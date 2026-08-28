@@ -1,6 +1,7 @@
 {
   "name": "Ascend_VF",
-  "issue_ports": 2,
+  "issue_ports": 3,
+  "three_ports_mode": true,
   "load_ports": 2,
   "store_ports": 1,
   "ub_slots": 2,

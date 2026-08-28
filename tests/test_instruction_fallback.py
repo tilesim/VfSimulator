@@ -35,11 +35,31 @@ class InstructionFallbackTest(unittest.TestCase):
         uarch = dict(db.get_uarch())
         uarch.update(
             {
+                "issue_ports": 2,
+                "three_ports_mode": False,
                 "enable_isu_queue_model": True,
                 "shq_exq_dispatch_policy": "fu_round_robin_exu0_reserve",
                 "exu0_reserve_lookahead": 8,
                 "exu0_reserve_min_count": 2,
                 "enforce_same_cycle_src_hazard": False,
+                "exq_depth": 2,
+            }
+        )
+        return OoOCoreMainline(uarch, db, dtype="fp32")
+
+    def _make_three_port_in_order_core_for_isu(self):
+        db = ParamDB(base_dir=str(ROOT))
+        uarch = dict(db.get_uarch())
+        uarch.update(
+            {
+                "issue_ports": 3,
+                "three_ports_mode": True,
+                "enable_isu_queue_model": True,
+                "shq_exq_dispatch_policy": (
+                    "fu_round_robin_exu0_reserve_in_order"
+                ),
+                "exu0_reserve_lookahead": 8,
+                "exu0_reserve_min_count": 1,
                 "exq_depth": 2,
             }
         )
@@ -232,6 +252,83 @@ class InstructionFallbackTest(unittest.TestCase):
         self.assertEqual(len(core.exq_wait[0]["SFU"]), 1)
         self.assertEqual(core.exq_wait[0]["SFU"][0].op, "VEXP")
 
+    def test_strict_shq_order_does_not_bypass_blocked_head(self):
+        core = self._make_mainline_core_for_isu()
+        core.shq_exq_dispatch_policy = (
+            "fu_round_robin_exu0_reserve_in_order"
+        )
+        core.SHQ.extend(
+            [
+                self._make_compute_uop(0, "VADDS", state="blocked"),
+                self._make_compute_uop(1, "VEXP"),
+            ]
+        )
+
+        issued = core.isu.enqueue_shq_to_exq(0, set())
+
+        self.assertEqual(issued, 0)
+        self.assertEqual([u.op for u in core.SHQ], ["VADDS", "VEXP"])
+        self.assertFalse(core.exq_wait[0]["ALU"])
+        self.assertFalse(core.exq_wait[0]["SFU"])
+        self.assertFalse(core.exq_wait[1]["ALU"])
+        self.assertFalse(core.exq_wait[1]["SFU"])
+
+    def test_strict_shq_order_does_not_bypass_head_with_full_legal_port(self):
+        core = self._make_mainline_core_for_isu()
+        core.shq_exq_dispatch_policy = (
+            "fu_round_robin_exu0_reserve_in_order"
+        )
+        core.exq_wait[0]["ALU"].extend(
+            [
+                self._make_compute_uop(100, "VADDS"),
+                self._make_compute_uop(101, "VADDS"),
+            ]
+        )
+        core.SHQ.extend(
+            [
+                self._make_compute_uop(0, "VPACK", form="b32"),
+                self._make_compute_uop(1, "VADDS"),
+            ]
+        )
+
+        issued = core.isu.enqueue_shq_to_exq(0, set())
+
+        self.assertEqual(issued, 0)
+        self.assertEqual([u.op for u in core.SHQ], ["VPACK", "VADDS"])
+        self.assertFalse(core.exq_wait[1]["ALU"])
+
+    def test_three_port_topology_routes_sfu_and_legacy_exu0_only_to_exu2(self):
+        core = self._make_three_port_in_order_core_for_isu()
+
+        self.assertEqual(core._eligible_exu_ports("VADD", "fp32"), [0, 1, 2])
+        self.assertEqual(core._eligible_exu_ports("VEXP", "fp32"), [2])
+        self.assertEqual(core._eligible_exu_ports("VPACK", "b32"), [2])
+
+    def test_three_port_reserve_keeps_exq2_for_pending_sfu(self):
+        core = self._make_three_port_in_order_core_for_isu()
+        core.SHQ.extend(
+            [
+                self._make_compute_uop(0, "VADD"),
+                self._make_compute_uop(1, "VADD"),
+                self._make_compute_uop(2, "VEXP"),
+            ]
+        )
+
+        issued = core.isu.enqueue_shq_to_exq(0, set())
+
+        self.assertEqual(issued, 3)
+        self.assertEqual([u.op for u in core.exq_wait[0]["ALU"]], ["VADD"])
+        self.assertEqual([u.op for u in core.exq_wait[1]["ALU"]], ["VADD"])
+        self.assertEqual([u.op for u in core.exq_wait[2]["SFU"]], ["VEXP"])
+
+    def test_three_port_mode_halves_sfu_pair_ii(self):
+        triple = self._make_three_port_in_order_core_for_isu()
+        dual = self._make_mainline_core_for_isu()
+
+        self.assertEqual(triple._get_ii("VEXPDIF", "VEXPDIF", "fp32", "fp32"), 2)
+        self.assertEqual(triple._get_ii("VDIV", "VEXP", "fp32", "fp32"), 2)
+        self.assertEqual(dual._get_ii("VDIV", "VEXP", "fp32", "fp32"), 5)
+
     def test_exu0_reserve_lookahead_min_count_sends_flexible_alu_to_exq1(self):
         core = self._make_mainline_core_for_isu()
         core.SHQ.extend(
@@ -270,10 +367,12 @@ class InstructionFallbackTest(unittest.TestCase):
         self.assertEqual(core.exq_wait[0]["ALU"][0].exu_port, 0)
         self.assertEqual(len(core.exq_wait[1]["ALU"]), 0)
 
-    def test_default_exu0_reserve_min_count_reserves_for_single_exu0_only(self):
+    def test_default_exclusive_reserve_routes_legacy_exu0_only_to_exq2(self):
         db = ParamDB(base_dir=str(ROOT))
         uarch = dict(db.get_uarch())
         self.assertEqual(uarch["exu0_reserve_min_count"], 1)
+        self.assertEqual(uarch["issue_ports"], 3)
+        self.assertTrue(uarch["three_ports_mode"])
         core = OoOCoreMainline(uarch, db, dtype="fp32")
         core.SHQ.extend(
             [
@@ -285,12 +384,14 @@ class InstructionFallbackTest(unittest.TestCase):
         issued = core.isu.enqueue_shq_to_exq(0, set())
 
         self.assertEqual(issued, 2)
-        self.assertEqual([u.op for u in core.exq_wait[0]["ALU"]], ["VPACK"])
-        self.assertEqual([u.op for u in core.exq_wait[1]["ALU"]], ["VADDS"])
+        self.assertEqual([u.op for u in core.exq_wait[0]["ALU"]], ["VADDS"])
+        self.assertFalse(core.exq_wait[1]["ALU"])
+        self.assertEqual([u.op for u in core.exq_wait[2]["ALU"]], ["VPACK"])
 
     def test_exu0_reserve_balances_queue_gap_instead_of_forcing_exq1(self):
         db = ParamDB(base_dir=str(ROOT))
         uarch = dict(db.get_uarch())
+        uarch.update({"issue_ports": 2, "three_ports_mode": False})
         core = OoOCoreMainline(uarch, db, dtype="fp32")
         core.exq_wait[1]["ALU"].append(self._make_compute_uop(100, "VADDS"))
         core.SHQ.extend(

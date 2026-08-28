@@ -352,16 +352,25 @@ class OoOCore:
         if prev_op is None:
             return 1
         if prev_profile is not None and cur_profile is not None:
-            return int(self.db.get_ii_for_profiles(prev_profile, cur_profile))
-        return int(
-            self.db.get_ii(
+            ii = int(self.db.get_ii_for_profiles(prev_profile, cur_profile))
+        else:
+            ii = int(self.db.get_ii(
                 prev_op,
                 cur_op,
                 dtype=self.dtype,
                 prev_form=prev_form,
                 cur_form=cur_form,
-            )
-        )
+            ))
+            prev_profile = self._profile(prev_op, prev_form)
+            cur_profile = self._profile(cur_op, cur_form)
+
+        if (
+            self.three_ports_mode
+            and prev_profile.fu_type == "SFU"
+            and cur_profile.fu_type == "SFU"
+        ):
+            return max(1, ii // 2)
+        return ii
 
     def _get_fu_type(
         self,
@@ -388,10 +397,11 @@ class OoOCore:
         """
         Restrict which EXU/EXQ ports an op may use according to isa.json.
 
-        Supported tags:
-        - EXU0_ONLY : only port 0
-        - EXU01     : port 0 / port 1 (or port 0 / port 1 / port 2 in three_ports_mode)
-        - EXU012    : port 0 / port 1 / port 2
+        Three-port experiment topology:
+        - flexible ALU: ports 0 / 1 / 2
+        - SFU and legacy EXU0_ONLY: port 2 only
+
+        Dual-port topology keeps the configured dispatch tags unchanged.
 
         Fallback:
         - missing / unknown tag => all available ports
@@ -404,11 +414,19 @@ class OoOCore:
         except Exception:
             dispatch_exu = ""
 
+        if self.three_ports_mode:
+            if self.issue_ports < 3:
+                raise RuntimeError(
+                    "three_ports_mode requires issue_ports >= 3"
+                )
+            fu_type = self._get_fu_type(op, form, profile)
+            if fu_type == "SFU" or dispatch_exu == "EXU0_ONLY":
+                return [2]
+            return [p for p in range(min(self.issue_ports, 3))]
+
         if dispatch_exu == "EXU0_ONLY":
             return [0] if self.issue_ports > 0 else []
         if dispatch_exu == "EXU01":
-            if self.three_ports_mode:
-                return [p for p in range(min(self.issue_ports, 3))]
             return [p for p in range(min(self.issue_ports, 2))]
         if dispatch_exu == "EXU012":
             return [p for p in range(min(self.issue_ports, 3))]

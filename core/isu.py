@@ -34,13 +34,23 @@ class ISUController:
             "fu_rr_fifo",
             "fu_round_robin",
             "fu_round_robin_exu0_reserve",
+            "fu_round_robin_exu0_reserve_in_order",
         )
+
+    def _use_strict_shq_order(self) -> bool:
+        policy = str(
+            getattr(self.core, "shq_exq_dispatch_policy", "fu_round_robin_fifo")
+        ).lower()
+        return policy == "fu_round_robin_exu0_reserve_in_order"
 
     def _use_exu0_reserve(self) -> bool:
         policy = str(
             getattr(self.core, "shq_exq_dispatch_policy", "fu_round_robin_fifo")
         ).lower()
-        return policy == "fu_round_robin_exu0_reserve"
+        return policy in (
+            "fu_round_robin_exu0_reserve",
+            "fu_round_robin_exu0_reserve_in_order",
+        )
 
     def _dispatch_exu_tag(self, u: Any) -> str:
         profile = getattr(u, "profile", None)
@@ -53,7 +63,15 @@ class ISUController:
         except Exception:
             return ""
 
-    def _exu0_only_pressure_count(self, start_index: int) -> int:
+    def _exclusive_port(self) -> int:
+        return 2 if bool(getattr(self.core, "three_ports_mode", False)) else 0
+
+    def _requires_exclusive_port(self, u: Any) -> bool:
+        return set(self.core._eligible_exu_ports(u.op, u.form, u.profile)) == {
+            self._exclusive_port()
+        }
+
+    def _exclusive_port_pressure_count(self, start_index: int) -> int:
         lookahead = int(getattr(self.core, "exu0_reserve_lookahead", 0))
         if lookahead <= 0:
             return 0
@@ -62,13 +80,13 @@ class ISUController:
         seen_exu0_only = 0
         for cand in self.core.SHQ[start_index + 1 :]:
             seen_compute += 1
-            if self._dispatch_exu_tag(cand) == "EXU0_ONLY":
+            if self._requires_exclusive_port(cand):
                 seen_exu0_only += 1
             if seen_compute >= lookahead:
                 break
         return seen_exu0_only if seen_exu0_only >= min_count else 0
 
-    def _apply_exu0_reserve(
+    def _apply_exclusive_port_reserve(
         self,
         index: int,
         u: Any,
@@ -77,13 +95,14 @@ class ISUController:
     ) -> List[int]:
         if not self._use_exu0_reserve():
             return candidates
-        if 0 not in candidates:
+        exclusive_port = self._exclusive_port()
+        if exclusive_port not in candidates:
             return candidates
-        if self._dispatch_exu_tag(u) == "EXU0_ONLY":
+        if self._requires_exclusive_port(u):
             return candidates
-        if 0 not in legal_ports or len(legal_ports) <= 1:
+        if exclusive_port not in legal_ports or len(legal_ports) <= 1:
             return candidates
-        pressure = self._exu0_only_pressure_count(index)
+        pressure = self._exclusive_port_pressure_count(index)
         if pressure <= 0 or len(candidates) <= 1:
             return candidates
 
@@ -92,11 +111,17 @@ class ISUController:
         def balance_error(port: int) -> float:
             projected = list(occupancy)
             projected[port] += 1
-            non_exu0 = projected[1:]
-            if not non_exu0:
+            flexible_ports = [
+                projected[p]
+                for p in range(self.core.issue_ports)
+                if p != exclusive_port
+            ]
+            if not flexible_ports:
                 return 0.0
-            non_exu0_average = sum(non_exu0) / len(non_exu0)
-            return abs((non_exu0_average - projected[0]) - pressure)
+            flexible_average = sum(flexible_ports) / len(flexible_ports)
+            return abs(
+                (flexible_average - projected[exclusive_port]) - pressure
+            )
 
         best_error = min(balance_error(port) for port in candidates)
         return [port for port in candidates if balance_error(port) == best_error]
@@ -267,13 +292,18 @@ class ISUController:
         shq_to_exq_cnt = [0] * self.core.issue_ports
         ex_count = 0
         use_fu_rr_fifo = self._use_fu_round_robin_fifo()
+        strict_shq_order = self._use_strict_shq_order()
         blocked_fu_types: Set[str] = set()
 
         for index, u in enumerate(self.core.SHQ):
             fu_type = self.core._get_fu_type(u.op, u.form, u.profile)
             if use_fu_rr_fifo and fu_type in blocked_fu_types:
+                if strict_shq_order:
+                    break
                 continue
             if u.state != "ready":
+                if strict_shq_order:
+                    break
                 continue
             if ex_count >= self.core.issue_ports:
                 break
@@ -284,6 +314,8 @@ class ISUController:
                 and (not self.core.theoretical_limit_mode)
                 and (issued_srcs_this_cycle & cur_srcs)
             ):
+                if strict_shq_order:
+                    break
                 if use_fu_rr_fifo:
                     blocked_fu_types.add(fu_type)
                 continue
@@ -300,11 +332,15 @@ class ISUController:
                     continue
                 candidates.append(port)
             if not candidates:
+                if strict_shq_order:
+                    break
                 all_ports = set(range(self.core.issue_ports))
                 if use_fu_rr_fifo and all_ports.issubset(legal_ports):
                     blocked_fu_types.add(fu_type)
                 continue
-            candidates = self._apply_exu0_reserve(index, u, legal_ports, candidates)
+            candidates = self._apply_exclusive_port_reserve(
+                index, u, legal_ports, candidates
+            )
 
             recv_cycle = cycle + self.core.exq_recv_delay
             if use_fu_rr_fifo:
