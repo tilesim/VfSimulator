@@ -258,7 +258,9 @@ def run_simulation(
             "Simulation did not complete before max_cycles. "
             f"cycle={cycle}, vf_end={ooo.vf_end_cycle()}, "
             f"ifu_done={ifu.done()}, idu_empty={idu.empty()}, "
-            f"shq={len(ooo.SHQ)}, lsq={len(ooo.LSQ)}, rob={len(ooo.ROB)}, pipe={len(idu_to_ooo_pipe)}"
+            f"shq={len(ooo.SHQ)}, lsq={len(ooo.LSQ)}, rob={len(ooo.ROB)}, "
+            f"unified_exq={len(getattr(ooo, 'unified_exq_wait', ()))}, "
+            f"pipe={len(idu_to_ooo_pipe)}"
         )
 
     if not os.path.exists(results_dir):

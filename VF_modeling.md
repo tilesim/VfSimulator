@@ -812,14 +812,14 @@ OoO 在 `accept(inst)` 时做寄存器重命名。
 
 ### 11.2 EXQ
 
-默认模型有两个 EXQ，分别对应两个 EXU：
+历史基线有两个 EXQ，分别对应两个 EXU：
 
 ```text
 SHQ -> EXQ0 -> EXU0
 SHQ -> EXQ1 -> EXU1
 ```
 
-默认参数：
+关闭 `enable_unified_exq` 时使用以下历史参数：
 
 - `exq_depth = 26`
 - `exq_recv_delay = 1`
@@ -827,17 +827,40 @@ SHQ -> EXQ1 -> EXU1
 - `exq_issue_inflight_cap_per_port = 7`
 - `exq_capacity_counts_inflight = false`
 
-SHQ 到 EXQ 的发射会同时考虑就绪状态、合法 EXU 集合、EXQ 占用、每拍接收宽度和预测发射时间。
+当前实验分支默认启用统一 EXQ：
+
+```text
+SHQ -> Unified EXQ -> EXU0/EXU1
+```
+
+实验参数：
+
+- `enable_unified_exq = true`
+- `unified_exq_depth = 52`
+- `shq_to_unified_exq_width = 2`
+- `unified_exq_issue_window = 8`
+- `unified_exq_skip_exu0_only_when_imbalanced = false`
+
+SHQ 只把 ready 指令按 oldest-ready 顺序搬入共享队列，不再选择 EXU 端口，也不再执行
+`EXU0_ONLY` reserve。统一 EXQ 的总容量等于历史两条 EXQ 的容量之和。
 
 ### 11.3 EXQ -> EXU 发射
 
-每个 EXU 每拍最多启动一条计算指令。候选指令必须满足：
+统一 EXQ 每周期顺序检查前 `unified_exq_issue_window` 个物理位置。某条指令因两个
+EXU 的 II 都不满足而无法发射时，可以继续检查窗口中的下一条；窗口外指令不能参与
+本周期仲裁。每个 EXU 每拍最多启动一条计算指令。候选指令必须满足：
 
 - `cycle >= exq_recv_cycle`
-- 源操作数已就绪
+- 指令进入 EXQ 前源操作数已经就绪
 - II 约束满足
 - 每个 EXU 的在途数量上限未满
 - 该 EXU 在当前拍还没被使用
+
+II 使用每个 EXU 上实际上一条发射的指令计算。flexible 指令优先选择更早可发射的
+EXU；两边相同时选择 inflight 更少的 EXU，仍相同时优先 EXU1。`EXU0_ONLY`
+只能进入 EXU0，默认不因 EXU0/EXU1 inflight 不平衡而延迟。
+
+完整实验契约见 [`exq_unification_experiment_plan.md`](exq_unification_experiment_plan.md)。
 
 ### 11.4 dispatch_exu
 

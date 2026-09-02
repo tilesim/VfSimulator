@@ -35,6 +35,19 @@ def normalize_mainline_uarch(uarch: Dict[str, Any]) -> Dict[str, Any]:
     cfg["enable_isu_queue_model"] = bool(cfg.get("enable_isu_queue_model", True))
     cfg["shq_depth"] = int(cfg.get("shq_depth", 58))
     cfg["exq_depth"] = int(cfg.get("exq_depth", 26))
+    cfg["enable_unified_exq"] = bool(cfg.get("enable_unified_exq", False))
+    cfg["unified_exq_depth"] = int(
+        cfg.get("unified_exq_depth", cfg["exq_depth"] * 2)
+    )
+    cfg["shq_to_unified_exq_width"] = int(
+        cfg.get("shq_to_unified_exq_width", 2)
+    )
+    cfg["unified_exq_issue_window"] = int(
+        cfg.get("unified_exq_issue_window", 8)
+    )
+    cfg["unified_exq_skip_exu0_only_when_imbalanced"] = bool(
+        cfg.get("unified_exq_skip_exu0_only_when_imbalanced", False)
+    )
     cfg["enforce_same_cycle_src_hazard"] = bool(
         cfg.get("enforce_same_cycle_src_hazard", False)
     )
@@ -109,6 +122,9 @@ def apply_theoretical_limit_overrides(uarch: Dict[str, Any]) -> Dict[str, Any]:
     cfg["LDQ_width"] = int(cfg.get("theoretical_limit_ldq_width", huge))
     cfg["shq_depth"] = int(cfg.get("theoretical_limit_shq_depth", huge))
     cfg["exq_depth"] = int(cfg.get("theoretical_limit_exq_depth", huge))
+    cfg["unified_exq_depth"] = int(
+        cfg.get("theoretical_limit_unified_exq_depth", huge)
+    )
 
     cfg["idu_to_ooo_delay"] = int(cfg.get("theoretical_limit_idu_to_ooo_delay", 0))
     cfg["ooo_to_shq_delay"] = int(cfg.get("theoretical_limit_ooo_to_shq_delay", 0))
@@ -124,6 +140,9 @@ def apply_theoretical_limit_overrides(uarch: Dict[str, Any]) -> Dict[str, Any]:
 
     cfg["shq_to_exq_port_per_cycle"] = int(
         cfg.get("theoretical_limit_shq_to_exq_port_per_cycle", huge)
+    )
+    cfg["shq_to_unified_exq_width"] = int(
+        cfg.get("theoretical_limit_shq_to_unified_exq_width", huge)
     )
     cfg["compute_inflight_cap"] = int(
         cfg.get("theoretical_limit_compute_inflight_cap", 0)

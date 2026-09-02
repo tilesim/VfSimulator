@@ -530,6 +530,27 @@ class OoOCoreMainline(OoOCore):
         self.enable_isu_queue_model: bool = bool(uarch.get("enable_isu_queue_model", False))
         self.shq_depth: int = int(uarch.get("shq_depth", self.shq_depth))
         self.exq_depth: int = int(uarch.get("exq_depth", 26))
+        self.enable_unified_exq: bool = bool(
+            uarch.get("enable_unified_exq", False)
+        )
+        self.unified_exq_depth: int = int(
+            uarch.get("unified_exq_depth", self.exq_depth * self.issue_ports)
+        )
+        self.shq_to_unified_exq_width: int = int(
+            uarch.get("shq_to_unified_exq_width", self.issue_ports)
+        )
+        self.unified_exq_issue_window: int = int(
+            uarch.get("unified_exq_issue_window", 8)
+        )
+        self.unified_exq_skip_exu0_only_when_imbalanced: bool = bool(
+            uarch.get("unified_exq_skip_exu0_only_when_imbalanced", False)
+        )
+        if self.unified_exq_depth <= 0:
+            raise ValueError("unified_exq_depth must be positive")
+        if self.shq_to_unified_exq_width <= 0:
+            raise ValueError("shq_to_unified_exq_width must be positive")
+        if self.unified_exq_issue_window <= 0:
+            raise ValueError("unified_exq_issue_window must be positive")
         self.exq_recv_delay: int = int(uarch.get("exq_recv_delay", 1))
         self.shq_to_exq_port_per_cycle: int = int(uarch.get("shq_to_exq_port_per_cycle", 1))
         self.exq_capacity_counts_inflight: bool = bool(uarch.get("exq_capacity_counts_inflight", False))
@@ -595,6 +616,7 @@ class OoOCoreMainline(OoOCore):
         self.exq_wait: List[Dict[str, Deque[Uop]]] = [
             {"ALU": deque(), "SFU": deque()} for _ in range(self.issue_ports)
         ]
+        self.unified_exq_wait: Deque[Uop] = deque()
         # Experimental iter-boundary sealing state.
         # Keep the data structures for compatibility, but the current
         # reproduction path leaves this mechanism disabled.

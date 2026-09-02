@@ -38,6 +38,7 @@ class InstructionFallbackTest(unittest.TestCase):
         uarch.update(
             {
                 "enable_isu_queue_model": True,
+                "enable_unified_exq": False,
                 "shq_exq_dispatch_policy": "fu_round_robin_exu0_reserve",
                 "exu0_reserve_lookahead": 8,
                 "exu0_reserve_min_count": 2,
@@ -45,6 +46,24 @@ class InstructionFallbackTest(unittest.TestCase):
                 "exq_depth": 2,
             }
         )
+        return OoOCoreMainline(uarch, db, dtype="fp32")
+
+    def _make_unified_exq_core_for_isu(self, **overrides):
+        db = ParamDB(base_dir=str(ROOT))
+        uarch = dict(db.get_uarch())
+        uarch.update(
+            {
+                "enable_isu_queue_model": True,
+                "enable_unified_exq": True,
+                "unified_exq_depth": 16,
+                "shq_to_unified_exq_width": 2,
+                "unified_exq_issue_window": 8,
+                "unified_exq_skip_exu0_only_when_imbalanced": True,
+                "exq_recv_delay": 0,
+                "exq_issue_inflight_cap_per_port": 0,
+            }
+        )
+        uarch.update(overrides)
         return OoOCoreMainline(uarch, db, dtype="fp32")
 
     def test_unknown_vector_op_uses_default_compute_params(self):
@@ -199,6 +218,184 @@ class InstructionFallbackTest(unittest.TestCase):
         self.assertEqual(core.exq_wait[0]["ALU"][0].exu_port, 0)
         self.assertEqual(len(core.exq_wait[1]["ALU"]), 0)
 
+    def test_unified_exq_admits_oldest_ready_without_binding_exu(self):
+        core = self._make_unified_exq_core_for_isu()
+        core.SHQ.extend(
+            [
+                self._make_compute_uop(0, "VADD", state="blocked"),
+                self._make_compute_uop(1, "VADD"),
+                self._make_compute_uop(2, "VMUL"),
+            ]
+        )
+
+        admitted = core.isu.enqueue_shq_to_exq(10, set())
+
+        self.assertEqual(admitted, 2)
+        self.assertEqual([u.inst_id for u in core.unified_exq_wait], [1, 2])
+        self.assertEqual([u.inst_id for u in core.SHQ], [0])
+        self.assertTrue(all(u.exu_port is None for u in core.unified_exq_wait))
+
+    def test_unified_exq_uses_one_shared_capacity_pool(self):
+        core = self._make_unified_exq_core_for_isu(unified_exq_depth=2)
+        resident = self._make_compute_uop(99, "VADD")
+        resident.state = "exq_wait"
+        core.unified_exq_wait.append(resident)
+        core.SHQ.extend(
+            [
+                self._make_compute_uop(0, "VADD"),
+                self._make_compute_uop(1, "VMUL"),
+            ]
+        )
+
+        admitted = core.isu.enqueue_shq_to_exq(0, set())
+
+        self.assertEqual(admitted, 1)
+        self.assertEqual([u.inst_id for u in core.unified_exq_wait], [99, 0])
+        self.assertEqual([u.inst_id for u in core.SHQ], [1])
+
+    def test_unified_exq_flexible_tie_prefers_exu1(self):
+        core = self._make_unified_exq_core_for_isu()
+        uop = self._make_compute_uop(0, "VADD")
+        uop.state = "exq_wait"
+        uop.exq_recv_cycle = 0
+        core.unified_exq_wait.append(uop)
+
+        core.isu.issue_exq_to_exu(0, [False, False])
+
+        self.assertEqual(uop.start_cycle, 0)
+        self.assertEqual(uop.exu_port, 1)
+
+    def test_unified_exq_flexible_uses_less_loaded_exu(self):
+        core = self._make_unified_exq_core_for_isu()
+        core.exq_inflight[:] = [1, 3]
+        uop = self._make_compute_uop(0, "VADD")
+        uop.state = "exq_wait"
+        uop.exq_recv_cycle = 0
+        core.unified_exq_wait.append(uop)
+
+        core.isu.issue_exq_to_exu(0, [False, False])
+
+        self.assertEqual(uop.exu_port, 0)
+
+    def test_unified_exq_bypasses_instruction_blocked_by_ii_on_both_exus(self):
+        core = self._make_unified_exq_core_for_isu()
+        core.last_issue_cycle_exu[:] = [10, 10]
+        core.last_op_exu[:] = ["VADD", "VADD"]
+        original_get_ii = core._get_ii
+
+        def test_ii(prev_op, cur_op, **kwargs):
+            if cur_op == "VEXPDIF":
+                return 2
+            return 1
+
+        core._get_ii = test_ii
+        blocked = self._make_compute_uop(0, "VEXPDIF")
+        bypass = self._make_compute_uop(1, "VADD")
+        for uop in (blocked, bypass):
+            uop.state = "exq_wait"
+            uop.exq_recv_cycle = 0
+            core.unified_exq_wait.append(uop)
+
+        try:
+            core.isu.issue_exq_to_exu(11, [False, False])
+        finally:
+            core._get_ii = original_get_ii
+
+        self.assertIsNone(blocked.start_cycle)
+        self.assertEqual(bypass.start_cycle, 11)
+        self.assertEqual([u.inst_id for u in core.unified_exq_wait], [0])
+
+    def test_unified_exq_does_not_scan_beyond_physical_window(self):
+        core = self._make_unified_exq_core_for_isu()
+        core.last_issue_cycle_exu[:] = [10, 10]
+        core.last_op_exu[:] = ["VADD", "VADD"]
+        original_get_ii = core._get_ii
+
+        def test_ii(prev_op, cur_op, **kwargs):
+            return 2 if cur_op == "VEXPDIF" else 1
+
+        core._get_ii = test_ii
+        blocked = [self._make_compute_uop(i, "VEXPDIF") for i in range(8)]
+        ninth = self._make_compute_uop(8, "VADD")
+        for uop in [*blocked, ninth]:
+            uop.state = "exq_wait"
+            uop.exq_recv_cycle = 0
+            core.unified_exq_wait.append(uop)
+
+        try:
+            core.isu.issue_exq_to_exu(11, [False, False])
+        finally:
+            core._get_ii = original_get_ii
+
+        self.assertTrue(all(u.start_cycle is None for u in blocked))
+        self.assertIsNone(ninth.start_cycle)
+        self.assertEqual(len(core.unified_exq_wait), 9)
+
+    def test_unified_exq_ii_two_releases_on_next_cycle(self):
+        core = self._make_unified_exq_core_for_isu()
+        core.last_issue_cycle_exu[:] = [10, 10]
+        core.last_op_exu[:] = ["VADD", "VADD"]
+        original_get_ii = core._get_ii
+        core._get_ii = lambda *args, **kwargs: 2
+        uop = self._make_compute_uop(0, "VEXPDIF")
+        uop.state = "exq_wait"
+        uop.exq_recv_cycle = 0
+        core.unified_exq_wait.append(uop)
+
+        try:
+            core.isu.issue_exq_to_exu(11, [False, False])
+            self.assertIsNone(uop.start_cycle)
+            core.isu.issue_exq_to_exu(12, [False, False])
+        finally:
+            core._get_ii = original_get_ii
+
+        self.assertEqual(uop.start_cycle, 12)
+
+    def test_unified_exq_ii_uses_actual_bypass_predecessor_per_exu(self):
+        core = self._make_unified_exq_core_for_isu()
+        core.last_issue_cycle_exu[:] = [10, 10]
+        core.last_op_exu[:] = ["VADD", "VADD"]
+        original_get_ii = core._get_ii
+
+        def test_ii(prev_op, cur_op, **kwargs):
+            if cur_op == "VEXPDIF":
+                return 3 if prev_op == "VMUL" else 2
+            return 1
+
+        core._get_ii = test_ii
+        delayed = self._make_compute_uop(0, "VEXPDIF")
+        bypass = self._make_compute_uop(1, "VMUL")
+        for uop in (delayed, bypass):
+            uop.state = "exq_wait"
+            uop.exq_recv_cycle = 0
+            core.unified_exq_wait.append(uop)
+
+        try:
+            core.isu.issue_exq_to_exu(11, [False, False])
+            self.assertEqual(bypass.exu_port, 1)
+            core.isu.issue_exq_to_exu(12, [False, False])
+        finally:
+            core._get_ii = original_get_ii
+
+        self.assertEqual(delayed.exu_port, 0)
+        self.assertEqual(delayed.start_cycle, 12)
+
+    def test_unified_exq_can_skip_imbalanced_exu0_only(self):
+        core = self._make_unified_exq_core_for_isu()
+        core.exq_inflight[:] = [2, 1]
+        exu0_only = self._make_compute_uop(0, "VPACK", form="b32")
+        flexible = self._make_compute_uop(1, "VADD")
+        for uop in (exu0_only, flexible):
+            uop.state = "exq_wait"
+            uop.exq_recv_cycle = 0
+            core.unified_exq_wait.append(uop)
+
+        core.isu.issue_exq_to_exu(0, [False, False])
+
+        self.assertIsNone(exu0_only.start_cycle)
+        self.assertEqual(flexible.exu_port, 1)
+        self.assertEqual([u.inst_id for u in core.unified_exq_wait], [0])
+
     def test_fu_round_robin_fifo_allows_alu_to_pass_blocked_exu0_only_alu(self):
         core = self._make_mainline_core_for_isu()
         core.exq_wait[0]["ALU"].append(self._make_compute_uop(100, "VADDS"))
@@ -272,10 +469,15 @@ class InstructionFallbackTest(unittest.TestCase):
         self.assertEqual(core.exq_wait[0]["ALU"][0].exu_port, 0)
         self.assertEqual(len(core.exq_wait[1]["ALU"]), 0)
 
-    def test_default_exu0_reserve_min_count_reserves_for_single_exu0_only(self):
+    def test_default_config_uses_unified_exq_without_port_binding(self):
         db = ParamDB(base_dir=str(ROOT))
         uarch = dict(db.get_uarch())
-        self.assertEqual(uarch["exu0_reserve_min_count"], 1)
+        self.assertTrue(uarch["enable_unified_exq"])
+        self.assertEqual(uarch["unified_exq_depth"], 52)
+        self.assertEqual(uarch["unified_exq_issue_window"], 8)
+        self.assertFalse(
+            uarch["unified_exq_skip_exu0_only_when_imbalanced"]
+        )
         core = OoOCoreMainline(uarch, db, dtype="fp32")
         core.SHQ.extend(
             [
@@ -287,12 +489,15 @@ class InstructionFallbackTest(unittest.TestCase):
         issued = core.isu.enqueue_shq_to_exq(0, set())
 
         self.assertEqual(issued, 2)
-        self.assertEqual([u.op for u in core.exq_wait[0]["ALU"]], ["VPACK"])
-        self.assertEqual([u.op for u in core.exq_wait[1]["ALU"]], ["VADDS"])
+        self.assertEqual(
+            [u.op for u in core.unified_exq_wait], ["VADDS", "VPACK"]
+        )
+        self.assertTrue(all(u.exu_port is None for u in core.unified_exq_wait))
 
     def test_exu0_reserve_balances_queue_gap_instead_of_forcing_exq1(self):
         db = ParamDB(base_dir=str(ROOT))
         uarch = dict(db.get_uarch())
+        uarch["enable_unified_exq"] = False
         core = OoOCoreMainline(uarch, db, dtype="fp32")
         core.exq_wait[1]["ALU"].append(self._make_compute_uop(100, "VADDS"))
         core.SHQ.extend(

@@ -117,11 +117,151 @@ class ISUController:
             occ += self.core.exq_inflight[port]
         return occ
 
+    def unified_exq_occ(self) -> int:
+        occ = len(self.core.unified_exq_wait)
+        if self.core.exq_capacity_counts_inflight:
+            occ += sum(int(value) for value in self.core.exq_inflight)
+        return int(occ)
+
     def total_compute_inflight(self) -> int:
         total = sum(int(x) for x in self.core.exq_inflight)
+        if self.core.enable_unified_exq:
+            return int(total + len(self.core.unified_exq_wait))
         for q in self.core.exq_wait:
             total += len(q["ALU"]) + len(q["SFU"])
         return int(total)
+
+    def enqueue_shq_to_unified_exq(self, cycle: int) -> int:
+        issued: List[Any] = []
+        available = self.core.unified_exq_depth - self.unified_exq_occ()
+        budget = min(self.core.shq_to_unified_exq_width, max(0, available))
+        if budget <= 0:
+            return 0
+
+        for u in self.core.SHQ:
+            if len(issued) >= budget:
+                break
+            if u.state != "ready":
+                continue
+
+            u.exu_port = None
+            u.exq_recv_cycle = cycle + self.core.exq_recv_delay  # type: ignore[attr-defined]
+            u.state = "exq_wait"
+            self.core.unified_exq_wait.append(u)
+            issued.append(u)
+
+            if bool(getattr(u, "shq_tracked", False)):
+                self.core._schedule_shq_release(cycle, 1)
+                setattr(u, "shq_tracked", False)
+
+        self.remove_issued("SHQ", issued)
+        return len(issued)
+
+    def _unified_exu_earliest_issue(self, u: Any, port: int, cycle: int) -> int:
+        ii = self.core._get_ii(
+            self.core.last_op_exu[port],
+            u.op,
+            prev_form=self.core.last_form_exu[port],
+            cur_form=u.form,
+            prev_profile=self.core.last_profile_exu[port],
+            cur_profile=u.profile,
+        )
+        return max(
+            int(cycle),
+            int(getattr(u, "exq_recv_cycle", cycle)),
+            int(self.core.last_issue_cycle_exu[port]) + int(ii),
+        )
+
+    def _launch_unified_exq_uop(self, u: Any, port: int, cycle: int) -> None:
+        fu_type = self.core._get_fu_type(u.op, u.form, u.profile)
+        u.start_cycle = cycle
+        u.done_cycle = cycle + self.core._latency(u.op, u.form, u.profile)
+        u.state = "running"
+        u.exu_port = port
+        self.core._schedule_src_release_from_start(u)
+        self.core._log("start", u)
+        self.core._log_start_simple(u)
+
+        self.core.last_issue_cycle_exu[port] = cycle
+        self.core.last_op_exu[port] = u.op
+        self.core.last_form_exu[port] = u.form
+        self.core.last_profile_exu[port] = u.profile
+        self.core.last_issue_cycle[fu_type][port] = cycle
+        self.core.last_op[fu_type][port] = u.op
+        self.core.last_form[fu_type][port] = u.form
+        self.core.last_profile[fu_type][port] = u.profile
+        self.core.exq_inflight[port] += 1
+
+        for pd in u.preg_dst:
+            self.core.preg_producer[pd] = (u.op, u.form, u.start_cycle, "COMPUTE")
+            self.core.preg_producer_profile[pd] = u.profile
+            self.core.preg_producer_uop[pd] = u
+            self.core.preg_pending.discard(pd)
+
+    def issue_unified_exq_to_exu(
+        self,
+        cycle: int,
+        exu_used_this_cycle: List[bool],
+    ) -> None:
+        window = list(self.core.unified_exq_wait)[
+            : self.core.unified_exq_issue_window
+        ]
+        issued: List[Any] = []
+
+        for u in window:
+            if all(exu_used_this_cycle):
+                break
+            recv_cycle = int(getattr(u, "exq_recv_cycle", cycle))
+            if recv_cycle > cycle:
+                continue
+
+            legal_ports = set(
+                self.core._eligible_exu_ports(u.op, u.form, u.profile)
+            )
+            if (
+                self.core.unified_exq_skip_exu0_only_when_imbalanced
+                and legal_ports == {0}
+                and self.core.issue_ports > 1
+                and int(self.core.exq_inflight[0])
+                > int(self.core.exq_inflight[1])
+            ):
+                continue
+
+            candidates: List[Tuple[Tuple[int, int, int], int]] = []
+            for port in sorted(legal_ports):
+                if port < 0 or port >= self.core.issue_ports:
+                    continue
+                if exu_used_this_cycle[port]:
+                    continue
+                if (
+                    self.core.exq_issue_inflight_cap_per_port > 0
+                    and int(self.core.exq_inflight[port])
+                    >= self.core.exq_issue_inflight_cap_per_port
+                ):
+                    continue
+                earliest = self._unified_exu_earliest_issue(u, port, cycle)
+                if earliest > cycle:
+                    continue
+                # Equal timing/load prefers EXU1, matching the experiment rule.
+                tie_preference = 0 if port == 1 else 1
+                key = (earliest, int(self.core.exq_inflight[port]), tie_preference)
+                candidates.append((key, port))
+
+            if not candidates:
+                continue
+
+            _, chosen_port = min(candidates, key=lambda item: (item[0], item[1]))
+            self._launch_unified_exq_uop(u, chosen_port, cycle)
+            exu_used_this_cycle[chosen_port] = True
+            issued.append(u)
+
+        if issued:
+            issued_ids = {id(u) for u in issued}
+            self.core.unified_exq_wait = type(self.core.unified_exq_wait)(
+                u
+                for u in self.core.unified_exq_wait
+                if id(u) not in issued_ids
+            )
 
     def select_fu_rr_port(self, fu_type: str, candidates: List[int]) -> int:
         if not candidates:
@@ -263,6 +403,9 @@ class ISUController:
         cycle: int,
         issued_srcs_this_cycle: Set[str],
     ) -> int:
+        if self.core.enable_unified_exq:
+            return self.enqueue_shq_to_unified_exq(cycle)
+
         issued_shq: List[Any] = []
         shq_to_exq_cnt = [0] * self.core.issue_ports
         ex_count = 0
@@ -353,6 +496,10 @@ class ISUController:
         return ex_count
 
     def issue_exq_to_exu(self, cycle: int, exu_used_this_cycle: List[bool]) -> None:
+        if self.core.enable_unified_exq:
+            self.issue_unified_exq_to_exu(cycle, exu_used_this_cycle)
+            return
+
         for port in range(self.core.issue_ports):
             if exu_used_this_cycle[port]:
                 continue
