@@ -18,7 +18,6 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-
 def _load_json(path: Path) -> Dict[str, Any]:
     with path.open("r", encoding="utf-8-sig") as stream:
         return json.load(stream)
@@ -30,21 +29,6 @@ def _dump_json(path: Path, obj: Dict[str, Any]) -> None:
         json.dump(obj, stream, ensure_ascii=False, indent=2)
 
 
-def _iter_insts(node: Any):
-    if isinstance(node, list):
-        for item in node:
-            yield from _iter_insts(item)
-        return
-    if not isinstance(node, dict):
-        return
-    if node.get("type") == "inst":
-        yield node
-    body = node.get("body")
-    if isinstance(body, list):
-        for item in body:
-            yield from _iter_insts(item)
-
-
 def _apply_case_transform(trace_obj: Dict[str, Any], case: Dict[str, Any]) -> Dict[str, Any]:
     out = copy.deepcopy(trace_obj)
 
@@ -54,24 +38,12 @@ def _apply_case_transform(trace_obj: Dict[str, Any], case: Dict[str, Any]) -> Di
         for key, value in param_overrides.items():
             out["params"][key] = value
 
-    transform = case.get("transform", {}) or {}
-    replace_op = transform.get("replace_op")
-    if isinstance(replace_op, dict):
-        src_op = replace_op.get("from")
-        dst_op = replace_op.get("to")
-        if src_op and dst_op:
-            for inst in _iter_insts(out.get("program", [])):
-                if inst.get("op") == src_op:
-                    inst["op"] = dst_op
+    if case.get("transform"):
+        raise ValueError(
+            "Canonical regression cases must use a dedicated fixture instead "
+            "of a runtime semantic transform"
+        )
     return out
-
-
-def _lower_trace_to_vfinfo_payload(trace_obj: Dict[str, Any]) -> Dict[str, Any]:
-    from api.json_adapter import JsonVfInfoAdapter
-    from api.vf_lowering import VFInfoLowerer
-
-    vf_info = JsonVfInfoAdapter.from_payload(trace_obj)
-    return VFInfoLowerer().lower(vf_info)
 
 
 def _run_cmd(cmd: List[str], cwd: Path) -> str:
@@ -96,9 +68,8 @@ def _run_native_on_trace(
     max_cycles: int,
 ) -> Dict[str, Any]:
     run_dir.mkdir(parents=True, exist_ok=True)
-    payload = _lower_trace_to_vfinfo_payload(trace_obj)
-    trace_path = run_dir / "vfinfo_input.json"
-    _dump_json(trace_path, payload)
+    trace_path = run_dir / "canonical_input.json"
+    _dump_json(trace_path, trace_obj)
 
     stdout = _run_cmd(
         [
@@ -266,7 +237,7 @@ def _print_summary(summary: Dict[str, Any]) -> None:
 def main() -> None:
     parser = argparse.ArgumentParser(description="Run native C++ VF cost model regression suite")
     parser.add_argument("--suite", default="regression_suite/cases/cost_model_regression_cases.json")
-    parser.add_argument("--baseline", default="regression_suite/cases/baseline_balanced_exu0_reserve.json")
+    parser.add_argument("--baseline", default="regression_suite/cases/baseline_canonical_membar.json")
     parser.add_argument("--out-dir", default="results/native_regression_suite/latest")
     parser.add_argument("--tier", choices=["smoke", "full"], default="smoke")
     parser.add_argument("--runner", default="build-native/vfsim_native_json_runner")

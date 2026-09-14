@@ -38,7 +38,7 @@ class ControlUnit:
             text = text.rsplit(".", 1)[-1]
         return text
 
-    def accept_membar(self, node: Dict[str, Any]) -> None:
+    def accept_membar(self, node: Dict[str, Any], cycle: int = 0) -> None:
         barrier = self.normalize_barrier(node.get("barrier", node.get("type", "VST_VLD")))
         if barrier not in self._SUPPORTED:
             if hasattr(self.db, "record_warning"):
@@ -60,7 +60,14 @@ class ControlUnit:
             )
         )
 
-    def update(self, has_pending_prior: Callable[[int, str], bool]) -> None:
+    def observe_instruction(self, inst: Dict[str, Any]) -> None:
+        pass
+
+    def notify_lsu_start(self, stream_seq: int, cycle: int) -> None:
+        pass
+
+    def update(self, has_pending_prior: Callable[[int, str], bool], *,
+               cycle: int = 0, has_pending_dispatch=None) -> None:
         for barrier in self.barriers:
             if barrier.released:
                 continue

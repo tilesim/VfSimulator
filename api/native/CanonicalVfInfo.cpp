@@ -401,7 +401,8 @@ CanonicalValidationResult validateCanonicalVfInfo(const CanonicalVfInfo &vfInfo)
             error("catalog_instruction_class_mismatch",
                   "Instruction class conflicts with Catalog semantics", nodePath,
                   inst->sourceLocation);
-          const bool validForm = catalogSpec->forms.count(inst->form) ||
+          const bool validForm = catalogSpec->virtualOpcode ||
+                                 catalogSpec->forms.count(inst->form) ||
                                  catalogSpec->specializations.count(inst->form);
           if (!validForm)
             error("catalog_instruction_form_mismatch",
@@ -413,6 +414,24 @@ CanonicalValidationResult validateCanonicalVfInfo(const CanonicalVfInfo &vfInfo)
             error("catalog_specialization_required",
                   "Virtual opcode/form must use specialized opcode", nodePath,
                   inst->sourceLocation);
+          if (!catalogSpec->alignStateOperation.empty()) {
+            const auto operation = inst->attributes.find("align_state_operation");
+            const auto state = inst->attributes.find("align_state_id");
+            const auto *operationValue =
+                operation == inst->attributes.end()
+                    ? nullptr
+                    : std::get_if<std::string>(&operation->second);
+            const auto *stateValue =
+                state == inst->attributes.end()
+                    ? nullptr
+                    : std::get_if<std::string>(&state->second);
+            if (operationValue == nullptr ||
+                *operationValue != catalogSpec->alignStateOperation ||
+                stateValue == nullptr || stateValue->empty())
+              error("catalog_align_state_mismatch",
+                    "Instruction must declare its Catalog align-state operation and state ID",
+                    nodePath, inst->sourceLocation);
+          }
         }
         validateScalarMap(inst->attributes, nodePath + ".attributes");
 
@@ -735,8 +754,8 @@ CanonicalValidationResult validateCanonicalVfInfo(const CanonicalVfInfo &vfInfo)
       const auto &membar = std::get<CanonicalMembar>(node.payload);
       registerNodeId(membar.instructionId, nodePath, membar.sourceLocation);
       validateLocation(membar.sourceLocation, nodePath + ".source_location");
-      if (membar.barrier != "VST_VLD" && membar.barrier != "VLD_VST")
-        error("unsupported_membar_type", "Unsupported Membar type", nodePath,
+      if (membar.barrier.empty())
+        error("missing_membar_type", "Membar type is required", nodePath,
               membar.sourceLocation);
       validateDependencies(membar.dependencies, membar.instructionId,
                            nodePath + ".dependencies");

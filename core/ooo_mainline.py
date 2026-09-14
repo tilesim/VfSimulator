@@ -415,6 +415,7 @@ class RenameController:
             src_value_instances=src_value_instances,
             dst_value_instances=dst_value_instances,
         )
+        self.core.bind_align_state(u, inst.get("attributes"))
         setattr(u, "preg_src_gen", preg_src_gen)
 
         for pd in preg_dst:
@@ -687,6 +688,100 @@ class OoOCoreMainline(OoOCore):
     def _run_overwrite_release_events(self, cycle: int) -> None:
         self.preg_lifecycle.run_overwrite_release_events(cycle)
 
+    @staticmethod
+    def _lsu_age_key(u: Uop) -> Tuple[int, int]:
+        stream_seq = int(u.stream_seq) if int(u.stream_seq) >= 0 else int(u.inst_id)
+        return (stream_seq, int(u.inst_id))
+
+    def _lsu_issue_key(self, u: Uop) -> Tuple[int, int, int]:
+        age = self._lsu_age_key(u)
+        preg_pressure = (
+            len(self.freelist) < self.lsu_store_priority_preg_threshold
+        )
+        preferred_class = "STORE" if preg_pressure else "LOAD"
+        class_priority = 0 if u.profile.op_class == preferred_class else 1
+        return (class_priority, *age)
+
+    def _issue_ready_lsu(
+        self,
+        cycle: int,
+        issued_loads: int,
+        issued_stores: int,
+        issued_total: int,
+        membar_blocked_logged_ids: Optional[Set[int]] = None,
+    ) -> Tuple[int, int, int]:
+        """Issue pressure-ranked ready LSU operations within shared UB limits."""
+        if cycle < self.vf_startup_cost or issued_total >= self.ub_slots:
+            return issued_loads, issued_stores, issued_total
+
+        candidates = sorted(
+            (
+                u
+                for u in self.LSQ
+                if u.state == "ready"
+                and u.profile
+                and u.profile.op_class in ("LOAD", "STORE")
+            ),
+            key=self._lsu_issue_key,
+        )
+        issued: List[Uop] = []
+        for u in candidates:
+            if issued_total >= self.ub_slots:
+                break
+
+            op_class = u.profile.op_class
+            if op_class == "LOAD" and issued_loads >= self.load_ports:
+                continue
+            if op_class == "STORE" and issued_stores >= self.store_ports:
+                continue
+            if self._blocked_by_control_unit(u):
+                if (
+                    membar_blocked_logged_ids is None
+                    or u.inst_id not in membar_blocked_logged_ids
+                ):
+                    self._log_membar_blocked(u)
+                    if membar_blocked_logged_ids is not None:
+                        membar_blocked_logged_ids.add(u.inst_id)
+                continue
+            if (
+                op_class == "STORE"
+                and not u.store_dependencies_resolved
+                and u.producer_op_for_store is None
+            ):
+                continue
+
+            u.start_cycle = cycle
+            control = getattr(self, "control_unit", None)
+            if control is not None and hasattr(control, "notify_lsu_start"):
+                control.notify_lsu_start(u.stream_seq, cycle)
+            u.blocked_reason = None
+            u.done_cycle = cycle + self._latency(u.op, u.form, u.profile)
+            u.state = "running"
+            if u.align_producer_record is not None:
+                u.align_producer_record.start_cycle = cycle
+            self._schedule_src_release_from_start(u)
+
+            if op_class == "LOAD":
+                issued_loads += 1
+                for pd in u.preg_dst:
+                    self.preg_producer[pd] = (u.op, u.form, u.start_cycle, "LOAD")
+                    self.preg_producer_profile[pd] = u.profile
+                    self.preg_producer_uop[pd] = u
+                    self.preg_pending.discard(pd)
+            else:
+                issued_stores += 1
+                if self.enable_shq_credit_model and bool(getattr(u, "shq_tracked", False)):
+                    self._schedule_shq_release(cycle, 1)
+                    setattr(u, "shq_tracked", False)
+
+            issued_total += 1
+            self._log("start", u)
+            self._log_start_simple(u)
+            issued.append(u)
+
+        self.isu.remove_issued("LSQ", issued)
+        return issued_loads, issued_stores, issued_total
+
     def accept(self, inst: Dict[str, Any]) -> None:
         self.rename_unit.accept(inst)
 
@@ -721,6 +816,8 @@ class OoOCoreMainline(OoOCore):
                     self.exq_inflight[u.exu_port] = max(0, self.exq_inflight[u.exu_port] - 1)
                     u.exu_port = None
                 if u.profile and u.profile.op_class == "STORE":
+                    if u.align_producer_record is not None:
+                        u.align_producer_record.done_cycle = u.done_cycle
                     iter_key = self._top_iter_key_from_stack(u.top_block_id, list(u.iter_stack))
                     iter_remain = self.iter_outstanding_stores.get(iter_key, 0) - 1
                     self.iter_outstanding_stores[iter_key] = max(0, iter_remain)
@@ -767,38 +864,18 @@ class OoOCoreMainline(OoOCore):
             u.ready_cycle = self._compute_ready_cycle(u)
             u.state = "ready" if c >= u.ready_cycle else "blocked"
 
-        ld = ex = st = 0
-
-        issued_ld: List[Any] = []
-        for u in self.LSQ:
-            if u.state != "ready" or not (u.profile and u.profile.op_class == "LOAD"):
-                continue
-            if ld >= self.load_ports:
-                break
-            if c < self.vf_startup_cost:
-                break
-            if self._blocked_by_control_unit(u):
-                self._log_membar_blocked(u)
-                continue
-
-            u.start_cycle = c
-            u.blocked_reason = None
-            u.done_cycle = c + self._latency(u.op, u.form, u.profile)
-            u.state = "running"
-            self._schedule_src_release_from_start(u)
-            self._log("start", u)
-            self._log_start_simple(u)
-            ld += 1
-
-            for pd in u.preg_dst:
-                self.preg_producer[pd] = (u.op, u.form, u.start_cycle, "LOAD")
-                self.preg_producer_profile[pd] = u.profile
-                self.preg_producer_uop[pd] = u
-                self.preg_pending.discard(pd)
-
-            issued_ld.append(u)
-
-        self.isu.remove_issued("LSQ", issued_ld)
+        ex = 0
+        issued_loads = 0
+        issued_stores = 0
+        issued_lsu_total = 0
+        membar_blocked_logged_ids: Set[int] = set()
+        issued_loads, issued_stores, issued_lsu_total = self._issue_ready_lsu(
+            c,
+            issued_loads,
+            issued_stores,
+            issued_lsu_total,
+            membar_blocked_logged_ids,
+        )
 
         for u in self.SHQ:
             if u.state in ("running", "done"):
@@ -851,34 +928,12 @@ class OoOCoreMainline(OoOCore):
             ) = self._store_ready_cycle(u)
             u.state = "ready" if c >= u.ready_cycle else "blocked"
 
-        issued_st: List[Any] = []
-        for u in self.LSQ:
-            if u.state != "ready" or not (u.profile and u.profile.op_class == "STORE"):
-                continue
-            if st >= self.store_ports:
-                break
-            if c < self.vf_startup_cost:
-                break
-            if self._blocked_by_control_unit(u):
-                self._log_membar_blocked(u)
-                continue
-            if u.producer_op_for_store is None:
-                continue
-
-            u.start_cycle = c
-            u.blocked_reason = None
-            u.done_cycle = c + self._latency(u.op, u.form, u.profile)
-            u.state = "running"
-            self._schedule_src_release_from_start(u)
-            # SHQ credit release for store-like LSU ops.
-            if self.enable_shq_credit_model and bool(getattr(u, "shq_tracked", False)):
-                self._schedule_shq_release(c, 1)
-                setattr(u, "shq_tracked", False)
-            self._log("start", u)
-            self._log_start_simple(u)
-            st += 1
-            issued_st.append(u)
-
-        self.isu.remove_issued("LSQ", issued_st)
+        self._issue_ready_lsu(
+            c,
+            issued_loads,
+            issued_stores,
+            issued_lsu_total,
+            membar_blocked_logged_ids,
+        )
 
         self.cycle += 1

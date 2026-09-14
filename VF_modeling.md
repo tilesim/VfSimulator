@@ -32,14 +32,14 @@ VfSimulator/
 ├─ README.md                           # 项目入口说明
 ├─ api.md                              # 公共 API 总览
 ├─ VF_modeling.md                      # 当前文档
-├─ api/                                # JSON/CCE 输入适配和公共 VFInfo API
-│  ├─ vf_info.py                       # VFInfo、VFLoop、VFInst、ValueInfo、Membar
-│  ├─ input_api.py                     # main.py 使用的统一输入加载入口
-│  ├─ json_adapter.py                  # JSON trace 到 VFInfo 的适配
-│  ├─ cce_adapter.py                   # CCE/DSL __VEC_SCOPE__ 解析
-│  ├─ vf_lowering.py                   # VFInfo -> simulator trace payload
+├─ api/                                # Canonical JSON/CCE 输入与预测 API
+│  ├─ frontend/schema.py               # Python CanonicalVfInfo v1
+│  ├─ frontend/adapter_ir.py           # CCE 私有 parser IR，不对外导出
+│  ├─ frontend/core_lowering.py        # CanonicalVfInfo -> Core payload
+│  ├─ input_api.py                     # canonical JSON/CCE/builder 入口
+│  ├─ cce_adapter.py                   # CCE/DSL -> CanonicalVfInfo
 │  ├─ simulator_costmodel.py           # 程序化 cost model wrapper
-│  ├─ vf_costmodel.py                  # 兼容 re-export 和抽象接口
+│  ├─ vf_costmodel.py                  # canonical cost model 抽象接口
 │  └─ native/                          # API 侧 native 相关辅助目录
 ├─ configs/
 │  ├─ isa.json                         # 指令级参数：延迟/启动/排空/EXU 类型等
@@ -51,13 +51,13 @@ VfSimulator/
 │  ├─ value_storage.py                 # Register/UB/Scalar 存储分类
 │  ├─ isa_traits.py                    # LOAD/STORE/COMPUTE 资源分类 helper
 │  ├─ program_analysis.py              # loop bound 和 top block 分析
-│  ├─ program_canonicalization.py      # 单 super-iteration 循环规范化
+│  ├─ program_canonicalization.py      # 历史循环规范化，仅兼容/专项测试
 │  ├─ flatten.py                       # 静态程序 -> 线性 IR
 │  ├─ ifu.py                           # 线性 IR -> 动态指令流（支持 loop/unroll）
 │  ├─ idu.py                           # IDU 窗口、发射、VLOOP 可见性、信用门控
 │  ├─ simulator_runner.py              # IFU -> IDU -> OoO 主循环和日志写出
 │  ├─ dynamic_trace.py                 # 动态指令辅助标注（last-use 等）
-│  ├─ vreg_live_range_normalization.py # 预处理：规范化中间 vreg 活跃范围
+│  ├─ vreg_live_range_normalization.py # 历史 vreg pass，仅兼容/专项测试
 │  ├─ ooo.py                           # 基础 OoO 核心（单队列/基础就绪执行）
 │  ├─ ooo_mainline.py                  # 当前主力 OoO 实现，包含 queue level4 主路径
 │  ├─ ooo_factory.py                   # OoO 模型选择与配置拼装
@@ -94,15 +94,14 @@ VfSimulator/
 
 ## 3. 建模主流程
 
-当前建模入口是 [`main.py`](/D:/VfSimulator/main.py)。
+当前建模入口是 [`main.py`](main.py)。
 
 整体执行链路如下：
 
 ```text
-trace.json
-  -> VFInfoLowerer：统一 JSON/CCE 输入
-  -> vreg 活跃范围规范化
-  -> 单 super-iteration 循环规范化
+旧 JSON / 旧 VFInfo / CCE
+  -> 输入 adapter：统一生成 CanonicalVfInfo
+  -> CoreLoweringPass：生成唯一 Core payload
   -> Flattener：program -> linear IR
   -> IFUUnroll：linear IR -> 动态指令
   -> IDU：按 VLOOP/窗口/信用发射到 OoO
@@ -123,62 +122,45 @@ trace JSON 主要包含：
 
 - `params` 用来解析 loop trip count、unroll 因子等符号参数
 - `program` 是嵌套 loop + inst 的静态程序表示
-- `uarch` 如果在 trace 中提供，会覆盖全局 [`configs/uarch.json`](/D:/VfSimulator/configs/uarch.json) 的同名项
+- `uarch` 如果在输入中提供，会覆盖全局 [`configs/uarch.json`](configs/uarch.json) 的同名项
 
-### 3.2 固定预处理：vreg 活跃范围规范化
+### 3.2 Canonical definition 与寄存器依赖
 
-实现位置：[`core/vreg_live_range_normalization.py`](/D:/VfSimulator/core/vreg_live_range_normalization.py)
+实现位置：[`api/frontend/value_versioning.py`](api/frontend/value_versioning.py)、[`api/frontend/core_lowering.py`](api/frontend/core_lowering.py)
 
-这是一个**建模前的程序规范化处理**，不是硬件行为。
+当前公开预测入口不再执行 `normalize_program_vreg_live_ranges()`。CCE 直接生成 `CanonicalVfInfo`；旧 JSON 和旧 `VFInfo` 先经过 `LegacyVfInfoAdapter`，然后进入相同 canonical 主线。
 
-它的目的不是做物理寄存器重命名，而是尽量消除“同一计算逻辑仅因 DSL 写法不同而导致 vreg 名字分配差异很大”的问题。直观上，它更接近一个轻量级编译器临时变量复用处理。
+每次寄存器写入在 canonical 输入中具有独立 `definition_id`，输入 operand 通过该 definition 的 `producer_node_id` 表达数据依赖。循环状态使用 `entry_value_id`、`back_edge_value_id` 和 `exit_value_id` 显式描述，不再依赖逻辑寄存器名称改写。
 
-核心规则是：
+这条主线保证：
 
-- 对循环体内的单层、平坦指令序列做分析
-- 遍历每条指令的 `dst`
-- 优先复用**之前已经出现过的 vreg 槽位**
-- 但前提是该槽位当前承载的值在后续**不会再被当作源操作数使用**
-- 如果没有安全可复用的旧槽位，才分配新的 vreg 名字
+- 直线代码、循环前后和嵌套循环使用同一套 definition 语义。
+- loop-carried 依赖由结构化关系表达，不通过名称 alias 猜测。
+- IDU 与 OoO 根据 value storage metadata 识别寄存器，不依赖 `V` 前缀。
+- OoO 仍在运行时完成物理寄存器分配和 RAT 更新；canonical definition 不是物理寄存器。
 
-这个处理的意义是：
+[`core/vreg_live_range_normalization.py`](core/vreg_live_range_normalization.py) 仅保留给历史兼容分析和专项测试，不属于 `main.py` 或 `CoreVfCostModel` 的公共执行路径。
 
-- 让模型对 DSL 表层 vreg 命名不那么敏感
-- 更贴近“编译器会对中间值做一定复用整理”的现实
-- 降低一些 case 中因为 vreg 写法松散带来的虚假寄存器压力
+### 3.3 结构化 loop/unroll 动态身份
 
-当前 `main.py` 固定执行这个处理，并且不再暴露单独的启停命令行开关。
+实现位置：[`core/ifu.py`](core/ifu.py)
 
-也就是说：
+`CoreLoweringPass` 保留静态 `instruction_id`、definition 和 loop-carried 关系。`IFUUnroll` 展开动态指令时生成：
 
-- 直接运行 `main.py` 时，会默认执行这个处理
-- 如果需要做关闭该处理的实验，应通过代码或专门的实验分支显式修改，避免把非主线配置误用为默认精度口径
+- `static_instruction_id`
+- `stream_seq`
+- `iteration_path`
+- 结构化 value-instance keep/release 标记
 
-### 3.3 固定预处理：单 super-iteration 循环规范化
-
-实现位置：[`core/program_canonicalization.py`](/D:/VfSimulator/core/program_canonicalization.py)
-
-`main.py` 会在 vreg 活跃范围规范化之后、`flatten` 之前调用：
-
-```python
-canonicalize_single_super_iteration_loops(program, params, pdb=db, dtype=dtype)
-```
-
-这一步只处理满足以下条件的循环：
-
-- 最内层循环。
-- body 全部是 `inst`，没有嵌套 loop 或其它节点。
-- `iters == 1`，或 `unroll > 1` 且 `iters == unroll`。
-
-满足条件时，该循环会在静态 program 阶段被直接展开成指令序列；展开时会按 lane 给 `src`/`dst` 后缀加 `_laneN`。因此这类循环不会再作为 `loop_begin` / `loop_end` 进入 `Flattener` 和 IFU。这个行为和普通多 super-iteration 循环不同，文档和调试时要区分。
+canonical 主线不调用 `canonicalize_single_super_iteration_loops()`，也不生成 `_laneN` 名称。innermost `unroll>1` 使用 `(definition_id, iteration_path)` 区分动态值实例；非 innermost 或不能整除的 unroll 会明确拒绝，含 Membar 的 innermost unroll 当前保守回退为 1 并记录 warning。[`core/program_canonicalization.py`](core/program_canonicalization.py) 仅用于历史兼容和专项测试。
 
 ---
 
 ## 4. 静态程序展开：Flattener
 
-实现位置：[`core/flatten.py`](/D:/VfSimulator/core/flatten.py)
+实现位置：[`core/flatten.py`](core/flatten.py)
 
-Flattener 的任务是把预处理后的 `program` 嵌套结构转换成线性 IR，但这里的“线性”仍然保留 loop 边界信息，而不是直接复制出所有动态迭代。已经被单 super-iteration 规范化展开的循环不会再出现在这里。
+Flattener 的任务是把 `CoreLoweringPass` 生成的嵌套 program 转换成线性 IR，但这里的“线性”仍然保留 loop 边界信息，不直接复制所有动态迭代。动态展开和结构化 value instance 绑定由 IFU 完成。
 
 它会生成三类节点：
 
@@ -215,7 +197,7 @@ Flattener 的任务是把预处理后的 `program` 嵌套结构转换成线性 I
 
 ## 5. 动态指令生成：IFU
 
-实现位置：[`core/ifu.py`](/D:/VfSimulator/core/ifu.py)
+实现位置：[`core/ifu.py`](core/ifu.py)
 
 IFU 的职责是把线性 IR 变成**动态指令流**。它不是简单顺序吐指令，而是负责：
 
@@ -238,6 +220,7 @@ IFU 的职责是把线性 IR 变成**动态指令流**。它不是简单顺序�
 - 嵌套循环的 body-open 判定
 - block/iter 级发射节拍控制
 - 顶层 block 结束后的后继 block 激活
+- `count=0` 的空顶层 block 跳过
 
 ### 5.1 top_block_id
 
@@ -254,6 +237,11 @@ IFU 的职责是把线性 IR 变成**动态指令流**。它不是简单顺序�
 - body 打开时间
 - 嵌套 block 的动态触发
 
+Canonical 动态流构建时还会生成 `empty_top_blocks` 元数据。`count=0` 的顶层 loop
+不会产生普通动态指令，因此也不存在可用于触发后继块的
+`is_last_in_top_block`。IDU 初始化及块切换时会显式跳过这些空块，直接开启下一个
+包含普通动态指令的 top block；Python 与 Native 使用相同规则。
+
 ### 5.2 is_last_in_top_block
 
 如果一条动态指令是某个顶层 block 的最后一条静态指令实例，它会被标成 `is_last_in_top_block=true`。
@@ -266,14 +254,14 @@ IFU 的职责是把线性 IR 变成**动态指令流**。它不是简单顺序�
 
 ## 6. 参数数据库：ParamDB
 
-实现位置：[`core/param_db.py`](/D:/VfSimulator/core/param_db.py)
+实现位置：[`core/param_db.py`](core/param_db.py)
 
 ParamDB 是模型配置的统一入口。它会加载：
 
-- [`configs/isa.json`](/D:/VfSimulator/configs/isa.json)
-- [`configs/uarch.json`](/D:/VfSimulator/configs/uarch.json)
-- [`configs/forwarding.json`](/D:/VfSimulator/configs/forwarding.json)
-- [`configs/InitiationInterval.json`](/D:/VfSimulator/configs/InitiationInterval.json)
+- [`configs/isa.json`](configs/isa.json)
+- [`configs/uarch.json`](configs/uarch.json)
+- [`configs/forwarding.json`](configs/forwarding.json)
+- [`configs/InitiationInterval.json`](configs/InitiationInterval.json)
 
 对外提供：
 
@@ -286,7 +274,7 @@ ParamDB 是模型配置的统一入口。它会加载：
 
 ### 6.1 ISA 参数含义
 
-当前 [`configs/isa.json`](/D:/VfSimulator/configs/isa.json) 使用 `schema_version: 2`。记录格式是：
+当前 [`configs/isa.json`](configs/isa.json) 使用 `schema_version: 2`。记录格式是：
 
 ```text
 instructions.<op>.op_class
@@ -352,7 +340,7 @@ VSTS.fp16
 
 ### 6.2 forwarding 参数含义
 
-[`configs/forwarding.json`](/D:/VfSimulator/configs/forwarding.json) 描述的是：
+[`configs/forwarding.json`](configs/forwarding.json) 描述的是：
 
 - 生产者是哪种 `OP.form`
 - 消费者是哪种 `OP.form`
@@ -369,7 +357,7 @@ VSTS.fp16
 
 ### 6.3 II 参数含义
 
-[`configs/InitiationInterval.json`](/D:/VfSimulator/configs/InitiationInterval.json) 描述的是：
+[`configs/InitiationInterval.json`](configs/InitiationInterval.json) 描述的是：
 
 - 某个端口/EXU 上，前一条指令是 `prev OP.form`
 - 当前想发射的是 `cur OP.form`
@@ -388,7 +376,7 @@ VSTS.fp16
 
 ### 6.4 uarch 参数含义
 
-当前 [`configs/uarch.json`](/D:/VfSimulator/configs/uarch.json) 中最重要的字段有：
+当前 [`configs/uarch.json`](configs/uarch.json) 中最重要的字段有：
 
 - `issue_ports = 2`
   - 计算 EXU 数量，目前等价于两个执行端口
@@ -398,6 +386,17 @@ VSTS.fp16
 
 - `store_ports = 1`
   - 每拍最多启动一条类 store 指令，当前常见指令是 `VSTS`
+
+- `ub_slots = 2`
+  - load/store 共享的 UB 发射槽总数
+  - 每拍同时满足 load、store 各自端口上限和 `load_count + store_count <= ub_slots`
+  - Python 和 C++ 主线使用相同的共享槽约束
+
+- `lsu_store_priority_preg_threshold = 1`
+  - ready LSQ 指令默认优先 load
+  - 当真实空闲物理寄存器数小于 `lsu_store_priority_preg_threshold` 时，切换为 store 优先
+  - 当前阈值为 1，即只有 freelist 已空时才优先启动一条 store
+  - 不再提供 `oldest_ready` 策略切换；同类指令内部仍按动态年龄仲裁
 
 - `IDU_window_width = 6`
   - IDU 前端窗口容量
@@ -457,7 +456,7 @@ VSTS.fp16
 
 ## 7. IDU：前端发射与 VLOOP 调度
 
-实现位置：[`core/idu.py`](/D:/VfSimulator/core/idu.py)
+实现位置：[`core/idu.py`](core/idu.py)
 
 IDU 负责做的事情不是重命名，而是：
 
@@ -472,7 +471,7 @@ IDU 负责做的事情不是重命名，而是：
 
 IDU 初始化时把：
 
-- `top_block 0` 的 VLOOP 启动时间固定在第 `19` 拍
+- 第一个非空 top block 的 VLOOP 启动时间固定在第 `19` 拍
 
 这和项目里一直沿用的 VF 开始语义一致。
 
@@ -558,11 +557,11 @@ IDU 初始化时把：
 
 ## 8. OoO / ISU 主线模型
 
-OoO 核心的创建由 [`core/ooo_factory.py`](/D:/VfSimulator/core/ooo_factory.py) 负责。当前公开主线只有一个默认模型：
+OoO 核心的创建由 [`core/ooo_factory.py`](core/ooo_factory.py) 负责。当前公开主线只有一个默认模型：
 
 - `queue_level4`
 - 消费者释放规则：`start + 4`
-- vreg 活跃范围规范化：开启
+- canonical definition 与结构化 value lifetime：开启
 - `shq_depth = 58`
 - `exq_depth = 26`
 
@@ -570,10 +569,10 @@ OoO 核心的创建由 [`core/ooo_factory.py`](/D:/VfSimulator/core/ooo_factory.
 
 当前实现拆分：
 
-- [`core/ooo.py`](/D:/VfSimulator/core/ooo.py)：共享 OoO 状态、配置、就绪/forwarding/II 查询和日志辅助函数。
-- [`core/ooo_mainline.py`](/D:/VfSimulator/core/ooo_mainline.py)：当前主线 OoO 核心，包括重命名、preg 生命周期、SHQ/LSQ、LSU/计算发射路径和单拍推进循环。
-- [`core/isu.py`](/D:/VfSimulator/core/isu.py)：计算指令的 ISU/EXQ/EXU 发射路径。
-- [`core/uarch_normalize.py`](/D:/VfSimulator/core/uarch_normalize.py)：规范化 `configs/uarch.json` 和理论上界覆盖配置。
+- [`core/ooo.py`](core/ooo.py)：共享 OoO 状态、配置、就绪/forwarding/II 查询和日志辅助函数。
+- [`core/ooo_mainline.py`](core/ooo_mainline.py)：当前主线 OoO 核心，包括重命名、preg 生命周期、SHQ/LSQ、LSU/计算发射路径和单拍推进循环。
+- [`core/isu.py`](core/isu.py)：计算指令的 ISU/EXQ/EXU 发射路径。
+- [`core/uarch_normalize.py`](core/uarch_normalize.py)：规范化 `configs/uarch.json` 和理论上界覆盖配置。
 
 ### 8.1 当前队列路径
 
@@ -600,15 +599,16 @@ IDU -> OoO rename -> SHQ -> EXQ0/EXQ1 -> EXU0/EXU1
 
 主线同时保留 consumer-done 封口条件：一个 vreg 被覆盖后，新的生产者必须进入重命名阶段，模型才知道旧 preg 不会再被后续指令消费。
 
-### 8.3 vreg 活跃范围规范化
+### 8.3 Canonical value 生命周期
 
-`main.py` 会在模拟前运行这个处理：
+canonical 动态流会统一计算每个 value instance 的最后使用，并向 OoO 传递 keep/release 标记。覆盖范围包括：
 
-```python
-normalize_program_vreg_live_ranges(program)
-```
+- 直线代码
+- `unroll=1` 与受支持的 innermost `unroll>1`
+- 循环前后
+- 嵌套循环和 loop-carried value
 
-这个处理会降低由表层逻辑寄存器命名造成的人为寄存器压力，是当前 `queue_level4+vregpass` 精度配置的一部分。
+物理寄存器容量、RAT 和消费者释放规则仍由 OoO 建模。旧 vreg 活跃范围规范化不再参与公开主线，因此新的精度基线不应继续标记为 `+vregpass`。
 
 ---
 
@@ -856,6 +856,7 @@ ISA `dispatch_exu` 取值：
 - 从 IDU 发射后进入 LSQ
 - 就绪后直接启动，不经过 SHQ / EXQ
 - 每拍最多启动 `load_ports` 条
+- load 与 store 共享 `ub_slots` 个 UB 发射槽；默认 `ub_slots=2`
 - 当前常见指令是 `VLDS`
 - 启动后 `done_cycle = start + isa_latency(load_op, form)`
 - load 完成时间只使用该 load 指令自身在 `isa.json` 中的 `latency`
@@ -876,8 +877,32 @@ ISA `dispatch_exu` 取值：
 - 当前常见指令是 `VSTS`
 - 就绪时间通过生产者/消费者 forwarding 表计算
 - 每拍最多启动 `store_ports` 条
-- 启动后执行时长取生产者的 `data_store_cost`
+- 默认在空闲物理寄存器不小于阈值时优先 load，低于阈值时优先 store
+- 同一类别内部再按动态 `(stream_seq, inst_id)` 年龄顺序仲裁，最终共同受 `ub_slots` 总上限约束
+- 启动后 `done_cycle = start + isa_latency(store_op, form)`
 - 开始执行后再触发 SHQ release 计时
+
+### 12.4 `VSTUS` / `VSTAS` 对齐状态
+
+`vector_align` 建模为独立的收集状态，不是普通向量寄存器，不进入 SSA/RAT，
+不分配物理寄存器，也不增加 preg 压力。
+
+- `VSTUS(state, count, src, memory, POST_UPDATE)` 从普通向量寄存器读取数据，
+  向 `state` 当前 generation 追加一个 producer，并执行 UB store；它不读取旧状态。
+- `VSTAS(state, memory, offset, POST_UPDATE)` 消费并封存当前 generation，随后为
+  同一状态打开下一 generation；它没有普通向量寄存器输入。
+- generation 在 `VSTAS` 进入 OoO/LSQ 时封存，而不是等到发射时封存，因此后续已
+  入队的 `VSTUS` 不会污染前一组。
+- `VSTAS` 等待本组所有 `VSTUS` 已经 start，不等待它们 done。就绪时间取各
+  `VSTUS -> VSTAS` forwarding 的最大值，当前配置为 1 cycle。
+- 两条指令仍属于 STORE，进入 LSQ，消耗 store port、`ub_slots` 和共享 SHQ 信用；
+  `mem_bar(VST_VLD)` 会等待它们完成。
+- `VSTUS`、`VSTAS` 当前显式 latency 均为 8；reduction 到 `VSTUS` 的 forwarding
+  复用相同 reduction 到 `VSTS` 的实测参数。
+
+Python 和 Native 使用相同的 generation 封存与 ready 语义。Canonical 指令通过
+`align_state_operation` 和 `align_state_id` attributes 传递状态信息；Catalog 已知的
+`VSTUS`/`VSTAS` 缺少这些属性时由 validator 拒绝，避免进入 Core 后永久阻塞。
 
 ---
 
@@ -885,9 +910,9 @@ ISA `dispatch_exu` 取值：
 
 当前公开理论上界候选模式由以下文件实现：
 
-- [`main.py`](/D:/VfSimulator/main.py)
-- [`core/ooo_factory.py`](/D:/VfSimulator/core/ooo_factory.py)
-- [`core/uarch_normalize.py`](/D:/VfSimulator/core/uarch_normalize.py)
+- [`main.py`](main.py)
+- [`core/ooo_factory.py`](core/ooo_factory.py)
+- [`core/uarch_normalize.py`](core/uarch_normalize.py)
 
 这些模式是上界参考，不是真实硬件模型。它们会在 `resolve_model_uarch()` 规范化主线配置之后，再通过 `apply_theoretical_limit_overrides()` 覆盖部分微架构参数。
 
@@ -896,7 +921,7 @@ ISA `dispatch_exu` 取值：
 保留顶层 VLOOP 启动和顶层 body-open 时序，同时放宽前端窗口、发射宽度、OoO/LSQ/SHQ/EXQ 容量、IDU 到 OoO 延迟、OoO 到 SHQ/LSQ 延迟、EXQ 接收延迟、SHQ 释放延迟和在途数量上限。当前实现中，该模式还会跳过嵌套 body-open gate 和 innermost iter gate。
 
 ```bash
-python main.py --trace VFtest/GeLU_poly.json   --theoretical-limit-vloop-only   --out_dir results/theory_vloop_only
+python main.py --trace VFtest/canonical/GeLU_poly.json   --theoretical-limit-vloop-only   --out_dir results/theory_vloop_only
 ```
 
 ### 13.2 `--theoretical-limit-vloop-only-legacy-forwarding-direct-issue`
@@ -909,7 +934,7 @@ python main.py --trace VFtest/GeLU_poly.json   --theoretical-limit-vloop-only   
 - 关闭 ISU 队列模型、SHQ 信用模型和延迟信用可见性
 
 ```bash
-python main.py --trace VFtest/GeLU_poly.json   --theoretical-limit-vloop-only-legacy-forwarding-direct-issue   --out_dir results/theory_direct_issue
+python main.py --trace VFtest/canonical/GeLU_poly.json   --theoretical-limit-vloop-only-legacy-forwarding-direct-issue   --out_dir results/theory_direct_issue
 ```
 
 旧的通用 `--theoretical-limit`、`--theoretical-limit-single-queue`、`--theoretical-limit-vloop-only-legacy-forwarding` 参数已不再是当前公开入口。
@@ -922,7 +947,7 @@ python main.py --trace VFtest/GeLU_poly.json   --theoretical-limit-vloop-only-le
 
 - 固定主线模型：`queue_level4`
 - 寄存器释放规则：消费者开始 + 4
-- vreg 活跃范围规范化：开启
+- canonical definition 与结构化 value lifetime：开启
 - `shq_depth = 58`
 - `exq_depth = 26`
 - `exq_issue_inflight_cap_per_port = 7`
@@ -930,10 +955,10 @@ python main.py --trace VFtest/GeLU_poly.json   --theoretical-limit-vloop-only-le
 因此，普通命令：
 
 ```bash
-python main.py --trace VFtest/GeLU_poly.json --out_dir results/gelu_poly
+python main.py --trace VFtest/canonical/GeLU_poly.json --out_dir results/gelu_poly
 ```
 
-使用的配置与当前回归精度报告中的 `queue_level4+vregpass (shq=58 exq=26)` 列一致。
+使用的配置与当前 canonical 主线回归基线一致。历史报告中的 `queue_level4+vregpass` 只代表旧流程，不能作为当前执行链路名称。
 
 主要调节项位于 `configs/uarch.json`。正常精度工作中，优先有意识地修改配置文件，不建议随意增加新的公开 CLI 参数。
 
@@ -944,14 +969,14 @@ python main.py --trace VFtest/GeLU_poly.json --out_dir results/gelu_poly
 ### 15.1 默认 JSON trace 模拟
 
 ```bash
-python main.py --trace VFtest/GeLU_poly.json --out_dir results/gelu_poly_default
+python main.py --trace VFtest/canonical/GeLU_poly.json --out_dir results/gelu_poly_default
 ```
 
 默认行为：
 
 - `queue_level4`
 - `start+4` release
-- vreg 活跃范围规范化开启
+- canonical definition 与结构化 value lifetime 开启
 - `shq_depth=58`
 - `exq_depth=26`
 
@@ -970,17 +995,17 @@ python main.py --cce path/to/file.dsl --cce-kernel kernel_name --out_dir results
 ### 15.3 理论上界
 
 ```bash
-python main.py --trace VFtest/GeLU_poly.json   --theoretical-limit-vloop-only   --out_dir results/theory_vloop_only
+python main.py --trace VFtest/canonical/GeLU_poly.json   --theoretical-limit-vloop-only   --out_dir results/theory_vloop_only
 ```
 
 ```bash
-python main.py --trace VFtest/GeLU_poly.json   --theoretical-limit-vloop-only-legacy-forwarding-direct-issue   --out_dir results/theory_direct_issue
+python main.py --trace VFtest/canonical/GeLU_poly.json   --theoretical-limit-vloop-only-legacy-forwarding-direct-issue   --out_dir results/theory_direct_issue
 ```
 
 ### 15.4 实验三端口模式
 
 ```bash
-python main.py --trace VFtest/GeLU_poly.json --three-ports --out_dir results/three_ports
+python main.py --trace VFtest/canonical/GeLU_poly.json --three-ports --out_dir results/three_ports
 ```
 
 三端口模式把计算/load 发射容量扩展到 3 个端口。store 发射仍然单发射，`EXU0_ONLY` 指令仍只在 EXU0 执行。
@@ -1014,16 +1039,16 @@ VF end cycle (with drain) = N
 
 后续做模型工作时，建议按以下顺序阅读：
 
-1. [`main.py`](/D:/VfSimulator/main.py)
-2. [`api/input_api.py`](/D:/VfSimulator/api/input_api.py) 和 [`api/cce_adapter.py`](/D:/VfSimulator/api/cce_adapter.py)
-3. [`core/param_db.py`](/D:/VfSimulator/core/param_db.py)
-4. [`core/flatten.py`](/D:/VfSimulator/core/flatten.py)
-5. [`core/ifu.py`](/D:/VfSimulator/core/ifu.py)
-6. [`core/idu.py`](/D:/VfSimulator/core/idu.py)
-7. [`core/ooo_factory.py`](/D:/VfSimulator/core/ooo_factory.py)
-8. [`core/ooo_mainline.py`](/D:/VfSimulator/core/ooo_mainline.py)
-9. [`core/isu.py`](/D:/VfSimulator/core/isu.py)
-10. [`core/vreg_live_range_normalization.py`](/D:/VfSimulator/core/vreg_live_range_normalization.py)
+1. [`main.py`](main.py)
+2. [`api/input_api.py`](api/input_api.py) 和 [`api/cce_adapter.py`](api/cce_adapter.py)
+3. [`api/frontend/value_versioning.py`](api/frontend/value_versioning.py) 和 [`api/frontend/core_lowering.py`](api/frontend/core_lowering.py)
+4. [`core/param_db.py`](core/param_db.py)
+5. [`core/flatten.py`](core/flatten.py)
+6. [`core/ifu.py`](core/ifu.py)
+7. [`core/idu.py`](core/idu.py)
+8. [`core/ooo_factory.py`](core/ooo_factory.py)
+9. [`core/ooo_mainline.py`](core/ooo_mainline.py)
+10. [`core/isu.py`](core/isu.py)
 
 这个顺序把输入解析、静态展开、动态发射、队列调度和寄存器生命周期分开。
 
@@ -1033,7 +1058,7 @@ VF end cycle (with drain) = N
 
 当前 VF 建模实现可以总结为：
 
-1. 公开主线不再是一组可选 `--ooo-model` 变体，而是队列级 VF 模型：`queue_level4 + start+4 release + vreg 活跃范围规范化`。
+1. 公开主线不再是一组可选 `--ooo-model` 变体，而是 `CanonicalVfInfo -> CoreLoweringPass -> queue_level4` 的单一路径，并使用 `start+4` 释放规则和结构化 value lifetime。
 
 2. 主要计算路径显式分阶段：
    - IDU

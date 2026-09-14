@@ -15,6 +15,7 @@ regression_suite/
   README.md
   cases/
     cost_model_regression_cases.json
+    baseline_canonical_membar.json
     baseline_balanced_exu0_reserve.json
     baseline_queue_level4_ooo_transfer_delay.json
     baseline_consumer_done.json
@@ -34,7 +35,8 @@ regression_suite/
 ## 文件说明
 
 - `cases/cost_model_regression_cases.json`：主测试集清单，包含 case id、trace、参数、CCE/camodel 参考时间和容忍阈值。
-- `cases/baseline_balanced_exu0_reserve.json`：主线默认基线，对应 `precision_compare_3modes.md` 的 `queue_level4+rr-reserve(min1 cap7)` 列。
+- `cases/baseline_canonical_membar.json`：主线默认基线，对应 Canonical 入口、平衡预留策略与全局 membar 时序模型；详见 [合并验证报告](reports/master_canonical_merge_20260914.md)。
+- `cases/baseline_balanced_exu0_reserve.json`：2026-08-19 平衡预留历史基线，保留供对比。
 - `cases/baseline_queue_level4_ooo_transfer_delay.json`：旧 OoO transfer-delay 基线，仅用于历史对比。
 - `cases/baseline_consumer_done.json`：历史 consumer-done 基线，仅用于结果追溯。
 - `cases/archive/`：历史 queue-level 对比实验的 case/baseline，保留供追溯，不作为主线默认入口。
@@ -99,7 +101,7 @@ python tools/run_native_cost_model_regression.py --tier full
 ```bash
 python tools/run_cost_model_regression.py \
   --suite regression_suite/cases/cost_model_regression_cases.json \
-  --baseline regression_suite/cases/baseline_balanced_exu0_reserve.json \
+  --baseline regression_suite/cases/baseline_canonical_membar.json \
   --tier smoke
 ```
 

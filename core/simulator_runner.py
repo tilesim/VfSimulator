@@ -8,6 +8,8 @@ from collections import deque
 from typing import Any, Dict
 
 from core.control_unit import ControlUnit
+from core.membar_timing import TimedControlUnit
+from core.perfetto_trace import dump_perfetto_trace
 from core.isa_traits import get_op_class
 from core.isa_traits import uses_lsq, uses_shared_shq_credit, uses_shq_queue
 from core.value_storage import ValueStorageLookup
@@ -141,7 +143,11 @@ def run_simulation(
     idu.value_storage = value_storage
     pdb = getattr(ooo, "db", None)
     dtype = str(getattr(ooo, "dtype", "fp32"))
-    control_unit = ControlUnit(pdb, dtype)
+    membar_config = uarch.get("membar_timing")
+    control_unit = (
+        TimedControlUnit(pdb, dtype, membar_config, issue_floor=ooo.vf_startup_cost)
+        if "membar_timing" in uarch else ControlUnit(pdb, dtype)
+    )
     setattr(ooo, "control_unit", control_unit)
     idu_to_ooo_delay = int(uarch.get("idu_to_ooo_delay", 0))
     idu_to_ooo_pipe = deque()
@@ -189,11 +195,12 @@ def run_simulation(
             if inst is None:
                 break
             if inst.get("type") == "membar":
-                control_unit.accept_membar(inst)
+                control_unit.accept_membar(inst, cycle)
                 continue
             if "inst_id" not in inst and "id" in inst:
                 inst["inst_id"] = inst["id"]
             idu.accept(inst)
+            control_unit.observe_instruction(inst)
 
         control_unit.update(
             lambda seq, cls: _has_pending_prior_lsu(
@@ -204,7 +211,15 @@ def run_simulation(
                 op_class=cls,
                 pdb=pdb,
                 dtype=dtype,
-            )
+            ),
+            cycle=cycle,
+            has_pending_dispatch=lambda seq: any(
+                int(inst.get("stream_seq", -1)) < seq
+                for inst in idu.window
+            ) or any(
+                int(inst.get("stream_seq", -1)) < seq
+                for _, inst in idu_to_ooo_pipe
+            ),
         )
 
         if use_explicit_idu_credit_bank:
@@ -237,6 +252,7 @@ def run_simulation(
                 ooo.accept(inst)
 
         ooo.step()
+        ooo.last_done_cycle = max(ooo.last_done_cycle, getattr(control_unit, "last_retire_cycle", 0))
 
         if (
             ifu.done()
@@ -264,9 +280,19 @@ def run_simulation(
         os.makedirs(results_dir)
 
     ooo.dump_history(os.path.join(results_dir, "sim_history.json"))
+    if isinstance(control_unit, TimedControlUnit):
+        with open(os.path.join(results_dir, "membar_history.json"), "w", encoding="utf-8") as f:
+            json.dump(control_unit.history, f, indent=2)
     ooo.dump_simple_logs(
         os.path.join(results_dir, "start_by_cycle.json"),
         os.path.join(results_dir, "done_by_cycle.json"),
+    )
+    trace_path = os.path.join(results_dir, "trace.json")
+    dump_perfetto_trace(
+        trace_path,
+        ooo.cyc_start_log,
+        ooo.cyc_done_log,
+        issue_ports=int(getattr(ooo, "issue_ports", 2)),
     )
     idu.dump_dispatch_log(os.path.join(results_dir, "idu_to_ooo.json"))
     idu.dump_vloop_trace(os.path.join(results_dir, "vloop_trace.json"))
@@ -280,4 +306,5 @@ def run_simulation(
         "cycles_executed": int(cycle),
         "vf_end_cycle": int(ooo.vf_end_cycle()),
         "results_dir": str(results_dir),
+        "trace_path": trace_path,
     }

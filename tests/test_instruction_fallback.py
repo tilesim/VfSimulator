@@ -5,6 +5,8 @@ import unittest
 from pathlib import Path
 
 from api.simulator_costmodel import CoreVfCostModel
+from api.frontend.serialization import canonical_vf_info_to_dict
+from api.json_adapter import LegacyCanonicalJsonAdapter
 from core.flatten import Flattener
 from core.ifu import IFUUnroll
 from core.ooo import Uop
@@ -390,7 +392,9 @@ class InstructionFallbackTest(unittest.TestCase):
         }
         with tempfile.TemporaryDirectory() as tmpdir:
             out_dir = Path(tmpdir)
-            CoreVfCostModel(base_dir=ROOT, out_dir=out_dir)._run_lowered_payload(payload)
+            CoreVfCostModel(base_dir=ROOT, out_dir=out_dir).run_vf_info(
+                LegacyCanonicalJsonAdapter.from_payload(payload)
+            )
             starts = [
                 json.loads(line)
                 for line in (out_dir / "start_by_cycle.json").read_text().splitlines()
@@ -591,7 +595,9 @@ class InstructionFallbackTest(unittest.TestCase):
         }
         with tempfile.TemporaryDirectory() as tmpdir:
             out_dir = Path(tmpdir)
-            CoreVfCostModel(base_dir=ROOT, out_dir=out_dir)._run_lowered_payload(payload)
+            CoreVfCostModel(base_dir=ROOT, out_dir=out_dir).run_vf_info(
+                LegacyCanonicalJsonAdapter.from_payload(payload)
+            )
             warnings = json.loads((out_dir / "model_warnings.json").read_text(encoding="utf-8"))
             starts = [
                 json.loads(line)
@@ -682,20 +688,46 @@ class InstructionFallbackTest(unittest.TestCase):
             )
         )
 
-    def test_timing_optional_store_uses_store_fallback(self):
+    def test_vector_align_stores_have_explicit_timing(self):
         db = ParamDB(base_dir=str(ROOT))
 
-        params = db.get_inst_form("VSTUS", form="fp32", dtype="fp32")
-
-        self.assertEqual(params["op_class"], "STORE")
-        self.assertEqual(params["latency"], 9)
-        self.assertTrue(
-            any(
-                warning["kind"] == "unsupported_isa_op"
-                and warning.get("op") == "VSTUS"
-                for warning in db.get_warnings()
-            )
+        for op in ("VSTUS", "VSTAS"):
+            params = db.get_inst_form(op, form="fp32", dtype="fp32")
+            self.assertEqual(params["op_class"], "STORE")
+            self.assertEqual(params["latency"], 8)
+        self.assertFalse(
+            any(warning.get("op") in {"VSTUS", "VSTAS"} for warning in db.get_warnings())
         )
+
+    def test_vector_align_generations_are_sealed_at_vstas_accept(self):
+        starts, _ = self._run_payload_logs(
+            [
+                {"type": "inst", "op": "VLDS", "form": "fp32", "src": ["memA"], "dst": ["v0"]},
+                {"type": "inst", "op": "VCMAX", "form": "fp32", "src": ["v0"], "dst": ["v1"]},
+                {
+                    "type": "inst", "op": "VSTUS", "form": "fp32", "src": ["v1"], "dst": ["memB"],
+                    "attributes": {"align_state_operation": "append", "align_state_id": "u1"},
+                },
+                {
+                    "type": "inst", "op": "VSTAS", "form": "fp32", "src": [], "dst": ["memB"],
+                    "attributes": {"align_state_operation": "consume", "align_state_id": "u1"},
+                },
+                {
+                    "type": "inst", "op": "VSTUS", "form": "fp32", "src": ["v1"], "dst": ["memC"],
+                    "attributes": {"align_state_operation": "append", "align_state_id": "u1"},
+                },
+                {
+                    "type": "inst", "op": "VSTAS", "form": "fp32", "src": [], "dst": ["memC"],
+                    "attributes": {"align_state_operation": "consume", "align_state_id": "u1"},
+                },
+            ]
+        )
+        vstus_starts = [item["cy"] for item in starts if item["op"] == "VSTUS"]
+        vstas_starts = [item["cy"] for item in starts if item["op"] == "VSTAS"]
+        self.assertEqual(len(vstus_starts), 2)
+        self.assertEqual(len(vstas_starts), 2)
+        self.assertEqual(vstas_starts[0], vstus_starts[0] + 1)
+        self.assertGreaterEqual(vstas_starts[1], vstus_starts[1] + 1)
 
     def test_loop_carried_vreg_alias_updates_following_store_source(self):
         values = {
@@ -999,7 +1031,14 @@ class InstructionFallbackTest(unittest.TestCase):
             tmp = Path(tmpdir)
             trace_path = tmp / "unknown_trace.json"
             out_dir = tmp / "out"
-            trace_path.write_text(json.dumps(trace), encoding="utf-8")
+            trace_path.write_text(
+                json.dumps(
+                    canonical_vf_info_to_dict(
+                        LegacyCanonicalJsonAdapter.from_payload(trace)
+                    )
+                ),
+                encoding="utf-8",
+            )
             subprocess.run(
                 [
                     "python3",
@@ -1036,7 +1075,9 @@ class InstructionFallbackTest(unittest.TestCase):
         }
         with tempfile.TemporaryDirectory() as tmpdir:
             out_dir = Path(tmpdir)
-            CoreVfCostModel(base_dir=ROOT, out_dir=out_dir)._run_lowered_payload(payload)
+            CoreVfCostModel(base_dir=ROOT, out_dir=out_dir).run_vf_info(
+                LegacyCanonicalJsonAdapter.from_payload(payload)
+            )
             starts = [
                 json.loads(line)
                 for line in (out_dir / "start_by_cycle.json").read_text().splitlines()
@@ -1064,7 +1105,8 @@ class InstructionFallbackTest(unittest.TestCase):
 
         store_done = next(item["cy"] for item in dones if item["op"] == "VSTS")
         post_barrier_load_start = [item["cy"] for item in starts if item["op"] == "VLDS"][-1]
-        self.assertGreaterEqual(post_barrier_load_start, store_done)
+        self.assertGreaterEqual(post_barrier_load_start, store_done + 1)
+        self.assertEqual(post_barrier_load_start, 41)  # Includes configured control timing.
 
     def test_same_ub_without_membar_does_not_create_implicit_dependency(self):
         starts, dones = self._run_payload_logs(
@@ -1090,7 +1132,8 @@ class InstructionFallbackTest(unittest.TestCase):
 
         load_done = next(item["cy"] for item in dones if item["op"] == "VLDS")
         store_start = next(item["cy"] for item in starts if item["op"] == "VSTS")
-        self.assertGreaterEqual(store_start, load_done)
+        self.assertGreaterEqual(store_start, load_done + 1)
+        self.assertEqual(store_start, 45)  # Includes configured control timing.
 
     def test_vst_vld_membar_does_not_directly_block_compute(self):
         starts, dones, history = self._run_payload_logs(
@@ -1145,7 +1188,9 @@ class InstructionFallbackTest(unittest.TestCase):
         }
         with tempfile.TemporaryDirectory() as tmpdir:
             out_dir = Path(tmpdir)
-            CoreVfCostModel(base_dir=ROOT, out_dir=out_dir)._run_lowered_payload(payload)
+            CoreVfCostModel(base_dir=ROOT, out_dir=out_dir).run_vf_info(
+                LegacyCanonicalJsonAdapter.from_payload(payload)
+            )
             starts = [
                 json.loads(line)
                 for line in (out_dir / "start_by_cycle.json").read_text().splitlines()
@@ -1190,7 +1235,14 @@ class InstructionFallbackTest(unittest.TestCase):
             tmp = Path(tmpdir)
             trace_path = tmp / "membar_unroll.json"
             out_dir = tmp / "out"
-            trace_path.write_text(json.dumps(trace), encoding="utf-8")
+            trace_path.write_text(
+                json.dumps(
+                    canonical_vf_info_to_dict(
+                        LegacyCanonicalJsonAdapter.from_payload(trace)
+                    )
+                ),
+                encoding="utf-8",
+            )
             subprocess.run(
                 [
                     "python3",
@@ -1254,7 +1306,14 @@ class InstructionFallbackTest(unittest.TestCase):
             tmp = Path(tmpdir)
             trace_path = tmp / "unsupported_membar.json"
             out_dir = tmp / "out"
-            trace_path.write_text(json.dumps(trace), encoding="utf-8")
+            trace_path.write_text(
+                json.dumps(
+                    canonical_vf_info_to_dict(
+                        LegacyCanonicalJsonAdapter.from_payload(trace)
+                    )
+                ),
+                encoding="utf-8",
+            )
             subprocess.run(
                 [
                     "python3",

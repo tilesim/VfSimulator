@@ -253,10 +253,48 @@ ParamDB::ParamDB(std::filesystem::path baseDir)
 
   if (!uarchRoot.empty()) {
     const auto &obj = uarchRoot;
+    if (findKey(obj, "lsu_issue_policy") != nullptr)
+      throw std::runtime_error(
+          "lsu_issue_policy has been removed; configure "
+          "lsu_store_priority_preg_threshold instead");
+    if (const auto *timing = findKey(obj, "membar_timing")) {
+      auto object = [](const JsonValue *value) -> const JsonValue::Object & {
+        if (!value || !value->isObject())
+          throw std::runtime_error("membar_timing requires object fields");
+        return value->asObject();
+      };
+      auto integer = [](const JsonValue::Object &fields, const char *key) {
+        const auto *value = findKey(fields, key);
+        if (!value || !value->isInt() || value->asInt() < 0)
+          throw std::runtime_error(std::string("invalid membar_timing integer: ") + key);
+        return value->asInt();
+      };
+      const auto &fields = object(timing);
+      MembarTimingConfig cfg;
+      cfg.admissionDelay = integer(fields, "admission_delay");
+      const auto &feedback = object(findKey(fields, "lsu_start_to_next_issue"));
+      for (const char *name : {"LOAD", "STORE"})
+        cfg.startFeedback[name] = integer(feedback, name);
+      const auto &directions = object(findKey(fields, "directions"));
+      for (const char *name : {"VLD_VST", "VST_VLD"}) {
+        const auto &rule = object(findKey(directions, name));
+        MembarDirectionTiming t{integer(rule, "release_latency"),
+                               integer(rule, "retire_latency"),
+                               integer(rule, "consumer_delay"),
+                               integer(rule, "next_issue_delay")};
+        if (t.retireLatency < t.releaseLatency || t.nextIssueDelay < 1)
+          throw std::runtime_error("invalid membar_timing retirement or next issue delay");
+        cfg.directions[name] = t;
+      }
+      bundle_.uarch.membarTiming = std::move(cfg);
+    }
     bundle_.uarch.issuePorts = readIntField(obj, "issue_ports");
     bundle_.uarch.threePortsMode = readBoolField(obj, "three_ports_mode");
     bundle_.uarch.loadPorts = readIntField(obj, "load_ports");
     bundle_.uarch.storePorts = readIntField(obj, "store_ports");
+    bundle_.uarch.ubSlots = readIntField(obj, "ub_slots", 2);
+    bundle_.uarch.lsuStorePriorityPregThreshold =
+        readIntField(obj, "lsu_store_priority_preg_threshold", 1);
     bundle_.uarch.iduWindowWidth = readIntField(obj, "IDU_window_width");
     bundle_.uarch.iduIssueWidth = readIntField(obj, "IDU_issue_width");
     bundle_.uarch.ldqWidth = readIntField(obj, "LDQ_width");

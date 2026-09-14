@@ -35,11 +35,27 @@ struct IsaDefaults {
   int64_t vfDrainCost = 0;
 };
 
+struct MembarDirectionTiming {
+  int64_t releaseLatency = 0;
+  int64_t retireLatency = 0;
+  int64_t consumerDelay = 0;
+  int64_t nextIssueDelay = 0;
+};
+
+struct MembarTimingConfig {
+  int64_t admissionDelay = 0;
+  std::map<std::string, int64_t> startFeedback;
+  std::map<std::string, MembarDirectionTiming> directions;
+};
+
 struct UarchConfig {
+  std::optional<MembarTimingConfig> membarTiming;
   int64_t issuePorts = 0;
   bool threePortsMode = false;
   int64_t loadPorts = 0;
   int64_t storePorts = 0;
+  int64_t ubSlots = 2;
+  int64_t lsuStorePriorityPregThreshold = 1;
   int64_t iduWindowWidth = 0;
   int64_t iduIssueWidth = 0;
   int64_t ldqWidth = 0;

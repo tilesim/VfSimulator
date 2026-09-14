@@ -11,9 +11,6 @@
 #include "native/ControlUnit.h"
 #include "native/CanonicalProgramLowering.h"
 #include "native/ISATraits.h"
-#include "native/ProgramCanonicalization.h"
-#include "native/ProgramFlatten.h"
-#include "native/ProgramVregLiveRangeNormalization.h"
 #include "native/ValueStorage.h"
 
 #include <deque>
@@ -177,30 +174,6 @@ void dumpModelWarnings(const ParamDB &db, const std::string &path) {
 
 } // namespace
 
-SimulationResult runVfInfo(const VfInfo &input,
-                           const ParamDB &db,
-                           const std::string &resultsDir,
-                           int64_t maxCycles) {
-  VfInfo vfInfo = input;
-  lowerVfInfoValueIds(vfInfo);
-  normalizeProgramVregLiveRanges(vfInfo);
-  const auto program = canonicalizeSingleSuperIterationLoops(
-      vfInfo.body, vfInfo.params, db, vfInfo.defaultDtype);
-  ProgramAnalysis analysis(vfInfo.params, vfInfo.values);
-  const auto loopBounds = analysis.inferTopBlockLoopBounds(program);
-  ProgramFlatten flattener(vfInfo.params);
-  const auto &linear = flattener.flatten(program);
-  const int topBlocks = static_cast<int>(loopBounds.size());
-
-  IFU ifu(linear, vfInfo.params, &db, loopBounds, topBlocks,
-          vfInfo.defaultDtype);
-  IDU idu(db.uarch(), db, vfInfo.params, {}, topBlocks, loopBounds,
-          vfInfo.defaultDtype, vfInfo.values);
-  OoOCoreMainline ooo(db.uarch(), db, vfInfo.defaultDtype, vfInfo.values);
-  return runSimulation(ifu, idu, ooo, db.uarch(), vfInfo.params, resultsDir,
-                       maxCycles, vfInfo.values);
-}
-
 SimulationResult runCanonicalVfInfo(const CanonicalVfInfo &vfInfo,
                                     const ParamDB &db,
                                     const std::string &resultsDir,
@@ -210,7 +183,8 @@ SimulationResult runCanonicalVfInfo(const CanonicalVfInfo &vfInfo,
   IFU ifu(std::move(runtime.instructions), runtime.topBlockLoopBounds,
           runtime.totalTopBlocks);
   IDU idu(uarch, db, runtime.params, {}, runtime.totalTopBlocks,
-          runtime.topBlockLoopBounds, runtime.dtype, runtime.values);
+          runtime.topBlockLoopBounds, runtime.dtype, runtime.values,
+          runtime.emptyTopBlocks);
   OoOCoreMainline ooo(uarch, db, runtime.dtype, runtime.values);
   return runSimulation(ifu, idu, ooo, uarch, runtime.params, resultsDir,
                        maxCycles, runtime.values);
@@ -220,7 +194,7 @@ SimulationResult runSimulation(IFU &ifu,
                                IDU &idu,
                                OoOCoreMainline &ooo,
                                const UarchConfig &uarch,
-                               const ProgramAnalysis::ParamMap &params,
+                               const RuntimeParamMap &params,
                                const std::string &resultsDir,
                                int64_t maxCycles,
                                const std::unordered_map<std::string, ValueInfo> &values) {
@@ -238,7 +212,8 @@ SimulationResult runSimulation(IFU &ifu,
   std::deque<std::pair<int64_t, DynamicInst>> iduToOooPipe;
   const bool useExplicitIduCreditBank = uarch.useExplicitIduCreditBank;
   const ValueStorageLookup valueStorage(values);
-  ControlUnit controlUnit(&idu.db());
+  ControlUnit controlUnit(&idu.db(), uarch.membarTiming,
+                          idu.db().isaDefaults().vfStartupCost);
   ooo.setControlUnit(&controlUnit);
 
   int64_t iduPregCredit = ooo.getFreePreg();
@@ -299,10 +274,11 @@ SimulationResult runSimulation(IFU &ifu,
       if (!inst.has_value())
         break;
       if (inst->type == "membar") {
-        controlUnit.acceptMembar(*inst);
+        controlUnit.acceptMembar(*inst, cycle);
         continue;
       }
       idu.accept(*inst);
+      controlUnit.observeInstruction(*inst, dtype);
     }
     if (debugCycles)
       std::cerr << "[vfsim] cycle " << cycle << " fill_idu end\n";
@@ -326,6 +302,14 @@ SimulationResult runSimulation(IFU &ifu,
         }
       }
       return ooo.hasPendingLsuBefore(streamSeq, opClass);
+    }, cycle, [&](int64_t seq) {
+      for (const auto &inst : idu.window())
+        if (inst.streamSeq < seq)
+          return true;
+      for (const auto &entry : iduToOooPipe)
+        if (entry.second.streamSeq < seq)
+          return true;
+      return false;
     });
 
     IDUDispatchBudget budget;
@@ -366,6 +350,7 @@ SimulationResult runSimulation(IFU &ifu,
     if (debugCycles)
       std::cerr << "[vfsim] cycle " << cycle << " ooo begin\n";
     ooo.step();
+    ooo.recordControlRetirement(controlUnit.lastRetireCycle());
     if (debugCycles)
       std::cerr << "[vfsim] cycle " << cycle << " ooo end\n";
 
@@ -388,6 +373,7 @@ SimulationResult runSimulation(IFU &ifu,
       dumpDispatchLog(idu, resultsDir + "/idu_to_ooo.json");
       dumpVloopTrace(idu, resultsDir + "/vloop_trace.json");
       dumpModelWarnings(idu.db(), resultsDir + "/model_warnings.json");
+      controlUnit.dumpHistory(resultsDir + "/membar_history.json");
     }
     throw std::runtime_error(
         "Simulation did not complete before maxCycles"
@@ -409,6 +395,7 @@ SimulationResult runSimulation(IFU &ifu,
     dumpDispatchLog(idu, resultsDir + "/idu_to_ooo.json");
     dumpVloopTrace(idu, resultsDir + "/vloop_trace.json");
     dumpModelWarnings(idu.db(), resultsDir + "/model_warnings.json");
+    controlUnit.dumpHistory(resultsDir + "/membar_history.json");
   }
   return SimulationResult{cycle, ooo.vfEndCycle(), resultsDir};
 }

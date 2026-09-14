@@ -44,7 +44,7 @@ JSON/CCE 输入
 运行 JSON trace：
 
 ```bash
-python main.py --trace VFtest/GeLU_poly.json --out_dir results/demo_gelu_poly
+python main.py --trace VFtest/canonical/GeLU_poly.json --out_dir results/demo_gelu_poly
 ```
 
 运行 CCE/DSL 文件：
@@ -73,13 +73,13 @@ python main.py --cce path/to/file.dsl --cce-kernel kernel_name --out_dir results
 当前暴露两个 theoretical-limit 候选模式：
 
 ```bash
-python main.py --trace VFtest/GeLU_poly.json \
+python main.py --trace VFtest/canonical/GeLU_poly.json \
   --theoretical-limit-vloop-only \
   --out_dir results/theory_vloop_only
 ```
 
 ```bash
-python main.py --trace VFtest/GeLU_poly.json \
+python main.py --trace VFtest/canonical/GeLU_poly.json \
   --theoretical-limit-vloop-only-legacy-forwarding-direct-issue \
   --out_dir results/theory_direct_issue
 ```
@@ -91,7 +91,7 @@ python main.py --trace VFtest/GeLU_poly.json \
 仓库还包含实验性的三端口 VF 模型：
 
 ```bash
-python main.py --trace VFtest/GeLU_poly.json --three-ports --out_dir results/demo_three_ports
+python main.py --trace VFtest/canonical/GeLU_poly.json --three-ports --out_dir results/demo_three_ports
 ```
 
 该模式把 compute issue port 和 load issue capacity 扩展到 3，store issue 仍然单发射。
@@ -102,25 +102,26 @@ python main.py --trace VFtest/GeLU_poly.json --three-ports --out_dir results/dem
 
 主要文件：
 
-- `api/vf_info.py`：公共数据类，包括 `VFInfo`、`VFLoop`、`VFInst`、`ValueInfo`、`MemInfo`、`Membar`。
-- `api/vf_costmodel.py`：兼容 re-export，并定义抽象接口 `VfCostModel`。
-- `api/cce_adapter.py`：从 CCE/DSL 文件解析 `__VEC_SCOPE__` kernel。
-- `api/vf_lowering.py`：把 API 层 `VFInfo` lower 到模拟器 trace 格式。
-- `api/input_api.py`：JSON 和 CCE 输入的统一 loader。
+- `api/frontend/schema.py`：Python `CanonicalVfInfo v1` 数据模型。
+- `api/vf_costmodel.py`：只接收 canonical 输入的抽象接口。
+- `api/cce_adapter.py`：从 CCE/DSL `__VEC_SCOPE__` 直接生成 canonical 输入。
+- `api/frontend/core_lowering.py`：把 canonical 输入 lower 到 Core payload。
+- `api/input_api.py`：canonical JSON、CCE 和 builder 入口。
 - `api/simulator_costmodel.py`：程序化 cost model wrapper。
 
 典型程序化用法：
 
 ```python
-from api.cce_adapter import parse_cce_vf_info
+from api.input_api import InputAPI
 from api.simulator_costmodel import CoreVfCostModel
 
-vf_info = parse_cce_vf_info("cce_code/GeLU_poly.dsl")
+vf_info = InputAPI.load_cce("cce_code/GeLU_poly.dsl")
 cycles = CoreVfCostModel().predict_vf_cycles(vf_info)
 print(cycles)
 ```
 
-不从 CCE 开始的测试和工具也可以直接构造 `VFInfo`。
+不从 CCE 开始的调用方使用 `InputAPI.new_builder()` 构造 canonical 输入。旧 JSON
+必须先通过 `tools/convert_legacy_vfinfo.py` 离线转换。
 
 ## 配置文件
 
@@ -183,6 +184,7 @@ VFtest/              JSON trace 示例和部分回归输入
 regression_suite/
   cases/
     cost_model_regression_cases.json
+    baseline_canonical_membar.json
     baseline_balanced_exu0_reserve.json
     baseline_queue_level4_ooo_transfer_delay.json
     baseline_consumer_done.json
@@ -215,8 +217,15 @@ python tools/run_cost_model_regression.py --tier full --update-baseline
 ```
 
 默认输出写到 `results/regression_suite/latest/`。稳定、整理过的报告应放在 `regression_suite/reports/`。
-默认 baseline 为 `baseline_balanced_exu0_reserve.json`，对应平衡 EXU0 预留策略：
-`lookahead=8`、`min_count=1`、每端口执行中上限 `cap=7`。旧 baseline 仅用于历史对比。
+默认 baseline 为 `baseline_canonical_membar.json`，对应 Canonical 入口、全局 membar
+时序模型和平衡 EXU0 预留策略：`lookahead=8`、`min_count=1`、每端口执行中上限 `cap=7`。
+旧 baseline 保留用于历史对比。更新记录见
+[master 合并验证](regression_suite/reports/master_canonical_merge_20260914.md)。
+
+每次 Python Core 仿真还会在结果目录生成 `trace.json`。该文件采用 Perfetto 支持的
+Chrome Trace Event JSON 格式，可直接上传到 `https://ui.perfetto.dev/`。时间轴按
+`1 cycle = 1 us` 映射，分为 `Load Unit`、`EXU Unit`（含 `EXU0/EXU1` 子轨）和
+`Store Unit`，每个时间片表示指令从 start 到 done 的执行区间。
 
 ## Ascend Runner
 
@@ -234,7 +243,7 @@ python tools/run_cost_model_regression.py --tier full --update-baseline
 修改模拟器后建议运行：
 
 ```bash
-python main.py --trace VFtest/GeLU_poly.json --out_dir results/sanity_gelu
+python main.py --trace VFtest/canonical/GeLU_poly.json --out_dir results/sanity_gelu
 python main.py --cce cce_code/GeLU_poly.dsl --out_dir results/sanity_gelu_cce
 python tools/run_cost_model_regression.py --tier smoke
 ```

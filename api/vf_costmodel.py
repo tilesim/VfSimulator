@@ -1,36 +1,17 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from api.vf_info import (
-    Membar,
-    MemInfo,
-    ValueInfo,
-    ValueStorageKind,
-    VFInfo,
-    VFAlias,
-    VFInst,
-    VFLoop,
-    VFNode,
-    canonicalize_vf_info,
-)
+
+from api.frontend.schema import CanonicalVfInfo
 
 
 class VfCostModel(ABC):
     @abstractmethod
-    def predict_vf_cycles(self, vf_info: VFInfo) -> int:
+    def predict_vf_cycles(self, vf_info: CanonicalVfInfo) -> int:
+        """Predict cycles for the sole formal input contract."""
         pass
 
 
 __all__ = [
-    "Membar",
-    "MemInfo",
-    "ValueInfo",
-    "ValueStorageKind",
-    "VFInfo",
-    "VFAlias",
-    "VFInst",
-    "VFLoop",
-    "VFNode",
     "VfCostModel",
-    "canonicalize_vf_info",
 ]

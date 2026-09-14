@@ -364,20 +364,19 @@ dispatch 前，也不应把受阻塞的 load/store 提前标记为 not-ready。�
 当前 lane batch 展开破坏。后续若要支持这种场景，需要单独实现按 lane 保序或按
 barrier 切分 unroll batch 的语义。
 
-### Core 输入仍是历史 dict program
+### Core 内部 payload 与正式输入边界
 
-当前公开输入已经统一到 `VFInfo`，但 `main.py` 仍通过 `VFInfoLowerer` 把它转换成
-历史 simulator payload：
+正式输入已统一为 `CanonicalVfInfo`。`main.py` 的 canonical JSON 和 CCE 都通过
+`CoreLoweringPass` 生成内部 simulator payload：
 
 ```text
-VFInfo
+CanonicalVfInfo
   -> {"program": [...], "values": {...}, "dtype": ..., "params": ...}
-  -> vreg_live_range_normalization
-  -> canonicalize_single_super_iteration_loops
   -> flatten / IFU / IDU / OoO
 ```
 
-这保留了历史 core 的输入合同，但也让后端仍然存在按字符串前缀判断的逻辑。
+内部 dict 不是公共合同；value storage、definition 和动态 identity 均来自 canonical
+metadata，不再依赖旧寄存器 normalization 或名称前缀。
 例如 IDU 中对目的寄存器数量的估算仍有直接检查 `V*` 前缀的路径。
 
 ## 短期目标
@@ -958,19 +957,19 @@ prev/cur: VEXPDIF.fp32, VPACK.b32, VMULSCVT.f32_to_f16, VADD.fp32
 
 ### 步骤六：在最终 program 上做预扫描
 
-预扫描位置应放在 program 预处理之后，而不是刚 `VFInfoLowerer` 后。
+预扫描位置应放在 canonical lowering 之后的最终 Core program 上。
 
 当前实际链路应调整为：
 
 ```text
-VFInfoLowerer
-  -> vreg_live_range_normalization
-  -> canonicalize_single_super_iteration_loops
+CanonicalVfInfo validation
+  -> CoreLoweringPass
   -> instruction fallback pre-scan on final program
   -> ProgramAnalyzer / Flattener / IFU / IDU / OoO
 ```
 
-这样可以覆盖 normalization / canonicalization 后最终进入 core 的 program。
+这样可以覆盖 canonical definition、loop-carried 和动态展开前最终进入 Core 的
+program。旧 normalization/canonicalization 不再位于正式输入路径。
 如果后续 lane 后缀由 IFU 生成，预扫描仍应以 op/form 为主；storage 判断必须依赖
 `values` 和 `ValueStorageLookup`，不能依赖 lane 后的字符串前缀。
 
@@ -1247,15 +1246,16 @@ Python API 路径也必须写出同样的 `model_warnings.json`，不能只在 C
 
 `Flattener` 和 `IFU` 先支持 CoreIR，同时保留历史 dict 兼容入口。
 
-#### 阶段四：main.py 不再调用 VFInfoLowerer 历史 lowering
+#### 阶段四：main.py 不再调用 VFInfoLowerer 历史 lowering（已完成）
 
 新链路：
 
 ```text
-InputAPI -> VFInfo -> canonicalize/resolve -> CoreIR -> simulation
+canonical JSON / CCE -> CanonicalVfInfo -> CoreLoweringPass -> simulation
 ```
 
-`VFInfoLowerer` 保留为兼容老工具的 adapter，退出主线。
+`VFInfoLowerer` 已删除。旧 JSON/VFInfo 只能通过离线转换工具生成 canonical JSON；
+Python/C++ 公共预测接口均只接收 canonical。
 
 #### 阶段五：日志和回归更新
 
@@ -1341,3 +1341,15 @@ InputAPI -> VFInfo -> canonicalize/resolve -> CoreIR -> simulation
 
 同一 lowered payload 的 Native Release 完整日志中位耗时由约 67.4 ms 降至
 约 64.5 ms；Native 原本已完成加载期 merge，因此收益小于 Python。
+
+## `VSTUS` / `VSTAS` 显式建模
+
+本轮将两条指令从 timing fallback 升级为显式 STORE 模型：latency 均为 8，并通过
+Catalog 声明 `vector_align` 状态参数。状态采用按动态指令序分组的 generation：
+`VSTUS` 追加 producer，`VSTAS` 在进入 OoO 时封存 producer 快照并打开下一组。
+`VSTAS` 不伪造 preg producer，而是在本组所有 producer start 后按配置的
+`VSTUS -> VSTAS = 1` forwarding 就绪。
+
+CCE Adapter、Canonical attributes、Python OoO 和 Native OoO 使用同一语义。
+稳定 producer record 的生命周期覆盖 ROB/LSQ 副本和 producer 退休，禁止保存队列
+元素裸指针。不同状态和不同 generation 分别维护，后续组不能加入已封存的前一组。

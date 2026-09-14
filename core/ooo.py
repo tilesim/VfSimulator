@@ -18,6 +18,23 @@ def is_vreg(name: Any) -> bool:
 
 
 @dataclass
+class AlignProducerRecord:
+    inst_id: int
+    stream_seq: int
+    profile: InstructionProfile
+    start_cycle: Optional[int] = None
+    done_cycle: Optional[int] = None
+
+
+@dataclass
+class AlignGeneration:
+    state_id: str
+    generation_id: int
+    producers: List[AlignProducerRecord] = field(default_factory=list)
+    consumer_inst_id: Optional[int] = None
+
+
+@dataclass
 class Uop:
     inst_id: int
     op: str
@@ -38,6 +55,11 @@ class Uop:
     producer_op_for_store: Optional[str] = None
     producer_form_for_store: Optional[str] = None
     producer_start_for_store: Optional[int] = None
+    store_dependencies_resolved: bool = False
+    align_state_operation: Optional[str] = None
+    align_state_id: Optional[str] = None
+    align_generation: Optional[AlignGeneration] = None
+    align_producer_record: Optional[AlignProducerRecord] = None
     top_block_id: int = 0
     iter_stack: List[Any] = field(default_factory=list)
     is_last_in_top_block: bool = False
@@ -62,6 +84,19 @@ class OoOCore:
         self.load_ports = int(uarch.get("load_ports", 2))
         self.issue_ports = int(uarch.get("issue_ports", 2))  # total EXU count
         self.store_ports = int(uarch.get("store_ports", 1))
+        self.ub_slots = int(uarch.get("ub_slots", 2))
+        if self.load_ports <= 0 or self.store_ports <= 0 or self.ub_slots <= 0:
+            raise ValueError("load_ports, store_ports, and ub_slots must be positive")
+        if "lsu_issue_policy" in uarch:
+            raise ValueError(
+                "lsu_issue_policy has been removed; configure "
+                "lsu_store_priority_preg_threshold instead"
+            )
+        self.lsu_store_priority_preg_threshold = int(
+            uarch.get("lsu_store_priority_preg_threshold", 1)
+        )
+        if self.lsu_store_priority_preg_threshold < 0:
+            raise ValueError("lsu_store_priority_preg_threshold must be non-negative")
         self.shq_depth = int(uarch.get("shq_depth", 58))
         self.lsq_depth = int(uarch.get("LDQ_width", 24))
         self.preg_num = int(uarch.get("vreg", uarch.get("vreg_num", 68)))
@@ -84,6 +119,8 @@ class OoOCore:
         self.preg_producer: Dict[str, Tuple[str, str, int, str]] = {}
         self.preg_producer_uop: Dict[str, Uop] = {}
         self.preg_producer_profile: Dict[str, InstructionProfile] = {}
+        self.align_state_open: Dict[str, AlignGeneration] = {}
+        self.align_state_next_generation: Dict[str, int] = {}
 
         # EXU issue history.
         # By default, II is enforced at EXU level (cross-FU), because each EXU
@@ -165,11 +202,21 @@ class OoOCore:
             "preg_dst": u.preg_dst,
             "preg_old": u.preg_old,
             "producer_op_for_store": u.producer_op_for_store,
+            "store_dependencies_resolved": u.store_dependencies_resolved,
+            "align_state_operation": u.align_state_operation,
+            "align_state_id": u.align_state_id,
+            "align_generation": (
+                u.align_generation.generation_id
+                if u.align_generation is not None
+                else None
+            ),
             "producer_form_for_store": u.producer_form_for_store,
             "producer_start_for_store": u.producer_start_for_store,
         })
 
     def _log_start_simple(self, u: Uop) -> None:
+        profile = u.profile
+        op_class = profile.op_class if profile is not None else None
         self.cyc_start_log.append({
             "cy": self.cycle,
             "inst_id": u.inst_id,
@@ -180,11 +227,23 @@ class OoOCore:
             "dst_value_instances": u.dst_value_instances,
             "op": u.op,
             "form": u.form,
+            "op_class": op_class,
+            "fu_type": (
+                profile.fu_type
+                if profile is not None and op_class == "COMPUTE"
+                else None
+            ),
+            "exu_port": u.exu_port,
+            "ready_cycle": u.ready_cycle,
             "dst": u.dst,
             "src": u.src,
+            "preg_dst": u.preg_dst,
+            "preg_src": u.preg_src,
         })
 
     def _log_done_simple(self, u: Uop) -> None:
+        profile = u.profile
+        op_class = profile.op_class if profile is not None else None
         self.cyc_done_log.append({
             "cy": u.done_cycle if u.done_cycle is not None else self.cycle,
             "inst_id": u.inst_id,
@@ -195,6 +254,12 @@ class OoOCore:
             "dst_value_instances": u.dst_value_instances,
             "op": u.op,
             "form": u.form,
+            "op_class": op_class,
+            "fu_type": (
+                profile.fu_type
+                if profile is not None and op_class == "COMPUTE"
+                else None
+            ),
             "dst": u.dst,
             "src": u.src,
         })
@@ -417,6 +482,7 @@ class OoOCore:
         u.blocked_reason = old_reason
 
     def _store_ready_cycle(self, u: Uop) -> Tuple[int, Optional[str], Optional[str], Optional[int]]:
+        u.store_dependencies_resolved = False
         for ps in u.preg_src:
             if ps is None:
                 continue
@@ -449,10 +515,61 @@ class OoOCore:
                 pform = prod_form
                 pst = prod_start
 
-        if best_t < 0:
+        has_dependency = best_t >= 0
+        generation = u.align_generation
+        if u.align_state_operation == "consume" and generation is not None:
+            if any(record.start_cycle is None for record in generation.producers):
+                return 10 ** 9, pop, pform, pst
+            state_ready = int(getattr(u, "lsq_ready_cycle", 0))
+            for record in generation.producers:
+                state_ready = max(
+                    state_ready,
+                    int(record.start_cycle)
+                    + int(self.db.get_forwarding_for_profiles(record.profile, u.profile)),
+                )
+            best_t = max(best_t, state_ready)
+            has_dependency = True
+
+        if not has_dependency:
             return 10 ** 9, None, None, None
         best_t = max(best_t, int(getattr(u, "lsq_ready_cycle", 0)))
+        u.store_dependencies_resolved = True
         return best_t, pop, pform, pst
+
+    def bind_align_state(self, u: Uop, attributes: Any) -> None:
+        if not isinstance(attributes, dict):
+            return
+        operation = str(attributes.get("align_state_operation", "")).lower()
+        state_id = str(attributes.get("align_state_id", ""))
+        if operation not in {"append", "consume"} or not state_id:
+            return
+
+        generation = self.align_state_open.get(state_id)
+        if generation is None:
+            generation_id = self.align_state_next_generation.get(state_id, 0)
+            generation = AlignGeneration(state_id, generation_id)
+            self.align_state_open[state_id] = generation
+            self.align_state_next_generation[state_id] = generation_id + 1
+
+        u.align_state_operation = operation
+        u.align_state_id = state_id
+        u.align_generation = generation
+        if operation == "append":
+            record = AlignProducerRecord(
+                inst_id=u.inst_id,
+                stream_seq=u.stream_seq,
+                profile=u.profile,
+            )
+            generation.producers.append(record)
+            u.align_producer_record = record
+            return
+
+        generation.consumer_inst_id = u.inst_id
+        generation_id = self.align_state_next_generation.get(
+            state_id, generation.generation_id + 1
+        )
+        self.align_state_open[state_id] = AlignGeneration(state_id, generation_id)
+        self.align_state_next_generation[state_id] = generation_id + 1
 
     def has_pending_lsu_before(self, stream_seq: int, op_class: str) -> bool:
         target = str(op_class).upper()
