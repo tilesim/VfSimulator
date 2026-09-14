@@ -1,0 +1,15 @@
+{
+  "scope": "DV100 Python/Native global Membar replay",
+  "historical_source": {
+    "branch": "MultiSoC-membar",
+    "base_commit": "23f226d7c46ff22053000830e7bc095f33368f31",
+    "uncommitted_changes": true,
+    "note": "Timing implementation and results were generated with uncommitted changes on this base; the base commit alone does not reproduce them. CAmodel/local values below are historical observations, not executed by the global validation script."
+  },
+  "cases": [
+    {"name": "single", "fixture": "single.cce", "camodel_historical": 110, "global_cycles": 114, "local_historical": 90},
+    {"name": "clustered8", "fixture": "clustered8.cce", "camodel_historical": 336, "global_cycles": 338, "local_historical": 90},
+    {"name": "interleaved8", "fixture": "interleaved8.cce", "camodel_historical": 339, "global_cycles": 348, "local_historical": 90},
+    {"name": "spill", "fixture": "spill.cce", "camodel_historical": 391, "global_cycles": 396, "local_historical": 237}
+  ]
+}

@@ -271,6 +271,10 @@ int64_t OoOCore::vfEndCycle() const {
   return lastDoneCycle_ + vfDrainCost_;
 }
 
+void OoOCore::recordControlRetirement(int64_t cycle) {
+  lastDoneCycle_ = std::max(lastDoneCycle_, cycle);
+}
+
 std::string OoOCore::classifyOpClass(const std::string &op,
                                      const std::string &form) const {
   return isLoadOp(db_, op, form)
@@ -938,6 +942,8 @@ void OoOCore::issueReadyLsu(
       continue;
 
     u.startCycle = cycle;
+    if (controlUnit_)
+      controlUnit_->notifyLsuStart(u.streamSeq, cycle);
     u.blockedReason.reset();
     u.doneCycle = cycle + u.latency;
     u.state = "running";

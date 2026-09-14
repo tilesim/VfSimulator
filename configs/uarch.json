@@ -1,4 +1,25 @@
 {
+  "membar_timing": {
+    "admission_delay": 1,
+    "lsu_start_to_next_issue": {
+      "STORE": 4,
+      "LOAD": 3
+    },
+    "directions": {
+      "VLD_VST": {
+        "release_latency": 18,
+        "retire_latency": 20,
+        "consumer_delay": 4,
+        "next_issue_delay": 1
+      },
+      "VST_VLD": {
+        "release_latency": 7,
+        "retire_latency": 9,
+        "consumer_delay": 1,
+        "next_issue_delay": 2
+      }
+    }
+  },
   "name": "Ascend_VF",
   "issue_ports": 2,
   "load_ports": 2,

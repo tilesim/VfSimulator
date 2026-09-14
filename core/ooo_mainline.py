@@ -763,6 +763,9 @@ class OoOCoreMainline(OoOCore):
                 continue
 
             u.start_cycle = cycle
+            control = getattr(self, "control_unit", None)
+            if control is not None and hasattr(control, "notify_lsu_start"):
+                control.notify_lsu_start(u.stream_seq, cycle)
             u.blocked_reason = None
             u.done_cycle = cycle + self._latency(u.op, u.form, u.profile)
             u.state = "running"
