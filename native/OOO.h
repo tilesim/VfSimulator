@@ -157,10 +157,11 @@ public:
 
   virtual void accept(const DynamicInst &inst) = 0;
   virtual void step() = 0;
-  void setControlUnit(const ControlUnit *controlUnit) noexcept {
+  void setControlUnit(ControlUnit *controlUnit) noexcept {
     controlUnit_ = controlUnit;
   }
   virtual int64_t vfEndCycle() const;
+  void recordControlRetirement(int64_t cycle);
   virtual void dumpHistory(const std::string &path) const;
   virtual void dumpSimpleLogs(const std::string &startPath,
                               const std::string &donePath) const;
@@ -250,7 +251,7 @@ protected:
   std::vector<HistoryRecord> history_;
   std::vector<SimpleLogRecord> startLogs_;
   std::vector<SimpleLogRecord> doneLogs_;
-  const ControlUnit *controlUnit_ = nullptr;
+  ControlUnit *controlUnit_ = nullptr;
 
   virtual std::string classifyOpClass(const std::string &op,
                                       const std::string &form) const;

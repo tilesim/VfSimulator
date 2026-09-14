@@ -24,6 +24,8 @@
 - `IDU`：执行 dispatch gate、VLOOP 可见性和信用计数。
 - `OOO`：执行 rename、ready、execute 和 retire 主流程。
 - `SimulatorRunner`：驱动主循环并输出日志。
+- `ControlUnit`：处理全局 membar 的发射、同步放行和退休，参数和验证方式见
+  [Membar 时序模型](../docs/membar_timing_model.md)。
 - `CanonicalProgramLowering`：处理已验证的 canonical definition、loop-carried
   binding、动态身份和值生命周期标记。
 - `CanonicalJsonVfInfoAdapter`：读取并校验语言无关的 canonical JSON v1。

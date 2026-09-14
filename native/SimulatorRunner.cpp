@@ -212,7 +212,8 @@ SimulationResult runSimulation(IFU &ifu,
   std::deque<std::pair<int64_t, DynamicInst>> iduToOooPipe;
   const bool useExplicitIduCreditBank = uarch.useExplicitIduCreditBank;
   const ValueStorageLookup valueStorage(values);
-  ControlUnit controlUnit(&idu.db());
+  ControlUnit controlUnit(&idu.db(), uarch.membarTiming,
+                          idu.db().isaDefaults().vfStartupCost);
   ooo.setControlUnit(&controlUnit);
 
   int64_t iduPregCredit = ooo.getFreePreg();
@@ -273,10 +274,11 @@ SimulationResult runSimulation(IFU &ifu,
       if (!inst.has_value())
         break;
       if (inst->type == "membar") {
-        controlUnit.acceptMembar(*inst);
+        controlUnit.acceptMembar(*inst, cycle);
         continue;
       }
       idu.accept(*inst);
+      controlUnit.observeInstruction(*inst, dtype);
     }
     if (debugCycles)
       std::cerr << "[vfsim] cycle " << cycle << " fill_idu end\n";
@@ -300,6 +302,14 @@ SimulationResult runSimulation(IFU &ifu,
         }
       }
       return ooo.hasPendingLsuBefore(streamSeq, opClass);
+    }, cycle, [&](int64_t seq) {
+      for (const auto &inst : idu.window())
+        if (inst.streamSeq < seq)
+          return true;
+      for (const auto &entry : iduToOooPipe)
+        if (entry.second.streamSeq < seq)
+          return true;
+      return false;
     });
 
     IDUDispatchBudget budget;
@@ -340,6 +350,7 @@ SimulationResult runSimulation(IFU &ifu,
     if (debugCycles)
       std::cerr << "[vfsim] cycle " << cycle << " ooo begin\n";
     ooo.step();
+    ooo.recordControlRetirement(controlUnit.lastRetireCycle());
     if (debugCycles)
       std::cerr << "[vfsim] cycle " << cycle << " ooo end\n";
 
@@ -362,6 +373,7 @@ SimulationResult runSimulation(IFU &ifu,
       dumpDispatchLog(idu, resultsDir + "/idu_to_ooo.json");
       dumpVloopTrace(idu, resultsDir + "/vloop_trace.json");
       dumpModelWarnings(idu.db(), resultsDir + "/model_warnings.json");
+      controlUnit.dumpHistory(resultsDir + "/membar_history.json");
     }
     throw std::runtime_error(
         "Simulation did not complete before maxCycles"
@@ -383,6 +395,7 @@ SimulationResult runSimulation(IFU &ifu,
     dumpDispatchLog(idu, resultsDir + "/idu_to_ooo.json");
     dumpVloopTrace(idu, resultsDir + "/vloop_trace.json");
     dumpModelWarnings(idu.db(), resultsDir + "/model_warnings.json");
+    controlUnit.dumpHistory(resultsDir + "/membar_history.json");
   }
   return SimulationResult{cycle, ooo.vfEndCycle(), resultsDir};
 }
