@@ -1,0 +1,53 @@
+#ifdef __CCE_KT_TEST__
+#define __aicore__
+#else
+#define __aicore__ [aicore]
+#endif
+
+__attribute__((always_inline)) inline [aicore] void polynomial_vf(__ubuf__ float *memA, __ubuf__ float *memY, __ubuf__ float *scratch) {
+    __VEC_SCOPE__ {
+        vector_bool mask = pset_b32(PAT_ALL);
+        vector_f32 r0, r1, total;
+        vlds(r0, memA, 0, NORM);
+        mem_bar(VLD_VST);
+        vsts(r0, scratch, 0, NORM_B32, mask);
+        mem_bar(VLD_VST);
+        vsts(r0, scratch, 64, NORM_B32, mask);
+        mem_bar(VLD_VST);
+        vsts(r0, scratch, 128, NORM_B32, mask);
+        mem_bar(VLD_VST);
+        vsts(r0, scratch, 192, NORM_B32, mask);
+        mem_bar(VLD_VST);
+        vsts(r0, scratch, 256, NORM_B32, mask);
+        mem_bar(VLD_VST);
+        vsts(r0, scratch, 320, NORM_B32, mask);
+        mem_bar(VLD_VST);
+        vsts(r0, scratch, 384, NORM_B32, mask);
+        mem_bar(VLD_VST);
+        vsts(r0, scratch, 448, NORM_B32, mask);
+        mem_bar(VST_VLD);
+        vlds(total, scratch, 0, NORM);
+        mem_bar(VST_VLD);
+        vlds(r1, scratch, 64, NORM);
+        vadd(total, total, r1, mask);
+        mem_bar(VST_VLD);
+        vlds(r1, scratch, 128, NORM);
+        vadd(total, total, r1, mask);
+        mem_bar(VST_VLD);
+        vlds(r1, scratch, 192, NORM);
+        vadd(total, total, r1, mask);
+        mem_bar(VST_VLD);
+        vlds(r1, scratch, 256, NORM);
+        vadd(total, total, r1, mask);
+        mem_bar(VST_VLD);
+        vlds(r1, scratch, 320, NORM);
+        vadd(total, total, r1, mask);
+        mem_bar(VST_VLD);
+        vlds(r1, scratch, 384, NORM);
+        vadd(total, total, r1, mask);
+        mem_bar(VST_VLD);
+        vlds(r1, scratch, 448, NORM);
+        vadd(total, total, r1, mask);
+        vsts(total, memY, 0, NORM_B32, mask);
+    }
+}

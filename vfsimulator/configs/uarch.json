@@ -1,8 +1,31 @@
 {
+  "membar_timing": {
+    "admission_delay": 1,
+    "lsu_start_to_next_issue": {
+      "STORE": 4,
+      "LOAD": 3
+    },
+    "directions": {
+      "VLD_VST": {
+        "release_latency": 18,
+        "retire_latency": 20,
+        "consumer_delay": 4,
+        "next_issue_delay": 1
+      },
+      "VST_VLD": {
+        "release_latency": 7,
+        "retire_latency": 9,
+        "consumer_delay": 1,
+        "next_issue_delay": 2
+      }
+    }
+  },
   "name": "Ascend_VF",
   "issue_ports": 2,
   "load_ports": 2,
   "store_ports": 1,
+  "ub_slots": 2,
+  "lsu_store_priority_preg_threshold": 1,
   "IDU_window_width": 6,
   "IDU_issue_width": 5,
   "LDQ_width": 2400000,
@@ -25,16 +48,18 @@
   "nested_vloop_initial_start_gap": 1,
   "loop1_min_feedback_gap": 7,
   "innermost_iter_dispatch_stride": 1,
+  "canonical_dynamic_instruction_limit": 20000,
   "consumer_release_start_offset": 4,
-  "load_done_latency": 9,
   "ooo_to_shq_delay": 1,
   "ooo_to_lsq_delay": 1,
   "exq_recv_delay": 1,
   "shq_to_exq_port_per_cycle": 1,
+  "shq_exq_dispatch_policy": "fu_round_robin_exu0_reserve",
+  "exu0_reserve_lookahead": 8,
+  "exu0_reserve_min_count": 1,
   "compute_inflight_cap": 0,
   "exq_issue_inflight_cap_per_port": 7,
   "exq_capacity_counts_inflight": false,
-  "mem_bar_mode": "strong",
   "enforce_same_cycle_src_hazard": false,
   "enable_cross_fu_ii": false
 }

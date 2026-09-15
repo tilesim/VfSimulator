@@ -2,13 +2,11 @@
 # -*- coding: utf-8 -*-
 
 import argparse
-import json
 import os
 from typing import Any, Dict
 
+from api.frontend import CanonicalVfInfo, CoreLoweringPass
 from api.input_api import InputAPI
-from api.vf_info import VFInfo
-from api.vf_lowering import VFInfoLowerer
 from core.flatten import Flattener
 from core.idu import IDU
 from core.ifu import IFUUnroll
@@ -18,10 +16,8 @@ from core.ooo_factory import (
     resolve_model_uarch,
 )
 from core.param_db import ParamDB
-from core.program_canonicalization import canonicalize_single_super_iteration_loops
 from core.program_analysis import ProgramAnalyzer
-from core.simulator_runner import run_simulation
-from core.vreg_live_range_normalization import normalize_program_vreg_live_ranges
+from core.simulator_runner import dump_model_warnings, run_simulation
 
 
 def build_arg_parser() -> argparse.ArgumentParser:
@@ -30,7 +26,7 @@ def build_arg_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--cce",
         type=str,
-        help="Path to a CCE/DSL file. When provided, parse __VEC_SCOPE__ into VFInfo.",
+        help="Path to a CCE/DSL file. When provided, parse __VEC_SCOPE__ into CanonicalVfInfo.",
     )
     parser.add_argument(
         "--cce-kernel",
@@ -73,7 +69,13 @@ def build_arg_parser() -> argparse.ArgumentParser:
 
 
 def resolve_trace_path(base_dir: str, trace_arg: str | None) -> str:
-    trace_path = trace_arg or os.path.join(base_dir, "VFtest", "VADD_oneloop.json")
+    trace_path = trace_arg or os.path.join(
+        base_dir,
+        "tests",
+        "fixtures",
+        "canonical_vf_info",
+        "v1_valid_loop.json",
+    )
     if not os.path.isabs(trace_path):
         trace_path = os.path.join(base_dir, trace_path)
     return trace_path
@@ -85,7 +87,10 @@ def resolve_input_path(base_dir: str, path_arg: str) -> str:
     return os.path.join(base_dir, path_arg)
 
 
-def load_input_vf_info(base_dir: str, args: argparse.Namespace) -> tuple[VFInfo, str]:
+def load_input_canonical_vf_info(
+    base_dir: str,
+    args: argparse.Namespace,
+) -> tuple[CanonicalVfInfo, str]:
     if args.trace and args.cce:
         raise RuntimeError("Please provide only one input: --trace or --cce")
 
@@ -97,7 +102,7 @@ def load_input_vf_info(base_dir: str, args: argparse.Namespace) -> tuple[VFInfo,
         if args.cce_kernel:
             print(f"[INFO] CCE kernel = {args.cce_kernel}")
         return (
-            InputAPI.load_cce_file(cce_path, kernel_name=args.cce_kernel),
+            InputAPI.load_cce(cce_path, kernel_name=args.cce_kernel),
             cce_path,
         )
 
@@ -105,7 +110,7 @@ def load_input_vf_info(base_dir: str, args: argparse.Namespace) -> tuple[VFInfo,
     if not os.path.exists(trace_path):
         raise RuntimeError(f"Trace file not found: {trace_path}")
     print(f"[INFO] Loading trace: {trace_path}")
-    return InputAPI.load_json_trace(trace_path), trace_path
+    return InputAPI.load_json(trace_path), trace_path
 
 
 def build_uarch(
@@ -159,28 +164,61 @@ def build_uarch(
     return uarch
 
 
-def write_warning_log(results_dir: str, warnings: list[Dict[str, Any]]) -> None:
-    if not warnings:
+def scan_instruction_fallback_warnings(program, db: ParamDB, dtype: str) -> None:
+    def visit(node):
+        if isinstance(node, list):
+            for item in node:
+                visit(item)
+            return
+        if not isinstance(node, dict):
+            return
+        ntype = node.get("type")
+        if ntype == "inst":
+            op = str(node.get("op", ""))
+            form = str(node.get("form", "") or dtype)
+            db.get_inst_form(op, form=form, dtype=dtype)
+            return
+        if ntype == "loop":
+            visit(node.get("body", []))
+
+    visit(program)
+
+
+def write_warning_log(
+    results_dir: str,
+    vreg_warnings: list[Dict[str, Any]],
+    instruction_warnings: list[Dict[str, Any]],
+) -> None:
+    if not vreg_warnings and not instruction_warnings:
         return
     print("[WARN] Low-confidence scenario detected:")
-    for warning in warnings:
+    for warning in vreg_warnings:
         print(
             "[WARN]",
             f"{warning['loop_path']}: expanded_vreg_namespace={warning['expanded_vreg_namespace']}",
             f"> preg_num={warning['preg_num']}",
         )
-    warning_path = os.path.join(results_dir, "model_warnings.json")
-    with open(warning_path, "w", encoding="utf-8") as f:
-        json.dump(
-            {
-                "has_warning": True,
-                "warnings": warnings,
-            },
-            f,
-            indent=2,
-            ensure_ascii=False,
+    if instruction_warnings:
+        unsupported = sum(
+            1
+            for warning in instruction_warnings
+            if str(warning.get("kind", "")).startswith("unsupported_isa")
         )
-    print(f"Wrote {warning_path}")
+        timing = sum(
+            1
+            for warning in instruction_warnings
+            if str(warning.get("kind", "")).startswith("missing_")
+        )
+        print(
+            "[WARN]",
+            f"instruction fallback warnings: unsupported={unsupported}, timing={timing}",
+        )
+    if dump_model_warnings(
+        results_dir,
+        instruction_warnings=instruction_warnings,
+        vreg_warnings=vreg_warnings,
+    ):
+        print(f"Wrote {os.path.join(results_dir, 'model_warnings.json')}")
 
 
 def main():
@@ -188,37 +226,26 @@ def main():
     base_dir = os.path.dirname(os.path.abspath(__file__))
 
     try:
-        vf_info, _ = load_input_vf_info(base_dir, args)
+        vf_info, _ = load_input_canonical_vf_info(base_dir, args)
     except Exception as exc:
         print(f"[ERROR] {exc}")
         return
 
-    trace = VFInfoLowerer().lower(vf_info)
+    lowering = CoreLoweringPass()
+    lowering.ensure_current_core_compatible(vf_info)
+    trace = lowering.lower(vf_info)
 
     dtype = trace.get("dtype", "fp32")
     params = trace.get("params", {}) or {}
+    values = trace.get("values", {}) or {}
     program = trace.get("program")
     if program is None:
         raise RuntimeError("trace.json missing key 'program'")
     db = ParamDB(base_dir=base_dir)
-    analyzer = ProgramAnalyzer(params)
+    print("[INFO] input contract = CanonicalVfInfo v1")
+    scan_instruction_fallback_warnings(program, db, dtype)
 
-    program, norm_stats = normalize_program_vreg_live_ranges(program)
-    print(
-        "[INFO] vreg live-range normalization = ON, changed_chains =",
-        int(norm_stats.get("changed_fields", norm_stats.get("changed_chains", 0))),
-    )
-    program, canonicalization_stats = canonicalize_single_super_iteration_loops(
-        program,
-        params,
-        pdb=db,
-        dtype=dtype,
-    )
-    print(
-        "[INFO] single-super-iteration loops expanded =",
-        int(canonicalization_stats["expanded_loops"]),
-    )
-
+    analyzer = ProgramAnalyzer(params, values=values)
     top_block_loop_bounds = analyzer.infer_top_block_loop_bounds(program)
     total_top_blocks = len(top_block_loop_bounds)
     print("[INFO] top block loop bounds =", top_block_loop_bounds)
@@ -227,11 +254,22 @@ def main():
     loop_bounds = top_block_loop_bounds.get(0, [])
     linear = Flattener(params).flatten(program)
 
-    ifu = IFUUnroll(linear, params, pdb=db, dtype=dtype)
     trace_uarch = trace.get("uarch", {}) or {}
     if not isinstance(trace_uarch, dict):
         raise RuntimeError("trace.json key 'uarch' must be a dict when provided")
     uarch = build_uarch(db, trace_uarch, args)
+    dynamic_instruction_limit = int(
+        uarch.get("canonical_dynamic_instruction_limit", 20_000)
+    )
+    ifu = IFUUnroll(
+        linear,
+        params,
+        pdb=db,
+        dtype=dtype,
+        structured_value_identity=True,
+        structured_dynamic_instruction_limit=dynamic_instruction_limit,
+    )
+    empty_top_blocks = ifu.empty_top_block_ids()
 
     idu = IDU(
         uarch,
@@ -241,13 +279,14 @@ def main():
         total_top_blocks=total_top_blocks,
         top_block_loop_bounds=top_block_loop_bounds,
         dtype=dtype,
+        empty_top_blocks=empty_top_blocks,
     )
 
     results_dir = args.out_dir
     if not os.path.isabs(results_dir):
         results_dir = os.path.join(base_dir, results_dir)
 
-    ooo = create_ooo_core(uarch, db, dtype=dtype)
+    ooo = create_ooo_core(uarch, db, dtype=dtype, values=values)
     sim_result = run_simulation(
         ifu=ifu,
         idu=idu,
@@ -255,6 +294,7 @@ def main():
         uarch=uarch,
         params=params,
         results_dir=results_dir,
+        values=values,
     )
 
     print("Done. cycles_executed =", int(sim_result["cycles_executed"]))
@@ -263,9 +303,10 @@ def main():
         program,
         int(ooo.preg_num),
     )
-    write_warning_log(results_dir, vreg_capacity_warnings)
+    write_warning_log(results_dir, vreg_capacity_warnings, db.get_warnings())
 
     print(f"Wrote {os.path.join(results_dir, 'sim_history.json')}")
+    print(f"Wrote Perfetto trace to {sim_result['trace_path']}")
     print(f"Wrote logs to {results_dir}")
     print("VF end cycle (with drain) =", int(sim_result["vf_end_cycle"]))
     print(f"Wrote idu_to_ooo.json to {results_dir}")

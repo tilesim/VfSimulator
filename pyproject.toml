@@ -4,12 +4,15 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "vfsimulator"
-version = "0.1.0"
+version = "0.2.0"
 description = "Cycle-level vector function simulator"
 requires-python = ">=3.10"
+
+[project.optional-dependencies]
+json = ["jsonschema>=4"]
 
 [tool.setuptools.packages.find]
 include = ["vfsimulator*"]
 
 [tool.setuptools.package-data]
-vfsimulator = ["configs/*.json"]
+vfsimulator = ["configs/*.json", "api/frontend/*.json"]

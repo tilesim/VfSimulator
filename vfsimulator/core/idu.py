@@ -11,6 +11,7 @@ from vfsimulator.core.isa_traits import (
     uses_shared_shq_credit,
     uses_shq_queue,
 )
+from vfsimulator.core.value_storage import ValueStorageLookup
 
 
 class IDU:
@@ -23,6 +24,8 @@ class IDU:
         total_top_blocks=1,
         top_block_loop_bounds=None,
         dtype="fp32",
+        values=None,
+        empty_top_blocks=None,
     ):
         self.window_width = uarch["IDU_window_width"]
         self.issue_width = uarch["IDU_issue_width"]
@@ -32,6 +35,7 @@ class IDU:
         )
         self.db = pdb
         self.dtype = str(dtype)
+        self.value_storage = ValueStorageLookup(values)
 
         defaults = self.db.get_defaults()
         self.vf_startup_cost = int(defaults.get("vf_startup_cost", 0))
@@ -60,6 +64,7 @@ class IDU:
 
         # top-level sibling blocks
         self.total_top_blocks = int(total_top_blocks)
+        self.empty_top_blocks = {int(item) for item in (empty_top_blocks or ())}
 
         # {top_block_id: [bounds...]}
         if top_block_loop_bounds is None:
@@ -193,9 +198,18 @@ class IDU:
         """
         if self.total_top_blocks <= 0:
             return
+        first_top = self._next_nonempty_top_block(0)
+        if first_top is None:
+            return
         start_cycle = int(self.initial_top_block_vloop_start_cycle)
-        self._set_top_block_vloop(0, start_cycle)
-        self._init_top_block_nested_starts(0, start_cycle)
+        self._set_top_block_vloop(first_top, start_cycle)
+        self._init_top_block_nested_starts(first_top, start_cycle)
+
+    def _next_nonempty_top_block(self, start: int):
+        for top_block_id in range(max(0, int(start)), self.total_top_blocks):
+            if top_block_id not in self.empty_top_blocks:
+                return top_block_id
+        return None
 
     def _normalize_block_key(self, raw_key, top_block_id: int):
         """
@@ -282,8 +296,8 @@ class IDU:
 
         # ---------- sibling top-level block ----------
         if bool(inst.get("is_last_in_top_block", False)):
-            next_tbid = top_block_id + 1
-            if next_tbid < self.total_top_blocks:
+            next_tbid = self._next_nonempty_top_block(top_block_id + 1)
+            if next_tbid is not None:
                 if next_tbid not in self.top_block_vloop_start:
                     self._set_top_block_vloop(next_tbid, cycle)
                     self._init_top_block_nested_starts(next_tbid, cycle)
@@ -406,6 +420,7 @@ class IDU:
                 break
 
             op = inst.get("op", "")
+            form = inst.get("form") or self.dtype
             iter_stack = inst.get("iter_stack", [])
             top_block_id = int(inst.get("top_block_id", 0))
 
@@ -450,8 +465,8 @@ class IDU:
             # -------------------------------------------------
             # 2) SHQ / LSQ space gate
             # -------------------------------------------------
-            is_load = is_load_op(op, self.db, self.dtype)
-            is_store = is_store_op(op, self.db, self.dtype)
+            is_load = is_load_op(op, self.db, form)
+            is_store = is_store_op(op, self.db, form)
             if is_load:
                 if lsq_free <= 0:
                     break
@@ -471,7 +486,7 @@ class IDU:
             # -------------------------------------------------
             dst_count = 0
             for d in inst.get("dst", []):
-                if isinstance(d, str) and d[:1].lower() == "v":
+                if self.value_storage.is_register(d):
                     dst_count += 1
 
             if credits < dst_count:
@@ -483,11 +498,11 @@ class IDU:
             dispatched.append(inst)
 
             credits -= dst_count
-            if uses_lsq(op, self.db, self.dtype):
+            if uses_lsq(op, self.db, form):
                 lsq_free -= 1
-                if uses_shared_shq_credit(op, self.db, self.dtype):
+                if uses_shared_shq_credit(op, self.db, form):
                     shq_free -= 1
-            elif uses_shq_queue(op, self.db, self.dtype):
+            elif uses_shq_queue(op, self.db, form):
                 shq_queue_free -= 1
                 shq_free -= 1
 
@@ -498,6 +513,9 @@ class IDU:
             self.dispatch_log.append({
                 "cy": cycle,
                 "inst_id": inst.get("inst_id", inst.get("id")),
+                "static_instruction_id": inst.get("static_instruction_id"),
+                "iteration_path": inst.get("iteration_path", []),
+                "stream_seq": int(inst.get("stream_seq", -1)),
                 "op": inst.get("op"),
                 "dst": inst.get("dst", []),
                 "src": inst.get("src", []),

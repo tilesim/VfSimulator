@@ -8,24 +8,30 @@ from typing import Any, Dict, List, Optional, Tuple, Deque
 from collections import deque
 import json
 
-from core.isa_traits import is_compute_op, is_load_op
+from core.isa_traits import is_compute_op, is_load_op, is_store_op
+from core.instruction_profile import InstructionProfile
+from core.value_storage import ValueStorageLookup
 
 
 def is_vreg(name: Any) -> bool:
-    return isinstance(name, str) and name[:1].lower() == "v"
+    return ValueStorageLookup().is_register(name)
 
 
-def is_mem(name: Any) -> bool:
-    return isinstance(name, str) and name[:3].lower() == "mem"
+@dataclass
+class AlignProducerRecord:
+    inst_id: int
+    stream_seq: int
+    profile: InstructionProfile
+    start_cycle: Optional[int] = None
+    done_cycle: Optional[int] = None
 
 
-def is_intermediate_mem(name: Any) -> bool:
-    return isinstance(name, str) and name.lower().startswith("mem_inter")
-
-
-def make_mem_key(name: str, iter_stack: List[Any]) -> Tuple[str, Tuple[int, ...]]:
-    norm_iter = tuple(int(x) for x in (iter_stack or []))
-    return (name, norm_iter)
+@dataclass
+class AlignGeneration:
+    state_id: str
+    generation_id: int
+    producers: List[AlignProducerRecord] = field(default_factory=list)
+    consumer_inst_id: Optional[int] = None
 
 
 @dataclass
@@ -38,34 +44,59 @@ class Uop:
     preg_src: List[Optional[str]]
     preg_dst: List[str]
     preg_old: List[Optional[str]]
+    profile: Optional[InstructionProfile] = None
 
     state: str = "blocked"  # blocked/ready/running/done
     ready_cycle: int = 0
     start_cycle: Optional[int] = None
     done_cycle: Optional[int] = None
+    blocked_reason: Optional[str] = None
 
     producer_op_for_store: Optional[str] = None
     producer_form_for_store: Optional[str] = None
     producer_start_for_store: Optional[int] = None
-    mem_dep_uops: List["Uop"] = field(default_factory=list)
+    store_dependencies_resolved: bool = False
+    align_state_operation: Optional[str] = None
+    align_state_id: Optional[str] = None
+    align_generation: Optional[AlignGeneration] = None
+    align_producer_record: Optional[AlignProducerRecord] = None
     top_block_id: int = 0
     iter_stack: List[Any] = field(default_factory=list)
     is_last_in_top_block: bool = False
+    stream_seq: int = -1
+    static_instruction_id: Optional[str] = None
+    iteration_path: List[Dict[str, Any]] = field(default_factory=list)
+    src_value_instances: List[Dict[str, Any]] = field(default_factory=list)
+    dst_value_instances: List[Dict[str, Any]] = field(default_factory=list)
     exu_port: Optional[int] = None
     shq_ready_cycle: int = 0
     lsq_ready_cycle: int = 0
 
 
 class OoOCore:
-    def __init__(self, uarch: Dict[str, Any], pdb, dtype: str = "fp32"):
+    def __init__(self, uarch: Dict[str, Any], pdb, dtype: str = "fp32", values: Dict[str, Any] | None = None):
         self.dtype = dtype
         self.db = pdb
+        self.value_storage = ValueStorageLookup(values)
         self.theoretical_limit_mode = bool(uarch.get("theoretical_limit_mode", False))
         self.three_ports_mode = bool(uarch.get("three_ports_mode", False))
 
         self.load_ports = int(uarch.get("load_ports", 2))
         self.issue_ports = int(uarch.get("issue_ports", 2))  # total EXU count
         self.store_ports = int(uarch.get("store_ports", 1))
+        self.ub_slots = int(uarch.get("ub_slots", 2))
+        if self.load_ports <= 0 or self.store_ports <= 0 or self.ub_slots <= 0:
+            raise ValueError("load_ports, store_ports, and ub_slots must be positive")
+        if "lsu_issue_policy" in uarch:
+            raise ValueError(
+                "lsu_issue_policy has been removed; configure "
+                "lsu_store_priority_preg_threshold instead"
+            )
+        self.lsu_store_priority_preg_threshold = int(
+            uarch.get("lsu_store_priority_preg_threshold", 1)
+        )
+        if self.lsu_store_priority_preg_threshold < 0:
+            raise ValueError("lsu_store_priority_preg_threshold must be non-negative")
         self.shq_depth = int(uarch.get("shq_depth", 58))
         self.lsq_depth = int(uarch.get("LDQ_width", 24))
         self.preg_num = int(uarch.get("vreg", uarch.get("vreg_num", 68)))
@@ -76,7 +107,7 @@ class OoOCore:
 
         # rename
         self.freelist: Deque[str] = deque([f"p{i}" for i in range(self.preg_num)])
-        self.RAT: Dict[str, str] = {}
+        self.RAT: Dict[Any, str] = {}
         self.next_dynamic_preg_id: int = self.preg_num
 
         # queues
@@ -87,6 +118,9 @@ class OoOCore:
         # dependency tracking
         self.preg_producer: Dict[str, Tuple[str, str, int, str]] = {}
         self.preg_producer_uop: Dict[str, Uop] = {}
+        self.preg_producer_profile: Dict[str, InstructionProfile] = {}
+        self.align_state_open: Dict[str, AlignGeneration] = {}
+        self.align_state_next_generation: Dict[str, int] = {}
 
         # EXU issue history.
         # By default, II is enforced at EXU level (cross-FU), because each EXU
@@ -107,6 +141,11 @@ class OoOCore:
         self.last_issue_cycle_exu = [-10**9] * self.issue_ports
         self.last_op_exu = [None] * self.issue_ports
         self.last_form_exu = [None] * self.issue_ports
+        self.last_profile = {
+            "ALU": [None] * self.issue_ports,
+            "SFU": [None] * self.issue_ports,
+        }
+        self.last_profile_exu = [None] * self.issue_ports
 
         self.cycle: int = 0
         self.last_done_cycle: int = 0
@@ -114,11 +153,8 @@ class OoOCore:
         self.debug = bool(uarch.get("debug", False))
 
         self.preg_pending = set()
-        self.load_done_latency = int(uarch.get("load_done_latency", 9))
         self.ooo_to_shq_delay = int(uarch.get("ooo_to_shq_delay", 1))
         self.ooo_to_lsq_delay = int(uarch.get("ooo_to_lsq_delay", 1))
-        self.mem_last_store_uop: Dict[Tuple[str, Tuple[int, ...]], Uop] = {}
-        self.mem_bar_mode = str(uarch.get("mem_bar_mode", "weak")).strip().lower()
         self.enforce_same_cycle_src_hazard = bool(uarch.get("enforce_same_cycle_src_hazard", True))
         # Optional EXQ-aware port selection policy (disabled by default to preserve old behavior)
         self.enable_exq_greedy_balance = bool(uarch.get("enable_exq_greedy_balance", False))
@@ -129,9 +165,6 @@ class OoOCore:
         self.shq_to_exq_port_per_cycle = int(uarch.get("shq_to_exq_port_per_cycle", 1))
         self.exq_capacity_counts_inflight = bool(uarch.get("exq_capacity_counts_inflight", False))
         self.exq_rr_ptr = 0
-        self.block_outstanding_stores: Dict[int, int] = {}
-        self.block_last_inst_done: Dict[int, bool] = {}
-        self.block_release_cycle: Dict[int, int] = {}
         self.theoretical_limit_legacy_forwarding = bool(
             uarch.get("theoretical_limit_legacy_forwarding", False)
         )
@@ -139,15 +172,27 @@ class OoOCore:
         self.cyc_start_log: List[Dict[str, Any]] = []
         self.cyc_done_log: List[Dict[str, Any]] = []
 
+    def is_vreg(self, name: Any) -> bool:
+        return self.value_storage.is_register(name)
+
+    def is_mem(self, name: Any) -> bool:
+        return self.value_storage.is_ub(name)
+
     # -------- logging --------
     def _log(self, event: str, u: Uop) -> None:
         self.history.append({
             "cy": self.cycle,
             "event": event,
             "id": u.inst_id,
+            "static_instruction_id": u.static_instruction_id,
+            "iteration_path": u.iteration_path,
+            "stream_seq": u.stream_seq,
+            "src_value_instances": u.src_value_instances,
+            "dst_value_instances": u.dst_value_instances,
             "op": u.op,
             "form": u.form,
             "state": u.state,
+            "blocked_reason": u.blocked_reason,
             "ready": u.ready_cycle,
             "start": u.start_cycle,
             "done": u.done_cycle,
@@ -157,26 +202,64 @@ class OoOCore:
             "preg_dst": u.preg_dst,
             "preg_old": u.preg_old,
             "producer_op_for_store": u.producer_op_for_store,
+            "store_dependencies_resolved": u.store_dependencies_resolved,
+            "align_state_operation": u.align_state_operation,
+            "align_state_id": u.align_state_id,
+            "align_generation": (
+                u.align_generation.generation_id
+                if u.align_generation is not None
+                else None
+            ),
             "producer_form_for_store": u.producer_form_for_store,
             "producer_start_for_store": u.producer_start_for_store,
         })
 
     def _log_start_simple(self, u: Uop) -> None:
+        profile = u.profile
+        op_class = profile.op_class if profile is not None else None
         self.cyc_start_log.append({
             "cy": self.cycle,
             "inst_id": u.inst_id,
+            "static_instruction_id": u.static_instruction_id,
+            "iteration_path": u.iteration_path,
+            "stream_seq": u.stream_seq,
+            "src_value_instances": u.src_value_instances,
+            "dst_value_instances": u.dst_value_instances,
             "op": u.op,
             "form": u.form,
+            "op_class": op_class,
+            "fu_type": (
+                profile.fu_type
+                if profile is not None and op_class == "COMPUTE"
+                else None
+            ),
+            "exu_port": u.exu_port,
+            "ready_cycle": u.ready_cycle,
             "dst": u.dst,
             "src": u.src,
+            "preg_dst": u.preg_dst,
+            "preg_src": u.preg_src,
         })
 
     def _log_done_simple(self, u: Uop) -> None:
+        profile = u.profile
+        op_class = profile.op_class if profile is not None else None
         self.cyc_done_log.append({
             "cy": u.done_cycle if u.done_cycle is not None else self.cycle,
             "inst_id": u.inst_id,
+            "static_instruction_id": u.static_instruction_id,
+            "iteration_path": u.iteration_path,
+            "stream_seq": u.stream_seq,
+            "src_value_instances": u.src_value_instances,
+            "dst_value_instances": u.dst_value_instances,
             "op": u.op,
             "form": u.form,
+            "op_class": op_class,
+            "fu_type": (
+                profile.fu_type
+                if profile is not None and op_class == "COMPUTE"
+                else None
+            ),
             "dst": u.dst,
             "src": u.src,
         })
@@ -229,8 +312,16 @@ class OoOCore:
             return self.db.get_inst_form(op, form=form, dtype=self.dtype)
         return self.db.get_inst(op, dtype=form or self.dtype)
 
-    def _latency(self, op: str, form: Optional[str] = None) -> int:
-        return int(self._inst_params(op, form=form).get("latency", 1))
+    def _profile(self, op: str, form: Optional[str] = None) -> InstructionProfile:
+        return self.db.resolve_inst(op, form=form, dtype=self.dtype)
+
+    def _latency(
+        self,
+        op: str,
+        form: Optional[str] = None,
+        profile: Optional[InstructionProfile] = None,
+    ) -> int:
+        return int((profile or self._profile(op, form)).latency)
 
     def _get_ii(
         self,
@@ -238,9 +329,13 @@ class OoOCore:
         cur_op: str,
         prev_form: Optional[str] = None,
         cur_form: Optional[str] = None,
+        prev_profile: Optional[InstructionProfile] = None,
+        cur_profile: Optional[InstructionProfile] = None,
     ) -> int:
         if prev_op is None:
             return 1
+        if prev_profile is not None and cur_profile is not None:
+            return int(self.db.get_ii_for_profiles(prev_profile, cur_profile))
         return int(
             self.db.get_ii(
                 prev_op,
@@ -251,10 +346,14 @@ class OoOCore:
             )
         )
 
-    def _data_store_cost(self, producer_op: str, producer_form: Optional[str] = None) -> int:
-        return int(self._inst_params(producer_op, form=producer_form).get("data_store_cost", 1))
-
-    def _get_fu_type(self, op: str, form: Optional[str] = None) -> str:
+    def _get_fu_type(
+        self,
+        op: str,
+        form: Optional[str] = None,
+        profile: Optional[InstructionProfile] = None,
+    ) -> str:
+        if profile is not None:
+            return profile.fu_type
         try:
             fu = str(self._inst_params(op, form=form).get("EXU", "ALU")).upper()
         except Exception:
@@ -263,7 +362,12 @@ class OoOCore:
             fu = "ALU"
         return fu
 
-    def _eligible_exu_ports(self, op: str, form: Optional[str] = None) -> List[int]:
+    def _eligible_exu_ports(
+        self,
+        op: str,
+        form: Optional[str] = None,
+        profile: Optional[InstructionProfile] = None,
+    ) -> List[int]:
         """
         Restrict which EXU/EXQ ports an op may use according to isa.json.
 
@@ -276,7 +380,10 @@ class OoOCore:
         - missing / unknown tag => all available ports
         """
         try:
-            dispatch_exu = str(self._inst_params(op, form=form).get("dispatch_exu", "")).upper()
+            if profile is not None:
+                dispatch_exu = profile.dispatch_exu
+            else:
+                dispatch_exu = str(self._inst_params(op, form=form).get("dispatch_exu", "")).upper()
         except Exception:
             dispatch_exu = ""
 
@@ -300,23 +407,27 @@ class OoOCore:
         producer_info: Tuple[str, str, int, str],
         consumer_op: str,
         consumer_form: Optional[str] = None,
+        producer_profile: Optional[InstructionProfile] = None,
+        consumer_profile: Optional[InstructionProfile] = None,
     ) -> int:
         prod_op, prod_form, prod_start, _kind = producer_info
-        fwd = int(
-            self.db.get_forwarding_cycles(
+        if producer_profile is not None and consumer_profile is not None:
+            fwd = int(self.db.get_forwarding_for_profiles(producer_profile, consumer_profile))
+        else:
+            fwd = int(self.db.get_forwarding_cycles(
                 prod_op,
                 consumer_op,
                 dtype=self.dtype,
                 producer_form=prod_form,
                 consumer_form=consumer_form,
-            )
-        )
+            ))
         # Queue-level timing alignment:
         # In SHQ wakeup modeling, consumer wakeup-ready follows
         #   producer_EXQ_ISSUE - 1 + forwarding
         # where prod_start is producer_EXQ_ISSUE/start_cycle.
         if (
-            is_compute_op(consumer_op, self.db, consumer_form or self.dtype)
+            ((consumer_profile is not None and consumer_profile.op_class == "COMPUTE")
+             or (consumer_profile is None and is_compute_op(consumer_op, self.db, consumer_form or self.dtype)))
             and bool(getattr(self, "enable_isu_queue_model", False))
             and not self.theoretical_limit_legacy_forwarding
         ):
@@ -334,29 +445,44 @@ class OoOCore:
                 if ps in self.preg_pending:
                     return 10 ** 9
                 continue
-            t = max(t, self._ready_time_for_src(info, u.op, u.form))
+            t = max(
+                t,
+                self._ready_time_for_src(
+                    info,
+                    u.op,
+                    u.form,
+                    self.preg_producer_profile.get(ps),
+                    u.profile,
+                ),
+            )
         return t
 
     def _load_ready_cycle(self, u: Uop) -> int:
-        t = max(self.vf_startup_cost, int(getattr(u, "lsq_ready_cycle", 0)))
-        for pred_u in u.mem_dep_uops:
-            if pred_u.done_cycle is None:
-                return 10 ** 9
-            t = max(t, pred_u.done_cycle)
-        if self.mem_bar_mode == "strong":
-            for s in u.src:
-                if not is_intermediate_mem(s):
-                    continue
-                if u.top_block_id <= 0:
-                    continue
-                prev_block_id = u.top_block_id - 1
-                release_cycle = self.block_release_cycle.get(prev_block_id)
-                if release_cycle is None:
-                    return 10 ** 9
-                t = max(t, release_cycle)
-        return t
+        return max(self.vf_startup_cost, int(getattr(u, "lsq_ready_cycle", 0)))
+
+    def _blocked_by_control_unit(self, u: Uop) -> bool:
+        control_unit = getattr(self, "control_unit", None)
+        if control_unit is None:
+            return False
+        return bool(
+            control_unit.blocks(
+                {
+                    "type": "inst",
+                    "op": u.op,
+                    "form": u.form,
+                    "stream_seq": int(getattr(u, "stream_seq", -1)),
+                }
+            )
+        )
+
+    def _log_membar_blocked(self, u: Uop) -> None:
+        old_reason = u.blocked_reason
+        u.blocked_reason = "membar"
+        self._log("blocked", u)
+        u.blocked_reason = old_reason
 
     def _store_ready_cycle(self, u: Uop) -> Tuple[int, Optional[str], Optional[str], Optional[int]]:
+        u.store_dependencies_resolved = False
         for ps in u.preg_src:
             if ps is None:
                 continue
@@ -374,22 +500,88 @@ class OoOCore:
             if info is None:
                 continue
             prod_op, prod_form, prod_start, kind = info
+            producer_profile = self.preg_producer_profile.get(ps)
             if kind not in ("COMPUTE", "LOAD") and not (
-                is_compute_op(prod_op, self.db, prod_form or self.dtype)
-                or is_load_op(prod_op, self.db, prod_form or self.dtype)
+                producer_profile is not None
+                and producer_profile.op_class in ("COMPUTE", "LOAD")
             ):
                 continue
-            cand = self._ready_time_for_src(info, u.op, u.form)
+            cand = self._ready_time_for_src(
+                info, u.op, u.form, producer_profile, u.profile
+            )
             if cand > best_t:
                 best_t = cand
                 pop = prod_op
                 pform = prod_form
                 pst = prod_start
 
-        if best_t < 0:
+        has_dependency = best_t >= 0
+        generation = u.align_generation
+        if u.align_state_operation == "consume" and generation is not None:
+            if any(record.start_cycle is None for record in generation.producers):
+                return 10 ** 9, pop, pform, pst
+            state_ready = int(getattr(u, "lsq_ready_cycle", 0))
+            for record in generation.producers:
+                state_ready = max(
+                    state_ready,
+                    int(record.start_cycle)
+                    + int(self.db.get_forwarding_for_profiles(record.profile, u.profile)),
+                )
+            best_t = max(best_t, state_ready)
+            has_dependency = True
+
+        if not has_dependency:
             return 10 ** 9, None, None, None
         best_t = max(best_t, int(getattr(u, "lsq_ready_cycle", 0)))
+        u.store_dependencies_resolved = True
         return best_t, pop, pform, pst
+
+    def bind_align_state(self, u: Uop, attributes: Any) -> None:
+        if not isinstance(attributes, dict):
+            return
+        operation = str(attributes.get("align_state_operation", "")).lower()
+        state_id = str(attributes.get("align_state_id", ""))
+        if operation not in {"append", "consume"} or not state_id:
+            return
+
+        generation = self.align_state_open.get(state_id)
+        if generation is None:
+            generation_id = self.align_state_next_generation.get(state_id, 0)
+            generation = AlignGeneration(state_id, generation_id)
+            self.align_state_open[state_id] = generation
+            self.align_state_next_generation[state_id] = generation_id + 1
+
+        u.align_state_operation = operation
+        u.align_state_id = state_id
+        u.align_generation = generation
+        if operation == "append":
+            record = AlignProducerRecord(
+                inst_id=u.inst_id,
+                stream_seq=u.stream_seq,
+                profile=u.profile,
+            )
+            generation.producers.append(record)
+            u.align_producer_record = record
+            return
+
+        generation.consumer_inst_id = u.inst_id
+        generation_id = self.align_state_next_generation.get(
+            state_id, generation.generation_id + 1
+        )
+        self.align_state_open[state_id] = AlignGeneration(state_id, generation_id)
+        self.align_state_next_generation[state_id] = generation_id + 1
+
+    def has_pending_lsu_before(self, stream_seq: int, op_class: str) -> bool:
+        target = str(op_class).upper()
+        for u in self.ROB:
+            if int(getattr(u, "stream_seq", -1)) >= int(stream_seq):
+                continue
+            if u.state == "done":
+                continue
+            cls = u.profile.op_class if u.profile is not None else None
+            if cls == target:
+                return True
+        return False
 
     # -------- retire helper --------
     def _free_old_pregs(self, u: Uop) -> None:
@@ -404,8 +596,9 @@ class OoOCore:
         c: int,
         exu_used_this_cycle: List[bool],
         cur_form: Optional[str] = None,
+        cur_profile: Optional[InstructionProfile] = None,
     ) -> Optional[int]:
-        legal_ports = set(self._eligible_exu_ports(cur_op, cur_form))
+        legal_ports = set(self._eligible_exu_ports(cur_op, cur_form, cur_profile))
         if not self.enable_exq_greedy_balance:
             for port in range(self.issue_ports):
                 if port not in legal_ports:
@@ -420,7 +613,14 @@ class OoOCore:
                     prev_op = self.last_op[fu_type][port]
                     prev_form = self.last_form[fu_type][port]
                     prev_issue = self.last_issue_cycle[fu_type][port]
-                ii = self._get_ii(prev_op, cur_op, prev_form=prev_form, cur_form=cur_form)
+                ii = self._get_ii(
+                    prev_op,
+                    cur_op,
+                    prev_form=prev_form,
+                    cur_form=cur_form,
+                    prev_profile=(self.last_profile_exu[port] if self.enable_cross_fu_ii else self.last_profile[fu_type][port]),
+                    cur_profile=cur_profile,
+                )
                 if c >= prev_issue + ii:
                     return port
             return None
@@ -439,7 +639,14 @@ class OoOCore:
                 prev_op = self.last_op[fu_type][port]
                 prev_form = self.last_form[fu_type][port]
                 prev_issue = self.last_issue_cycle[fu_type][port]
-            ii = self._get_ii(prev_op, cur_op, prev_form=prev_form, cur_form=cur_form)
+            ii = self._get_ii(
+                prev_op,
+                cur_op,
+                prev_form=prev_form,
+                cur_form=cur_form,
+                prev_profile=(self.last_profile_exu[port] if self.enable_cross_fu_ii else self.last_profile[fu_type][port]),
+                cur_profile=cur_profile,
+            )
             avail = max(c, prev_issue + ii)
             candidates.append((port, avail))
 

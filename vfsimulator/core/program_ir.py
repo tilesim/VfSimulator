@@ -3,6 +3,9 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, TypeAlias
 
+from vfsimulator.api.frontend.schema import StorageKind
+from vfsimulator.api.input_symbols import normalize_dtype, MembarType
+
 
 ProgramNode: TypeAlias = "VfSimInst | VfSimLoop | VfSimMembar"
 
@@ -13,6 +16,43 @@ def _validate_str_list(values: List[str], field_name: str) -> None:
     for value in values:
         if not isinstance(value, str) or not value:
             raise ValueError(f"{field_name} entries must be non-empty strings")
+
+
+@dataclass(frozen=True)
+class VfSimValue:
+    """Named operand metadata. UB offsets are row-major element indices."""
+
+    value_id: str
+    storage: StorageKind
+    dtype: str
+    shape: tuple[int, ...] = ()
+    storage_object_id: str | None = None
+    offsets: tuple[int | str, ...] = ()
+    storage_shape: tuple[int, ...] = ()
+
+    def __post_init__(self) -> None:
+        if not isinstance(self.value_id, str) or not self.value_id:
+            raise ValueError("VfSimValue requires a non-empty name")
+        object.__setattr__(self, "storage", StorageKind(self.storage))
+        if not self.dtype:
+            raise ValueError("VfSimValue requires an explicit dtype")
+        object.__setattr__(self, "dtype", str(normalize_dtype(self.dtype)))
+        object.__setattr__(self, "shape", tuple(self.shape))
+        object.__setattr__(self, "offsets", tuple(self.offsets))
+        object.__setattr__(self, "storage_shape", tuple(self.storage_shape))
+        if any(not isinstance(x, int) or isinstance(x, bool) or x < 0 for x in self.shape + self.storage_shape):
+            raise ValueError("VfSimValue.shape requires resolved non-negative integer dimensions")
+        if any(isinstance(x, bool) or not isinstance(x, (int, str)) or x == "" for x in self.offsets):
+            raise ValueError("VfSimValue.offsets requires integer or affine element indices")
+        if self.storage is StorageKind.UB:
+            if not isinstance(self.storage_object_id, str) or not self.storage_object_id:
+                raise ValueError("UB operands require an explicit storage_object_id")
+            if self.storage_shape and len(self.storage_shape) != len(self.shape):
+                raise ValueError("UB storage_shape must have the same rank as shape")
+            if self.offsets and len(self.offsets) != len(self.shape):
+                raise ValueError("UB offsets must have the same rank as shape")
+        elif self.storage_object_id is not None or self.offsets or self.storage_shape:
+            raise ValueError("Only UB operands may have storage_object_id or offsets")
 
 
 @dataclass
@@ -54,6 +94,7 @@ class VfSimMembar:
     def __post_init__(self) -> None:
         if not isinstance(self.barrier, str) or not self.barrier:
             raise ValueError("VfSimMembar.barrier must be a non-empty string")
+        self.barrier = MembarType(self.barrier).value
 
     def to_trace_node(self) -> Dict[str, Any]:
         return {
@@ -111,8 +152,12 @@ class VfSimProgram:
     params: Dict[str, Any] | None = None
     config: Dict[str, Any] | None = None
     uarch: Dict[str, Any] | None = None
+    values: Dict[str, VfSimValue] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
+        for name, value in self.values.items():
+            if not isinstance(value, VfSimValue) or name != value.value_id:
+                raise ValueError(f"Invalid typed operand entry: {name!r}")
         if not isinstance(self.dtype, str) or not self.dtype:
             raise ValueError("VfSimProgram.dtype must be a non-empty string")
         if not isinstance(self.body, list):
@@ -127,37 +172,8 @@ class VfSimProgram:
         if self.uarch is not None and not isinstance(self.uarch, dict):
             raise TypeError("VfSimProgram.uarch must be a dict when provided")
 
-    def to_payload(self) -> Dict[str, Any]:
-        payload: Dict[str, Any] = {
-            "dtype": self.dtype,
-            "params": dict(self.params or {}),
-            "program": [to_trace_node(node) for node in self.body],
-        }
-        if self.config:
-            payload["config"] = dict(self.config)
-        if self.uarch:
-            payload["uarch"] = dict(self.uarch)
-        return payload
-
 
 def to_trace_node(node: ProgramNode) -> Dict[str, Any]:
     if isinstance(node, (VfSimInst, VfSimLoop, VfSimMembar)):
         return node.to_trace_node()
     raise TypeError(f"Unsupported VfSimProgram node: {type(node).__name__}")
-
-
-def coerce_trace_program(program: Any) -> List[Dict[str, Any]]:
-    """
-    Convert supported program inputs to the legacy trace-program shape.
-
-    The core analyzer/normalizer/Flattener stack historically consumes a list
-    of trace dict nodes. This helper keeps JSON traces unchanged while allowing
-    the new Program IR to enter the same path.
-    """
-    if isinstance(program, VfSimProgram):
-        return [to_trace_node(node) for node in program.body]
-    if isinstance(program, list):
-        if all(isinstance(node, dict) for node in program):
-            return program
-        return [to_trace_node(node) for node in program]
-    raise TypeError(f"Unsupported program input: {type(program).__name__}")

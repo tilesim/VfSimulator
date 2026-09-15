@@ -2,56 +2,27 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from typing import Any, Dict
 
+from vfsimulator.api.program_adapter import program_to_canonical
+from vfsimulator.api.frontend.serialization import canonical_vf_info_to_dict
 from vfsimulator.api.simulator_costmodel import CoreVfCostModel
-from vfsimulator.core.model_config import normalize_model_name
 from vfsimulator.core.program_ir import VfSimProgram
 
 
 def predict_from_program(
-    program: VfSimProgram,
-    *,
-    config_root: str | Path | None = None,
-    out_dir: str | Path = "results/program_api",
-    model: str = "mainline",
+    program: VfSimProgram, *, config_root: str | Path | None = None,
+    out_dir: str | Path = 'results/program_api', model: str = 'mainline',
     dump_trace_path: str | Path | None = None,
-) -> Dict[str, Any]:
-    """Run VfSimulator from the stable in-memory program API."""
-    if not isinstance(program, VfSimProgram):
-        raise TypeError("program must be a VfSimProgram")
-    model_name = normalize_model_name(model)
-
-    payload = program.to_payload()
+):
+    """Predict through CanonicalVfInfo and the master Python core."""
+    if model != 'mainline':
+        raise ValueError(f'Only the master mainline model is supported, got {model!r}')
+    canonical = program_to_canonical(program)
     if dump_trace_path is not None:
-        _dump_payload(payload, dump_trace_path, model=model_name)
-
+        path = Path(dump_trace_path)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(json.dumps(canonical_vf_info_to_dict(canonical), indent=2), encoding='utf-8')
     base_dir = Path(config_root) if config_root is not None else Path(__file__).resolve().parents[1]
-    result = CoreVfCostModel(
-        base_dir=base_dir,
-        out_dir=out_dir,
-        dtype=program.dtype,
-        model=model_name,
-    ).run_program(program)
-    return {
-        "cycles": int(result["vf_end_cycle"]),
-        "model": model_name,
-        "payload": payload,
-        "raw": result,
-        "trace_path": str(dump_trace_path) if dump_trace_path is not None else None,
-    }
-
-
-def _dump_payload(payload: Dict[str, Any], path: str | Path, *, model: str) -> None:
-    dump_path = Path(path)
-    dump_path.parent.mkdir(parents=True, exist_ok=True)
-    with dump_path.open("w", encoding="utf-8") as f:
-        json.dump(
-            {
-                "model": model,
-                "payload": payload,
-            },
-            f,
-            indent=2,
-            ensure_ascii=False,
-        )
+    result = CoreVfCostModel(base_dir=base_dir, out_dir=out_dir, dtype=program.dtype).run_vf_info(canonical)
+    return {'cycles': int(result['vf_end_cycle']), 'model': model, 'raw': result,
+            'trace_path': str(dump_trace_path) if dump_trace_path is not None else None}

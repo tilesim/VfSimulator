@@ -2,8 +2,6 @@ import argparse
 import json
 from typing import Any, Dict, List
 
-from core.program_ir import VfSimInst, VfSimLoop, VfSimMembar, VfSimProgram, to_trace_node
-
 
 def is_number(x: Any) -> bool:
     return isinstance(x, (int, float))
@@ -36,15 +34,6 @@ def contains_any_loop(node):
         for x in node:
             if contains_any_loop(x):
                 return True
-        return False
-
-    if isinstance(node, VfSimProgram):
-        return contains_any_loop(node.body)
-
-    if isinstance(node, VfSimLoop):
-        return True
-
-    if isinstance(node, (VfSimInst, VfSimMembar)):
         return False
 
     if isinstance(node, dict):
@@ -86,20 +75,9 @@ class Flattener:
         return self.linear
 
     def _visit(self, node, depth, loop_stack):
-        if isinstance(node, VfSimProgram):
-            self._visit(node.body, depth=depth, loop_stack=loop_stack)
-            return
-
         if isinstance(node, list):
             for x in node:
                 self._visit(x, depth=depth, loop_stack=loop_stack)
-            return
-
-        if isinstance(node, (VfSimInst, VfSimMembar)):
-            node = to_trace_node(node)
-
-        if isinstance(node, VfSimLoop):
-            self._emit_loop(node, depth, loop_stack)
             return
 
         if not isinstance(node, dict):
@@ -142,9 +120,6 @@ class Flattener:
         self._pc += 1
 
     def _emit_loop(self, loop_node, depth, loop_stack):
-        if isinstance(loop_node, VfSimLoop):
-            loop_node = to_trace_node(loop_node)
-
         loop_id = self._next_loop_id
         self._next_loop_id += 1
 
@@ -189,6 +164,10 @@ class Flattener:
             "name": name,
             "is_innermost": is_innermost,
             "loop_stack": list(loop_stack),
+            "induction": dict(loop_node.get("induction", {})),
+            "carried_values": [
+                dict(item) for item in loop_node.get("carried_values", [])
+            ],
         }
         self.linear.append(begin)
         self._pc += 1

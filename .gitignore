@@ -39,3 +39,8 @@ ascend_runner/ii_param_suite/cases/
 ascend_runner/single_op_param_suite/cases/
 ipc_compare/
 gelu_poly_i16_u1_compare/
+
+# Python wheel build outputs
+build/
+dist/
+*.egg-info/
