@@ -11,7 +11,7 @@ from core.idu import IDU
 from core.ifu import IFUUnroll
 from core.ooo_factory import create_ooo_core
 from core.param_db import ParamDB
-from main import collect_vreg_capacity_warnings, infer_top_block_loop_bounds, load_json
+from main import infer_top_block_loop_bounds, load_json
 
 
 class IDUTimingProbe(IDU):
@@ -176,13 +176,6 @@ def run_once(
     if not os.path.isabs(results_dir):
         results_dir = os.path.join(base_dir, results_dir)
     os.makedirs(results_dir, exist_ok=True)
-
-    vreg_capacity_warnings = collect_vreg_capacity_warnings(program, params, int(ooo.preg_num))
-    if vreg_capacity_warnings:
-        warning_path = os.path.join(results_dir, "vreg_capacity_warnings.json")
-        import json
-        with open(warning_path, "w", encoding="utf-8") as f:
-            json.dump(vreg_capacity_warnings, f, indent=2, ensure_ascii=False)
 
     ooo.dump_history(os.path.join(results_dir, "sim_history.json"))
     ooo.dump_simple_logs(

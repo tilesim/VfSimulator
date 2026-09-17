@@ -38,6 +38,17 @@ Timing form 兼容只由 `core/param_compat.py` 与 `native/ParamCompat.cpp` 维
 
 Python 调用方可直接使用 builder，不需要拼接内部 dict：
 
+`CoreVfCostModel` 的默认精度参数命名为 `fallback_dtype`，不是 VF 全局精度。
+时序查询优先使用每条指令的 `form`；输入输出值保留各自 `dtype`。
+旧 `CoreVfCostModel(dtype=...)` 关键字仍兼容，内部 lowering payload 改用
+`fallback_dtype`，不改变公开 Canonical JSON schema。当前 lowering 的兜底值仍为
+`fp32`，与此次清理前一致；它不覆盖明确给出的指令 form。
+
+已删除“寄存器值数量乘 unroll 超过物理寄存器数”的静态风险 warning。
+架构寄存器溢出预警尚未实现；物理寄存器 credit 和实际阻塞的仿真保持不变。
+
+Python builder 示例：
+
 ```python
 builder = InputAPI.new_vf_info_builder(params={"N": 4})
 builder.register_storage_object("ub.input", storage=StorageKind.UB)
@@ -103,3 +114,16 @@ Catalog 的 CONFIG operand 默认只接受声明的符号值。只有显式设�
 `ValueVersioningPass` 对 Catalog 已知指令使用 Catalog operand signature 决定 role，value storage 只用于检查 register/scalar/UB 是否匹配；未知指令才使用通用 storage 推断。validator 失败统一抛出 `VfInfoValidationError`，保留 diagnostic code、path、context 和 source location。instruction、loop、membar 节点范围内产生的诊断默认继承当前节点的 `source_location`，因此 CCE canonical 错误可同时报告 canonical path 与原始文件、行、列。
 
 Core 只自动建立寄存器 producer-consumer 依赖，不根据 UB 名称、迭代或地址表达式推导 load/store 依赖。UB 顺序当前统一由显式 `Membar(VST_VLD/VLD_VST)` 控制；canonical memory/control `DependencyRef` 在动态 Uop edge lowering 完成前会明确拒绝。
+
+## POST_UPDATE 地址状态
+
+Canonical `MemoryAccess` 可提供 `address_state_id`、`update_mode`（`none` 或
+`post_update`）和 `post_update_delta_bytes`（affine expression）。更新必须同时
+提供状态与增量；零增量仍是一条更新事件。普通访问也应提供所读取的状态 ID，
+以便识别前序更新。缺省字段的旧输入保持原行为。
+
+Python/Native 在按序接收动态指令时绑定地址 RAW/WAR，LSU 发射前检查。
+`lsu_post_update_ready_latency` 默认 1，表示更新指令 start 到新地址状态可用
+的间隔。地址状态不占 vector preg，也不表示 UB 数据依赖；数据内存同步仍由
+Membar 控制。完整支持范围、限制及复现步骤见
+[POST_UPDATE 开发与验证记录](../docs/post_update_address_dependency_plan.md)。

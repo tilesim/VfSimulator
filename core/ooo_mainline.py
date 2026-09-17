@@ -261,7 +261,7 @@ class RenameController:
 
     def accept(self, inst: Dict[str, Any]) -> None:
         op = str(inst.get("op"))
-        form = str(inst.get("form", "") or self.core.dtype)
+        form = str(inst.get("form", "") or self.core.fallback_dtype)
         profile = self.core._profile(op, form)
         inst_id = int(inst.get("inst_id", inst.get("id", -1)))
         iter_stack = list(inst.get("iter_stack", []))
@@ -421,6 +421,7 @@ class RenameController:
             ],
         )
         self.core.bind_align_state(u, inst.get("attributes"))
+        u.address_bindings = self.core.address_states.bind(inst_id, inst.get("memory_accesses", []))
         setattr(u, "preg_src_gen", preg_src_gen)
 
         for pd in preg_dst:
@@ -741,6 +742,8 @@ class OoOCoreMainline(OoOCore):
                 continue
             if op_class == "STORE" and issued_stores >= self.store_ports:
                 continue
+            if not all(binding.can_issue(cycle) for binding in u.address_bindings):
+                continue
             if self._blocked_by_control_unit(u):
                 if (
                     membar_blocked_logged_ids is None
@@ -763,6 +766,7 @@ class OoOCoreMainline(OoOCore):
                 continue
 
             u.start_cycle = cycle
+            self.address_states.notify_start(u.address_bindings, cycle)
             u.blocked_reason = None
             u.done_cycle = cycle + self._latency(u.op, u.form, u.profile)
             u.state = "running"

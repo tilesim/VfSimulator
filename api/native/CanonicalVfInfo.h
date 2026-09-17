@@ -49,6 +49,9 @@ struct CanonicalMemoryAccess {
   CanonicalAccessKind accessKind = CanonicalAccessKind::Unknown;
   std::optional<int64_t> span;
   std::optional<std::string> aliasGroup;
+  std::optional<std::string> addressStateId;
+  std::string updateMode = "none";
+  std::optional<CanonicalAffineExpression> postUpdateDeltaBytes;
 };
 
 struct CanonicalStorageObject {

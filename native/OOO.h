@@ -11,6 +11,7 @@
 
 #include "native/IDU.h"
 #include "native/ValueStorage.h"
+#include "native/AddressState.h"
 
 #include <deque>
 #include <optional>
@@ -50,6 +51,7 @@ struct Uop {
   std::optional<std::string> producerOpForStore;
   std::optional<std::string> producerFormForStore;
   std::optional<int64_t> producerStartForStore;
+  std::vector<AddressBinding> addressBindings;
   int64_t topBlockId = 0;
   std::vector<int64_t> iterStack;
   bool isLastInTopBlock = false;
@@ -97,6 +99,8 @@ struct HistoryRecord {
   std::string staticInstructionId;
   std::vector<std::pair<std::string, int64_t>> iterationPath;
   int64_t streamSeq = -1;
+  std::vector<std::pair<int64_t, int64_t>> addressDependencies;
+  std::vector<std::string> addressStateIds;
 };
 
 struct SimpleLogRecord {
@@ -145,7 +149,7 @@ public:
 
 protected:
   const ParamDB &db_;
-  std::string dtype_;
+  std::string fallbackDtype_;
   ValueStorageLookup valueStorage_;
   bool theoreticalLimitMode_ = false;
   bool enableIsuQueueModel_ = false;
@@ -155,6 +159,7 @@ protected:
   int storePorts_ = 1;
   int ubSlots_ = 2;
   int lsuStorePriorityPregThreshold_ = 1;
+  AddressStateTracker addressStates_;
   int shqDepth_ = 58;
   int lsqDepth_ = 24;
   int pregNum_ = 68;

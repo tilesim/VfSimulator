@@ -5,11 +5,26 @@
 
 #include <stdexcept>
 #include <utility>
+#include <initializer_list>
+#include <string_view>
+#include <unordered_set>
 
 namespace vfsim {
 namespace {
 
 using Object = json::Value::Object;
+
+void rejectUnknownFields(const Object &object,
+                         std::initializer_list<std::string_view> fields,
+                         const std::string &context) {
+  std::unordered_set<std::string> allowed;
+  for (auto field : fields) allowed.emplace(field);
+  for (const auto &[field, value] : object) {
+    (void)value;
+    if (!allowed.count(field))
+      throw std::runtime_error(context + " contains unknown field: " + field);
+  }
+}
 
 const json::Value *find(const Object &object, const std::string &key) {
   auto it = object.find(key);
@@ -190,6 +205,24 @@ CanonicalOperand operand(const json::Value &value) {
         throw std::runtime_error("unsupported canonical access kind: " + access);
       memory.span = optionalInt(memoryObject, "span");
       memory.aliasGroup = optionalString(memoryObject, "alias_group");
+      memory.addressStateId = optionalString(memoryObject, "address_state_id");
+      if (const auto *mode = find(memoryObject, "update_mode"))
+        memory.updateMode = mode->asString();
+      if (const auto *delta = find(memoryObject, "post_update_delta_bytes")) {
+        if (!delta->isNull()) {
+          const auto &object = delta->asObject();
+          rejectUnknownFields(object, {"constant", "terms"}, "canonical update delta");
+          CanonicalAffineExpression expression;
+          expression.constant = required(object, "constant").asInt();
+          for (const auto &term : required(object, "terms").asArray()) {
+            const auto &fields = term.asObject();
+            rejectUnknownFields(fields, {"variable_id", "coefficient"}, "canonical affine term");
+            expression.terms.push_back({required(fields, "variable_id").asString(),
+                                       required(fields, "coefficient").asInt()});
+          }
+          memory.postUpdateDeltaBytes = std::move(expression);
+        }
+      }
       result.memoryAccess = std::move(memory);
     }
   }

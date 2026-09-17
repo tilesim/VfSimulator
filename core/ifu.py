@@ -119,7 +119,7 @@ class IFUUnroll:
         self.nodes = [dict(x) for x in (linear_nodes or [])]
         self.params = dict(params or {})
         self.db = pdb
-        self.dtype = str(dtype)
+        self.fallback_dtype = str(dtype)
         self.structured_value_identity = bool(structured_value_identity)
         self.ub_dependency_mode = str(ub_dependency_mode)
         self.ub_address_generator = (

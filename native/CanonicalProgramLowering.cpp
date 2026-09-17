@@ -196,6 +196,10 @@ private:
     dynamic.op = instruction.opcode;
     dynamic.form = instruction.form;
     dynamic.staticInstructionId = instruction.instructionId;
+    for (const auto &operand : instruction.inputs)
+      if (operand.memoryAccess) dynamic.memoryAccesses.push_back(*operand.memoryAccess);
+    for (const auto &operand : instruction.outputs)
+      if (operand.memoryAccess) dynamic.memoryAccesses.push_back(*operand.memoryAccess);
     fillDynamicMetadata(dynamic);
     for (const auto &operand : instruction.inputs)
       dynamic.src.push_back(resolve(operand.valueId));
@@ -429,6 +433,7 @@ integerUarchOverrideFields() {
       {"load_ports", &UarchConfig::loadPorts},
       {"store_ports", &UarchConfig::storePorts},
       {"ub_slots", &UarchConfig::ubSlots},
+      {"lsu_post_update_ready_latency", &UarchConfig::lsuPostUpdateReadyLatency},
       {"lsu_store_priority_preg_threshold",
        &UarchConfig::lsuStorePriorityPregThreshold},
       {"IDU_window_width", &UarchConfig::iduWindowWidth},

@@ -6,6 +6,7 @@
     "store_ports": {"type": "integer", "targets": ["python", "cpp"]},
     "ub_slots": {"type": "integer", "targets": ["python", "cpp"]},
     "lsu_store_priority_preg_threshold": {"type": "integer", "targets": ["python", "cpp"]},
+    "lsu_post_update_ready_latency": {"type": "integer", "targets": ["python", "cpp"]},
     "IDU_window_width": {"type": "integer", "targets": ["python", "cpp"]},
     "IDU_issue_width": {"type": "integer", "targets": ["python", "cpp"]},
     "LDQ_width": {"type": "integer", "targets": ["python", "cpp"]},

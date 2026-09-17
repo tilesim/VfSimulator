@@ -111,7 +111,7 @@ std::string joinIterationPath(
 
 OoOCore::OoOCore(const UarchConfig &uarch, const ParamDB &db, std::string dtype,
                  const std::unordered_map<std::string, ValueInfo> &values)
-    : db_(db), dtype_(std::move(dtype)), valueStorage_(values) {
+    : db_(db), fallbackDtype_(std::move(dtype)), valueStorage_(values) {
   theoreticalLimitMode_ = false;
   enableIsuQueueModel_ = uarch.enableIsuQueueModel;
   loadPorts_ = static_cast<int>(uarch.loadPorts);
@@ -121,6 +121,9 @@ OoOCore::OoOCore(const UarchConfig &uarch, const ParamDB &db, std::string dtype,
   ubSlots_ = static_cast<int>(uarch.ubSlots);
   lsuStorePriorityPregThreshold_ =
       static_cast<int>(uarch.lsuStorePriorityPregThreshold);
+  if (uarch.lsuPostUpdateReadyLatency <= 0)
+    throw std::runtime_error("lsu_post_update_ready_latency must be positive");
+  addressStates_.updateLatency = uarch.lsuPostUpdateReadyLatency;
   if (loadPorts_ <= 0 || storePorts_ <= 0 || ubSlots_ <= 0)
     throw std::invalid_argument(
         "load_ports, store_ports, and ub_slots must be positive");
@@ -313,7 +316,7 @@ bool OoOCore::blockedByControlUnit(const Uop &u) const {
   inst.op = u.op;
   inst.form = u.form;
   inst.streamSeq = u.streamSeq;
-  return controlUnit_->blocks(inst, db_, dtype_);
+  return controlUnit_->blocks(inst, db_, fallbackDtype_);
 }
 
 std::tuple<int64_t, std::optional<std::string>,
@@ -437,6 +440,16 @@ void OoOCore::log(const std::string &event, const Uop &u) {
       u.doneCycle, u.src, u.dst, u.pregSrc, u.pregDst, u.pregOld,
       u.producerOpForStore, u.producerStartForStore, u.staticInstructionId,
       u.iterationPath, u.streamSeq});
+  auto &record = history_.back();
+  for (const auto &binding : u.addressBindings) {
+    record.addressStateIds.push_back(binding.stateId);
+    for (const auto &[event, delay] : binding.dependencies)
+      record.addressDependencies.emplace_back(event->instId, delay);
+  }
+  std::sort(record.addressStateIds.begin(), record.addressStateIds.end());
+  auto &deps = record.addressDependencies;
+  std::sort(deps.begin(), deps.end());
+  deps.erase(std::unique(deps.begin(), deps.end()), deps.end());
 }
 
 void OoOCore::logMembarBlocked(Uop &u) {
@@ -484,7 +497,14 @@ void OoOCore::dumpHistory(const std::string &path) const {
        << "\"static_instruction_id\":\"" << jsonEscape(h.staticInstructionId) << "\","
        << "\"iteration_path\":" << joinIterationPath(h.iterationPath) << ","
        << "\"stream_seq\":" << h.streamSeq
-       << "}";
+       << ",\"address_state_ids\":" << joinJsonArray(h.addressStateIds)
+       << ",\"address_dependencies\":[";
+    for (size_t j = 0; j < h.addressDependencies.size(); ++j) {
+      if (j) os << ",";
+      os << "[" << h.addressDependencies[j].first << ","
+         << h.addressDependencies[j].second << "]";
+    }
+    os << "]}";
     if (i + 1 < history_.size())
       os << ",";
     os << "\n";
@@ -736,7 +756,7 @@ void OoOCoreMainline::accept(const DynamicInst &inst) {
   Uop u;
   u.instId = inst.instId;
   u.op = inst.op;
-  u.form = inst.form.empty() ? dtype_ : inst.form;
+  u.form = inst.form.empty() ? fallbackDtype_ : inst.form;
   const InstConfig &profile = db_.inst(u.op, u.form);
   u.opClass = profile.opClass;
   std::transform(u.opClass.begin(), u.opClass.end(), u.opClass.begin(),
@@ -791,6 +811,7 @@ void OoOCoreMainline::accept(const DynamicInst &inst) {
   u.streamSeq = inst.streamSeq;
   u.staticInstructionId = inst.staticInstructionId;
   u.iterationPath = inst.iterationPath;
+  u.addressBindings = addressStates_.bind(u.instId, inst.memoryAccesses);
 
   for (const auto &preg : u.pregSrc) {
     if (preg) {
@@ -929,6 +950,9 @@ void OoOCore::issueReadyLsu(
       continue;
     if (u.opClass == "STORE" && issuedStores >= storePorts_)
       continue;
+    if (!std::all_of(u.addressBindings.begin(), u.addressBindings.end(),
+                     [cycle](const auto &binding) { return binding.canIssue(cycle); }))
+      continue;
     if (blockedByControlUnit(u)) {
       if (membarBlockedLoggedIds.insert(u.instId).second)
         logMembarBlocked(u);
@@ -938,6 +962,7 @@ void OoOCore::issueReadyLsu(
       continue;
 
     u.startCycle = cycle;
+    addressStates_.notifyStart(u.addressBindings, cycle);
     u.blockedReason.reset();
     u.doneCycle = cycle + u.latency;
     u.state = "running";
