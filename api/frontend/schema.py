@@ -68,6 +68,9 @@ class MemoryAccess:
     access_kind: AccessKind
     span: int | None = None
     alias_group: str | None = None
+    address_state_id: str | None = None
+    update_mode: str = "none"
+    post_update_delta_bytes: AffineExpression | None = None
 
 
 @dataclass(frozen=True)

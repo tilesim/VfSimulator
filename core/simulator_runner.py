@@ -96,11 +96,9 @@ def dump_model_warnings(
     results_dir: str,
     *,
     instruction_warnings: list[Dict[str, Any]] | None = None,
-    vreg_warnings: list[Dict[str, Any]] | None = None,
 ) -> bool:
     instruction_warnings = list(instruction_warnings or [])
-    vreg_warnings = list(vreg_warnings or [])
-    if not instruction_warnings and not vreg_warnings:
+    if not instruction_warnings:
         return False
     if not os.path.exists(results_dir):
         os.makedirs(results_dir)
@@ -109,7 +107,8 @@ def dump_model_warnings(
         json.dump(
             {
                 "has_warning": True,
-                "vreg_capacity_warnings": vreg_warnings,
+                # Preserve the log shape for existing readers; old heuristic removed.
+                "vreg_capacity_warnings": [],
                 "instruction_fallback_warnings": instruction_warnings,
             },
             f,
@@ -142,11 +141,11 @@ def run_simulation(
     value_storage = ValueStorageLookup(values)
     idu.value_storage = value_storage
     pdb = getattr(ooo, "db", None)
-    dtype = str(getattr(ooo, "dtype", "fp32"))
+    fallback_dtype = str(getattr(ooo, "fallback_dtype", "fp32"))
     membar_config = uarch.get("membar_timing")
     control_unit = (
-        TimedControlUnit(pdb, dtype, membar_config, issue_floor=ooo.vf_startup_cost)
-        if "membar_timing" in uarch else ControlUnit(pdb, dtype)
+        TimedControlUnit(pdb, fallback_dtype, membar_config, issue_floor=ooo.vf_startup_cost)
+        if "membar_timing" in uarch else ControlUnit(pdb, fallback_dtype)
     )
     setattr(ooo, "control_unit", control_unit)
     idu_to_ooo_delay = int(uarch.get("idu_to_ooo_delay", 0))
@@ -172,7 +171,7 @@ def run_simulation(
         while idu_to_ooo_pipe and idu_to_ooo_pipe[0][0] <= cycle:
             _, inst = idu_to_ooo_pipe.popleft()
             if use_explicit_idu_credit_bank:
-                r = _inst_reservation(inst, value_storage, pdb, dtype)
+                r = _inst_reservation(inst, value_storage, pdb, fallback_dtype)
                 idu_pending_shq_queue = max(
                     0, int(idu_pending_shq_queue) - int(r["shq_queue"])
                 )
@@ -182,7 +181,7 @@ def run_simulation(
         pending_preg = pending_shq_queue = pending_lsq = pending_shq = 0
         if not use_explicit_idu_credit_bank:
             for _, inst in idu_to_ooo_pipe:
-                r = _inst_reservation(inst, value_storage, pdb, dtype)
+                r = _inst_reservation(inst, value_storage, pdb, fallback_dtype)
                 pending_preg += int(r["preg"])
                 pending_shq_queue += int(r["shq_queue"])
                 pending_lsq += int(r["lsq"])
@@ -210,7 +209,7 @@ def run_simulation(
                 stream_seq=seq,
                 op_class=cls,
                 pdb=pdb,
-                dtype=dtype,
+                dtype=fallback_dtype,
             ),
             cycle=cycle,
             has_pending_dispatch=lambda seq: any(
@@ -240,7 +239,7 @@ def run_simulation(
         to_send = idu.dispatch(cycle, idu_credit_proxy)
         for inst in to_send:
             if use_explicit_idu_credit_bank:
-                r = _inst_reservation(inst, value_storage, pdb, dtype)
+                r = _inst_reservation(inst, value_storage, pdb, fallback_dtype)
                 idu_preg_credit = max(0, int(idu_preg_credit) - int(r["preg"]))
                 idu_shq_credit = max(0, int(idu_shq_credit) - int(r["shq"]))
                 if idu_to_ooo_delay > 0:

@@ -11,6 +11,7 @@
 #include <unordered_map>
 #include <utility>
 #include <vector>
+#include "api/native/CanonicalVfInfo.h"
 
 namespace vfsim {
 
@@ -26,6 +27,7 @@ struct DynamicInst {
   std::vector<std::string> dst;
   std::string alignStateOperation;
   std::string alignStateId;
+  std::vector<CanonicalMemoryAccess> memoryAccesses;
   std::vector<bool> srcValueRelease;
   std::vector<bool> dstValueKeep;
   std::string staticInstructionId;
