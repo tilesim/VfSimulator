@@ -34,7 +34,7 @@ class IDU:
             uarch.get("theoretical_limit_vloop_only", False)
         )
         self.db = pdb
-        self.dtype = str(dtype)
+        self.fallback_dtype = str(dtype)
         self.value_storage = ValueStorageLookup(values)
 
         defaults = self.db.get_defaults()
@@ -420,7 +420,7 @@ class IDU:
                 break
 
             op = inst.get("op", "")
-            form = inst.get("form") or self.dtype
+            form = inst.get("form") or self.fallback_dtype
             iter_stack = inst.get("iter_stack", [])
             top_block_id = int(inst.get("top_block_id", 0))
 

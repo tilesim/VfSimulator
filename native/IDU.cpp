@@ -39,7 +39,7 @@ IDU::IDU(const UarchConfig &uarch,
          std::string dtype,
          std::unordered_map<std::string, ValueInfo> values,
          std::unordered_set<int64_t> emptyTopBlocks)
-    : db_(db), dtype_(std::move(dtype)), valueStorage_(values),
+    : db_(db), fallbackDtype_(std::move(dtype)), valueStorage_(values),
       loopBounds_(std::move(loopBounds)), totalTopBlocks_(totalTopBlocks),
       topBlockLoopBounds_(std::move(topBlockLoopBounds)),
       emptyTopBlocks_(std::move(emptyTopBlocks)) {
@@ -321,7 +321,7 @@ std::vector<DynamicInst> IDU::dispatch(int64_t cycle, const IDUDispatchBudget &b
       }
     }
 
-    const std::string &form = inst.form.empty() ? dtype_ : inst.form;
+    const std::string &form = inst.form.empty() ? fallbackDtype_ : inst.form;
     const bool isLoad = isLoadOp(db_, inst.op, form);
     const bool isStore = isStoreOp(db_, inst.op, form);
     if (isLoad) {

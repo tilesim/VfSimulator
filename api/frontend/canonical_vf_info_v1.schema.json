@@ -107,7 +107,10 @@
         "offset": {"$ref": "#/$defs/affineExpression"},
         "access_kind": {"enum": ["read", "write"]},
         "span": {"type": ["integer", "null"], "minimum": 1, "maximum": 9223372036854775807},
-        "alias_group": {"type": ["string", "null"]}
+        "alias_group": {"type": ["string", "null"]},
+        "address_state_id": {"type": ["string", "null"], "minLength": 1},
+        "update_mode": {"enum": ["none", "post_update"]},
+        "post_update_delta_bytes": {"anyOf": [{"$ref": "#/$defs/affineExpression"}, {"type": "null"}]}
       }
     },
     "operand": {

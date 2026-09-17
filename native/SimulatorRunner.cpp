@@ -183,9 +183,9 @@ SimulationResult runCanonicalVfInfo(const CanonicalVfInfo &vfInfo,
   IFU ifu(std::move(runtime.instructions), runtime.topBlockLoopBounds,
           runtime.totalTopBlocks);
   IDU idu(uarch, db, runtime.params, {}, runtime.totalTopBlocks,
-          runtime.topBlockLoopBounds, runtime.dtype, runtime.values,
+          runtime.topBlockLoopBounds, runtime.fallbackDtype, runtime.values,
           runtime.emptyTopBlocks);
-  OoOCoreMainline ooo(uarch, db, runtime.dtype, runtime.values);
+  OoOCoreMainline ooo(uarch, db, runtime.fallbackDtype, runtime.values);
   return runSimulation(ifu, idu, ooo, uarch, runtime.params, resultsDir,
                        maxCycles, runtime.values);
 }
@@ -219,7 +219,7 @@ SimulationResult runSimulation(IFU &ifu,
   int64_t iduShqCredit = ooo.getFreeShq();
   int64_t iduPendingShqQueue = 0;
   int64_t iduPendingLsq = 0;
-  const std::string dtype = "fp32";
+  const std::string fallbackDtype = "fp32";
   (void)params;
 
   int64_t cycle = 0;
@@ -243,7 +243,7 @@ SimulationResult runSimulation(IFU &ifu,
       auto item = std::move(iduToOooPipe.front());
       iduToOooPipe.pop_front();
       if (useExplicitIduCreditBank) {
-        const auto r = reservationForInst(item.second, idu.db(), dtype, valueStorage);
+        const auto r = reservationForInst(item.second, idu.db(), fallbackDtype, valueStorage);
         iduPendingShqQueue = std::max<int64_t>(0, iduPendingShqQueue - r.shqQueue);
         iduPendingLsq = std::max<int64_t>(0, iduPendingLsq - r.lsq);
       }
@@ -258,7 +258,7 @@ SimulationResult runSimulation(IFU &ifu,
     int64_t pendingShq = 0;
     if (!useExplicitIduCreditBank) {
       for (const auto &item : iduToOooPipe) {
-        const auto r = reservationForInst(item.second, idu.db(), dtype, valueStorage);
+        const auto r = reservationForInst(item.second, idu.db(), fallbackDtype, valueStorage);
         pendingPreg += r.preg;
         pendingShqQueue += r.shqQueue;
         pendingLsq += r.lsq;
@@ -283,7 +283,7 @@ SimulationResult runSimulation(IFU &ifu,
 
     controlUnit.update([&](int64_t streamSeq, const std::string &opClass) {
       for (const auto &inst : idu.window()) {
-        const std::string form = inst.form.empty() ? dtype : inst.form;
+        const std::string form = inst.form.empty() ? fallbackDtype : inst.form;
         if (inst.streamSeq < streamSeq &&
             ((opClass == "LOAD" && isLoadOp(idu.db(), inst.op, form)) ||
              (opClass == "STORE" && isStoreOp(idu.db(), inst.op, form)))) {
@@ -292,7 +292,7 @@ SimulationResult runSimulation(IFU &ifu,
       }
       for (const auto &item : iduToOooPipe) {
         const auto &inst = item.second;
-        const std::string form = inst.form.empty() ? dtype : inst.form;
+        const std::string form = inst.form.empty() ? fallbackDtype : inst.form;
         if (inst.streamSeq < streamSeq &&
             ((opClass == "LOAD" && isLoadOp(idu.db(), inst.op, form)) ||
              (opClass == "STORE" && isStoreOp(idu.db(), inst.op, form)))) {
@@ -322,7 +322,7 @@ SimulationResult runSimulation(IFU &ifu,
       std::cerr << "[vfsim] cycle " << cycle << " dispatch end n=" << dispatched.size() << "\n";
     for (const auto &inst : dispatched) {
       if (useExplicitIduCreditBank) {
-        const auto r = reservationForInst(inst, idu.db(), dtype, valueStorage);
+        const auto r = reservationForInst(inst, idu.db(), fallbackDtype, valueStorage);
         iduPregCredit = std::max<int64_t>(0, iduPregCredit - r.preg);
         iduShqCredit = std::max<int64_t>(0, iduShqCredit - r.shq);
         if (iduToOooDelay > 0) {

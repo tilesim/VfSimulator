@@ -28,8 +28,16 @@ class CoreVfCostModel(VfCostModel):
 
     base_dir: str | Path = Path(__file__).resolve().parents[1]
     out_dir: str | Path = "results/api_costmodel"
-    dtype: str = "fp32"
+    fallback_dtype: str = "fp32"
     include_param_cache_stats: bool = False
+    # Compatibility keyword only; instruction forms remain authoritative.
+    dtype: str | None = None
+
+    def __post_init__(self) -> None:
+        if self.dtype is not None:
+            if self.fallback_dtype != "fp32" and self.fallback_dtype != self.dtype:
+                raise ValueError("dtype and fallback_dtype must not conflict")
+            self.fallback_dtype = self.dtype
 
     def predict_vf_cycles(self, vf_info: CanonicalVfInfo) -> int:
         return int(self.run_vf_info(vf_info)["vf_end_cycle"])
@@ -57,7 +65,7 @@ class CoreVfCostModel(VfCostModel):
                 "use run_payload() for CanonicalVfInfo JSON input"
             )
         base_dir = Path(self.base_dir)
-        dtype = str(payload.get("dtype", self.dtype))
+        fallback_dtype = str(payload.get("fallback_dtype", self.fallback_dtype))
         params = payload.get("params", {}) or {}
         if not isinstance(params, dict):
             raise RuntimeError("payload key 'params' must be a dict when provided")
@@ -92,7 +100,7 @@ class CoreVfCostModel(VfCostModel):
             linear,
             params,
             pdb=db,
-            dtype=dtype,
+            dtype=fallback_dtype,
             structured_value_identity=True,
             structured_dynamic_instruction_limit=dynamic_instruction_limit,
         )
@@ -105,10 +113,10 @@ class CoreVfCostModel(VfCostModel):
             loop_bounds=loop_bounds,
             total_top_blocks=len(top_block_loop_bounds),
             top_block_loop_bounds=top_block_loop_bounds,
-            dtype=dtype,
+            dtype=fallback_dtype,
             empty_top_blocks=empty_top_blocks,
         )
-        ooo = create_ooo_core(uarch, db, dtype=dtype, values=values)
+        ooo = create_ooo_core(uarch, db, dtype=fallback_dtype, values=values)
 
         results_dir = Path(self.out_dir)
         if not results_dir.is_absolute():
