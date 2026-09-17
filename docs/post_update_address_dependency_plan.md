@@ -2,9 +2,11 @@
 
 ## 1. 基线与目标
 
-本文基于本地 master 提交 `d9b19f3` 的代码审查编写。编写时工作目录实际属于 MultiSoC-membar 分支，本文不将该实验分支的 UB 地址计算能力视为 master 已有功能。实施前应确认目标分支和最新基线。
+本文最初基于 master `d9b19f3` 编写，2026-09-17 根据新执行的 camodel 积压实验修订。master 工作区已将首版 LSU 地址事件方案替换为 IDU dispatch 地址状态模型，验证见第 11 节。第 10 节保留首版历史，不作为当前开发要求。
 
-目标是补齐 load/store 的 POST_UPDATE 地址状态依赖，解释共享地址状态时不能同周期连续发射的现象，同时保留独立地址状态的并行能力。
+目标是在 IDU 顺序 dispatch 时建模 POST_UPDATE 地址状态依赖，解释同指针指令不能同周期 dispatch 的现象，同时允许已进入后端的同指针 load 在资源满足时双发。
+
+**本次修订撤销“依赖前一条 LSU start + 1”的约束，不采用 IDU 与 LSU 两层叠加地址间隔。** 实验源码和完整证据见 [POST_UPDATE 积压实验](../results/post_update_backlog_probe/README.md)，复现入口为 `tools/run_post_update_backlog_probe.py`。
 
 本次不是修改 load/store latency，不是降低全局 load 吞吐，也不是引入 UB 地址重叠依赖或替换 mem_bar。Python 和 C++ 的 canonical 接口与调度行为需要同步。
 
@@ -17,20 +19,34 @@ vlds(r0, p, 64, POST_UPDATE);
 vlds(r1, p, 64, POST_UPDATE);
 ```
 
-第一条使用更新前的 p 访问内存，然后产生新的 p；第二条使用更新后的 p。即使两个 load port 和 UB 发射额度均可用，第二条也必须等待地址更新结果。
+两条指令分别使用更新前后的 p。需要等待的是 IDU 阶段的地址状态转发，不是等待前一条访存指令在 LSU start 或 done。
 
-目前讨论采用的初始时序是假设更新结果在前一条指令发射后一周期可用，而非等待其完整访存 latency。该时序需要用已有 camodel 实验复核，不应宣称适用于所有指令和 SoC。
+当前实验支持：第一条在 t0 成功 dispatch，第二条最早 t0+1 dispatch。两条之后如果在后端积压，可以同周期 issue。不要将 IDU dispatch、ISU issue 和 LSU_I1 混为一个“发射”事件。普通 VLDS 的积压双发已经实测；特殊 store 及其他 SoC 的具体转发时序仍需校准。
 
 相反，两次访问若只读取 p、不更新 p，则没有此类更新依赖。两个独立指针 p、q 即使指向同一 UB allocation，也不应因为 allocation 相同而被串行化。
 
 CCE 指针身份是地址状态的源级抽象，不必然等同于编译后的物理地址寄存器分配。预测结果与 camodel 不一致时，需要检查这一映射，而不是直接增加全局发射限制。
 
-### 2.1 master 当前缺口
+### 2.1 当前实现的问题与保留部分
 
-1. `api/cce_adapter.py::_memory_accesses_for_call()` 将调用 offset 合入访问偏移，没有单独区分 POST_UPDATE 的访问位置与更新步长。
-2. `api/frontend/schema.py::MemoryAccess` 没有独立的地址状态身份与更新语义。
-3. Python/C++ 的 Uop 和 LSU 发射检查中没有地址状态依赖。
-4. load/store 依据物理寄存器压力排序，后面的 load 可能先于前面的 store 被选中；仅在成功发射时记录一个指针时间戳不能阻止尚未发射的前序更新被越过。
+1. 首版 CCE/canonical 已传递 `address_state_id`、`update_mode` 和 `post_update_delta_bytes`，保留这部分能力。
+2. 首版在 OoO accept 时绑定事件，在 LSU start 时释放依赖，约束阶段错误。
+3. 首版允许 IDU 持续分发，LSU 可绕过受阻指针选择其他指针，无法复现真实 IDU 队头阻塞。
+4. 首版禁止积压的同指针 load 同周期 issue，与新实验直接冲突。必须移除，而非仅叠加 IDU 检查。
+
+### 2.2 新实验的判别证据
+
+在 24 条串行 VADDS、前置 store 和 VST_VLD barrier 后积压 load，得到：
+
+| 同一 Sn[64]、#p=1 的指令 | IDU dispatch | LDQ 接收 | ISU issue | LSU_I1 |
+| --- | ---: | ---: | ---: | ---: |
+| 85 | 1712 | 1714 | 1799 | 1800，LDU0 |
+| 86 | 1713 | 1715 | 1799 | 1800，LDU1 |
+
+两条同周期从 LDQ issue 并进入不同 LDU，证明不能加 LSU 同指针最小 start 间隔。
+同指针、独立指针、显式 offset 三个版本均通过 1024 个 fp32 输出校验。
+barrier 可以提前进入后端并通过背压形成积压；不能假设所有等待都发生在 LDQ，
+也不能把较早的 ISU issue 当成 UB 已执行完成。本次不顺带重构 membar。
 
 ## 3. 建模边界与接口
 
@@ -40,13 +56,13 @@ CCE 指针身份是地址状态的源级抽象，不必然等同于编译后的�
 | --- | --- | --- |
 | UB allocation ID | 数据位于哪块内存 | 保留现有描述，不作为指针身份 |
 | 地址状态 ID | 哪个可更新指针状态 | 建立地址读取与更新依赖 |
-| 动态依赖记录 | 某次更新或读取何时发生 | 判断 LSU 是否可以发射 |
+| IDU 地址就绪记录 | 前次成功 dispatch 产生的更新何时可用 | 判断当前队头是否可 dispatch |
 
 不要把地址状态当成普通 vector Register，不进入 vector RAT，不消耗 preg credit。
 
 ### 3.2 Canonical 描述
 
-在 canonical 内存访问描述中显式表达以下语义，最终字段名由开发者结合现有类型确定：
+保留首版 canonical 内存访问字段，表达以下语义：
 
 - 使用的地址状态 ID，可选，缺省表示调用方未提供地址状态信息。
 - 更新模式，至少区分不更新与 POST_UPDATE。
@@ -61,71 +77,72 @@ CCE adapter 根据 Catalog 的参数定义识别 offset、update 和 memory oper
 
 旧 canonical 输入没有地址状态描述时维持原行为。显式声明 POST_UPDATE 却缺少地址状态等必要信息的输入应校验失败。
 
-## 4. 动态依赖规则
+## 4. IDU 地址状态规则
 
-### 4.1 建立位置
+### 4.1 检查与提交位置
 
-在动态指令按程序顺序进入 OoO、创建 Uop 时建立依赖。Python 使用 `RenameController.accept()`，C++ 使用 `OoOCoreMainline::accept()`。
+在 Python `core/idu.py::IDU.dispatch()` 和 C++ `native/IDU.cpp::IDU::dispatch()`
+中检查。以最终动态流顺序处理窗口队头，跨 loop/unroll 保持同一地址状态的关联。
+遇到地址未就绪必须停止本轮顺序 dispatch，不能 continue 跳过队头。
 
-以最终展开流的顺序为准，覆盖循环、跨迭代与 unroll；不能使用重复的静态 PC，也不能按 LSU 候选优先级建立依赖。实施时验证 accept 的顺序确实与 `stream_seq` 一致。
+只有指令满足原有资源、宽度和其他 dispatch 条件并成功分发后，才登记其地址更新。
+失败尝试不能占用 credit，不能更新 scoreboard，也不能对下一条制造虚假依赖。
+记录的时间是 IDU dispatch，而不是经过 `idu_to_ooo_delay` 后的 OoO accept。
 
-### 4.2 依赖语义
+### 4.2 就绪表与操作规则
 
-对每个地址状态维护最近的更新事件和当前版本尚未完成地址读取的访问：
+每个地址状态维护最近一次更新的 `ready_cycle`，可附带 producer 动态身份用于日志。
 
-1. 所有访问都读取当前地址版本，依赖前一个更新事件。
-2. POST_UPDATE 同时产生下一地址版本，后续访问绑定到这个新版本。
-3. 更新不得越过此前尚未完成地址读取的访问，避免破坏旧版本的使用。
-4. 同一版本的只读访问之间不建立串行依赖。
-5. 当前指令先绑定前序依赖，再登记自身读取与更新事件，避免自依赖。
+1. 当前访问检查其所有地址状态的 ready_cycle，任一未就绪则阻塞队头。
+2. 成功 dispatch 的 POST_UPDATE 将对应状态设为 `cycle + 配置间隔`。
+3. 不更新地址的访问不改写 ready_cycle，因此同一状态的纯 NORM 访问不额外串行。
+4. POST_UPDATE 后的 NORM 仍需等待前次更新；NORM 后接更新依靠 IDU 按序取地址，不等待 NORM 的 LSU start。
+5. 更新标志独立于步长，零步长 POST_UPDATE 仍按更新指令处理。
+6. 同周期多次调用 dispatch 共用状态，不在函数返回时清空。
 
-地址读取暂以访存指令实际 start 为完成事件。对于“先读取、后更新”的防越过约束，第一版可要求前序读取已经 start，但不额外添加一周期。是否允许同周期读取与后续更新应通过边界测试与 camodel 校准，不能将更新结果的延迟机械套用到反依赖上。
+IDU 成功 dispatch 可视为本模型中的地址读取/版本捕获事件。已经进入后端的指令
+不再读取一个会被后续指令修改的全局指针值，因此无需继续维护等待 LSU start 的 WAR reader 列表。
+这是一种与日志一致的时序抽象，不宣称精确还原硬件物理 SREG 实现。
 
-### 4.3 事件与生命周期
+### 4.3 简化跟踪器
 
-建议使用独立、可共享的轻量事件记录，保存动态指令身份及 start/ready 时间。不要依赖 producer 始终存在于 LSQ 或 ROB 中。
-
-C++ 当前调度结构存在 Uop 的多份副本，必须保证事件状态一致，不能缓存可能因容器移动而失效的裸指针。完成且无人引用的事件应可回收，避免随循环次数无限累计。
-
-可新增一个小型地址状态跟踪器，建议职责接口如下，名称并非硬性要求：
+将 `core/address_state.py` 和 `native/AddressState.h` 改为 IDU 所有的轻量 scoreboard，
+不再给每条 Uop 创建共享地址事件图。可采用以下职责划分，具体命名由开发者决定：
 
 | 建议接口 | 职责 |
 | --- | --- |
-| `bind(uop, access)` | 按程序顺序绑定地址依赖、创建更新事件 |
-| `can_issue(uop, cycle)` | 检查更新可用时间和前序地址读取事件 |
-| `notify_start(uop, cycle)` | 成功发射后发布读取完成和更新可用时间 |
+| `can_dispatch(accesses, cycle)` | 无副作用地判断地址状态是否就绪 |
+| `notify_dispatch(inst, cycle)` | 成功 dispatch 后登记更新和日志身份 |
 
-不需要每周期扫描完整 ROB，也不应为所有历史访存维护两两依赖矩阵。
+每个地址状态只保留必要的最新记录，不随动态指令数无限增长。每次新 VF 仿真重置状态。
+不需要扫描 ROB 或 LSQ，不占 vector preg，也不引入完整的物理 SREG 分配器。
 
-## 5. LSU 发射规则
+## 5. 配置与后端清理
 
-在 Python `_issue_ready_lsu()` 和 C++ `issueReadyLsu()` 中，实际占用端口之前增加地址依赖检查。
-
-```text
-原有数据 ready 条件满足
-且地址状态依赖满足
-且 mem_bar 条件满足
-且 load/store port 和 UB 额度满足
-    -> 指令实际发射
-    -> 发布地址读取事件
-    -> 若有更新，发布更新结果可用时间
-```
-
-建议新增架构参数 `lsu_post_update_ready_latency`，初始值为 1，定义为：
+新参数建议为 `idu_post_update_ready_latency`，默认值为 1，正整数，定义如下：
 
 ```text
-更新结果 ready_cycle = producer.start_cycle + lsu_post_update_ready_latency
+地址 ready_cycle = 前一条更新指令的 IDU dispatch_cycle
+                    + idu_post_update_ready_latency
 ```
 
-第一版仅接受正整数，Python/C++ 保持同样的默认值和校验。该参数不复用指令 latency，也不放入按 opcode/form 查询的数据 forwarding 表。
+这是地址更新转发的 dispatch 间隔，不是访存 latency，也不是 LSU II。
+Python/C++ 配置文件、共享 override schema、生成文件和校验必须一致。
 
-地址阻塞应跳过当前候选，继续考察无关地址的候选。保留既有 load/store 压力优先级、端口数、ub_slots 和 mem_bar 行为，不在 IDU 引入阻塞。
+删除首版 `lsu_post_update_ready_latency`，遇到旧字段给出明确迁移错误，不能静默忽略，
+也不能在不告知语义改变的情况下直接当成新参数使用。
 
-同周期可能多次进入 LSU 发射函数，事件状态必须贯穿整个 cycle，不能在一次函数调用返回时清空。
+移除 Python `_issue_ready_lsu()` 和 C++ `issueReadyLsu()` 中的地址 can_issue/notify_start；
+同时移除 OoO accept 的地址事件绑定、Uop 共享事件引用及失去用途的生命周期代码。
+不要保留一个关闭的旧 LSU 模式增加维护负担。
+
+保留原有 vector 数据 ready、mem_bar、load/store 优先级、端口和 ub_slots 判断。
+两条同指针 load 已通过 IDU 后，只要这些原有条件满足，就允许在后端双发。
+不得用 SHQ 阻塞、缩小 UB 带宽或增大 load latency 替代 IDU 队头阻塞。
 
 ## 6. 代码改动位置与关键函数
 
-以下路径相对于目标仓库根目录，依据 master `d9b19f3` 核对。
+以下路径相对于目标仓库根目录，包含 master 首版实现后的增量修改。
 
 ### 6.1 Python 前端与接口
 
@@ -133,7 +150,7 @@ C++ 当前调度结构存在 Uop 的多份副本，必须保证事件状态一�
 | --- | --- | --- |
 | `api/cce_adapter.py::_memory_accesses_for_call()` | 从 CCE 调用构造内存访问 | 识别更新模式，分离访问偏移与步长，传递指针身份 |
 | `api/frontend/adapter_ir.py::AdapterMemoryAccess` | adapter 中间访问描述 | 承载地址状态信息 |
-| `api/frontend/schema.py::MemoryAccess` | canonical 内存语义 | 增加正式类型字段 |
+| `api/frontend/schema.py::MemoryAccess` | canonical 内存语义 | 保留首版正式字段，不另建私有属性路径 |
 | `api/frontend/value_versioning.py::ValueVersioningPass` | 将 adapter 转成版本化 canonical | 保留地址信息，不把指针塞入 vector 版本化路径 |
 | `api/frontend/serialization.py` 及 canonical 校验入口 | JSON 读写与语义检查 | 字段往返、缺省兼容与非法组合校验 |
 | `api/frontend/core_lowering.py::CoreLoweringPass._memory_accesses()` | 输出核心内存描述 | 传递地址字段，防止 lowering 丢失信息 |
@@ -143,10 +160,13 @@ C++ 当前调度结构存在 Uop 的多份副本，必须保证事件状态一�
 | 文件或函数 | 当前职责 | 本次修改 |
 | --- | --- | --- |
 | `core/ifu.py` | 指令展开、动态顺序与迭代信息 | 保证地址字段经过所有展开路径后仍存在 |
-| `core/ooo.py::Uop` | 动态调度状态 | 增加地址依赖事件引用，不增加 preg |
-| `core/ooo_mainline.py::RenameController.accept()` | 动态指令接收与重命名 | 按动态顺序绑定地址依赖 |
-| `core/ooo_mainline.py::_issue_ready_lsu()` | LSU 候选选择与实际发射 | 检查依赖并发布 start 事件 |
-| 架构配置读取与校验路径 | 初始化时序和资源参数 | 读取并校验更新可用延迟 |
+| `core/idu.py::IDU.dispatch()` | 顺序 dispatch 与资源检查 | 队头检查地址 ready；成功分发后提交更新 |
+| `core/address_state.py` | 首版 OoO 地址事件跟踪 | 简化为 IDU 地址就绪表 |
+| `core/ooo.py::Uop` | 动态调度状态 | 删除地址事件引用，不改变 preg |
+| `core/ooo_mainline.py::RenameController.accept()` | 动态指令接收与重命名 | 删除地址事件绑定 |
+| `core/ooo_mainline.py::_issue_ready_lsu()` | LSU 候选选择与实际发射 | 删除地址 start 间隔约束，保留其他 ready 条件 |
+| `core/simulator_runner.py` 及 dispatch 日志路径 | IDU 与 OoO 连接、trace | 日志区分 dispatch/accept/start，记录地址阻塞原因 |
+| 架构配置读取与校验路径 | 初始化时序和资源参数 | 迁移至 IDU 参数，拒绝旧 LSU 字段 |
 
 ### 6.3 C++ 对齐
 
@@ -157,9 +177,12 @@ C++ 当前调度结构存在 Uop 的多份副本，必须保证事件状态一�
 | `native/CanonicalVfInfoFixtureDecoder.cpp` | 支持测试与 JSON 输入字段 |
 | `native/CanonicalProgramLowering.cpp::expandInstruction()` | canonical 地址描述传至动态指令 |
 | `native/IFU.h::DynamicInst` | 保留地址描述，检查循环/unroll 路径不丢字段 |
-| `native/OOO.h::Uop` | 共享地址依赖事件记录 |
-| `native/OOO.cpp::OoOCoreMainline::accept()` | 顺序绑定依赖 |
-| `native/OOO.cpp::issueReadyLsu()` | 发射检查与事件发布 |
+| `native/IDU.h`、`native/IDU.cpp::IDU::dispatch()` | 持有 scoreboard，队头检查与成功 dispatch 提交 |
+| `native/AddressState.h` | 改为轻量 IDU 地址就绪表 |
+| `native/OOO.h::Uop` | 删除共享地址事件引用 |
+| `native/OOO.cpp::OoOCoreMainline::accept()` | 删除地址依赖绑定 |
+| `native/OOO.cpp::issueReadyLsu()` | 删除地址检查与 start 事件发布 |
+| `native/SimulatorRunner.cpp` 及 trace 路径 | 记录与 Python 同口径的 dispatch 和阻塞事件 |
 | `native/ParamSchema.h`、`native/ParamDB.cpp`、`native/CanonicalProgramLowering.cpp` | 配置字段、读取与 canonical uarch 覆盖传递 |
 
 此外检查 trace 输出与对外包同步流程。不要只更新工作区源码而遗漏实际使用的 wheel 或 native 构建。
@@ -174,12 +197,12 @@ C++ 当前调度结构存在 Uop 的多份副本，必须保证事件状态一�
 
 ## 8. 开发步骤
 
-1. 固定 master 基线，记录修改前回归结果和已有 AABBCC 实验数据。
-2. 完成 canonical 双语言字段、校验、JSON 往返和 lowering 测试。
-3. 完成 CCE 解析，先验证生成的地址状态身份与更新描述，不急于比较总周期。
-4. 在 Python 接收与 LSU 发射处实现事件跟踪，并添加逐条时序断言。
-5. 同步 C++，用同一 canonical fixture 对比动态发射结果。
-6. 跑原有回归和 camodel 对照；只有实际携带地址更新语义的输入才应产生预期时序变化。
+1. 保存首版基线与回归结果，把积压实验作为纠正时序位置的依据。
+2. 保留前端和 canonical 测试，确认地址字段在 IDU 可直接读取。
+3. 实现 Python IDU scoreboard，同步删除旧 LSU 事件约束并迁移参数。
+4. 同步 C++，将首版错误的 LSU 间隔断言替换为 IDU 间隔与后端可双发断言。
+5. 增加 dispatch trace 对齐，检查非零 `idu_to_ooo_delay` 下时间基准没有偏移。
+6. 跑原有回归、AABBCC 对照和积压微测。先核对阶段时序，再判断总周期误差，不通过调参强行匹配。
 
 ## 9. 测试与验收
 
@@ -187,17 +210,20 @@ C++ 当前调度结构存在 Uop 的多份副本，必须保证事件状态一�
 
 | 场景 | 预期 |
 | --- | --- |
-| 同一 p 连续 POST_UPDATE load | 后者不早于前者 start + 配置延迟 |
-| p、q 独立，指向同一 allocation | 其他条件允许时可双发 |
-| 同一 p 连续 NORM | 不增加地址串行约束 |
-| POST_UPDATE 后接同一 p 的 NORM | NORM 等待更新结果 |
-| NORM 尚未 start，后续 POST_UPDATE 已数据 ready | 后续更新不得越过前序读取 |
-| 前序 store POST_UPDATE、后序 load，load 优先 | load 不能绕过尚未 start 的地址 producer |
-| 地址 producer 因数据或 mem_bar 阻塞 | consumer 不能因 producer 尚无时间戳而误判 ready |
-| 其他指针 ready | 不被当前指针的阻塞影响 |
+| 同一 p 连续 POST_UPDATE load | 后者不早于前者 IDU dispatch + 配置间隔 |
+| p、q 独立，指向同一 allocation | 无队头阻塞且资源允许时可同周期 dispatch |
+| 同一 p 连续 NORM | 不增加地址 dispatch 间隔 |
+| POST_UPDATE 后接同一 p 的 NORM | NORM 的 dispatch 等待前次更新 ready |
+| NORM 已 dispatch 尚未 start，后续 POST_UPDATE | 不因 NORM 尚未 LSU start 而阻塞 |
+| 前序 store POST_UPDATE 已 dispatch、数据尚未 ready | 后续同指针访问达到地址 dispatch 间隔即可通过 IDU |
+| 队头发生地址 hazard，后面是独立 load/compute | 后续指令不得绕过队头 dispatch |
+| producer 因其他 IDU 条件未 dispatch | 不更新 scoreboard、不产生虚假占用 |
+| 两条同指针 load 均已入队，暂时阻塞后端后释放 | 允许同周期 issue，不残留首版 LSU 间隔 |
 | 循环跨迭代与 AABBCC unroll | 依赖遵循最终动态顺序，不因静态 PC 重复丢失 |
-| producer 已离开 LSQ/ROB | 后续依赖仍可正确读取事件结果 |
-| 同周期多次 LSU 调度 | 不出现第二次调用绕过延迟 |
+| producer 已离开 LSQ/ROB | 地址 ready 不依赖队列对象存活 |
+| 同周期多次 IDU dispatch 调用 | 不绕过当周期更新限制 |
+| `idu_to_ooo_delay` 非零 | 使用 IDU dispatch 时间，不使用 OoO accept/start 时间 |
+| 更新间隔设为 3、旧 LSU 配置字段 | 新参数按 dispatch 生效；旧字段明确拒绝 |
 | 缺省地址字段、JSON 往返、native 直接构造 canonical | 兼容性与语义一致 |
 
 ### 9.2 端到端对照
@@ -206,18 +232,22 @@ C++ 当前调度结构存在 Uop 的多份副本，必须保证事件状态一�
 
 记录实际 CCE、编译参数、硬件地址寄存器使用、camodel 发射日志、VfSim trace 与总周期。不能仅凭总周期接近判定模型正确，也不能通过修改 load latency 抵消地址依赖缺失。
 
-Python/C++ 对比至少包括：动态指令顺序、地址依赖 producer、start_cycle、done_cycle 和 vf_end。涉及相同输入的向量依赖、mem_bar 与 EXQ 策略应保持一致。
+同时增加本次 24 VADDS + store + barrier + 连续 load 的积压实验。真实硬件原始记录见实验 README，模型单测可直接控制后端资源以隔离地址行为，不要求先复刻整个 barrier 内部流水。
+
+Python/C++ 对比至少包括：动态指令顺序、IDU dispatch_cycle、地址阻塞原因与 ready_cycle、start_cycle、done_cycle 和 vf_end。日志中的地址 producer 时间基准必须写明是 dispatch，不能沿用首版 start 的解释。向量依赖、mem_bar 与 EXQ 策略保持一致。
 
 ### 9.3 完成标准
 
 - 同指针依赖生效，不同指针并行不被误伤。
-- 不新增 IDU 阻塞，不占用 vector preg。
+- IDU 出现符合日志的地址队头阻塞；后端没有额外同指针 start 间隔，不占用 vector preg。
 - 前端到 Python/C++ 核心全链路字段不丢失。
 - 新增测试覆盖实际发射时序，而不是只断言程序成功或总周期。
 - 未带新语义的旧输入回归保持稳定；预期变化有原因记录。
 - 未支持的指针操作与未校准的时序规则明确列出，不宣称已完整模拟物理地址寄存器。
 
-## 10. 首版实现与验证（2026-09-17，master 工作区）
+## 10. 首版实现与验证（历史记录，LSU 方案已被修订）
+
+本节记录修订前的实现与测试结果。通过首版测试只表示两端一致，不表示 LSU 地址间隔符合硬件。涉及 bind/start 事件、旧参数和“只在 LSU 检查”的要求均已撤销，以第 1～9 节为准；新 IDU 实现与验收见第 11 节。
 
 ### 10.1 已实现
 
@@ -302,15 +332,91 @@ U4 的原始前四条同指针 load 在 cycle 23/23/24/24 发射；增加依赖�
 发射顺序，不能根据总周期略降断言依赖没有生效。
 
 旧 CAModel 日志记录了 IDU 的 `SREG DATA hazard`，会阻止后续指令同周期
-继续 dispatch。按本计划明确限定的“只在 LSU 检查，不在 IDU 阻塞”，
+继续 dispatch。按首版方案曾限定的“只在 LSU 检查，不在 IDU 阻塞”，
 目前不能复现 U4/U8 的这部分性能下降。后续应单独设计并验证地址寄存器
 scoreboard 的 IDU 约束，不应调大 load latency、更新延迟或缩小 UB 带宽来
 强行匹配总周期。首版完成的是地址状态依赖机制，不是完整 SREG 微架构校准。
 
-## 2026-09-17 分支同步说明
+## 首版 LSU 实现的分支同步记录（历史）
 
 上文测试记录来自 master 的 6cf612c，不代表所有历史实验分支的行为相同。
 本次同步仅包含 POST_UPDATE 地址发射依赖、fallback_dtype 命名和无效静态
 vreg warning 清理；不增加架构寄存器预警，也不更改分发、UB 同步策略。
 
 本分支保留三发射/顺序实验策略与旧 VFInfo 兼容入口。Native 尚无 align-state lowering，新增跨语言测试不覆盖 VSTUS/VSTAS；对照使用 `vfsim_address_canonical_test_runner`。Python 226 项通过。Native CTest 5/6 通过，`vfsim_native_smoke_test` 的 balanced-reserve 断言失败已在迁移前 `82081d8` 单独构建复现，未修改实验调度策略掩盖失败。AABBCC 八组 Python/Native 周期逐项一致，POST_UPDATE U1/U2/U4/U8 为 189/189/189/187，与 master 的历史表格不同。
+后续新执行的积压实验已确认同指针 load 可在后端同时 issue，故当前方案不再是
+“保留 LSU 限制并额外研究 IDU”，而是用第 4～5 节的 IDU 规则替换首版 LSU 地址约束。
+
+## 11. IDU 修订实现与验收（2026-09-17）
+
+本轮以 master `5aca59e` 为代码基线，保留已有的文档修订和 camodel probe 脚本。
+本节保留 master 原始验收记录。当前分支同步范围与测试结果见
+[IDU 修订同步记录](post_update_idu_sync.md)。前端 canonical 字段与 CCE 解析保持不变。
+
+### 11.1 实现
+
+- Python/C++ scoreboard 由 IDU 独占，每个状态只保存最新更新的动态 inst ID、
+  dispatch_cycle 和 ready_cycle。无共享 LSU 事件引用，也不保留 WAR reader 列表。
+- 在原有资源检查通过后检查队头地址；失败 break，不扣 credit、不登记更新。
+  成功指令立即登记更新，后续同周期尝试可看到它，时间基准不是 OoO accept。
+- IDU 的地址读取即地址版本捕获，不等待旧 reader 或 store 的 LSU start。
+  OoO accept、Uop、LSU 中首版地址绑定/检查/发布逻辑全部移除。
+- 配置迁移为 `idu_post_update_ready_latency=1`，支持正 int64；旧 LSU 字段
+  在配置文件及 canonical override 中均报错，不静默沿用旧配置。
+- 新 `idu_address_blocked.json` 记录地址阻塞，`idu_to_ooo.json` 仍只记录成功
+  dispatch，新增 `event=dispatch` 与地址依赖快照。每条依赖包含状态 ID、
+  producer_inst_id、producer_dispatch_cycle、ready_cycle。
+- `sim_history.json` 删除旧地址事件字段。通过 inst_id/stream_seq 与 IDU 日志
+  关联 accept/start/done，避免把 dispatch 与访存实际执行混为一谈。
+
+### 11.2 AABBCC（64 次循环）
+
+| Unroll | 显式 offset（保持不变） | 首版 LSU POST | 新 IDU POST（Python=Native） | 已有 CAModel POST |
+| --- | ---: | ---: | ---: | ---: |
+| 1 | 189 | 189 | 189 | 188 |
+| 2 | 194 | 190 | 186 | 187 |
+| 4 | 198 | 190 | 276 | 277 |
+| 8 | 189 | 187 | 290 | 298 |
+
+U4/U8 的主要低估得到纠正。U8 仍低估 8 cycles，尚不能宣称完全校准硬件地址
+寄存器分配与流水。没有调整 load latency、UB slots 或 EXQ 策略拟合这些结果。
+CAModel 列沿用此前真实执行记录，本轮修改模型后未重新编译运行硬件仿真。
+
+### 11.3 积压反例
+
+使用同一份 24 VADDS + store + barrier + 16 load probe 源码：
+
+| 模式 | VfSim Python/Native | 已有 CAModel | IDU 地址阻塞事件 | 后端 load 吞吐 |
+| --- | ---: | ---: | ---: | --- |
+| 同指针 POST_UPDATE | 159 | 157 | 13 | 连续 8 cycle，每周期 2 条 |
+| 独立指针 POST_UPDATE | 159 | 156 | 0 | 连续 8 cycle，每周期 2 条 |
+| 显式 offset | 159 | 156 | 0 | 连续 8 cycle，每周期 2 条 |
+
+同指针 16 load 在 IDU cycle 26～41 逐周期 dispatch，后端在 115～122 双发。
+这验证了本次最重要的两阶段区别：IDU 不允许连续更新同周期通过，但积压后
+不再强制同指针 LSU start 间隔。模型没有拆分 ISU_ISSUE 与 LSU_I1，不能直接
+对齐 camodel 的绝对 cycle 或解释 barrier 内部所有背压现象。
+
+### 11.4 可复现验证
+
+Python/Native full regression 各 25 个 case 与当前基线的 vf_end 严格相等，
+Python 单测 220/220 通过（启用 Native 对照，无跳过），Native CTest 7/7 通过。
+两端也逐项相等；未刷新 baseline。单测覆盖资源失败不更新、队头阻塞独立
+compute、同周期重复 dispatch、零增量、跨迭代、旧 reader 尚未 start、
+延迟为 3、非零 idu_to_ooo_delay=7、积压双发和非法配置。
+
+```bash
+cmake -S native -B /tmp/vfsim-post-idu-build -DVFSIM_BUILD_TESTS=ON -DVFSIM_BUILD_LEGACY_MIGRATION=ON
+cmake --build /tmp/vfsim-post-idu-build -j2
+ctest --test-dir /tmp/vfsim-post-idu-build --output-on-failure
+VFSIM_NATIVE_RUNNER=/tmp/vfsim-post-idu-build/vfsim_native_json_runner python3 -m unittest discover -s tests
+python3 tools/run_post_update_validation.py --out-dir /tmp/vfsim-post-idu-validated --native-runner /tmp/vfsim-post-idu-build/vfsim_native_json_runner
+python3 tools/run_post_update_idu_backlog_validation.py --out-dir /tmp/vfsim-post-idu-backlog-parity --native-runner /tmp/vfsim-post-idu-build/vfsim_native_json_runner
+python3 tools/run_cost_model_regression.py --tier full --out-dir /tmp/vfsim-post-idu-regression-python
+python3 tools/run_native_cost_model_regression.py --tier full --out-dir /tmp/vfsim-post-idu-regression-native --runner /tmp/vfsim-post-idu-build/vfsim_native_json_runner
+```
+
+积压验证脚本复用 `run_post_update_backlog_probe.py` 的源码生成函数，但只运行
+VfSim；硬件编译、执行与 golden 校验仍由原 probe 脚本负责。输出包括 CCE、
+canonical JSON、两端日志、summary.json。项目现有 build-native 也需重建，
+避免使用首版二进制；本轮已重建该目录。本仓库未发现 wheel/pybind 打包入口。

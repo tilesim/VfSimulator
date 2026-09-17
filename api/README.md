@@ -122,8 +122,13 @@ Canonical `MemoryAccess` 可提供 `address_state_id`、`update_mode`（`none` �
 提供状态与增量；零增量仍是一条更新事件。普通访问也应提供所读取的状态 ID，
 以便识别前序更新。缺省字段的旧输入保持原行为。
 
-Python/Native 在按序接收动态指令时绑定地址 RAW/WAR，LSU 发射前检查。
-`lsu_post_update_ready_latency` 默认 1，表示更新指令 start 到新地址状态可用
-的间隔。地址状态不占 vector preg，也不表示 UB 数据依赖；数据内存同步仍由
-Membar 控制。完整支持范围、限制及复现步骤见
+Python/Native 在 IDU 顺序 dispatch 时检查地址 scoreboard。成功分发的更新
+使该状态在 `dispatch_cycle + idu_post_update_ready_latency` 就绪，默认间隔 1。
+队头未就绪时，后面的独立指令也不能绕过；已经通过 IDU 的同指针指令允许在
+LSU 资源满足时双发，不再等待前一条 LSU start。地址状态不占 vector preg，
+也不表示 UB 数据依赖；数据内存同步仍由 Membar 控制。
+`lsu_post_update_ready_latency` 已废弃并明确报迁移错误，不自动映射到新参数。
+`idu_to_ooo.json` 和 `idu_address_blocked.json` 记录地址 producer 的 dispatch
+时间与 ready_cycle；`sim_history.json` 不再输出旧 start-based 地址事件边。
+完整支持范围、限制及复现步骤见
 [POST_UPDATE 开发与验证记录](../docs/post_update_address_dependency_plan.md)。

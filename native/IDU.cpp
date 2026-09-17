@@ -39,6 +39,7 @@ IDU::IDU(const UarchConfig &uarch,
          std::string dtype,
          std::unordered_map<std::string, ValueInfo> values)
     : db_(db), fallbackDtype_(std::move(dtype)), analysis_(std::move(params), std::move(values)),
+      addressStates_(uarch.iduPostUpdateReadyLatency),
       loopBounds_(std::move(loopBounds)), totalTopBlocks_(totalTopBlocks),
       topBlockLoopBounds_(std::move(topBlockLoopBounds)) {
   windowWidth_ = uarch.iduWindowWidth;
@@ -267,6 +268,7 @@ std::vector<DynamicInst> IDU::dispatch(int64_t cycle, const IDUDispatchBudget &b
                                                           : budget.issueBudget;
 
   std::vector<DynamicInst> dispatched;
+  std::vector<std::vector<AddressDependency>> addressDependencies;
   dispatched.reserve(static_cast<size_t>(std::max<int64_t>(0, issueBudget)));
 
   if (shqQueueFree <= 0 && lsqFree <= 0)
@@ -328,7 +330,24 @@ std::vector<DynamicInst> IDU::dispatch(int64_t cycle, const IDUDispatchBudget &b
     if (credits < dstCount)
       break;
 
+    const auto dependencies = addressStates_.dependencies(inst.memoryAccesses);
+    if (!addressStates_.canDispatch(inst.memoryAccesses, cycle)) {
+      IDUDispatchRecord record;
+      record.cycle = cycle;
+      record.instId = inst.instId;
+      record.op = inst.op;
+      record.staticInstructionId = inst.staticInstructionId;
+      record.iterationPath = inst.iterationPath;
+      record.streamSeq = inst.streamSeq;
+      record.addressDependencies = dependencies;
+      record.event = "blocked";
+      addressBlockLog_.push_back(std::move(record));
+      break;
+    }
+
     dispatched.push_back(inst);
+    addressStates_.notifyDispatch(inst.instId, inst.memoryAccesses, cycle);
+    addressDependencies.push_back(dependencies);
     credits -= dstCount;
     if (usesLsq(db_, inst.op, form)) {
       --lsqFree;
@@ -340,6 +359,7 @@ std::vector<DynamicInst> IDU::dispatch(int64_t cycle, const IDUDispatchBudget &b
     }
   }
 
+  size_t dispatchIndex = 0;
   for (const auto &inst : dispatched) {
     window_.pop_front();
     dispatchLog_.push_back(IDUDispatchRecord{
@@ -356,6 +376,7 @@ std::vector<DynamicInst> IDU::dispatch(int64_t cycle, const IDUDispatchBudget &b
         inst.staticInstructionId,
         inst.iterationPath,
         inst.streamSeq,
+        addressDependencies[dispatchIndex++],
     });
     updateLastDispatch(inst, cycle);
     triggerNextVloops(inst, cycle);

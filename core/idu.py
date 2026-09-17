@@ -12,6 +12,7 @@ from core.isa_traits import (
     uses_shq_queue,
 )
 from core.value_storage import ValueStorageLookup
+from core.address_state import AddressStateTracker
 
 
 class IDU:
@@ -35,6 +36,10 @@ class IDU:
         self.db = pdb
         self.fallback_dtype = str(dtype)
         self.value_storage = ValueStorageLookup(values)
+        if "lsu_post_update_ready_latency" in uarch:
+            raise ValueError("lsu_post_update_ready_latency was removed; use idu_post_update_ready_latency (IDU dispatch timing)")
+        self.address_states = AddressStateTracker(uarch.get("idu_post_update_ready_latency", 1))
+        self.address_block_log = []
 
         defaults = self.db.get_defaults()
         self.vf_startup_cost = int(defaults.get("vf_startup_cost", 0))
@@ -378,6 +383,7 @@ class IDU:
             return []
 
         dispatched = []
+        address_dependencies = []
 
         if self.theoretical_limit_mode:
             credits = 10 ** 18
@@ -481,10 +487,25 @@ class IDU:
             if credits < dst_count:
                 break
 
+            accesses = inst.get("memory_accesses", [])
+            dependencies = self.address_states.dependencies(accesses)
+            if not self.address_states.can_dispatch(accesses, cycle):
+                self.address_block_log.append({
+                    "cy": cycle, "event": "blocked", "blocked_reason": "address_state",
+                    "inst_id": inst.get("inst_id", inst.get("id")),
+                    "static_instruction_id": inst.get("static_instruction_id"),
+                    "iteration_path": inst.get("iteration_path", []),
+                    "stream_seq": int(inst.get("stream_seq", -1)),
+                    "op": op, "address_dependencies": dependencies,
+                })
+                break
+
             # -------------------------------------------------
             # 4) dispatch accepted
             # -------------------------------------------------
             dispatched.append(inst)
+            self.address_states.notify_dispatch(inst.get("inst_id", inst.get("id")), accesses, cycle)
+            address_dependencies.append(dependencies)
 
             credits -= dst_count
             if uses_lsq(op, self.db, form):
@@ -496,11 +517,13 @@ class IDU:
                 shq_free -= 1
 
         # commit dispatch
-        for inst in dispatched:
+        for inst, dependencies in zip(dispatched, address_dependencies):
             self.window.popleft()
 
             self.dispatch_log.append({
                 "cy": cycle,
+                "event": "dispatch",
+                "address_dependencies": dependencies,
                 "inst_id": inst.get("inst_id", inst.get("id")),
                 "static_instruction_id": inst.get("static_instruction_id"),
                 "iteration_path": inst.get("iteration_path", []),
@@ -525,6 +548,11 @@ class IDU:
     def dump_dispatch_log(self, path="idu_to_ooo.json"):
         with open(path, "w", encoding="utf-8") as f:
             for item in self.dispatch_log:
+                f.write(json.dumps(item, ensure_ascii=False) + "\n")
+
+    def dump_address_block_log(self, path):
+        with open(path, "w", encoding="utf-8") as f:
+            for item in self.address_block_log:
                 f.write(json.dumps(item, ensure_ascii=False) + "\n")
 
     def dump_vloop_trace(self, path="vloop_trace.json"):

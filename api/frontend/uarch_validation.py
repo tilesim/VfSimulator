@@ -98,7 +98,9 @@ def validate_uarch_overrides(uarch: Any) -> ValidationResult:
         Diagnostic(
             "deprecated_uarch_field",
             DiagnosticSeverity.ERROR,
-            "Deprecated uarch field is no longer accepted",
+            ("lsu_post_update_ready_latency was removed; use idu_post_update_ready_latency (IDU dispatch timing)"
+             if name == "lsu_post_update_ready_latency"
+             else "Deprecated uarch field is no longer accepted"),
             context={"path": f"uarch.{name}", "field": name},
         )
         for name in sorted(DEPRECATED_UARCH_FIELDS & uarch.keys())

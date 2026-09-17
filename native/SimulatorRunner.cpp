@@ -119,9 +119,9 @@ Reservation reservationForInst(const DynamicInst &inst, const ParamDB &db,
   return out;
 }
 
-void dumpDispatchLog(const IDU &idu, const std::string &path) {
+void dumpIDULog(const std::vector<IDUDispatchRecord> &records, const std::string &path) {
   std::ofstream os(path);
-  for (const auto &r : idu.dispatchLog()) {
+  for (const auto &r : records) {
     os << "{\"cy\":" << r.cycle
        << ",\"inst_id\":" << r.instId
        << ",\"op\":\"" << jsonEscape(r.op) << "\""
@@ -135,8 +135,23 @@ void dumpDispatchLog(const IDU &idu, const std::string &path) {
        << ",\"static_instruction_id\":\"" << jsonEscape(r.staticInstructionId) << "\""
        << ",\"iteration_path\":" << joinIterationPath(r.iterationPath)
        << ",\"stream_seq\":" << r.streamSeq
-       << "}\n";
+       << ",\"event\":\"" << r.event << "\"";
+    if (r.event == "blocked") os << ",\"blocked_reason\":\"address_state\"";
+    os << ",\"address_dependencies\":[";
+    for (size_t i = 0; i < r.addressDependencies.size(); ++i) {
+      const auto &d = r.addressDependencies[i];
+      if (i) os << ",";
+      os << "{\"address_state_id\":\"" << jsonEscape(d.stateId)
+         << "\",\"producer_inst_id\":" << d.producerInstId
+         << ",\"producer_dispatch_cycle\":" << d.producerDispatchCycle
+         << ",\"ready_cycle\":" << d.readyCycle << "}";
+    }
+    os << "]}\n";
   }
+}
+
+void dumpDispatchLog(const IDU &idu, const std::string &path) {
+  dumpIDULog(idu.dispatchLog(), path);
 }
 
 void dumpVloopTrace(const IDU &idu, const std::string &path) {
@@ -375,6 +390,7 @@ SimulationResult runSimulation(IFU &ifu,
       ooo.dumpHistory(resultsDir + "/sim_history.json");
       ooo.dumpSimpleLogs(resultsDir + "/start_by_cycle.json", resultsDir + "/done_by_cycle.json");
       dumpDispatchLog(idu, resultsDir + "/idu_to_ooo.json");
+      dumpIDULog(idu.addressBlockLog(), resultsDir + "/idu_address_blocked.json");
       dumpVloopTrace(idu, resultsDir + "/vloop_trace.json");
       dumpModelWarnings(idu.db(), resultsDir + "/model_warnings.json");
     }
@@ -396,6 +412,7 @@ SimulationResult runSimulation(IFU &ifu,
     ooo.dumpHistory(resultsDir + "/sim_history.json");
     ooo.dumpSimpleLogs(resultsDir + "/start_by_cycle.json", resultsDir + "/done_by_cycle.json");
     dumpDispatchLog(idu, resultsDir + "/idu_to_ooo.json");
+    dumpIDULog(idu.addressBlockLog(), resultsDir + "/idu_address_blocked.json");
     dumpVloopTrace(idu, resultsDir + "/vloop_trace.json");
     dumpModelWarnings(idu.db(), resultsDir + "/model_warnings.json");
   }
