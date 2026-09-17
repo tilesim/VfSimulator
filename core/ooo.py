@@ -11,7 +11,6 @@ import json
 from core.isa_traits import is_compute_op, is_load_op, is_store_op
 from core.instruction_profile import InstructionProfile
 from core.value_storage import ValueStorageLookup
-from core.address_state import AddressBinding, AddressStateTracker
 
 
 def is_vreg(name: Any) -> bool:
@@ -46,7 +45,6 @@ class Uop:
     preg_dst: List[str]
     preg_old: List[Optional[str]]
     profile: Optional[InstructionProfile] = None
-    address_bindings: List[AddressBinding] = field(default_factory=list)
 
     state: str = "blocked"  # blocked/ready/running/done
     ready_cycle: int = 0
@@ -79,7 +77,6 @@ class OoOCore:
     def __init__(self, uarch: Dict[str, Any], pdb, dtype: str = "fp32", values: Dict[str, Any] | None = None):
         self.fallback_dtype = dtype
         self.db = pdb
-        self.address_states = AddressStateTracker(uarch.get("lsu_post_update_ready_latency", 1))
         self.value_storage = ValueStorageLookup(values)
         self.theoretical_limit_mode = bool(uarch.get("theoretical_limit_mode", False))
         self.three_ports_mode = bool(uarch.get("three_ports_mode", False))
@@ -190,9 +187,6 @@ class OoOCore:
             "static_instruction_id": u.static_instruction_id,
             "iteration_path": u.iteration_path,
             "stream_seq": u.stream_seq,
-            "address_dependencies": sorted({(p.inst_id, delay)
-                for b in u.address_bindings for p, delay in b.dependencies}),
-            "address_state_ids": sorted(b.state_id for b in u.address_bindings),
             "src_value_instances": u.src_value_instances,
             "dst_value_instances": u.dst_value_instances,
             "op": u.op,

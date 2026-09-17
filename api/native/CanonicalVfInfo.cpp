@@ -190,7 +190,9 @@ CanonicalValidationResult validateCanonicalVfInfo(const CanonicalVfInfo &vfInfo)
   for (const auto &[name, value] : vfInfo.uarch) {
     if (isDeprecatedUarchOverrideField(name)) {
       error("deprecated_uarch_field",
-            "Deprecated uarch field is no longer accepted", "uarch." + name);
+            name == "lsu_post_update_ready_latency"
+                ? "lsu_post_update_ready_latency was removed; use idu_post_update_ready_latency (IDU dispatch timing)"
+                : "Deprecated uarch field is no longer accepted", "uarch." + name);
       continue;
     }
     const auto expected = uarchOverrideFieldType(name);
