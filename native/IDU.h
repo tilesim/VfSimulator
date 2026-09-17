@@ -12,6 +12,7 @@
 #include "native/IFU.h"
 #include "native/ParamDB.h"
 #include "native/ValueStorage.h"
+#include "native/AddressState.h"
 #include "api/native/RuntimeTypes.h"
 
 #include <deque>
@@ -47,6 +48,8 @@ struct IDUDispatchRecord {
   std::string staticInstructionId;
   std::vector<std::pair<std::string, int64_t>> iterationPath;
   int64_t streamSeq = -1;
+  std::vector<AddressDependency> addressDependencies;
+  std::string event = "dispatch";
 };
 
 struct VloopTraceRecord {
@@ -77,6 +80,7 @@ public:
   const ParamDB &db() const noexcept { return db_; }
   const std::deque<DynamicInst> &window() const noexcept { return window_; }
   const std::vector<IDUDispatchRecord> &dispatchLog() const noexcept { return dispatchLog_; }
+  const std::vector<IDUDispatchRecord> &addressBlockLog() const noexcept { return addressBlockLog_; }
   const std::vector<VloopTraceRecord> &vloopTrace() const noexcept { return vloopTrace_; }
 
 private:
@@ -108,6 +112,7 @@ private:
 
   std::deque<DynamicInst> window_;
   ValueStorageLookup valueStorage_;
+  AddressStateTracker addressStates_;
   std::vector<int64_t> loopBounds_;
   int64_t totalTopBlocks_ = 1;
   std::unordered_map<int, std::vector<int64_t>> topBlockLoopBounds_;
@@ -121,6 +126,7 @@ private:
   std::unordered_map<std::string, int64_t> blockBaseCycle_;
   std::vector<VloopTraceRecord> vloopTrace_;
   std::vector<IDUDispatchRecord> dispatchLog_;
+  std::vector<IDUDispatchRecord> addressBlockLog_;
 
   void initVloopStarts();
   std::optional<int64_t> nextNonemptyTopBlock(int64_t start) const;

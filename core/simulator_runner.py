@@ -294,6 +294,7 @@ def run_simulation(
         issue_ports=int(getattr(ooo, "issue_ports", 2)),
     )
     idu.dump_dispatch_log(os.path.join(results_dir, "idu_to_ooo.json"))
+    idu.dump_address_block_log(os.path.join(results_dir, "idu_address_blocked.json"))
     idu.dump_vloop_trace(os.path.join(results_dir, "vloop_trace.json"))
     if pdb is not None and hasattr(pdb, "get_warnings"):
         dump_model_warnings(
