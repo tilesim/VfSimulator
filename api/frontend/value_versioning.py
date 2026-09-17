@@ -405,6 +405,13 @@ class ValueVersioningPass:
                     ),
                     access_kind=access_kind,
                     span=access.span if access is not None else None,
+                    address_state_id=access.address_state_id if access else None,
+                    update_mode=access.update_mode if access else "none",
+                    post_update_delta_bytes=(
+                        _affine_expression(access.post_update_delta_bytes,
+                            params=self._params, induction_variables=induction_variables)
+                        if access and access.post_update_delta_bytes is not None else None
+                    ),
                 ),
             )
         role = catalog_role or (

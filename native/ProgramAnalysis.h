@@ -18,16 +18,6 @@
 
 namespace vfsim {
 
-struct VregCapacityWarning {
-  std::string kind;
-  std::string loopPath;
-  int64_t pregNum = 0;
-  int64_t baseVregNamespace = 0;
-  int64_t unroll = 1;
-  int64_t expandedVregNamespace = 0;
-  std::string message;
-};
-
 class ProgramAnalysis {
 public:
   using ParamMap = std::unordered_map<std::string, int64_t>;
@@ -40,10 +30,6 @@ public:
   int64_t resolveBound(const std::string &bound) const;
   int64_t resolveUnrollValue(const std::string &unroll) const;
 
-  std::vector<VregCapacityWarning>
-  collectVregCapacityWarnings(const std::vector<ProgramNode> &program,
-                              int64_t pregNum) const;
-
   std::vector<int64_t> inferNestedBoundsFromLoop(const ProgramLoopNode &loop) const;
 
   std::unordered_map<int, std::vector<int64_t>>
@@ -55,12 +41,6 @@ private:
   ParamMap params_;
   std::unordered_map<std::string, ValueInfo> values_;
 
-  void collectVregsFromInst(const ProgramInstNode &inst,
-                            std::unordered_map<std::string, bool> &vregs) const;
-  void walkVregWarnings(const std::vector<ProgramNode> &nodes,
-                        const std::string &path,
-                        int64_t pregNum,
-                        std::vector<VregCapacityWarning> &warnings) const;
 };
 
 } // namespace vfsim

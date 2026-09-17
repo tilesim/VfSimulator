@@ -24,7 +24,7 @@ struct CanonicalRuntimeProgram {
   std::unordered_map<int, std::vector<int64_t>> topBlockLoopBounds;
   std::unordered_set<int64_t> emptyTopBlocks;
   int64_t totalTopBlocks = 1;
-  std::string dtype = "fp32";
+  std::string fallbackDtype = "fp32";
 };
 
 CanonicalRuntimeProgram lowerCanonicalProgram(const CanonicalVfInfo &vfInfo,

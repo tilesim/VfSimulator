@@ -185,6 +185,13 @@ class _VFScopeParser:
         self.ub_aliases: Dict[str, tuple[str, str]] = {
             name: (name, "0") for name in self.ub_names
         }
+        self._pointer_serial = 0
+        self.pointer_states = {name: self._new_pointer_state(name) for name in sorted(self.ub_names)}
+        self.updated_pointer_states: set[str] = set()
+        self.all_updated_pointer_states: set[str] = set()
+        self.loop_pointer_states: set[str] = set()
+        self.loop_pointer_sources: dict[str, str] = {}
+        self._block_induction_variables = frozenset()
         self.ub_dtypes: Dict[str, str] = {
             name: dtype
             for name, dtype in scope.param_dtypes.items()
@@ -200,11 +207,18 @@ class _VFScopeParser:
         self._record_function_scope_ub_pointer_declarations(scope.declaration_source)
 
     def parse(self) -> List[AdapterNode]:
-        return self._parse_block(
+        nodes = self._parse_block(
             self.scope.source,
             frozenset(),
             self.scope.start_line,
         )
+        for state in self.loop_pointer_sources:
+            source = self.loop_pointer_sources[state]
+            while source in self.loop_pointer_sources:
+                source = self.loop_pointer_sources[source]
+            if source in self.all_updated_pointer_states:
+                raise ValueError("Cannot snapshot an updated pointer in a loop-local alias")
+        return nodes
 
     def _parse_block(
         self,
@@ -223,6 +237,9 @@ class _VFScopeParser:
         saved_ub_names = set(self.ub_names)
         saved_ub_aliases = dict(self.ub_aliases)
         saved_ub_dtypes = dict(self.ub_dtypes)
+        saved_pointer_states = dict(self.pointer_states)
+        saved_induction_variables = self._block_induction_variables
+        self._block_induction_variables = induction_variables
         try:
             return self._parse_block_contents(text, induction_variables, base_line)
         finally:
@@ -237,6 +254,10 @@ class _VFScopeParser:
             self.ub_names = saved_ub_names
             self.ub_aliases = saved_ub_aliases
             self.ub_dtypes = saved_ub_dtypes
+            self.pointer_states = saved_pointer_states
+            self._block_induction_variables = saved_induction_variables
+            # Updates to outer pointers survive lexical block exit.
+            self.updated_pointer_states.intersection_update(self.pointer_states.values())
 
     def _parse_block_contents(
         self,
@@ -695,8 +716,45 @@ class _VFScopeParser:
         if ub_reference is None:
             return ()
         base_name, alias_offset = ub_reference
+        pointer_expression = args[memory_operand.argument_index]
+        pointer_name = _strip_ub_reference_wrappers(pointer_expression).split("+", 1)[0].strip()
+        state_id = self.pointer_states[pointer_name]
+        update_operand = next((o for o in spec.operands if o.name == "update"), None)
+        post_update = (update_operand is not None and update_operand.argument_index < len(args)
+                       and args[update_operand.argument_index].strip() == "POST_UPDATE")
+        delta_bytes = None
+        if post_update:
+            if _strip_ub_reference_wrappers(pointer_expression) != pointer_name:
+                raise ValueError("POST_UPDATE requires a pointer variable, not pointer arithmetic")
+            if state_id in self.loop_pointer_states:
+                raise ValueError("POST_UPDATE on a loop-local reinitialized pointer is not yet supported")
+            delta_operand = offset_operand or next((o for o in spec.operands if o.name == "count"), None)
+            if delta_operand is None:
+                raise ValueError("POST_UPDATE has no supported explicit element increment")
+            raw_delta = args[delta_operand.argument_index].strip()
+            if re.search(r"\bvag_b(?:16|32)\s*\(", raw_delta):
+                raise ValueError("POST_UPDATE with VAG requires address-generator modeling")
+            dtype = self.ub_dtypes.get(pointer_name)
+            casts = re.findall(
+                r"\(\s*(?:(?:const|volatile)\s+)*__ubuf__\s+"
+                r"(?:(?:const|volatile)\s+)*(\w+)\s*[*&]+\s*\)",
+                pointer_expression,
+            )
+            if "__ubuf__" in pointer_expression and not casts:
+                raise ValueError(f"Unsupported POST_UPDATE pointer cast: {pointer_expression}")
+            if casts:
+                dtype = _cce_scalar_dtype_to_form(casts[0])
+            width_dtype = dtype.removesuffix("_t") if dtype else None
+            width = {"fp32": 4, "fp16": 2, "bf16": 2, "int32": 4,
+                     "uint32": 4, "int16": 2, "uint16": 2,
+                     "int8": 1, "uint8": 1}.get(width_dtype)
+            if width is None:
+                raise ValueError(f"Unknown POST_UPDATE pointer element width: {dtype}")
+            delta_bytes = f"({self._expand_offset_expression(raw_delta)}) * {width}"
+            self.updated_pointer_states.add(state_id)
+            self.all_updated_pointer_states.add(state_id)
         offset: int | str = alias_offset
-        if offset_operand is not None and offset_operand.argument_index < len(args):
+        if not post_update and offset_operand is not None and offset_operand.argument_index < len(args):
             raw_offset = args[offset_operand.argument_index].strip()
             if not re.fullmatch(r"vag_b(?:16|32)\s*\(.*\)", raw_offset, re.DOTALL):
                 expanded_offset = self._expand_offset_expression(raw_offset)
@@ -718,6 +776,9 @@ class _VFScopeParser:
                 offset=offset,
                 span=span,
                 mode=mode,
+                address_state_id=state_id,
+                update_mode="post_update" if post_update else "none",
+                post_update_delta_bytes=delta_bytes,
             ),
         )
 
@@ -828,6 +889,11 @@ class _VFScopeParser:
         self._align_state_serial += 1
         return state_id
 
+    def _new_pointer_state(self, name: str) -> str:
+        state = f"{self.scope.kernel_name}:pointer:{self._pointer_serial}:{name}"
+        self._pointer_serial += 1
+        return state
+
     def _record_function_scope_scalar_declarations(self, source: str) -> None:
         for segment in source.split(";"):
             stmt = segment.strip()
@@ -878,6 +944,10 @@ class _VFScopeParser:
         name = match.group("name")
         dtype = _cce_scalar_dtype_to_form(match.group("dtype"))
         initializer = match.group("initializer").strip()
+        source_name = _strip_ub_reference_wrappers(initializer).split("+", 1)[0].strip()
+        source_state = self.pointer_states.get(source_name)
+        if self.pointer_states.get(source_name) in self.updated_pointer_states:
+            raise ValueError(f"Cannot snapshot an updated pointer alias: {stmt}")
         ub_reference = self._parse_ub_reference(initializer)
         if ub_reference is None:
             raise ValueError(
@@ -886,6 +956,11 @@ class _VFScopeParser:
         self.ub_names.add(name)
         self.ub_aliases[name] = ub_reference
         self.ub_dtypes[name] = dtype
+        self.pointer_states[name] = self._new_pointer_state(name)
+        if self._block_induction_variables:
+            self.loop_pointer_states.add(self.pointer_states[name])
+            if source_state is not None:
+                self.loop_pointer_sources[self.pointer_states[name]] = source_state
 
     def _loop_count_from_header(self, header: str) -> tuple[int, str, int, int]:
         parts = [part.strip() for part in header.split(";")]

@@ -79,7 +79,7 @@ class TimedControlUnit(ControlUnit):
         self.last_retire_cycle = 0
 
     def observe_instruction(self, inst):
-        cls = get_op_class(inst.get('op', ''), self.db, inst.get('form') or self.dtype)
+        cls = get_op_class(inst.get('op', ''), self.db, inst.get('form') or self.fallback_dtype)
         if cls in ('LOAD', 'STORE'):
             progress = self.segment.setdefault(cls, LsuProgress(cls))
             progress.pending += 1
@@ -154,7 +154,7 @@ class TimedControlUnit(ControlUnit):
 
     def blocks(self, inst):
         seq = int(inst.get('stream_seq', -1))
-        cls = get_op_class(inst.get('op', ''), self.db, inst.get('form') or self.dtype)
+        cls = get_op_class(inst.get('op', ''), self.db, inst.get('form') or self.fallback_dtype)
         for b in self.barriers:
             if seq > b.stream_seq and cls == b.block_class:
                 if b.release_cycle is None or self.cycle < b.release_cycle+self.rules[b.barrier]['consumer_delay']:
