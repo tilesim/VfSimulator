@@ -492,18 +492,32 @@ CanonicalValidationResult validateCanonicalVfInfo(const CanonicalVfInfo &vfInfo)
             if (memory.span && *memory.span <= 0)
               error("invalid_memory_span", "Memory span must be positive",
                     operandPath, inst->sourceLocation);
-            std::unordered_set<std::string> affineVariables;
-            for (const auto &term : memory.offset.terms) {
-              if (term.variableId.empty() ||
-                  !affineVariables.insert(term.variableId).second)
-                error("invalid_affine_term", "Affine variables must be unique",
-                      operandPath, inst->sourceLocation);
-              if (!inductionVariables.count(term.variableId) &&
-                  !vfInfo.params.count(term.variableId))
-                error("undeclared_affine_variable",
-                      "Affine variable is not in scope", operandPath,
-                      inst->sourceLocation);
-            }
+            if (memory.addressStateId && memory.addressStateId->empty())
+              error("invalid_address_state", "Address state must not be empty", operandPath,
+                    inst->sourceLocation);
+            if ((memory.updateMode != "none" && memory.updateMode != "post_update") ||
+                (memory.updateMode == "post_update" &&
+                 (!memory.addressStateId || memory.addressStateId->empty() || !memory.postUpdateDeltaBytes)) ||
+                (memory.updateMode != "post_update" && memory.postUpdateDeltaBytes))
+              error("invalid_address_update", "Invalid pointer update metadata", operandPath,
+                    inst->sourceLocation);
+            const auto validateAffine = [&](const CanonicalAffineExpression &expression) {
+              std::unordered_set<std::string> affineVariables;
+              for (const auto &term : expression.terms) {
+                if (term.variableId.empty() ||
+                    !affineVariables.insert(term.variableId).second)
+                  error("invalid_affine_term", "Affine variables must be unique",
+                        operandPath, inst->sourceLocation);
+                if (!inductionVariables.count(term.variableId) &&
+                    !vfInfo.params.count(term.variableId))
+                  error("undeclared_affine_variable",
+                        "Affine variable is not in scope", operandPath,
+                        inst->sourceLocation);
+              }
+            };
+            validateAffine(memory.offset);
+            if (memory.postUpdateDeltaBytes)
+              validateAffine(*memory.postUpdateDeltaBytes);
           }
           return hasMemory;
         };

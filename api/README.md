@@ -18,6 +18,15 @@ VfSimulator 的 Python、C++ 和 JSON 正式输入合同统一为
 - C++ `runCanonicalVfInfo(vf_info, db)`：唯一 Native 预测入口。
 - C++ `loadCanonicalJsonVfInfo(path)`：Native canonical JSON 入口。
 
+`CoreVfCostModel` 的默认精度参数命名为 `fallback_dtype`，不是 VF 全局精度。
+时序查询优先使用每条指令的 `form`；输入输出值保留各自 `dtype`。
+旧 `CoreVfCostModel(dtype=...)` 关键字仍兼容，内部 lowering payload 改用
+`fallback_dtype`，不改变公开 Canonical JSON schema。当前 lowering 的兜底值仍为
+`fp32`，与此次清理前一致；它不覆盖明确给出的指令 form。
+
+已删除“寄存器值数量乘 unroll 超过物理寄存器数”的静态风险 warning。
+架构寄存器溢出预警尚未实现；物理寄存器 credit 和实际阻塞的仿真保持不变。
+
 Python builder 示例：
 
 ```python
@@ -112,3 +121,16 @@ last-use/keep 标记和稳定 UB object。旧 vreg normalization、字符串 `_l
 
 当前支持可整除的 innermost `unroll>1`；非 innermost unroll 和不可整除 batch 会
 明确拒绝。含 Membar 的 innermost unroll 保守回退到 1 并记录 warning。
+
+## POST_UPDATE 地址状态
+
+Canonical `MemoryAccess` 可提供 `address_state_id`、`update_mode`（`none` 或
+`post_update`）和 `post_update_delta_bytes`（affine expression）。更新必须同时
+提供状态与增量；零增量仍是一条更新事件。普通访问也应提供所读取的状态 ID，
+以便识别前序更新。缺省字段的旧输入保持原行为。
+
+Python/Native 在按序接收动态指令时绑定地址 RAW/WAR，LSU 发射前检查。
+`lsu_post_update_ready_latency` 默认 1，表示更新指令 start 到新地址状态可用
+的间隔。地址状态不占 vector preg，也不表示 UB 数据依赖；数据内存同步仍由
+Membar 控制。完整支持范围、限制及复现步骤见
+[POST_UPDATE 开发与验证记录](../docs/post_update_address_dependency_plan.md)。

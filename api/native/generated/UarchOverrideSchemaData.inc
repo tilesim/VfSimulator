@@ -5,6 +5,7 @@ static constexpr GeneratedUarchField kGeneratedUarchFields[] = {
   {"store_ports", "integer", true, true},
   {"ub_slots", "integer", true, true},
   {"lsu_store_priority_preg_threshold", "integer", true, true},
+  {"lsu_post_update_ready_latency", "integer", true, true},
   {"IDU_window_width", "integer", true, true},
   {"IDU_issue_width", "integer", true, true},
   {"LDQ_width", "integer", true, true},

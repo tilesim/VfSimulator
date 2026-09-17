@@ -116,7 +116,7 @@ class IFUUnroll:
         self.nodes = [dict(x) for x in (linear_nodes or [])]
         self.params = dict(params or {})
         self.db = pdb
-        self.dtype = str(dtype)
+        self.fallback_dtype = str(dtype)
         self.structured_value_identity = bool(structured_value_identity)
         uarch = self.db.get_uarch() if self.db is not None else {}
         configured_limit = (

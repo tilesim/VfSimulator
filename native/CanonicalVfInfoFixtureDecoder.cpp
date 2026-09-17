@@ -196,7 +196,8 @@ CanonicalOperand operand(const json::Value &value) {
       const auto &memoryObject = memoryValue->asObject();
       rejectUnknownFields(
           memoryObject,
-          {"base_object_id", "offset", "access_kind", "span", "alias_group"},
+          {"base_object_id", "offset", "access_kind", "span", "alias_group",
+           "address_state_id", "update_mode", "post_update_delta_bytes"},
           "canonical memory_access");
       CanonicalMemoryAccess memory;
       memory.baseObjectId = required(memoryObject, "base_object_id").asString();
@@ -221,6 +222,24 @@ CanonicalOperand operand(const json::Value &value) {
         throw std::runtime_error("unsupported canonical access kind: " + access);
       memory.span = optionalInt(memoryObject, "span");
       memory.aliasGroup = optionalString(memoryObject, "alias_group");
+      memory.addressStateId = optionalString(memoryObject, "address_state_id");
+      if (const auto *mode = find(memoryObject, "update_mode"))
+        memory.updateMode = mode->asString();
+      if (const auto *delta = find(memoryObject, "post_update_delta_bytes")) {
+        if (!delta->isNull()) {
+          const auto &object = delta->asObject();
+          rejectUnknownFields(object, {"constant", "terms"}, "canonical update delta");
+          CanonicalAffineExpression expression;
+          expression.constant = required(object, "constant").asInt();
+          for (const auto &term : required(object, "terms").asArray()) {
+            const auto &fields = term.asObject();
+            rejectUnknownFields(fields, {"variable_id", "coefficient"}, "canonical affine term");
+            expression.terms.push_back({required(fields, "variable_id").asString(),
+                                       required(fields, "coefficient").asInt()});
+          }
+          memory.postUpdateDeltaBytes = std::move(expression);
+        }
+      }
       result.memoryAccess = std::move(memory);
     }
   }
