@@ -262,12 +262,14 @@ ParamDB::ParamDB(std::filesystem::path baseDir)
     bundle_.uarch.loadPorts = readIntField(obj, "load_ports");
     bundle_.uarch.storePorts = readIntField(obj, "store_ports");
     bundle_.uarch.ubSlots = readIntField(obj, "ub_slots", 2);
-    bundle_.uarch.lsuPostUpdateReadyLatency = readIntField(obj, "lsu_post_update_ready_latency", 1);
-    if (const auto *value = findKey(obj, "lsu_post_update_ready_latency"))
+    if (findKey(obj, "lsu_post_update_ready_latency"))
+      throw std::runtime_error("lsu_post_update_ready_latency was removed; use idu_post_update_ready_latency (IDU dispatch timing)");
+    bundle_.uarch.iduPostUpdateReadyLatency = readIntField(obj, "idu_post_update_ready_latency", 1);
+    if (const auto *value = findKey(obj, "idu_post_update_ready_latency"))
       if (!value->isInt())
-        throw std::runtime_error("lsu_post_update_ready_latency must be an integer");
-    if (bundle_.uarch.lsuPostUpdateReadyLatency <= 0)
-      throw std::runtime_error("lsu_post_update_ready_latency must be positive");
+        throw std::runtime_error("idu_post_update_ready_latency must be an integer");
+    if (bundle_.uarch.iduPostUpdateReadyLatency <= 0)
+      throw std::runtime_error("idu_post_update_ready_latency must be positive");
     bundle_.uarch.lsuStorePriorityPregThreshold =
         readIntField(obj, "lsu_store_priority_preg_threshold", 1);
     bundle_.uarch.iduWindowWidth = readIntField(obj, "IDU_window_width");

@@ -485,7 +485,7 @@ integerUarchOverrideFields() {
       {"load_ports", &UarchConfig::loadPorts},
       {"store_ports", &UarchConfig::storePorts},
       {"ub_slots", &UarchConfig::ubSlots},
-      {"lsu_post_update_ready_latency", &UarchConfig::lsuPostUpdateReadyLatency},
+      {"idu_post_update_ready_latency", &UarchConfig::iduPostUpdateReadyLatency},
       {"lsu_store_priority_preg_threshold",
        &UarchConfig::lsuStorePriorityPregThreshold},
       {"IDU_window_width", &UarchConfig::iduWindowWidth},

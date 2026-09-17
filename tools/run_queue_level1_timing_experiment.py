@@ -183,6 +183,7 @@ def run_once(
         os.path.join(results_dir, "done_by_cycle.json"),
     )
     idu.dump_dispatch_log(os.path.join(results_dir, "idu_to_ooo.json"))
+    idu.dump_address_block_log(os.path.join(results_dir, "idu_address_blocked.json"))
     idu.dump_vloop_trace(os.path.join(results_dir, "vloop_trace.json"))
 
     print(f"[RESULT] VF end cycle (with drain) = {ooo.vf_end_cycle()}")
