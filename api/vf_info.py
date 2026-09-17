@@ -69,11 +69,14 @@ VFNode: TypeAlias = "VFLoop | VFInst | VFAlias | Membar"
 
 @dataclass(frozen=True)
 class VFMemoryAccess:
+    # Pointer identity is independent of UB storage identity and vector registers.
     value_id: str
     access_kind: Literal["read", "write"]
     offset: int | str = 0
     span: int | None = None
     mode: str | None = None
+    address_state_id: str | None = None
+    update_mode: str = "none"
     pointer_state_id: str | None = None
     pointer_initial_offset_bytes: int | str | None = None
     access_offset_bytes: int | str | None = None

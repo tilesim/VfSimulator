@@ -294,7 +294,7 @@ class VfInfoApiTest(unittest.TestCase):
             vector_f16 vreg_x_exp_even_f16;
             vector_bool preg_low_half = pset_b16(PAT_ALL);
             vpack((vector_u16 &)vreg_x_exp_even_f16, (vector_u32 &)vreg_x_exp_even_f16, LOWER);
-            vsstb(vreg_x_exp_even_f16, ((__ubuf__ half *&)nz_buffer_Ptr), kVsstbConfig, preg_low_half, POST_UPDATE);
+            vsstb(vreg_x_exp_even_f16, ((__ubuf__ half *&)nz_buffer_Ptr), kVsstbConfig, preg_low_half, NO_UPDATE);
           }
         }
         """
@@ -302,6 +302,10 @@ class VfInfoApiTest(unittest.TestCase):
             path = Path(tmpdir) / "softmax.dsl"
             path.write_text(source, encoding="utf-8")
             vf_info = InputAPI.load_cce_vf_info(path, kernel_name="softmax_vf")
+
+            path.write_text(source.replace("NO_UPDATE", "POST_UPDATE"), encoding="utf-8")
+            with self.assertRaisesRegex(ValueError, "no supported explicit element increment"):
+                parse_cce_vf_info(path, kernel_name="softmax_vf")
 
         insts = vf_info.context
         self.assertEqual(insts[0].name, "VPACK")

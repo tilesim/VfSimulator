@@ -12,6 +12,7 @@ from core.isa_traits import is_compute_op, is_load_op, is_store_op
 from core.instruction_profile import InstructionProfile
 from core.ub_address_dependency import DynamicMemoryRange, dependency_conflict
 from core.value_storage import ValueStorageLookup
+from core.address_state import AddressBinding, AddressStateTracker
 
 
 def is_vreg(name: Any) -> bool:
@@ -46,6 +47,7 @@ class Uop:
     preg_dst: List[str]
     preg_old: List[Optional[str]]
     profile: Optional[InstructionProfile] = None
+    address_bindings: List[AddressBinding] = field(default_factory=list)
 
     state: str = "blocked"  # blocked/ready/running/done
     ready_cycle: int = 0
@@ -78,8 +80,9 @@ class Uop:
 
 class OoOCore:
     def __init__(self, uarch: Dict[str, Any], pdb, dtype: str = "fp32", values: Dict[str, Any] | None = None):
-        self.dtype = dtype
+        self.fallback_dtype = dtype
         self.db = pdb
+        self.address_states = AddressStateTracker(uarch.get("lsu_post_update_ready_latency", 1))
         self.value_storage = ValueStorageLookup(values)
         self.theoretical_limit_mode = bool(uarch.get("theoretical_limit_mode", False))
         self.three_ports_mode = bool(uarch.get("three_ports_mode", False))
@@ -201,6 +204,9 @@ class OoOCore:
             "static_instruction_id": u.static_instruction_id,
             "iteration_path": u.iteration_path,
             "stream_seq": u.stream_seq,
+            "address_dependencies": sorted({(p.inst_id, delay)
+                for b in u.address_bindings for p, delay in b.dependencies}),
+            "address_state_ids": sorted(b.state_id for b in u.address_bindings),
             "src_value_instances": u.src_value_instances,
             "dst_value_instances": u.dst_value_instances,
             "op": u.op,
@@ -326,11 +332,11 @@ class OoOCore:
     # -------- ISA --------
     def _inst_params(self, op: str, form: Optional[str] = None) -> Dict[str, Any]:
         if hasattr(self.db, "get_inst_form"):
-            return self.db.get_inst_form(op, form=form, dtype=self.dtype)
-        return self.db.get_inst(op, dtype=form or self.dtype)
+            return self.db.get_inst_form(op, form=form, dtype=self.fallback_dtype)
+        return self.db.get_inst(op, dtype=form or self.fallback_dtype)
 
     def _profile(self, op: str, form: Optional[str] = None) -> InstructionProfile:
-        return self.db.resolve_inst(op, form=form, dtype=self.dtype)
+        return self.db.resolve_inst(op, form=form, dtype=self.fallback_dtype)
 
     def _latency(
         self,
@@ -357,7 +363,7 @@ class OoOCore:
             self.db.get_ii(
                 prev_op,
                 cur_op,
-                dtype=self.dtype,
+                dtype=self.fallback_dtype,
                 prev_form=prev_form,
                 cur_form=cur_form,
             )
@@ -434,7 +440,7 @@ class OoOCore:
             fwd = int(self.db.get_forwarding_cycles(
                 prod_op,
                 consumer_op,
-                dtype=self.dtype,
+                dtype=self.fallback_dtype,
                 producer_form=prod_form,
                 consumer_form=consumer_form,
             ))
@@ -444,7 +450,7 @@ class OoOCore:
         # where prod_start is producer_EXQ_ISSUE/start_cycle.
         if (
             ((consumer_profile is not None and consumer_profile.op_class == "COMPUTE")
-             or (consumer_profile is None and is_compute_op(consumer_op, self.db, consumer_form or self.dtype)))
+             or (consumer_profile is None and is_compute_op(consumer_op, self.db, consumer_form or self.fallback_dtype)))
             and bool(getattr(self, "enable_isu_queue_model", False))
             and not self.theoretical_limit_legacy_forwarding
         ):

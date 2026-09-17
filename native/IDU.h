@@ -87,7 +87,7 @@ private:
   };
 
   const ParamDB &db_;
-  std::string dtype_;
+  std::string fallbackDtype_;
   int64_t windowWidth_ = 0;
   int64_t issueWidth_ = 0;
   bool theoreticalLimitMode_ = false;

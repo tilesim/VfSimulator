@@ -169,6 +169,10 @@ target_link_libraries(vfsim_membar_canonical_test_runner PRIVATE vfsim::native_c
 target_link_libraries(vfsim_membar_timing_test PRIVATE vfsim::native_core)
 add_test(NAME vfsim_membar_timing_test COMMAND vfsim_membar_timing_test)
 
+add_executable(vfsim_address_state_test AddressStateTest.cpp)
+target_link_libraries(vfsim_address_state_test PRIVATE vfsim::native_core)
+add_test(NAME vfsim_address_state_test COMMAND vfsim_address_state_test)
+
 target_link_libraries(vfsim_native_json_runner PRIVATE
   vfsim::native_core
 )

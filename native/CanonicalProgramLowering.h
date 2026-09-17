@@ -20,7 +20,7 @@ struct CanonicalRuntimeProgram {
   ProgramAnalysis::ParamMap params;
   std::unordered_map<int, std::vector<int64_t>> topBlockLoopBounds;
   int64_t totalTopBlocks = 1;
-  std::string dtype = "fp32";
+  std::string fallbackDtype = "fp32";
 };
 
 CanonicalRuntimeProgram lowerCanonicalProgram(const CanonicalVfInfo &vfInfo,

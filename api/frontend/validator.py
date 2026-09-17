@@ -13,6 +13,7 @@ from api.frontend.instruction_catalog import (
 from api.frontend.schema import (
     CANONICAL_VF_INFO_SCHEMA_VERSION,
     AccessKind,
+    AffineExpression,
     CanonicalInstruction,
     CanonicalLoop,
     CanonicalMembar,
@@ -373,10 +374,30 @@ def validate_canonical_vf_info(vf_info: CanonicalVfInfo) -> ValidationResult:
         if memory.span is not None:
             validate_int64(memory.span, f"{path}.memory_access.span", minimum=1,
                            code="invalid_memory_span")
-        validate_int64(memory.offset.constant, f"{path}.memory_access.offset.constant")
+        if memory.address_state_id is not None and (
+            not isinstance(memory.address_state_id, str) or not memory.address_state_id
+        ):
+            error("invalid_address_state", "Address state must be a nonempty string", path=path)
+        if memory.update_mode not in ("none", "post_update"):
+            error("invalid_address_update", "Unsupported address update mode", path=path)
+        if memory.update_mode == "post_update":
+            if not memory.address_state_id or memory.post_update_delta_bytes is None:
+                error("invalid_address_update", "POST_UPDATE requires state and byte delta", path=path)
+        elif memory.post_update_delta_bytes is not None:
+            error("invalid_address_update", "Only POST_UPDATE may specify a delta", path=path)
+        validate_affine(memory.offset, f"{path}.memory_access.offset", induction_variables)
+        if memory.post_update_delta_bytes is not None:
+            validate_affine(memory.post_update_delta_bytes,
+                            f"{path}.memory_access.post_update_delta_bytes", induction_variables)
+
+    def validate_affine(expression, path, induction_variables):
+        if not isinstance(expression, AffineExpression):
+            error("invalid_affine_expression", "Expected affine expression", path=path)
+            return
+        validate_int64(expression.constant, f"{path}.constant")
         seen_terms: set[str] = set()
-        for index, term in enumerate(memory.offset.terms):
-            term_path = f"{path}.memory_access.offset.terms[{index}]"
+        for index, term in enumerate(expression.terms):
+            term_path = f"{path}.terms[{index}]"
             if not term.variable_id or term.variable_id in seen_terms:
                 error("invalid_affine_term", "Affine variables must be unique", path=term_path)
             seen_terms.add(term.variable_id)

@@ -17,6 +17,7 @@
 #include <string>
 #include <utility>
 #include <vector>
+#include "api/native/CanonicalVfInfo.h"
 
 namespace vfsim {
 
@@ -30,6 +31,7 @@ struct DynamicInst {
   int64_t streamSeq = -1;
   std::vector<std::string> src;
   std::vector<std::string> dst;
+  std::vector<CanonicalMemoryAccess> memoryAccesses;
   std::vector<bool> srcValueRelease;
   std::vector<bool> dstValueKeep;
   std::string staticInstructionId;

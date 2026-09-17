@@ -28,7 +28,7 @@ class ControlUnit:
 
     def __init__(self, pdb: Any, dtype: str = "fp32") -> None:
         self.db = pdb
-        self.dtype = str(dtype)
+        self.fallback_dtype = str(dtype)
         self.barriers: List[MembarState] = []
 
     @staticmethod
@@ -87,7 +87,7 @@ class ControlUnit:
         op_class = get_op_class(
             inst.get("op", ""),
             self.db,
-            str(inst.get("form", "") or self.dtype),
+            str(inst.get("form", "") or self.fallback_dtype),
         )
         for barrier in self.barriers:
             if barrier.released:
