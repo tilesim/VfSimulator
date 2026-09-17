@@ -343,7 +343,8 @@ scoreboard 的 IDU 约束，不应调大 load latency、更新延迟或缩小 UB
 ## 11. IDU 修订实现与验收（2026-09-17）
 
 本轮以 master `5aca59e` 为代码基线，保留已有的文档修订和 camodel probe 脚本。
-只修改 master，未向其他分支同步本轮修订。前端 canonical 字段与 CCE 解析保持不变。
+本节保留 master 原始验收记录。当前分支同步范围与测试结果见
+[IDU 修订同步记录](post_update_idu_sync.md)。前端 canonical 字段与 CCE 解析保持不变。
 
 ### 11.1 实现
 
