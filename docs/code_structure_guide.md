@@ -161,7 +161,8 @@ CCE 解析器使用 [adapter_ir.py](../api/frontend/adapter_ir.py) 作为前端�
 | 同上 | `_build_pending_unrolled_structured()` | Canonical 最内层循环 unroll 展开 |
 | 同上 | `prepare_structured_stream()`、`_annotate_structured_value_lifetimes()` | 预展开动态流，统计值实例最后使用，生成释放标记 |
 | 同上 | `empty_top_block_ids()` | 识别空块，避免零次循环阻塞后续 block |
-| [idu.py](../core/idu.py) | `IDU.accept()`、`dispatch()` | 维护取指窗口，按宽度、循环开放时刻及后端 credit 分发 |
+| [idu.py](../core/idu.py) | `IDU.accept()`、`dispatch()` | 维护取指窗口，按宽度、循环开放时刻、后端 credit 和地址状态就绪时间顺序分发 |
+| [address_state.py](../core/address_state.py) | `AddressStateTracker.can_dispatch()/notify_dispatch()` | 记录 POST_UPDATE 的 IDU dispatch 转发就绪时间；不约束 LSU start |
 | 同上 | `_trigger_next_vloops()`、`_next_nonempty_top_block()` | 推进循环/block，跳过空块 |
 | [value_storage.py](../core/value_storage.py) | `ValueStorageLookup.is_register()/is_ub()/is_scalar()` | 按 values 元数据判断存储类别，不依赖 Canonical value 名称前缀 |
 

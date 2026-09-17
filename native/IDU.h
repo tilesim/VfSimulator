@@ -10,6 +10,7 @@
 #define VFSIM_NATIVE_IDU_H
 
 #include "native/IFU.h"
+#include "native/AddressState.h"
 
 #include <deque>
 #include <optional>
@@ -43,6 +44,8 @@ struct IDUDispatchRecord {
   std::string staticInstructionId;
   std::vector<std::pair<std::string, int64_t>> iterationPath;
   int64_t streamSeq = -1;
+  std::vector<AddressDependency> addressDependencies;
+  std::string event = "dispatch";
 };
 
 struct VloopTraceRecord {
@@ -72,6 +75,7 @@ public:
   const ParamDB &db() const noexcept { return db_; }
   const std::deque<DynamicInst> &window() const noexcept { return window_; }
   const std::vector<IDUDispatchRecord> &dispatchLog() const noexcept { return dispatchLog_; }
+  const std::vector<IDUDispatchRecord> &addressBlockLog() const noexcept { return addressBlockLog_; }
   const std::vector<VloopTraceRecord> &vloopTrace() const noexcept { return vloopTrace_; }
 
 private:
@@ -103,6 +107,7 @@ private:
 
   std::deque<DynamicInst> window_;
   ProgramAnalysis analysis_;
+  AddressStateTracker addressStates_;
   std::vector<int64_t> loopBounds_;
   int64_t totalTopBlocks_ = 1;
   std::unordered_map<int, std::vector<int64_t>> topBlockLoopBounds_;
@@ -115,6 +120,7 @@ private:
   std::unordered_map<std::string, int64_t> blockBaseCycle_;
   std::vector<VloopTraceRecord> vloopTrace_;
   std::vector<IDUDispatchRecord> dispatchLog_;
+  std::vector<IDUDispatchRecord> addressBlockLog_;
 
   void initVloopStarts();
   void setTopBlockVloop(int64_t topBlockId, int64_t startCycle);

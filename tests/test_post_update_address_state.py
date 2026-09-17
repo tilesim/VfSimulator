@@ -11,6 +11,7 @@ from api.frontend import (AffineExpression, CoreLoweringPass, canonical_vf_info_
                           canonical_vf_info_to_dict, validate_canonical_vf_info)
 from api.simulator_costmodel import CoreVfCostModel
 from core.address_state import AddressStateTracker
+from core.idu import IDU
 from core.ooo_mainline import OoOCoreMainline
 from core.param_db import ParamDB
 
@@ -33,98 +34,122 @@ def access(state="p", update=True):
 
 
 class PostUpdateTests(unittest.TestCase):
-    def core(self, latency=1):
+    def idu(self, latency=1, **overrides):
         db = ParamDB(base_dir=str(ROOT))
-        core = OoOCoreMainline({**db.get_uarch(), "lsu_post_update_ready_latency": latency}, db)
-        core.cycle = 100
-        return core
+        uarch = {**db.get_uarch(), "idu_post_update_ready_latency": latency, **overrides}
+        return IDU(uarch, db), OoOCoreMainline(uarch, db)
 
-    def accept(self, core, i, state="p", update=True, op="VLDS", ready=True):
-        core.accept({"inst_id": i, "stream_seq": i, "op": op, "form": "fp32",
-                     "src": [], "dst": [], "memory_accesses": [access(state, update)]})
-        u = core.LSQ[-1]
-        u.state = "ready" if ready else "blocked"
-        u.store_dependencies_resolved = True
-        return u
+    def inst(self, i, state="p", update=True, op="VLDS"):
+        return {"inst_id": i, "stream_seq": i, "op": op, "form": "fp32",
+                "src": [], "dst": [], "memory_accesses": [access(state, update)]}
 
-    def test_same_pointer_raw_and_repeated_issue_call(self):
+    def test_same_pointer_hol_and_repeated_dispatch(self):
         for latency in (1, 3):
-            core = self.core(latency)
-            first = self.accept(core, 0)
-            second = self.accept(core, 1, update=False)
-            budget = core._issue_ready_lsu(100, 0, 0, 0)
-            core._issue_ready_lsu(100, *budget)
-            self.assertEqual(first.start_cycle, 100)
-            self.assertIsNone(second.start_cycle)
-            core._issue_ready_lsu(100 + latency, 0, 0, 0)
-            self.assertEqual(second.start_cycle, 100 + latency)
+            idu, core = self.idu(latency)
+            first, second, other = self.inst(0), self.inst(1, update=False), self.inst(2, "q")
+            for inst in (first, second, other):
+                idu.accept(inst)
+            self.assertEqual(idu.dispatch(100, core), [first])
+            self.assertEqual(idu.dispatch(100, core), [])
+            if latency > 1:
+                self.assertEqual(idu.dispatch(102, core), [])
+            self.assertEqual(idu.dispatch(100 + latency, core), [second, other])
+            self.assertEqual(idu.address_block_log[0]["address_dependencies"][0],
+                             {"address_state_id": "p", "producer_inst_id": 0,
+                              "producer_dispatch_cycle": 100, "ready_cycle": 100 + latency})
 
-    def test_independent_pointers_and_read_only_dual_issue(self):
+    def test_independent_pointers_and_read_only_dispatch(self):
         for state, update in (("q", True), ("p", False)):
-            core = self.core()
-            first = self.accept(core, 0, update=update)
-            second = self.accept(core, 1, state=state, update=update)
-            core._issue_ready_lsu(100, 0, 0, 0)
-            self.assertEqual((first.start_cycle, second.start_cycle), (100, 100))
+            idu, core = self.idu()
+            for i, s in enumerate(("p", state)):
+                idu.accept(self.inst(i, s, update))
+            self.assertEqual(len(idu.dispatch(100, core)), 2)
 
-    def test_store_update_cannot_be_bypassed_by_load_priority(self):
-        core = self.core()
-        store = self.accept(core, 0, op="VSTS", ready=False)
-        load = self.accept(core, 1)
-        unrelated = self.accept(core, 2, state="q")
-        core._issue_ready_lsu(100, 0, 0, 0)
-        self.assertIsNone(load.start_cycle)
-        self.assertEqual(unrelated.start_cycle, 100)
-        store.state = "ready"
-        budget = core._issue_ready_lsu(101, 0, 0, 0)
-        core._issue_ready_lsu(101, *budget)
-        self.assertEqual(store.start_cycle, 101)
-        self.assertIsNone(load.start_cycle)
-        core._issue_ready_lsu(102, 0, 0, 0)
-        self.assertEqual(load.start_cycle, 102)
+    def test_address_head_of_line_blocks_independent_compute(self):
+        idu, core = self.idu()
+        for inst in (self.inst(0), self.inst(1), self.inst(2, "q", op="VADD")):
+            idu.accept(inst)
+        self.assertEqual([i["inst_id"] for i in idu.dispatch(100, core)], [0])
+        self.assertEqual([i["inst_id"] for i in idu.dispatch(101, core)], [1, 2])
 
-    def test_war_waits_for_reader_start_without_extra_delay(self):
-        core = self.core()
-        reader = self.accept(core, 0, update=False, op="VSTS", ready=False)
-        updater = self.accept(core, 1)
-        core._issue_ready_lsu(100, 0, 0, 0)
-        self.assertIsNone(updater.start_cycle)
-        reader.state = "ready"
-        budget = core._issue_ready_lsu(101, 0, 0, 0)
-        core._issue_ready_lsu(101, *budget)
-        self.assertEqual((reader.start_cycle, updater.start_cycle), (101, 101))
+    def test_zero_update_and_past_producer_dispatch(self):
+        idu, core = self.idu(3)
+        first = self.inst(0)
+        first["memory_accesses"][0]["post_update_delta_bytes"] = {"constant": 0, "terms": []}
+        idu.accept(first)
+        idu.dispatch(100, core)
+        # Producer need not be alive in any backend queue.
+        idu.accept(self.inst(1))
+        self.assertEqual(idu.dispatch(102, core), [])
+        self.assertEqual(len(idu.dispatch(103, core)), 1)
 
-    def test_events_survive_producer_queue_removal(self):
-        core = self.core(3)
-        first = self.accept(core, 0)
-        core._issue_ready_lsu(100, 0, 0, 0)
-        core.ROB.clear()
-        del first
-        second = self.accept(core, 1)
-        core._issue_ready_lsu(101, 0, 0, 0)
-        self.assertIsNone(second.start_cycle)
-        core._issue_ready_lsu(103, 0, 0, 0)
-        self.assertEqual(second.start_cycle, 103)
+    def test_failed_resource_check_does_not_publish_update(self):
+        idu, core = self.idu()
+        inst = self.inst(0)
+        inst["dst"] = ["V0"]
+        idu.accept(inst)
+        original = core.get_free_preg
+        core.get_free_preg = lambda: 0
+        self.assertEqual(idu.dispatch(100, core), [])
+        self.assertEqual(idu.address_states.updates, {})
+        core.get_free_preg = original
+        self.assertEqual(idu.dispatch(101, core), [inst])
+        self.assertEqual(idu.address_states.updates["p"]["producer_dispatch_cycle"], 101)
 
-    def test_membar_blocks_address_producer(self):
-        core = self.core()
-        producer = self.accept(core, 0)
-        consumer = self.accept(core, 1)
-        core._blocked_by_control_unit = lambda u: u is producer
-        core._issue_ready_lsu(100, 0, 0, 0)
-        self.assertIsNone(consumer.start_cycle)
+    def test_backlogged_loads_dual_issue_without_lsu_spacing(self):
+        idu, core = self.idu(3)
+        idu.accept(self.inst(0))
+        idu.accept(self.inst(1))
+        for cycle in (100, 103):
+            inst = idu.dispatch(cycle, core)[0]
+            # Deliberately delay accept, then hold both in the backend.
+            core.cycle = cycle + 7
+            core.accept(inst)
+            core.LSQ[-1].state = "ready"
+        core._blocked_by_control_unit = lambda u: True
+        core._issue_ready_lsu(120, 0, 0, 0)
+        self.assertTrue(all(u.start_cycle is None for u in core.LSQ))
         core._blocked_by_control_unit = lambda u: False
-        core._issue_ready_lsu(101, 0, 0, 0)
-        core._issue_ready_lsu(102, 0, 0, 0)
-        self.assertEqual((producer.start_cycle, consumer.start_cycle), (101, 102))
+        core._issue_ready_lsu(121, 0, 0, 0)
+        self.assertEqual([u.start_cycle for u in core.ROB], [121, 121])
+        self.assertEqual([r["cy"] for r in idu.dispatch_log], [100, 103])
 
-    def test_reader_records_do_not_grow_with_history(self):
-        tracker = AddressStateTracker(1)
+    def test_reader_and_data_blocked_store_do_not_gate_address_dispatch(self):
+        for update in (False, True):
+            idu, core = self.idu()
+            idu.accept(self.inst(0, update=update, op="VSTS"))
+            idu.accept(self.inst(1))
+            sent = idu.dispatch(100, core)
+            self.assertEqual(len(sent), 1 if update else 2)
+            core.cycle = 100
+            core.accept(sent[0])
+            self.assertIsNone(core.LSQ[0].start_cycle)
+            if update:
+                self.assertEqual(len(idu.dispatch(101, core)), 1)
+
+    def test_all_address_states_and_bounded_tracker(self):
+        tracker = AddressStateTracker(3)
+        tracker.notify_dispatch(0, [access("p")], 100)
+        self.assertFalse(tracker.can_dispatch([access("q"), access("p", False)], 102))
+        self.assertTrue(tracker.can_dispatch([access("q"), access("p", False)], 103))
         for i in range(1000):
-            binding = tracker.bind(i, [access(update=False)])
-            tracker.notify_start(binding, i)
-        self.assertEqual(tracker.readers["p"], [])
-        self.assertEqual(tracker.updates, {})
+            tracker.notify_dispatch(i, [access("p")], 200 + i * 3)
+            tracker.notify_dispatch(i, [access("q", False)], 200 + i * 3)
+        self.assertEqual(len(tracker.updates), 1)
+        self.assertEqual(AddressStateTracker(1).updates, {})
+
+    def test_old_config_rejected_at_public_and_file_boundaries(self):
+        vf = replace(parse("vlds(a,p,1,NORM,POST_UPDATE);"),
+                     uarch={"lsu_post_update_ready_latency": 1})
+        self.assertIn("deprecated_uarch_field",
+                      [d.code for d in validate_canonical_vf_info(vf).errors])
+        with self.assertRaisesRegex(ValueError, "was removed"):
+            self.idu(lsu_post_update_ready_latency=1)
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "uarch.json"
+            path.write_text(json.dumps({"lsu_post_update_ready_latency": 1}))
+            with self.assertRaisesRegex(ValueError, "was removed"):
+                ParamDB(base_dir=str(ROOT), uarch_path=str(path))
 
     def test_frontend_delta_identity_roundtrip_and_cast(self):
         vf = parse("__ubuf__ float *p0 = p + 4; __ubuf__ float *p1 = p0;"
@@ -191,7 +216,33 @@ class PostUpdateTests(unittest.TestCase):
     def test_latency_strict_positive_integer(self):
         for value in (0, -1, True, "1", 1.0, None, 2**63):
             with self.subTest(value=value), self.assertRaises(ValueError):
-                self.core(value)
+                self.idu(value)
+
+    @unittest.skipUnless(RUNNER, "set VFSIM_NATIVE_RUNNER for parity tests")
+    def test_native_config_migration_and_invalid_latency(self):
+        vf = parse("vlds(a,p,1,NORM,POST_UPDATE);")
+        for key, value in (("lsu_post_update_ready_latency", 1),
+                           ("idu_post_update_ready_latency", 0),
+                           ("idu_post_update_ready_latency", True),
+                           ("idu_post_update_ready_latency", "1")):
+            with self.subTest(key=key, value=value), tempfile.TemporaryDirectory() as tmp:
+                path = Path(tmp) / "input.json"
+                path.write_text(json.dumps(canonical_vf_info_to_dict(
+                    replace(vf, uarch={key: value}))))
+                proc = subprocess.run([RUNNER, "--trace", str(path)], capture_output=True,
+                                      text=True, timeout=30)
+                self.assertNotEqual(proc.returncode, 0)
+                self.assertIn(key, proc.stderr)
+                config = Path(tmp) / "uarch.json"
+                config.write_text(json.dumps({key: value}))
+                with self.assertRaises(ValueError):
+                    ParamDB(base_dir=str(ROOT), uarch_path=str(config))
+                path.write_text(json.dumps(canonical_vf_info_to_dict(vf)))
+                proc = subprocess.run([RUNNER, "--trace", str(path)], capture_output=True,
+                                      text=True, timeout=30,
+                                      env={**os.environ, "UARCH_JSON_PATH": str(config)})
+                self.assertNotEqual(proc.returncode, 0)
+                self.assertIn(key, proc.stderr)
 
     @unittest.skipUnless(RUNNER, "set VFSIM_NATIVE_RUNNER for parity tests")
     def test_python_native_dynamic_parity(self):
@@ -214,7 +265,8 @@ class PostUpdateTests(unittest.TestCase):
         for body in cases:
             with self.subTest(body=body), tempfile.TemporaryDirectory() as tmp:
                 root = Path(tmp)
-                vf = replace(parse(body), uarch={"lsu_post_update_ready_latency": 3})
+                vf = replace(parse(body), uarch={"idu_post_update_ready_latency": 3,
+                                                "idu_to_ooo_delay": 7})
                 path = root / "input.json"
                 path.write_text(json.dumps(canonical_vf_info_to_dict(vf)))
                 py, cpp = root / "py", root / "cpp"
@@ -228,9 +280,15 @@ class PostUpdateTests(unittest.TestCase):
                     rows = json.loads((folder / "sim_history.json").read_text())
                     return sorted((r["stream_seq"], r["static_instruction_id"],
                                    [(p["loop_id"], p["iteration"]) for p in r["iteration_path"]],
-                                   r["start"], r["done"], r["address_dependencies"])
+                                   r["start"], r["done"])
                                   for r in rows if r["event"] == "start")
                 self.assertEqual(starts(py), starts(cpp))
+                for filename in ("idu_to_ooo.json", "idu_address_blocked.json"):
+                    def idu_records(folder):
+                        records = [json.loads(line) for line in (folder / filename).read_text().splitlines()]
+                        return [(r["cy"], r["event"], r["inst_id"], r["stream_seq"],
+                                 r.get("blocked_reason"), r["address_dependencies"]) for r in records]
+                    self.assertEqual(idu_records(py), idu_records(cpp))
 
     @unittest.skipUnless(RUNNER, "set VFSIM_NATIVE_RUNNER for parity tests")
     def test_native_rejects_invalid_update_metadata(self):

@@ -61,32 +61,45 @@ int main() {
   std::get<CanonicalInstruction>(vf.context[0].payload).inputs[0].memoryAccess->addressStateId.reset();
   require(!validateCanonicalVfInfo(vf).ok());
 
-  AddressStateTracker tracker;
-  tracker.updateLatency = 3;
-  auto first = tracker.bind(0, {access("p", true)});
-  auto second = tracker.bind(1, {access("p", false)});
-  auto independent = tracker.bind(2, {access("q", true)});
-  require(first[0].canIssue(100));
-  require(independent[0].canIssue(100));
-  require(!second[0].canIssue(100));
-  auto queueCopy = first;
-  tracker.notifyStart(queueCopy, 100);
-  first.clear();
-  queueCopy.clear();
-  require(!second[0].canIssue(102));
-  require(second[0].canIssue(103));
-  auto reader = tracker.bind(3, {access("p", false)});
-  require(reader[0].canIssue(103));
-  auto update = tracker.bind(4, {access("p", true)});
-  require(!update[0].canIssue(103));
-  tracker.notifyStart(second, 103);
-  require(!update[0].canIssue(103));
-  tracker.notifyStart(reader, 104);
-  require(update[0].canIssue(104));
-  tracker.notifyStart(update, 104);
-  auto next = tracker.bind(5, {access("p", true)});
-  require(!next[0].canIssue(106));
-  require(next[0].canIssue(107));
-  require(tracker.bind(6, {CanonicalMemoryAccess{}}).empty());
-  std::cout << "Address state RAW/WAR and shared event tests passed\n";
+  AddressStateTracker tracker(3);
+  tracker.notifyDispatch(0, {access("p", true)}, 100);
+  require(!tracker.canDispatch({access("p", false)}, 102));
+  require(tracker.canDispatch({access("p", false)}, 103));
+  require(tracker.canDispatch({access("q", true)}, 100));
+  tracker.notifyDispatch(1, {access("p", false)}, 103);
+  require(tracker.canDispatch({access("p", true)}, 103));
+  tracker.notifyDispatch(2, {access("p", true)}, 103);
+  require(!tracker.canDispatch({access("p", true)}, 105));
+  require(tracker.canDispatch({access("p", true)}, 106));
+  require(tracker.dependencies({access("p", false)})[0].producerInstId == 2);
+  require(AddressStateTracker().dependencies({access("p", true)}).empty());
+
+  auto uarch = db.uarch();
+  uarch.iduPostUpdateReadyLatency = 3;
+  IDU idu(uarch, db, {}, {}, 1, {}, "fp32", lowered.values);
+  for (const auto &inst : lowered.instructions) idu.accept(inst);
+  IDUDispatchBudget budget{68, 58, 24, 58, 3};
+  auto noCredits = budget;
+  noCredits.freePreg = 0;
+  require(idu.dispatch(99, noCredits).empty());
+  require(idu.dispatch(100, budget).size() == 1);
+  require(idu.dispatch(100, budget).empty());
+  require(idu.dispatch(102, budget).empty());
+  require(idu.dispatch(103, budget).size() == 1);
+  require(idu.dispatch(106, budget).size() == 1);
+  require(idu.empty());
+  require(idu.dispatchLog()[1].addressDependencies[0].producerDispatchCycle == 100);
+  require(idu.addressBlockLog()[0].addressDependencies[0].readyCycle == 103);
+
+  for (bool update : {false, true}) {
+    IDU independent(uarch, db, {}, {}, 1, {}, "fp32", lowered.values);
+    auto first = lowered.instructions[0];
+    auto second = lowered.instructions[1];
+    first.memoryAccesses = {access("p", update)};
+    second.memoryAccesses = {access(update ? "q" : "p", update)};
+    independent.accept(first);
+    independent.accept(second);
+    require(independent.dispatch(100, budget).size() == 2);
+  }
+  std::cout << "IDU address forwarding and head-of-line tests passed\n";
 }

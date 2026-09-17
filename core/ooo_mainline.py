@@ -421,7 +421,6 @@ class RenameController:
             ],
         )
         self.core.bind_align_state(u, inst.get("attributes"))
-        u.address_bindings = self.core.address_states.bind(inst_id, inst.get("memory_accesses", []))
         setattr(u, "preg_src_gen", preg_src_gen)
 
         for pd in preg_dst:
@@ -742,8 +741,6 @@ class OoOCoreMainline(OoOCore):
                 continue
             if op_class == "STORE" and issued_stores >= self.store_ports:
                 continue
-            if not all(binding.can_issue(cycle) for binding in u.address_bindings):
-                continue
             if self._blocked_by_control_unit(u):
                 if (
                     membar_blocked_logged_ids is None
@@ -766,7 +763,6 @@ class OoOCoreMainline(OoOCore):
                 continue
 
             u.start_cycle = cycle
-            self.address_states.notify_start(u.address_bindings, cycle)
             control = getattr(self, "control_unit", None)
             if control is not None and hasattr(control, "notify_lsu_start"):
                 control.notify_lsu_start(u.stream_seq, cycle)

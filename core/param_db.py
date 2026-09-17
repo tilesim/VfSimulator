@@ -118,6 +118,11 @@ class ParamDB:
 
         self._isa: Dict[str, Any] = _read_json(self._isa_path)
         self._uarch: Dict[str, Any] = _read_json(self._uarch_path)
+        if "lsu_post_update_ready_latency" in self._uarch:
+            raise ValueError("lsu_post_update_ready_latency was removed; use idu_post_update_ready_latency (IDU dispatch timing)")
+        latency = self._uarch.get("idu_post_update_ready_latency", 1)
+        if type(latency) is not int or not 0 < latency < 2**63:
+            raise ValueError("idu_post_update_ready_latency must be a positive int64")
 
         self._defaults: Dict[str, Any] = self._isa.get("defaults", {}) or {}
         self._insts: Dict[str, Any] = self._isa.get("instructions", {}) or {}
