@@ -44,6 +44,8 @@ from api.frontend.instruction_catalog import (
     InstructionSpec,
     OperandDirection,
     OperandSpec,
+    PostUpdateDeltaEncoding,
+    PostUpdateDeltaSpec,
     instruction_catalog_from_dict,
     load_instruction_catalog,
 )
@@ -81,6 +83,8 @@ __all__ = [
     "OperandRole",
     "OperandDirection",
     "OperandSpec",
+    "PostUpdateDeltaEncoding",
+    "PostUpdateDeltaSpec",
     "SourceLocation",
     "ScalarValue",
     "StorageKind",

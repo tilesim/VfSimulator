@@ -136,6 +136,12 @@ class InstructionCatalogTest(unittest.TestCase):
             "integer_expression_non_config": lambda data: data["signatures"]["binary"][1].update(
                 allow_integer_expression=True
             ),
+            "unknown_post_update_encoding": lambda data: data["signatures"]["vsstb"][2][
+                "post_update_delta"
+            ].update(encoding="unknown"),
+            "invalid_post_update_bit_width": lambda data: data["signatures"]["vsstb"][2][
+                "post_update_delta"
+            ].update(bit_width=0),
             "operand_name_number": lambda data: data["signatures"]["binary"][0].update(
                 name=7
             ),
@@ -188,6 +194,13 @@ class InstructionCatalogTest(unittest.TestCase):
         )
         self.assertTrue(offset.allow_integer_expression)
         self.assertTrue(vsstb_config.allow_integer_expression)
+        self.assertEqual(offset.post_update_delta.encoding.value, "element_count")
+        self.assertEqual(
+            vsstb_config.post_update_delta.encoding.value,
+            "unsigned_bit_field",
+        )
+        self.assertEqual(vsstb_config.post_update_delta.bit_width, 16)
+        self.assertEqual(vsstb_config.post_update_delta.unit_bytes, 32)
         self.assertFalse(mode.allow_integer_expression)
         self.assertEqual(
             set(mode.allowed_values),

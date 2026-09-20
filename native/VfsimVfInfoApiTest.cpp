@@ -88,7 +88,15 @@ int main() {
           "NORM") != 1 ||
       instructionCatalog.lookup("VLDS")->callVariants.size() != 2 ||
       !instructionCatalog.lookup("VLDS")->operands[2].allowIntegerExpression ||
+      instructionCatalog.lookup("VLDS")->operands[2].postUpdateDeltaEncoding !=
+          "element_count" ||
       instructionCatalog.lookup("VLDS")->operands[3].allowIntegerExpression ||
+      instructionCatalog.lookup("VSSTB")->operands[2]
+              .postUpdateDeltaEncoding != "unsigned_bit_field" ||
+      instructionCatalog.lookup("VSSTB")->operands[2]
+              .postUpdateDeltaBitWidth != 16 ||
+      instructionCatalog.lookup("VSSTB")->operands[2]
+              .postUpdateDeltaUnitBytes != 32 ||
       instructionCatalog.lookup("VDUP")->callVariants[1].argumentValues.at(3).count(
           "POS_LOWEST") != 1 ||
       instructionCatalog.lookup("VSTUS")->alignStateOperation != "append" ||

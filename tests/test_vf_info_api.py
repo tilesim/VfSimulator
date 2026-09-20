@@ -315,8 +315,23 @@ class VfInfoApiTest(unittest.TestCase):
             vf_info = parse_cce_vf_info(path, kernel_name="softmax_vf")
 
             path.write_text(source.replace("NO_UPDATE", "POST_UPDATE"), encoding="utf-8")
-            with self.assertRaisesRegex(ValueError, "no supported explicit element increment"):
-                parse_cce_vf_info(path, kernel_name="softmax_vf")
+            post_update_info = parse_cce_vf_info(path, kernel_name="softmax_vf")
+
+            path.write_text(
+                source.replace("| 1u", "| 2u").replace("NO_UPDATE", "POST_UPDATE"),
+                encoding="utf-8",
+            )
+            two_block_info = parse_cce_vf_info(path, kernel_name="softmax_vf")
+
+            path.write_text(
+                source.replace("128 + 1", "255 + 1").replace(
+                    "NO_UPDATE", "POST_UPDATE"
+                ),
+                encoding="utf-8",
+            )
+            different_stride_info = parse_cce_vf_info(
+                path, kernel_name="softmax_vf"
+            )
 
         insts = vf_info.context
         self.assertEqual(insts[0].name, "VPACK")
@@ -329,13 +344,28 @@ class VfInfoApiTest(unittest.TestCase):
         self.assertEqual(insts[1].form, "b16")
         self.assertEqual(vf_info.values["vreg_x_exp_even_f16"].dtype, "fp16")
         self.assertEqual(vf_info.values["nz_buffer_Ptr"].storage, "UB")
+        no_update = vf_info.context[1].memory_accesses[0]
+        one_block_update = post_update_info.context[1].memory_accesses[0]
+        two_block_update = two_block_info.context[1].memory_accesses[0]
+        different_stride_update = (
+            different_stride_info.context[1].memory_accesses[0]
+        )
+        self.assertEqual(no_update.update_mode, "none")
+        self.assertIsNone(no_update.post_update_delta_bytes)
+        self.assertEqual(one_block_update.update_mode, "post_update")
+        self.assertEqual(one_block_update.post_update_delta_bytes, 32)
+        self.assertEqual(two_block_update.post_update_delta_bytes, 64)
+        self.assertEqual(different_stride_update.post_update_delta_bytes, 32)
 
     def test_cce_adapter_parses_symbolic_division_loop_bound(self):
         source = """
         void loop_bound_vf(__ubuf__ float *a) {
           constexpr uint16_t kRows = 128;
+          constexpr uint16_t kStart = 4;
+          constexpr uint16_t kStepBase = 2;
+          constexpr uint16_t kStep = kStepBase * 2;
           __VEC_SCOPE__ {
-            for (uint16_t i = 0; i < kRows / 4; ++i) {
+            for (uint16_t i = kStart; i < kRows / 2; i += kStep) {
               vector_f32 v0;
               vlds(v0, a, 0, NORM);
             }
@@ -348,10 +378,12 @@ class VfInfoApiTest(unittest.TestCase):
             vf_info = parse_cce_vf_info(
                 path,
                 kernel_name="loop_bound_vf",
-                loop_params={"kRows": 128},
             )
 
-        self.assertEqual(vf_info.context[0].count, 32)
+        loop = vf_info.context[0]
+        self.assertEqual(loop.count, 15)
+        self.assertEqual(loop.induction_start, 4)
+        self.assertEqual(loop.induction_step, 4)
 
     def test_cce_adapter_parses_vmulscvt_conversion_form(self):
         source = """

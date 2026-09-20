@@ -68,14 +68,14 @@
     "load": [
       {"name": "dst", "argument_index": 0, "direction": "output", "role": "destination", "kind": "register"},
       {"name": "memory", "argument_index": 1, "direction": "input", "role": "memory", "kind": "ub"},
-      {"name": "offset", "argument_index": 2, "direction": "ignore", "role": "config", "kind": "config", "allow_integer_expression": true},
+      {"name": "offset", "argument_index": 2, "direction": "ignore", "role": "config", "kind": "config", "allow_integer_expression": true, "post_update_delta": {"encoding": "element_count"}},
       {"name": "mode", "argument_index": 3, "direction": "ignore", "role": "config", "kind": "config", "allowed_values": ["NORM", "BRC_B32", "BRC_B16", "ONEPT_B32", "ONEPT_B16"]},
       {"name": "update", "argument_index": 4, "direction": "ignore", "role": "config", "kind": "config", "optional": true, "allowed_values": ["POST_UPDATE"]}
     ],
     "store": [
       {"name": "src", "argument_index": 0, "direction": "input", "role": "source", "kind": "register"},
       {"name": "memory", "argument_index": 1, "direction": "output", "role": "memory", "kind": "ub"},
-      {"name": "offset", "argument_index": 2, "direction": "ignore", "role": "config", "kind": "config", "allow_integer_expression": true},
+      {"name": "offset", "argument_index": 2, "direction": "ignore", "role": "config", "kind": "config", "allow_integer_expression": true, "post_update_delta": {"encoding": "element_count"}},
       {"name": "mode", "argument_index": 3, "direction": "ignore", "role": "config", "kind": "config", "allowed_values": ["NORM_B16", "NORM_B32", "ONEPT_B16", "ONEPT_B32", "PK_B32"]},
       {"name": "predicate", "argument_index": 4, "direction": "ignore", "role": "predicate", "kind": "predicate"},
       {"name": "update", "argument_index": 5, "direction": "ignore", "role": "config", "kind": "config", "optional": true, "allowed_values": ["POST_UPDATE"]}
@@ -83,13 +83,13 @@
     "vsstb": [
       {"name": "src", "argument_index": 0, "direction": "input", "role": "source", "kind": "register"},
       {"name": "memory", "argument_index": 1, "direction": "output", "role": "memory", "kind": "ub"},
-      {"name": "config", "argument_index": 2, "direction": "ignore", "role": "config", "kind": "config", "allowed_values": ["VSSTB_CONFIG"], "allow_integer_expression": true},
+      {"name": "config", "argument_index": 2, "direction": "ignore", "role": "config", "kind": "config", "allowed_values": ["VSSTB_CONFIG"], "allow_integer_expression": true, "post_update_delta": {"encoding": "unsigned_bit_field", "bit_offset": 0, "bit_width": 16, "unit_bytes": 32}},
       {"name": "predicate", "argument_index": 3, "direction": "ignore", "role": "predicate", "kind": "predicate"},
       {"name": "update", "argument_index": 4, "direction": "ignore", "role": "config", "kind": "config", "allowed_values": ["POST_UPDATE", "NO_UPDATE"]}
     ],
     "vstus": [
       {"name": "align_state", "argument_index": 0, "direction": "ignore", "role": "config", "kind": "align_state"},
-      {"name": "count", "argument_index": 1, "direction": "ignore", "role": "config", "kind": "config", "allow_integer_expression": true},
+      {"name": "count", "argument_index": 1, "direction": "ignore", "role": "config", "kind": "config", "allow_integer_expression": true, "post_update_delta": {"encoding": "element_count"}},
       {"name": "src", "argument_index": 2, "direction": "input", "role": "source", "kind": "register"},
       {"name": "memory", "argument_index": 3, "direction": "output", "role": "memory", "kind": "ub"},
       {"name": "update", "argument_index": 4, "direction": "ignore", "role": "config", "kind": "config", "allowed_values": ["POST_UPDATE"]}
@@ -97,7 +97,7 @@
     "vstas": [
       {"name": "align_state", "argument_index": 0, "direction": "ignore", "role": "config", "kind": "align_state"},
       {"name": "memory", "argument_index": 1, "direction": "output", "role": "memory", "kind": "ub"},
-      {"name": "offset", "argument_index": 2, "direction": "ignore", "role": "config", "kind": "config", "allow_integer_expression": true},
+      {"name": "offset", "argument_index": 2, "direction": "ignore", "role": "config", "kind": "config", "allow_integer_expression": true, "post_update_delta": {"encoding": "element_count"}},
       {"name": "update", "argument_index": 3, "direction": "ignore", "role": "config", "kind": "config", "allowed_values": ["POST_UPDATE"]}
     ]
   },

@@ -54,6 +54,8 @@ definition、producer、loop-carried 和 source location。
 - vector、predicate、scalar 和 UB pointer 使用词法作用域。
 - `b = a` 是零周期 value binding，不生成模拟指令。
 - UB pointer alias 保留稳定 base object；普通 offset 与 `POST_UPDATE` 分开处理。
+- POST_UPDATE 增量由 Catalog 参数规则解码；`VSSTB` 的复合配置按低 16 位
+  乘以 32 字节生成指针更新量，不把高位 block stride 当作更新量。
 - affine offset 支持常量、loop variable、`+`、`-` 和常量乘变量。
 - 无法识别的 VF scope 语句明确报错，不静默丢弃。
 

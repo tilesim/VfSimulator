@@ -32,6 +32,19 @@ class ArgumentKind(str, Enum):
     ALIGN_STATE = "align_state"
 
 
+class PostUpdateDeltaEncoding(str, Enum):
+    ELEMENT_COUNT = "element_count"
+    UNSIGNED_BIT_FIELD = "unsigned_bit_field"
+
+
+@dataclass(frozen=True)
+class PostUpdateDeltaSpec:
+    encoding: PostUpdateDeltaEncoding
+    bit_offset: int = 0
+    bit_width: int = 0
+    unit_bytes: int = 0
+
+
 @dataclass(frozen=True)
 class OperandSpec:
     name: str
@@ -42,6 +55,7 @@ class OperandSpec:
     optional: bool = False
     allowed_values: tuple[str, ...] = ()
     allow_integer_expression: bool = False
+    post_update_delta: PostUpdateDeltaSpec | None = None
 
     @property
     def storage(self) -> StorageKind | None:
@@ -185,6 +199,33 @@ class InstructionCatalog:
                 raise ValueError(
                     f"Only config operands may allow integer expressions in {spec.opcode}"
                 )
+            delta = operand.post_update_delta
+            if delta is not None:
+                if operand.kind != ArgumentKind.CONFIG or not operand.allow_integer_expression:
+                    raise ValueError(
+                        f"POST_UPDATE delta operand must be an integer config in {spec.opcode}"
+                    )
+                if delta.encoding == PostUpdateDeltaEncoding.ELEMENT_COUNT:
+                    if delta.bit_offset or delta.bit_width or delta.unit_bytes:
+                        raise ValueError(
+                            f"Element-count POST_UPDATE delta has invalid fields in {spec.opcode}"
+                        )
+                elif delta.encoding == PostUpdateDeltaEncoding.UNSIGNED_BIT_FIELD:
+                    if (
+                        isinstance(delta.bit_offset, bool)
+                        or not isinstance(delta.bit_offset, int)
+                        or delta.bit_offset < 0
+                        or isinstance(delta.bit_width, bool)
+                        or not isinstance(delta.bit_width, int)
+                        or delta.bit_width <= 0
+                        or delta.bit_offset + delta.bit_width > 64
+                        or isinstance(delta.unit_bytes, bool)
+                        or not isinstance(delta.unit_bytes, int)
+                        or delta.unit_bytes <= 0
+                    ):
+                        raise ValueError(
+                            f"Invalid bit-field POST_UPDATE delta in {spec.opcode}"
+                        )
             if operand.direction == OperandDirection.OUTPUT and operand.role not in {
                 OperandRole.DESTINATION,
                 OperandRole.MEMORY,
@@ -203,6 +244,8 @@ class InstructionCatalog:
                 raise ValueError(f"Ignored operand role mismatch in {spec.opcode}")
         if indexes and indexes != set(range(max(indexes) + 1)):
             raise ValueError(f"Argument indexes must be contiguous in {spec.opcode}")
+        if sum(operand.post_update_delta is not None for operand in spec.operands) > 1:
+            raise ValueError(f"Multiple POST_UPDATE delta operands in {spec.opcode}")
         if spec.align_state_argument_index is not None:
             state_operands = [
                 operand for operand in spec.operands
@@ -397,6 +440,7 @@ def instruction_catalog_from_dict(payload: Mapping[str, Any]) -> InstructionCata
             optional = raw.get("optional", False)
             allowed_values = raw.get("allowed_values", [])
             allow_integer_expression = raw.get("allow_integer_expression", False)
+            raw_post_update_delta = raw.get("post_update_delta")
             if not isinstance(operand_name, str) or not operand_name:
                 raise ValueError(f"{name}.name must be a non-empty string")
             if not isinstance(optional, bool):
@@ -409,6 +453,20 @@ def instruction_catalog_from_dict(payload: Mapping[str, Any]) -> InstructionCata
                 raise ValueError(
                     f"{name}.allow_integer_expression must be boolean"
                 )
+            post_update_delta = None
+            if raw_post_update_delta is not None:
+                if not isinstance(raw_post_update_delta, Mapping):
+                    raise ValueError(f"{name}.post_update_delta must be an object")
+                post_update_delta = PostUpdateDeltaSpec(
+                    encoding=_enum(
+                        PostUpdateDeltaEncoding,
+                        raw_post_update_delta.get("encoding"),
+                        f"{name}.post_update_delta.encoding",
+                    ),
+                    bit_offset=raw_post_update_delta.get("bit_offset", 0),
+                    bit_width=raw_post_update_delta.get("bit_width", 0),
+                    unit_bytes=raw_post_update_delta.get("unit_bytes", 0),
+                )
             operands.append(OperandSpec(
                 name=operand_name,
                 argument_index=raw.get("argument_index"),
@@ -420,6 +478,7 @@ def instruction_catalog_from_dict(payload: Mapping[str, Any]) -> InstructionCata
                 optional=optional,
                 allowed_values=tuple(allowed_values),
                 allow_integer_expression=allow_integer_expression,
+                post_update_delta=post_update_delta,
             ))
         signatures[name] = tuple(operands)
 
@@ -551,6 +610,8 @@ __all__ = [
     "InstructionSpec",
     "OperandDirection",
     "OperandSpec",
+    "PostUpdateDeltaEncoding",
+    "PostUpdateDeltaSpec",
     "instruction_catalog_from_dict",
     "load_instruction_catalog",
 ]

@@ -137,5 +137,9 @@ LSU 资源满足时双发，不再等待前一条 LSU start。地址状态不占
 `lsu_post_update_ready_latency` 已废弃并明确报迁移错误，不自动映射到新参数。
 `idu_to_ooo.json` 和 `idu_address_blocked.json` 记录地址 producer 的 dispatch
 时间与 ready_cycle；`sim_history.json` 不再输出旧 start-based 地址事件边。
+CCE 前端依据 Catalog 中的 `post_update_delta` 规则生成字节增量：普通
+`VLDS/VSTS/VSTUS/VSTAS` 将显式元素步长乘以指针元素宽度；`VSSTB` 将复合
+配置的低 16 位解释为 32 字节 block 数，因此 `(129 << 16) | 1` 的更新量为
+32 字节。高 16 位 block stride 不属于指针更新量。
 完整支持范围、限制及复现步骤见
 [POST_UPDATE 开发与验证记录](../docs/post_update_address_dependency_plan.md)。

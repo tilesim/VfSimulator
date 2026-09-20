@@ -31,6 +31,10 @@ struct NativeOperandSpec {
   CatalogArgumentKind kind = CatalogArgumentKind::Register;
   bool optional = false;
   bool allowIntegerExpression = false;
+  std::string postUpdateDeltaEncoding;
+  int postUpdateDeltaBitOffset = 0;
+  int postUpdateDeltaBitWidth = 0;
+  int postUpdateDeltaUnitBytes = 0;
   std::unordered_set<std::string> allowedValues;
 };
 

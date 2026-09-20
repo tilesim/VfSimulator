@@ -218,6 +218,13 @@ static constexpr GeneratedOperand kGeneratedOperands[] = {
   {"VSTAS", "offset", 2, "ignore", "config", "config", false, true},
   {"VSTAS", "update", 3, "ignore", "config", "config", false, false},
 };
+static constexpr GeneratedPostUpdateDelta kGeneratedPostUpdateDeltas[] = {
+  {"VLDS", 2, "element_count", 0, 0, 0},
+  {"VSTS", 2, "element_count", 0, 0, 0},
+  {"VSSTB", 2, "unsigned_bit_field", 0, 16, 32},
+  {"VSTUS", 1, "element_count", 0, 0, 0},
+  {"VSTAS", 2, "element_count", 0, 0, 0},
+};
 static constexpr GeneratedAllowedValue kGeneratedAllowedValues[] = {
   {"VEXP", 3, "MODE_ZEROING"},
   {"VADD", 4, "MODE_ZEROING"},

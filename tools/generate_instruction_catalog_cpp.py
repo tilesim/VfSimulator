@@ -52,6 +52,27 @@ def render_catalog_cpp(payload: Mapping[str, Any]) -> str:
                 )
             )
     lines.append("};")
+    lines.append(
+        "static constexpr GeneratedPostUpdateDelta "
+        "kGeneratedPostUpdateDeltas[] = {"
+    )
+    for opcode, spec in instructions.items():
+        for operand in signatures[spec["signature"]]:
+            delta = operand.get("post_update_delta")
+            if delta is None:
+                continue
+            lines.append(
+                "  {%s, %d, %s, %d, %d, %d},"
+                % (
+                    _quote(opcode),
+                    operand["argument_index"],
+                    _quote(delta["encoding"]),
+                    int(delta.get("bit_offset", 0)),
+                    int(delta.get("bit_width", 0)),
+                    int(delta.get("unit_bytes", 0)),
+                )
+            )
+    lines.append("};")
     lines.append("static constexpr GeneratedAllowedValue kGeneratedAllowedValues[] = {")
     for opcode, spec in instructions.items():
         for operand in signatures[spec["signature"]]:

@@ -30,6 +30,14 @@ struct GeneratedOperand {
   bool optional;
   bool allowIntegerExpression;
 };
+struct GeneratedPostUpdateDelta {
+  const char *opcode;
+  int argumentIndex;
+  const char *encoding;
+  int bitOffset;
+  int bitWidth;
+  int unitBytes;
+};
 struct GeneratedAllowedValue {
   const char *opcode;
   int argumentIndex;
@@ -136,6 +144,20 @@ InstructionCatalog::InstructionCatalog() {
     operand.optional = entry.optional;
     operand.allowIntegerExpression = entry.allowIntegerExpression;
     specs_.at(entry.opcode).operands.push_back(std::move(operand));
+  }
+  for (const auto &entry : kGeneratedPostUpdateDeltas) {
+    auto &operands = specs_.at(entry.opcode).operands;
+    auto operand = std::find_if(
+        operands.begin(), operands.end(), [&](const NativeOperandSpec &candidate) {
+          return candidate.argumentIndex == entry.argumentIndex;
+        });
+    if (operand == operands.end())
+      throw std::runtime_error("Generated POST_UPDATE delta references missing operand: " +
+                               std::string(entry.opcode));
+    operand->postUpdateDeltaEncoding = entry.encoding;
+    operand->postUpdateDeltaBitOffset = entry.bitOffset;
+    operand->postUpdateDeltaBitWidth = entry.bitWidth;
+    operand->postUpdateDeltaUnitBytes = entry.unitBytes;
   }
   for (const auto &entry : kGeneratedAllowedValues) {
     auto &operands = specs_.at(entry.opcode).operands;

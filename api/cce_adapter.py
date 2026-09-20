@@ -18,6 +18,8 @@ from api.frontend.instruction_catalog import (
     FormRule,
     InstructionSpec,
     OperandDirection,
+    OperandSpec,
+    PostUpdateDeltaEncoding,
 )
 from api.frontend.schema import CanonicalVfInfo, SourceLocation
 from api.frontend.adapter_ir import (
@@ -728,29 +730,21 @@ class _VFScopeParser:
                 raise ValueError("POST_UPDATE requires a pointer variable, not pointer arithmetic")
             if state_id in self.loop_pointer_states:
                 raise ValueError("POST_UPDATE on a loop-local reinitialized pointer is not yet supported")
-            delta_operand = offset_operand or next((o for o in spec.operands if o.name == "count"), None)
+            delta_operand = next(
+                (o for o in spec.operands if o.post_update_delta is not None),
+                None,
+            )
             if delta_operand is None:
-                raise ValueError("POST_UPDATE has no supported explicit element increment")
+                raise ValueError("POST_UPDATE has no declared delta rule")
             raw_delta = args[delta_operand.argument_index].strip()
             if re.search(r"\bvag_b(?:16|32)\s*\(", raw_delta):
                 raise ValueError("POST_UPDATE with VAG requires address-generator modeling")
-            dtype = self.ub_dtypes.get(pointer_name)
-            casts = re.findall(
-                r"\(\s*(?:(?:const|volatile)\s+)*__ubuf__\s+"
-                r"(?:(?:const|volatile)\s+)*(\w+)\s*[*&]+\s*\)",
+            delta_bytes = self._decode_post_update_delta_bytes(
+                delta_operand,
+                raw_delta,
                 pointer_expression,
+                pointer_name,
             )
-            if "__ubuf__" in pointer_expression and not casts:
-                raise ValueError(f"Unsupported POST_UPDATE pointer cast: {pointer_expression}")
-            if casts:
-                dtype = _cce_scalar_dtype_to_form(casts[0])
-            width_dtype = dtype.removesuffix("_t") if dtype else None
-            width = {"fp32": 4, "fp16": 2, "bf16": 2, "int32": 4,
-                     "uint32": 4, "int16": 2, "uint16": 2,
-                     "int8": 1, "uint8": 1}.get(width_dtype)
-            if width is None:
-                raise ValueError(f"Unknown POST_UPDATE pointer element width: {dtype}")
-            delta_bytes = f"({self._expand_offset_expression(raw_delta)}) * {width}"
             self.updated_pointer_states.add(state_id)
             self.all_updated_pointer_states.add(state_id)
         offset: int | str = alias_offset
@@ -781,6 +775,49 @@ class _VFScopeParser:
                 post_update_delta_bytes=delta_bytes,
             ),
         )
+
+    def _decode_post_update_delta_bytes(
+        self,
+        operand: OperandSpec,
+        raw_delta: str,
+        pointer_expression: str,
+        pointer_name: str,
+    ) -> int | str:
+        rule = operand.post_update_delta
+        if rule is None:
+            raise ValueError("POST_UPDATE has no declared delta rule")
+        if rule.encoding == PostUpdateDeltaEncoding.UNSIGNED_BIT_FIELD:
+            value = _eval_int_expr(
+                raw_delta,
+                self._resolved_integer_scalar_constants(),
+            )
+            if value is None or value < 0 or value >= 1 << 64:
+                raise ValueError(
+                    "POST_UPDATE packed configuration must resolve to an unsigned "
+                    "64-bit integer constant"
+                )
+            mask = (1 << rule.bit_width) - 1
+            return ((value >> rule.bit_offset) & mask) * rule.unit_bytes
+
+        dtype = self.ub_dtypes.get(pointer_name)
+        casts = re.findall(
+            r"\(\s*(?:(?:const|volatile)\s+)*__ubuf__\s+"
+            r"(?:(?:const|volatile)\s+)*(\w+)\s*[*&]+\s*\)",
+            pointer_expression,
+        )
+        if "__ubuf__" in pointer_expression and not casts:
+            raise ValueError(
+                f"Unsupported POST_UPDATE pointer cast: {pointer_expression}"
+            )
+        if casts:
+            dtype = _cce_scalar_dtype_to_form(casts[0])
+        width_dtype = dtype.removesuffix("_t") if dtype else None
+        width = {"fp32": 4, "fp16": 2, "bf16": 2, "int32": 4,
+                 "uint32": 4, "int16": 2, "uint16": 2,
+                 "int8": 1, "uint8": 1}.get(width_dtype)
+        if width is None:
+            raise ValueError(f"Unknown POST_UPDATE pointer element width: {dtype}")
+        return f"({self._expand_offset_expression(raw_delta)}) * {width}"
 
     @staticmethod
     def _combine_offset_expressions(lhs: str, rhs: str) -> str:
@@ -979,9 +1016,10 @@ class _VFScopeParser:
         if cond_match.group(1) != var:
             raise ValueError(f"Unsupported for-loop variable mismatch: {header}")
 
-        start = _resolve_count_expr(init_match.group(2), self.loop_params)
-        bound = _resolve_count_expr(cond_match.group(3), self.loop_params)
-        step = _resolve_loop_step(step_expr, var, self.loop_params)
+        integer_constants = self._resolved_integer_scalar_constants()
+        start = _resolve_count_expr(init_match.group(2), integer_constants)
+        bound = _resolve_count_expr(cond_match.group(3), integer_constants)
+        step = _resolve_loop_step(step_expr, var, integer_constants)
         if step <= 0:
             raise ValueError(f"Only positive for-loop steps are supported: {header}")
 
