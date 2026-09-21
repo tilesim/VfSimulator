@@ -69,14 +69,14 @@
       {"name": "dst", "argument_index": 0, "direction": "output", "role": "destination", "kind": "register"},
       {"name": "memory", "argument_index": 1, "direction": "input", "role": "memory", "kind": "ub"},
       {"name": "offset", "argument_index": 2, "direction": "ignore", "role": "config", "kind": "config", "allow_integer_expression": true, "post_update_delta": {"encoding": "element_count"}},
-      {"name": "mode", "argument_index": 3, "direction": "ignore", "role": "config", "kind": "config", "allowed_values": ["NORM", "BRC_B32", "BRC_B16", "ONEPT_B32", "ONEPT_B16"]},
+      {"name": "mode", "argument_index": 3, "direction": "ignore", "role": "config", "kind": "config", "allowed_values": ["NORM", "BRC_B32", "BRC_B16", "ONEPT_B32", "ONEPT_B16", "NORM_B8"]},
       {"name": "update", "argument_index": 4, "direction": "ignore", "role": "config", "kind": "config", "optional": true, "allowed_values": ["POST_UPDATE"]}
     ],
     "store": [
       {"name": "src", "argument_index": 0, "direction": "input", "role": "source", "kind": "register"},
       {"name": "memory", "argument_index": 1, "direction": "output", "role": "memory", "kind": "ub"},
       {"name": "offset", "argument_index": 2, "direction": "ignore", "role": "config", "kind": "config", "allow_integer_expression": true, "post_update_delta": {"encoding": "element_count"}},
-      {"name": "mode", "argument_index": 3, "direction": "ignore", "role": "config", "kind": "config", "allowed_values": ["NORM_B16", "NORM_B32", "ONEPT_B16", "ONEPT_B32", "PK_B32"]},
+      {"name": "mode", "argument_index": 3, "direction": "ignore", "role": "config", "kind": "config", "allowed_values": ["NORM_B16", "NORM_B32", "ONEPT_B16", "ONEPT_B32", "PK_B32", "NORM_B8"]},
       {"name": "predicate", "argument_index": 4, "direction": "ignore", "role": "predicate", "kind": "predicate"},
       {"name": "update", "argument_index": 5, "direction": "ignore", "role": "config", "kind": "config", "optional": true, "allowed_values": ["POST_UPDATE"]}
     ],
@@ -99,6 +99,30 @@
       {"name": "memory", "argument_index": 1, "direction": "output", "role": "memory", "kind": "ub"},
       {"name": "offset", "argument_index": 2, "direction": "ignore", "role": "config", "kind": "config", "allow_integer_expression": true, "post_update_delta": {"encoding": "element_count"}},
       {"name": "update", "argument_index": 3, "direction": "ignore", "role": "config", "kind": "config", "allowed_values": ["POST_UPDATE"]}
+    ],
+    "index_generate": [
+      {"name": "dst", "argument_index": 0, "direction": "output", "role": "destination", "kind": "register"},
+      {"name": "index", "argument_index": 1, "direction": "input", "role": "scalar", "kind": "scalar"},
+      {"name": "order", "argument_index": 2, "direction": "ignore", "role": "config", "kind": "config", "optional": true, "allowed_values": ["INC_ORDER"]}
+    ],
+    "vcvt_bf16_to_f32": [
+      {"name": "dst", "argument_index": 0, "direction": "output", "role": "destination", "kind": "register"},
+      {"name": "src", "argument_index": 1, "direction": "input", "role": "source", "kind": "register"},
+      {"name": "predicate", "argument_index": 2, "direction": "ignore", "role": "predicate", "kind": "predicate"},
+      {"name": "part", "argument_index": 3, "direction": "ignore", "role": "config", "kind": "config", "allowed_values": ["PART_EVEN", "PART_ODD"]},
+      {"name": "mode", "argument_index": 4, "direction": "ignore", "role": "config", "kind": "config", "optional": true, "allowed_values": ["MODE_ZEROING"]}
+    ],
+    "vcvt_s32_to_u8": [
+      {"name": "dst", "argument_index": 0, "direction": "output", "role": "destination", "kind": "register"},
+      {"name": "src", "argument_index": 1, "direction": "input", "role": "source", "kind": "register"},
+      {"name": "predicate", "argument_index": 2, "direction": "ignore", "role": "predicate", "kind": "predicate"},
+      {"name": "saturation", "argument_index": 3, "direction": "ignore", "role": "config", "kind": "config", "allowed_values": ["RS_ENABLE"]},
+      {"name": "part", "argument_index": 4, "direction": "ignore", "role": "config", "kind": "config", "allowed_values": ["PART_P0", "PART_P1", "PART_P2", "PART_P3"]},
+      {"name": "mode", "argument_index": 5, "direction": "ignore", "role": "config", "kind": "config", "optional": true, "allowed_values": ["MODE_ZEROING"]}
+    ],
+    "broadcast": [
+      {"name": "dst", "argument_index": 0, "direction": "output", "role": "destination", "kind": "register"},
+      {"name": "src", "argument_index": 1, "direction": "input", "role": "scalar", "kind": "scalar"}
     ]
   },
   "instructions": {
@@ -117,13 +141,13 @@
     "VCMAX": {"class": "compute", "signature": "reduction", "forms": ["fp16", "fp32", "b16", "b32"]},
     "VCMIN": {"class": "compute", "signature": "reduction", "forms": ["fp16", "fp32", "b16", "b32"]},
     "VCADD": {"class": "compute", "signature": "reduction", "forms": ["fp16", "fp32", "b16", "b32"]},
-    "VLDS": {"class": "load", "aliases": ["VLD"], "signature": "load", "forms": ["fp16", "fp32", "b16", "b32"], "call_variants": [{"argument_count": 4}, {"argument_count": 5, "argument_values": {"4": ["POST_UPDATE"]}}]},
-    "VSTS": {"class": "store", "aliases": ["VST"], "signature": "store", "forms": ["fp16", "fp32", "bf16", "b16", "b32"], "call_variants": [{"argument_count": 5}, {"argument_count": 6, "argument_values": {"5": ["POST_UPDATE"]}}]},
-    "VDUP": {"class": "compute", "signature": "duplicate", "forms": ["fp16", "fp32", "b16", "b32"], "call_variants": [{"argument_count": 4, "argument_values": {"3": ["MODE_ZEROING"]}}, {"argument_count": 5, "argument_values": {"3": ["POS_LOWEST"], "4": ["MODE_ZEROING"]}}]},
+    "VLDS": {"class": "load", "aliases": ["VLD"], "signature": "load", "forms": ["fp16", "fp32", "b16", "b32", "bf16", "uint32", "int32"], "call_variants": [{"argument_count": 4}, {"argument_count": 5, "argument_values": {"4": ["POST_UPDATE"]}}]},
+    "VSTS": {"class": "store", "aliases": ["VST"], "signature": "store", "forms": ["fp16", "fp32", "bf16", "b16", "b32", "uint32", "int32", "int8", "uint8"], "call_variants": [{"argument_count": 5}, {"argument_count": 6, "argument_values": {"5": ["POST_UPDATE"]}}]},
+    "VDUP": {"class": "compute", "signature": "duplicate", "forms": ["fp16", "fp32", "b16", "b32", "int8"], "call_variants": [{"argument_count": 4, "argument_values": {"3": ["MODE_ZEROING"]}}, {"argument_count": 5, "argument_values": {"3": ["POS_LOWEST"], "4": ["MODE_ZEROING"]}}]},
     "VAND": {"class": "compute", "signature": "binary", "forms": ["fp16", "fp32", "b16", "b32"]},
     "VCGMAX": {"class": "compute", "signature": "reduction", "forms": ["fp16", "fp32", "b16", "b32"]},
     "VCMP_EQ": {"class": "compute", "signature": "binary", "forms": ["fp16", "fp32", "b16", "b32"]},
-    "VCVT": {"class": "compute", "signature": "vcvt", "form_rule": "conversion", "virtual": true, "specializations": {"f32_to_f16": "VCVT_F32_TO_F16", "f32_to_bf16": "VCVT_F32_TO_BF16", "f16_to_f32": "VCVT_F16_TO_F32", "f32_to_s32": "VCVT_F32_TO_S32", "s32_to_f32": "VCVT_S32_TO_F32"}},
+    "VCVT": {"class": "compute", "signature": "vcvt", "form_rule": "conversion", "virtual": true, "specializations": {"f32_to_f16": "VCVT_F32_TO_F16", "f32_to_bf16": "VCVT_F32_TO_BF16", "f16_to_f32": "VCVT_F16_TO_F32", "f32_to_s32": "VCVT_F32_TO_S32", "s32_to_f32": "VCVT_S32_TO_F32", "bf16_to_f32": "VCVT_BF16_TO_F32", "s32_to_u8": "VCVT_S32_TO_U8"}},
     "VCVT_F16_TO_F32": {"class": "compute", "signature": "vcvt", "form_rule": "fixed", "fixed_form": "f16_to_f32", "forms": ["f16_to_f32"]},
     "VCVT_F32_TO_F16": {"class": "compute", "signature": "vcvt", "form_rule": "fixed", "fixed_form": "f32_to_f16", "forms": ["f32_to_f16"]},
     "VCVT_F32_TO_BF16": {"class": "compute", "signature": "vcvt", "form_rule": "fixed", "fixed_form": "f32_to_bf16", "forms": ["f32_to_bf16"]},
@@ -132,12 +156,18 @@
     "VSEL": {"class": "compute", "signature": "binary", "forms": ["fp16", "fp32", "b16", "b32"]},
     "VSHLS": {"class": "compute", "signature": "scalar", "forms": ["fp16", "fp32", "b16", "b32"]},
     "VSHRS": {"class": "compute", "signature": "scalar", "forms": ["fp16", "fp32", "b16", "b32"]},
-    "VBR": {"class": "compute", "signature": "duplicate", "forms": ["fp16", "fp32", "b16", "b32"]},
+    "VBR": {"class": "compute", "signature": "broadcast", "forms": ["fp16", "fp32", "b16", "b32", "int8"]},
     "VPACK": {"class": "compute", "signature": "pack", "form_rule": "fixed", "fixed_form": "b32", "forms": ["b32"]},
     "VSSTB": {"class": "store", "signature": "vsstb", "form_rule": "fixed", "fixed_form": "b16", "forms": ["b16"]},
     "VEXPDIF": {"class": "compute", "signature": "expdif", "forms": ["fp32", "b32"]},
     "VMULSCVT": {"class": "compute", "signature": "mulscvt", "form_rule": "conversion", "forms": ["f32_to_f16"]},
     "VSTUS": {"class": "store", "signature": "vstus", "forms": ["fp16", "fp32", "bf16", "b16", "b32"], "align_state_operation": "append", "align_state_argument_index": 0, "call_variants": [{"argument_count": 5, "argument_values": {"4": ["POST_UPDATE"]}}]},
-    "VSTAS": {"class": "store", "signature": "vstas", "forms": ["fp16", "fp32", "bf16", "b16", "b32"], "align_state_operation": "consume", "align_state_argument_index": 0, "call_variants": [{"argument_count": 4, "argument_values": {"3": ["POST_UPDATE"]}}]}
+    "VSTAS": {"class": "store", "signature": "vstas", "forms": ["fp16", "fp32", "bf16", "b16", "b32"], "align_state_operation": "consume", "align_state_argument_index": 0, "call_variants": [{"argument_count": 4, "argument_values": {"3": ["POST_UPDATE"]}}]},
+    "VSQRT": {"class": "compute", "signature": "unary", "forms": ["fp32"], "timing_optional": true},
+    "VLN": {"class": "compute", "signature": "unary", "forms": ["fp32"], "timing_optional": true},
+    "VOR": {"class": "compute", "signature": "binary", "form_rule": "fixed", "fixed_form": "b32", "forms": ["b32"], "timing_optional": true},
+    "VCI": {"class": "compute", "signature": "index_generate", "forms": ["int32"], "timing_optional": true},
+    "VCVT_BF16_TO_F32": {"class": "compute", "signature": "vcvt_bf16_to_f32", "form_rule": "fixed", "fixed_form": "bf16_to_f32", "forms": ["bf16_to_f32"], "timing_optional": true},
+    "VCVT_S32_TO_U8": {"class": "compute", "signature": "vcvt_s32_to_u8", "form_rule": "fixed", "fixed_form": "s32_to_u8", "forms": ["s32_to_u8"], "timing_optional": true}
   }
 }

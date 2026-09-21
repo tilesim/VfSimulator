@@ -203,7 +203,11 @@ class _VFScopeParser:
             name for name, storage in scope.param_storage.items() if storage == "Scalar"
         }
         self.offset_scalar_names = set(self.scalar_names)
-        self.local_scalar_dtypes: Dict[str, str] = {}
+        self.local_scalar_dtypes: Dict[str, str] = {
+            name: dtype
+            for name, dtype in scope.param_dtypes.items()
+            if name in self.scalar_names
+        }
         self.local_scalar_initializers: Dict[str, str] = {}
         self._record_function_scope_scalar_declarations(scope.declaration_source)
         self._record_function_scope_ub_pointer_declarations(scope.declaration_source)
@@ -402,6 +406,13 @@ class _VFScopeParser:
             return self._bind_generic_compute_call(
                 callee, op, args, self._source_location(line)
             )
+        if spec.virtual and spec.form_rule == FormRule.CONVERSION and len(args) >= 2:
+            dst_dtype = self.register_dtypes.get(_base_identifier(args[0]))
+            src_dtype = self.register_dtypes.get(_base_identifier(args[1]))
+            if dst_dtype and src_dtype:
+                form = f"{compact_dtype(src_dtype)}_to_{compact_dtype(dst_dtype)}"
+                op = DEFAULT_INSTRUCTION_CATALOG.specialize(op, form)
+                spec = DEFAULT_INSTRUCTION_CATALOG.lookup(op)
         src, dst = self._bind_catalog_call(
             callee, spec, args, induction_variables
         )
@@ -428,7 +439,10 @@ class _VFScopeParser:
             source_location=self._source_location(line),
             attributes=attributes,
             supplemental_inputs=tuple(
-                AdapterValue(args[operand.argument_index].strip(), "Scalar")
+                AdapterValue(
+                    args[operand.argument_index].strip(), "Scalar",
+                    _cast_numeric_scalar_dtype(args[operand.argument_index]),
+                )
                 for operand in spec.operands
                 if operand.direction == OperandDirection.INPUT
                 and operand.kind
@@ -541,7 +555,13 @@ class _VFScopeParser:
                     f"{callee} argument {index} cannot use a UB object as scalar: {arg}"
                 )
             if name in self.scalar_names:
-                return AdapterValue(name, "Scalar")
+                return AdapterValue(
+                    name,
+                    "Scalar",
+                    _cce_scalar_dtype_to_form(
+                        self.local_scalar_dtypes.get(name, "")
+                    ),
+                )
             if _is_numeric_scalar_literal(arg):
                 return None
             raise ValueError(
@@ -897,7 +917,13 @@ class _VFScopeParser:
         if ub_reference is not None:
             return AdapterValue(ub_reference[0], "UB")
         if name in self.scalar_names:
-            return AdapterValue(name, "Scalar")
+            return AdapterValue(
+                name,
+                "Scalar",
+                _cce_scalar_dtype_to_form(
+                    self.local_scalar_dtypes.get(name, "")
+                ),
+            )
         return None
 
     def _record_vector_decl_statement(self, stmt: str) -> None:
@@ -1068,25 +1094,37 @@ def _parse_param_dtypes(params: str) -> Dict[str, str]:
     dtypes: Dict[str, str] = {}
     for raw in _split_args(params):
         cleaned = raw.strip()
-        if "__ubuf__" not in cleaned:
-            continue
         match = re.search(
             r"__ubuf__\s+([A-Za-z_]\w*)\s*\*\s*([A-Za-z_]\w*)",
             cleaned,
         )
+        if match is None:
+            match = re.fullmatch(
+                r"(?:(?:const|volatile)\s+)*"
+                r"(u?int(?:8|16|32|64)_t|size_t|unsigned|signed|short|int|"
+                r"long|float|double|half)\s+([A-Za-z_]\w*)"
+                r"(?:\s*=\s*.+)?",
+                cleaned,
+            )
         if match:
             dtypes[match.group(2)] = _cce_scalar_dtype_to_form(match.group(1))
     return dtypes
 
 
 def _cce_scalar_dtype_to_form(dtype: str) -> str:
+    normalized = dtype.lower()
     aliases = {
         "float": "fp32",
         "half": "fp16",
         "bfloat16": "bf16",
         "bfloat16_t": "bf16",
     }
-    return aliases.get(dtype.lower(), str(normalize_dtype(dtype, default=dtype.lower())))
+    if re.fullmatch(r"u?int(?:8|16|32|64)_t", normalized):
+        normalized = normalized[:-2]
+    return aliases.get(
+        normalized,
+        str(normalize_dtype(normalized, default=normalized)),
+    )
 
 
 def _infer_call_argument_constants(source: str, scope: CCEVFScope) -> Dict[str, int]:
@@ -1210,11 +1248,19 @@ def _vector_dtype_to_form(dtype: str) -> str:
 
 def _is_numeric_scalar_literal(value: str) -> bool:
     text = value.strip()
+    text = re.sub(r"^\(\s*(?:u?int(?:8|16|32|64)_t|unsigned|signed|int)\s*\)\s*", "", text)
     text = re.sub(r"^[()]|[()]$", "", text).strip()
     return bool(re.fullmatch(
         r"[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?[fFlL]?",
         text,
     ))
+
+
+def _cast_numeric_scalar_dtype(value: str) -> str | None:
+    match = re.match(
+        r"^\(\s*(u?int(?:8|16|32|64))_t\s*\)", value.strip()
+    )
+    return normalize_dtype(match.group(1)) if match else None
 
 
 def _is_integer_scalar_dtype(dtype: str) -> bool:

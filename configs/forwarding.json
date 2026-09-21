@@ -2,6 +2,23 @@
   "schema_version": 2,
   "defaults": 3,
   "forwarding": {
+    "VLDS.uint32": {
+      "VOR.b32": 6
+    },
+    "VOR.b32": {
+      "VSTS.uint32": 4
+    },
+    "VCI.int32": {
+      "VSTS.int32": 5
+    },
+    "VSQRT.fp32": {
+      "VSQRT.fp32": 14,
+      "VSTS.fp32": 15
+    },
+    "VLN.fp32": {
+      "VLN.fp32": 15,
+      "VSTS.fp32": 16
+    },
     "VADDS.fp32": {
       "VADDS.fp32": 3,
       "VMULS.fp32": 3,
@@ -330,6 +347,8 @@
       "VSTS.fp32": 4
     },
     "VLDS.fp32": {
+      "VSQRT.fp32": 6,
+      "VLN.fp32": 6,
       "VADDS.fp32": 6,
       "VEXP.fp32": 6,
       "VADD.fp32": 6,
