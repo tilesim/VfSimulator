@@ -17,6 +17,8 @@ class DType(_StrEnum):
     BF16 = "bf16"
     INT32 = "int32"
     UINT32 = "uint32"
+    INT8 = "int8"
+    UINT8 = "uint8"
     BOOL = "bool"
 
 
@@ -52,6 +54,10 @@ DTYPE_ALIASES = {
     "int32": DType.INT32,
     "u32": DType.UINT32,
     "uint32": DType.UINT32,
+    "s8": DType.INT8,
+    "int8": DType.INT8,
+    "u8": DType.UINT8,
+    "uint8": DType.UINT8,
     "bool": DType.BOOL,
     "boolean": DType.BOOL,
     "predicate": DType.BOOL,
@@ -64,6 +70,8 @@ FORM_DTYPE_ALIASES = {
     "s32": DType.INT32,
     "i32": DType.INT32,
     "u32": DType.UINT32,
+    "s8": DType.INT8,
+    "u8": DType.UINT8,
 }
 
 DTYPE_TO_COMPACT = {
@@ -72,6 +80,8 @@ DTYPE_TO_COMPACT = {
     DType.BF16.value: "bf16",
     DType.INT32.value: "s32",
     DType.UINT32.value: "u32",
+    DType.INT8.value: "s8",
+    DType.UINT8.value: "u8",
     DType.BOOL.value: "bool",
 }
 
