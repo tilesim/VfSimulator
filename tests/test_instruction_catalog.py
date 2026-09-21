@@ -191,7 +191,7 @@ class InstructionCatalogTest(unittest.TestCase):
         self.assertFalse(mode.allow_integer_expression)
         self.assertEqual(
             set(mode.allowed_values),
-            {"NORM", "BRC_B32", "BRC_B16", "ONEPT_B32", "ONEPT_B16"},
+            {"NORM", "NORM_B8", "BRC_B32", "BRC_B16", "ONEPT_B32", "ONEPT_B16"},
         )
 
 

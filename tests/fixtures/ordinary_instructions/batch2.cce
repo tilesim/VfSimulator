@@ -1,0 +1,64 @@
+#define __aicore__ [aicore]
+__attribute__((always_inline)) inline [aicore] void bf_corrected(__ubuf__ bfloat16_t *in, __ubuf__ float *out) {
+    __VEC_SCOPE__ {
+        vector_bool convert_mask = pset_b16(PAT_ALL);
+        vector_bool store_mask = pset_b32(PAT_ALL);
+        vector_bf16 a;
+        vector_f32 even, odd;
+        vlds(a, in, 0, NORM);
+        vcvt(even, a, convert_mask, PART_EVEN, MODE_ZEROING);
+        vcvt(odd, a, convert_mask, PART_ODD, MODE_ZEROING);
+        vsts(even, out, 0, NORM_B32, store_mask);
+        vsts(odd, out, 64, NORM_B32, store_mask);
+    }
+}
+__attribute__((always_inline)) inline [aicore] void or_eight(__ubuf__ unsigned *in, __ubuf__ unsigned *out) {
+    __VEC_SCOPE__ {
+        vector_bool p = pset_b32(PAT_ALL);
+        vector_u32 a0,b0,a1,b1,a2,b2,a3,b3,a4,b4,a5,b5,a6,b6,a7,b7;
+        vector_u32 y0,y1,y2,y3,y4,y5,y6,y7;
+        vlds(a0,in,0,NORM); vlds(b0,in,64,NORM);
+        vlds(a1,in,128,NORM); vlds(b1,in,192,NORM);
+        vlds(a2,in,256,NORM); vlds(b2,in,320,NORM);
+        vlds(a3,in,384,NORM); vlds(b3,in,448,NORM);
+        vlds(a4,in,512,NORM); vlds(b4,in,576,NORM);
+        vlds(a5,in,640,NORM); vlds(b5,in,704,NORM);
+        vlds(a6,in,768,NORM); vlds(b6,in,832,NORM);
+        vlds(a7,in,896,NORM); vlds(b7,in,960,NORM);
+        vor(y0,a0,b0,p,MODE_ZEROING); vor(y1,a1,b1,p,MODE_ZEROING);
+        vor(y2,a2,b2,p,MODE_ZEROING); vor(y3,a3,b3,p,MODE_ZEROING);
+        vor(y4,a4,b4,p,MODE_ZEROING); vor(y5,a5,b5,p,MODE_ZEROING);
+        vor(y6,a6,b6,p,MODE_ZEROING); vor(y7,a7,b7,p,MODE_ZEROING);
+        vsts(y0,out,0,NORM_B32,p); vsts(y1,out,64,NORM_B32,p);
+        vsts(y2,out,128,NORM_B32,p); vsts(y3,out,192,NORM_B32,p);
+        vsts(y4,out,256,NORM_B32,p); vsts(y5,out,320,NORM_B32,p);
+        vsts(y6,out,384,NORM_B32,p); vsts(y7,out,448,NORM_B32,p);
+    }
+}
+__attribute__((always_inline)) inline [aicore] void ci_eight(__ubuf__ int *out) {
+    __VEC_SCOPE__ {
+        vector_bool p = pset_b32(PAT_ALL);
+        vector_s32 y0,y1,y2,y3,y4,y5,y6,y7;
+        vci(y0,(int32_t)-1009,INC_ORDER); vci(y1,(int32_t)-509,INC_ORDER);
+        vci(y2,(int32_t)-17,INC_ORDER); vci(y3,(int32_t)3,INC_ORDER);
+        vci(y4,(int32_t)137,INC_ORDER); vci(y5,(int32_t)1001,INC_ORDER);
+        vci(y6,(int32_t)70001,INC_ORDER); vci(y7,(int32_t)-70001,INC_ORDER);
+        vsts(y0,out,0,NORM_B32,p); vsts(y1,out,64,NORM_B32,p);
+        vsts(y2,out,128,NORM_B32,p); vsts(y3,out,192,NORM_B32,p);
+        vsts(y4,out,256,NORM_B32,p); vsts(y5,out,320,NORM_B32,p);
+        vsts(y6,out,384,NORM_B32,p); vsts(y7,out,448,NORM_B32,p);
+    }
+}
+extern "C" __global__ __aicore__ void ordinary_extra_batch2(__gm__ unsigned *input, __gm__ unsigned *output) {
+    __ubuf__ unsigned *in = (__ubuf__ unsigned *)get_imm(0);
+    __ubuf__ unsigned *out = (__ubuf__ unsigned *)get_imm(0x8000);
+    copy_gm_to_ubuf_align_v2(in, input, 0, 1, 4352, 0, 0, 0, 0, 0, 0);
+    set_flag(PIPE_MTE2, PIPE_V, (event_t)0);
+    wait_flag(PIPE_MTE2, PIPE_V, (event_t)0);
+    bf_corrected((__ubuf__ bfloat16_t *)(in+1024), (__ubuf__ float *)out);
+    or_eight(in, out+128);
+    ci_eight((__ubuf__ int *)(out+640));
+    set_flag(PIPE_V, PIPE_MTE3, (event_t)0);
+    wait_flag(PIPE_V, PIPE_MTE3, (event_t)0);
+    copy_ubuf_to_gm_align_v2(output, out, 0, 1, 4608, 0, 0, 0);
+}

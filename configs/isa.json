@@ -5,6 +5,58 @@
     "vf_drain_cost": 12
   },
   "instructions": {
+    "VOR": {
+      "op_class": "COMPUTE",
+      "forms": {
+        "b32": {
+          "latency": 6,
+          "EXU": "ALU",
+          "dispatch_exu": "EXU01",
+          "src_dtypes": ["uint32", "uint32"],
+          "dst_dtypes": ["uint32"],
+          "dtype": "uint32"
+        }
+      }
+    },
+    "VCI": {
+      "op_class": "COMPUTE",
+      "forms": {
+        "int32": {
+          "latency": 7,
+          "EXU": "ALU",
+          "dispatch_exu": "EXU01",
+          "src_dtypes": ["int32"],
+          "dst_dtypes": ["int32"],
+          "dtype": "int32"
+        }
+      }
+    },
+    "VSQRT": {
+      "op_class": "COMPUTE",
+      "forms": {
+        "fp32": {
+          "latency": 17,
+          "EXU": "SFU",
+          "dispatch_exu": "EXU01",
+          "src_dtypes": ["fp32"],
+          "dst_dtypes": ["fp32"],
+          "dtype": "fp32"
+        }
+      }
+    },
+    "VLN": {
+      "op_class": "COMPUTE",
+      "forms": {
+        "fp32": {
+          "latency": 18,
+          "EXU": "SFU",
+          "dispatch_exu": "EXU01",
+          "src_dtypes": ["fp32"],
+          "dst_dtypes": ["fp32"],
+          "dtype": "fp32"
+        }
+      }
+    },
     "VADDS": {
       "op_class": "COMPUTE",
       "forms": {
@@ -786,6 +838,14 @@
             "fp16"
           ],
           "dtype": "fp16"
+        },
+        "int8": {
+          "latency": 6,
+          "EXU": "ALU",
+          "dispatch_exu": "EXU01",
+          "src_dtypes": ["int8"],
+          "dst_dtypes": ["int8"],
+          "dtype": "int8"
         }
       }
     },
@@ -969,6 +1029,32 @@
             "bf16"
           ],
           "dtype": "bf16"
+        }
+      }
+    },
+    "VCVT_BF16_TO_F32": {
+      "op_class": "COMPUTE",
+      "forms": {
+        "bf16_to_f32": {
+          "latency": 7,
+          "EXU": "ALU",
+          "dispatch_exu": "EXU01",
+          "src_dtypes": ["bf16"],
+          "dst_dtypes": ["fp32"],
+          "dtype": "fp32"
+        }
+      }
+    },
+    "VCVT_S32_TO_U8": {
+      "op_class": "COMPUTE",
+      "forms": {
+        "s32_to_u8": {
+          "latency": 7,
+          "EXU": "ALU",
+          "dispatch_exu": "EXU01",
+          "src_dtypes": ["int32"],
+          "dst_dtypes": ["uint8"],
+          "dtype": "uint8"
         }
       }
     },
@@ -1169,6 +1255,14 @@
             "fp16"
           ],
           "dtype": "fp16"
+        },
+        "int8": {
+          "latency": 6,
+          "EXU": "ALU",
+          "dispatch_exu": "EXU01",
+          "src_dtypes": ["int8"],
+          "dst_dtypes": ["int8"],
+          "dtype": "int8"
         }
       }
     },
