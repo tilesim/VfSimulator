@@ -12,6 +12,8 @@ def span_bytes_for_access_mode(
     """Return only ISA-confirmed UB access spans for the experiment."""
 
     normalized = str(access_mode or "").strip().upper()
+    if normalized == "NORM_B8":
+        return _NORMAL_SPAN_BYTES
     if normalized.startswith("BRC_") or normalized.startswith("ONEPT_"):
         if normalized.endswith("B16"):
             return 2
