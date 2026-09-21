@@ -482,6 +482,78 @@ void verifyInstructionFallback(ParamDB &db) {
   require(sawForwarding, "native fallback must record missing_forwarding_pair");
 }
 
+void verifyOrdinaryVorVciParams(const std::filesystem::path &root) {
+  const ParamDB db(root);
+  const auto vor = db.inst("VOR", "b32");
+  const auto vci = db.inst("VCI", "int32");
+  require(vor.latency == 6 && vci.latency == 7,
+          "VOR/VCI measured latency mismatch");
+  require(vor.dispatchExu == "EXU01" &&
+              vci.dispatchExu == vor.dispatchExu,
+          "VOR/VCI measured EXU eligibility mismatch");
+  require(db.forwardingCycles("VLDS", "uint32", "VOR", "b32") == 6 &&
+              db.forwardingCycles("VOR", "b32", "VSTS", "uint32") == 4 &&
+              db.forwardingCycles("VCI", "int32", "VSTS", "int32") == 5,
+          "VOR/VCI measured dependency mismatch");
+  require(db.initiationInterval("VCI", "int32", "VCI", "int32") == 2,
+          "VCI measured self-II mismatch");
+  require(db.initiationInterval("VOR", "b32", "VOR", "b32") == 1,
+          "VOR unmeasured self-II fallback mismatch");
+  db.inst("VLDS", "uint32");
+  db.inst("VSTS", "uint32");
+  db.inst("VSTS", "int32");
+  bool sawVorIiWarning = false;
+  int missingMemoryForms = 0;
+  for (const auto &warning : db.warnings()) {
+    sawVorIiWarning |= warning.kind == "missing_ii_pair" &&
+                       warning.fields.at("prev") == "VOR.b32" &&
+                       warning.fields.at("cur") == "VOR.b32";
+    if (warning.kind == "unsupported_isa_form")
+      ++missingMemoryForms;
+  }
+  require(sawVorIiWarning && missingMemoryForms == 3,
+          "unmeasured VOR II and memory forms must retain warnings");
+}
+
+void verifyOrdinaryNarrowParams(const std::filesystem::path &root) {
+  const ParamDB db(root);
+  const std::vector<std::tuple<std::string, std::string, int64_t>> measured = {
+      {"VCVT_BF16_TO_F32", "bf16_to_f32", 7},
+      {"VCVT_S32_TO_U8", "s32_to_u8", 7},
+      {"VDUP", "int8", 6},
+      {"VBR", "int8", 6},
+  };
+  for (const auto &[op, form, latency] : measured) {
+    const auto profile = db.inst(op, form);
+    require(profile.latency == latency,
+            "ordinary narrow measured latency mismatch for " + op);
+    require(profile.exu == "ALU" &&
+                profile.dispatchExu ==
+                    std::string("EXU01"),
+            "ordinary narrow execution-unit mismatch for " + op);
+    require(db.initiationInterval(op, form, op, form) == 1,
+            "ordinary narrow unmeasured self-II fallback mismatch for " + op);
+  }
+  require(db.forwardingCycles("VCVT_BF16_TO_F32", "bf16_to_f32", "VSTS",
+                              "fp32") == 4 &&
+              db.forwardingCycles("VCVT_S32_TO_U8", "s32_to_u8", "VSTS",
+                                  "uint8") == 4 &&
+              db.forwardingCycles("VDUP", "int8", "VSTS", "int8") == 3 &&
+              db.forwardingCycles("VBR", "int8", "VSTS", "int8") == 3,
+          "ordinary narrow unmeasured forwarding fallback mismatch");
+
+  int missingIi = 0;
+  int missingForwarding = 0;
+  for (const auto &warning : db.warnings()) {
+    if (warning.kind == "missing_ii_pair")
+      ++missingIi;
+    if (warning.kind == "missing_forwarding_pair")
+      ++missingForwarding;
+  }
+  require(missingIi == 4 && missingForwarding == 4,
+          "ordinary narrow unmeasured pairs must retain native warnings");
+}
+
 void verifySharedParamDbFallbackQueriesAreStable(ParamDB &db) {
   static_assert(
       !std::is_reference_v<decltype(db.inst("VTHREAD_UNKNOWN", "fp32"))>,
@@ -923,6 +995,8 @@ int main() {
     const std::filesystem::path root = std::filesystem::path(VFSIM_SOURCE_ROOT);
     ParamDB db(root);
     verifyInstructionFallback(db);
+    verifyOrdinaryVorVciParams(root);
+    verifyOrdinaryNarrowParams(root);
     verifySharedParamDbFallbackQueriesAreStable(db);
     verifyNativePartialCompatibleFormMerge();
     verifyVpackVsstbConfig(db);
