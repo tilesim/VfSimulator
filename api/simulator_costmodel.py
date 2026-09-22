@@ -30,6 +30,8 @@ class CoreVfCostModel(VfCostModel):
     out_dir: str | Path = "results/api_costmodel"
     dtype: str = "fp32"
     include_param_cache_stats: bool = False
+    # Set False for batch/latency-only callers; skips all results_dir dumps.
+    dump_results: bool = True
 
     def predict_vf_cycles(self, vf_info: CanonicalVfInfo) -> int:
         return int(self.run_vf_info(vf_info)["vf_end_cycle"])
@@ -122,6 +124,7 @@ class CoreVfCostModel(VfCostModel):
             params=params,
             results_dir=str(results_dir),
             values=values,
+            dump_results=self.dump_results,
         )
         result["linear_inst_count"] = len(linear)
         result["normalization_stats"] = norm_stats

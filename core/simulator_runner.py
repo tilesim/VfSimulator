@@ -128,9 +128,16 @@ def run_simulation(
     params: Dict[str, Any],
     results_dir: str,
     values: Dict[str, Any] | None = None,
+    dump_results: bool = True,
 ) -> Dict[str, Any]:
     """
     Run the main IFU -> IDU -> OoO simulation loop and dump the standard logs.
+
+    dump_results=False skips every results_dir artifact (sim_history, per-cycle
+    logs, perfetto trace, dispatch/vloop logs, model warnings). Hot paths that
+    only need cycle counts (e.g. TileSim's per-event VF costmodel) call thousands
+    of simulations; the JSON serialization of these dumps costs more than the
+    simulation itself.
 
     Returns:
       {
@@ -276,31 +283,34 @@ def run_simulation(
             f"shq={len(ooo.SHQ)}, lsq={len(ooo.LSQ)}, rob={len(ooo.ROB)}, pipe={len(idu_to_ooo_pipe)}"
         )
 
-    if not os.path.exists(results_dir):
-        os.makedirs(results_dir)
-
-    ooo.dump_history(os.path.join(results_dir, "sim_history.json"))
-    if isinstance(control_unit, TimedControlUnit):
-        with open(os.path.join(results_dir, "membar_history.json"), "w", encoding="utf-8") as f:
-            json.dump(control_unit.history, f, indent=2)
-    ooo.dump_simple_logs(
-        os.path.join(results_dir, "start_by_cycle.json"),
-        os.path.join(results_dir, "done_by_cycle.json"),
-    )
     trace_path = os.path.join(results_dir, "trace.json")
-    dump_perfetto_trace(
-        trace_path,
-        ooo.cyc_start_log,
-        ooo.cyc_done_log,
-        issue_ports=int(getattr(ooo, "issue_ports", 2)),
-    )
-    idu.dump_dispatch_log(os.path.join(results_dir, "idu_to_ooo.json"))
-    idu.dump_vloop_trace(os.path.join(results_dir, "vloop_trace.json"))
-    if pdb is not None and hasattr(pdb, "get_warnings"):
-        dump_model_warnings(
-            results_dir,
-            instruction_warnings=pdb.get_warnings(),
+    if dump_results:
+        if not os.path.exists(results_dir):
+            os.makedirs(results_dir)
+
+        ooo.dump_history(os.path.join(results_dir, "sim_history.json"))
+        if isinstance(control_unit, TimedControlUnit):
+            with open(os.path.join(results_dir, "membar_history.json"), "w", encoding="utf-8") as f:
+                json.dump(control_unit.history, f, indent=2)
+        ooo.dump_simple_logs(
+            os.path.join(results_dir, "start_by_cycle.json"),
+            os.path.join(results_dir, "done_by_cycle.json"),
         )
+        dump_perfetto_trace(
+            trace_path,
+            ooo.cyc_start_log,
+            ooo.cyc_done_log,
+            issue_ports=int(getattr(ooo, "issue_ports", 2)),
+        )
+        idu.dump_dispatch_log(os.path.join(results_dir, "idu_to_ooo.json"))
+        idu.dump_vloop_trace(os.path.join(results_dir, "vloop_trace.json"))
+        if pdb is not None and hasattr(pdb, "get_warnings"):
+            dump_model_warnings(
+                results_dir,
+                instruction_warnings=pdb.get_warnings(),
+            )
+    else:
+        trace_path = None
 
     return {
         "cycles_executed": int(cycle),

@@ -44,6 +44,33 @@ def _read_json(path: str) -> Dict[str, Any]:
         return json.load(f)
 
 
+# Parsed-content cache for the immutable config JSONs loaded in ParamDB.__post_init__.
+# Keyed by (abspath, mtime_ns, size) so editing a config on disk invalidates the
+# entry. ParamDB never mutates the parsed isa/uarch/forwarding/II structures, so
+# the same object can be shared across instances. Without this cache, hot paths
+# that construct a ParamDB per prediction re-read and re-parse ~80 KB of JSON
+# on every call.
+_JSON_CONTENT_CACHE: Dict[tuple, Dict[str, Any]] = {}
+
+
+def _read_json_cached(path: str) -> Dict[str, Any]:
+    try:
+        stat = os.stat(path)
+        cache_key = (os.path.abspath(path), stat.st_mtime_ns, stat.st_size)
+    except OSError:
+        return _read_json(path)
+    cached = _JSON_CONTENT_CACHE.get(cache_key)
+    if cached is None:
+        cached = _read_json(path)
+        _JSON_CONTENT_CACHE[cache_key] = cached
+    return cached
+
+
+def clear_param_json_cache() -> None:
+    """Drop cached config JSON contents (test hook)."""
+    _JSON_CONTENT_CACHE.clear()
+
+
 def _deep_merge(a: Dict[str, Any], b: Dict[str, Any]) -> Dict[str, Any]:
     """Return merged dict: a overlaid by b (b wins)."""
     out = dict(a)
@@ -116,8 +143,8 @@ class ParamDB:
             ],
         )
 
-        self._isa: Dict[str, Any] = _read_json(self._isa_path)
-        self._uarch: Dict[str, Any] = _read_json(self._uarch_path)
+        self._isa: Dict[str, Any] = _read_json_cached(self._isa_path)
+        self._uarch: Dict[str, Any] = _read_json_cached(self._uarch_path)
 
         self._defaults: Dict[str, Any] = self._isa.get("defaults", {}) or {}
         self._insts: Dict[str, Any] = self._isa.get("instructions", {}) or {}
@@ -138,7 +165,7 @@ class ParamDB:
         self._fwd_table: Dict[str, Any] = {}
         if self._forwarding_path is not None:
             try:
-                fwd = _read_json(self._forwarding_path)
+                fwd = _read_json_cached(self._forwarding_path)
                 if isinstance(fwd, dict):
                     # schema:
                     # {"default": 3, "forwarding": {"fp32": {"PROD": {"CONS": t}}}}
@@ -153,7 +180,7 @@ class ParamDB:
         self._ii_table: Dict[str, Any] = {}
         if self._ii_path is not None:
             try:
-                ii_db = _read_json(self._ii_path)
+                ii_db = _read_json_cached(self._ii_path)
                 if isinstance(ii_db, dict):
                     # schema:
                     # {

@@ -13,8 +13,14 @@ def predict_from_program(
     program: VfSimProgram, *, config_root: str | Path | None = None,
     out_dir: str | Path = 'results/program_api', model: str = 'mainline',
     dump_trace_path: str | Path | None = None,
+    dump_results: bool = True,
 ):
-    """Predict through CanonicalVfInfo and the master Python core."""
+    """Predict through CanonicalVfInfo and the master Python core.
+
+    dump_results=False skips the per-run results_dir artifacts; use it for
+    latency-only batch callers that would otherwise pay JSON dump overhead on
+    every simulation.
+    """
     if model != 'mainline':
         raise ValueError(f'Only the master mainline model is supported, got {model!r}')
     canonical = program_to_canonical(program)
@@ -23,6 +29,9 @@ def predict_from_program(
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(json.dumps(canonical_vf_info_to_dict(canonical), indent=2), encoding='utf-8')
     base_dir = Path(config_root) if config_root is not None else Path(__file__).resolve().parents[1]
-    result = CoreVfCostModel(base_dir=base_dir, out_dir=out_dir, dtype=program.dtype).run_vf_info(canonical)
+    result = CoreVfCostModel(
+        base_dir=base_dir, out_dir=out_dir, dtype=program.dtype,
+        dump_results=dump_results,
+    ).run_vf_info(canonical)
     return {'cycles': int(result['vf_end_cycle']), 'model': model, 'raw': result,
             'trace_path': str(dump_trace_path) if dump_trace_path is not None else None}
