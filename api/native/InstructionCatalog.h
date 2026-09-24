@@ -56,6 +56,7 @@ struct NativeInstructionSpec {
   std::unordered_map<std::string, std::string> specializations;
   std::vector<NativeOperandSpec> operands;
   std::vector<NativeCallVariant> callVariants;
+  int memorySpan = 0;
 };
 
 class InstructionCatalog {
@@ -64,12 +65,15 @@ public:
   std::string specializeOpcode(const std::string &opcode,
                                const std::string &form) const;
   const NativeInstructionSpec *lookup(const std::string &opcode) const;
+  const NativeInstructionSpec *lookupMemoryMode(const std::string &opcode,
+                                               const std::string &mode) const;
 
 private:
   friend const InstructionCatalog &defaultInstructionCatalog();
   InstructionCatalog();
 
   std::unordered_map<std::string, NativeInstructionSpec> specs_;
+  std::unordered_map<std::string, NativeInstructionSpec> memoryModes_;
   std::unordered_map<std::string, std::string> aliases_;
 };
 

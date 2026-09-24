@@ -41,6 +41,7 @@ class IDU:
             raise ValueError("lsu_post_update_ready_latency was removed; use idu_post_update_ready_latency (IDU dispatch timing)")
         self.address_states = AddressStateTracker(uarch.get("idu_post_update_ready_latency", 1))
         self.address_block_log = []
+        self.resource_block_log = []
 
         defaults = self.db.get_defaults()
         self.vf_startup_cost = int(defaults.get("vf_startup_cost", 0))
@@ -410,6 +411,8 @@ class IDU:
             issue_budget = self.issue_width
 
         this_cycle_credits = credits
+        predicate_credits = 10**18 if self.theoretical_limit_mode else ooo.get_free_predicate()
+        this_cycle_predicate_credits = predicate_credits
         this_cycle_shq_queue = shq_queue_free
         this_cycle_lsq = lsq_free
         this_cycle_shq = shq_free
@@ -495,7 +498,17 @@ class IDU:
                 if self.value_storage.is_register(d):
                     dst_count += 1
 
-            if credits < dst_count:
+            predicate_count = sum(self.value_storage.is_predicate(d) for d in inst.get("dst", []))
+            if credits < dst_count or predicate_credits < predicate_count:
+                self.resource_block_log.append({
+                    "cy": cycle, "event": "blocked",
+                    "blocked_reason": "vector_credit" if credits < dst_count else "predicate_credit",
+                    "inst_id": inst.get("inst_id", inst.get("id")),
+                    "static_instruction_id": inst.get("static_instruction_id"),
+                    "iteration_path": inst.get("iteration_path", []),
+                    "stream_seq": int(inst.get("stream_seq", -1)),
+                    "op": op, "vreg": credits, "predicate_phys_free": predicate_credits,
+                })
                 break
 
             accesses = inst.get("memory_accesses", [])
@@ -519,6 +532,7 @@ class IDU:
             address_dependencies.append(dependencies)
 
             credits -= dst_count
+            predicate_credits -= predicate_count
             if uses_lsq(op, self.db, form):
                 lsq_free -= 1
                 if uses_shared_shq_credit(op, self.db, form):
@@ -544,6 +558,7 @@ class IDU:
                 "src": inst.get("src", []),
                 "top_block_id": int(inst.get("top_block_id", 0)),
                 "vreg": this_cycle_credits,
+                "predicate_phys_free": this_cycle_predicate_credits,
                 "SHQ_QUEUE": this_cycle_shq_queue,
                 "LSQ": this_cycle_lsq,
                 "SHQ": this_cycle_shq,
@@ -564,6 +579,11 @@ class IDU:
     def dump_address_block_log(self, path):
         with open(path, "w", encoding="utf-8") as f:
             for item in self.address_block_log:
+                f.write(json.dumps(item, ensure_ascii=False) + "\n")
+
+    def dump_resource_block_log(self, path):
+        with open(path, "w", encoding="utf-8") as f:
+            for item in self.resource_block_log:
                 f.write(json.dumps(item, ensure_ascii=False) + "\n")
 
     def dump_vloop_trace(self, path="vloop_trace.json"):

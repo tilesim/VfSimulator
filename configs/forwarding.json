@@ -2,6 +2,9 @@
   "schema_version": 2,
   "defaults": 3,
   "forwarding": {
+    "PSET_B8.b8": {"*": 2},
+    "PSET_B16.b16": {"*": 2},
+    "PSET_B32.b32": {"*": 2},
     "VLDS.uint32": {
       "VOR.b32": 6
     },

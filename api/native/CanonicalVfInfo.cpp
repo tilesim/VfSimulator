@@ -67,6 +67,7 @@ bool validInstructionClass(CanonicalInstructionClass value) {
 
 bool validStorageKind(CanonicalStorageKind value) {
   return value == CanonicalStorageKind::Register ||
+         value == CanonicalStorageKind::PredicateRegister ||
          value == CanonicalStorageKind::UB ||
          value == CanonicalStorageKind::Scalar;
 }
@@ -183,16 +184,21 @@ CanonicalValidationResult validateCanonicalVfInfo(const CanonicalVfInfo &vfInfo)
     }
   };
 
-  if (vfInfo.schemaVersion != kCanonicalVfInfoSchemaVersion)
+  if (std::find(kSupportedSchemaVersions.begin(), kSupportedSchemaVersions.end(), vfInfo.schemaVersion) == kSupportedSchemaVersions.end())
     error("unsupported_schema_version", "Unsupported schema version",
           "schema_version");
   validateScalarMap(vfInfo.uarch, "uarch");
   for (const auto &[name, value] : vfInfo.uarch) {
+    if (name == "physical_predicate_registers" && std::holds_alternative<int64_t>(value) &&
+        (std::get<int64_t>(value) <= 0 || std::get<int64_t>(value) > 2147483647))
+      error("invalid_predicate_capacity", "physical_predicate_registers must be a positive int32", "uarch." + name);
     if (isDeprecatedUarchOverrideField(name)) {
       error("deprecated_uarch_field",
             name == "lsu_post_update_ready_latency"
                 ? "lsu_post_update_ready_latency was removed; use idu_post_update_ready_latency (IDU dispatch timing)"
-                : "Deprecated uarch field is no longer accepted", "uarch." + name);
+                : name == "consumer_release_start_offset_by_op"
+                    ? "consumer_release_start_offset_by_op was removed; use global consumer_release_start_offset"
+                    : "Deprecated uarch field is no longer accepted", "uarch." + name);
       continue;
     }
     const auto expected = uarchOverrideFieldType(name);
@@ -293,6 +299,14 @@ CanonicalValidationResult validateCanonicalVfInfo(const CanonicalVfInfo &vfInfo)
     if (value.dtype.empty())
       error("missing_value_dtype", "Value must declare dtype", path,
             value.sourceLocation);
+    if (value.storage == CanonicalStorageKind::PredicateRegister) {
+      if (vfInfo.schemaVersion != 2)
+        error("predicate_requires_schema_v2", "PredicateRegister requires schema version 2", path, value.sourceLocation);
+      if (value.dtype != "bool")
+        error("predicate_dtype_mismatch", "PredicateRegister requires bool dtype", path, value.sourceLocation);
+      if (!value.producerNodeId)
+        error("predicate_live_in_not_supported", "Predicate values require an explicit producer", path, value.sourceLocation);
+    }
     if (std::any_of(value.shape.begin(), value.shape.end(),
                     [](int64_t dim) { return dim < 0; }))
       error("invalid_int64", "Value shape must be non-negative", path,
@@ -392,6 +406,28 @@ CanonicalValidationResult validateCanonicalVfInfo(const CanonicalVfInfo &vfInfo)
                 nodePath, inst->sourceLocation);
         const NativeInstructionSpec *catalogSpec =
             defaultInstructionCatalog().lookup(inst->opcode);
+        if (auto mode = inst->attributes.find("catalog_mode"); mode != inst->attributes.end()) {
+          const auto *name = std::get_if<std::string>(&mode->second);
+          const auto *variant = name ? defaultInstructionCatalog().lookupMemoryMode(inst->opcode, *name) : nullptr;
+          if (!variant)
+            error("unsupported_catalog_mode", "Unknown Catalog memory mode", nodePath, inst->sourceLocation);
+          else {
+            catalogSpec = variant;
+            for (const auto &operand : inst->inputs)
+              if (operand.memoryAccess && operand.memoryAccess->span != variant->memorySpan)
+                error("catalog_memory_span_mismatch", "Memory span conflicts with Catalog mode", nodePath, inst->sourceLocation);
+          }
+        }
+        for (const auto *operands : {&inst->inputs, &inst->outputs})
+          for (const auto &operand : *operands) {
+            auto value = vfInfo.values.find(operand.valueId);
+            if (!catalogSpec && value != vfInfo.values.end() &&
+                value->second.storage == CanonicalStorageKind::PredicateRegister)
+              error("unsupported_predicate_semantics", "Predicate instructions require a complete Catalog signature", nodePath, inst->sourceLocation);
+          }
+        for (const auto &[key, value] : inst->attributes)
+          if (const auto *text = std::get_if<std::string>(&value); text && *text == "MODE_MERGING")
+            error("unsupported_merging_mode", "MODE_MERGING requires an explicit old destination input", nodePath, inst->sourceLocation);
         if (catalogSpec) {
           if (inst->opcode != catalogSpec->opcode)
             error("noncanonical_opcode",
@@ -461,6 +497,10 @@ CanonicalValidationResult validateCanonicalVfInfo(const CanonicalVfInfo &vfInfo)
               error("operand_dtype_mismatch", "Operand dtype differs from value",
                     operandPath, inst->sourceLocation);
             const bool isUb = value.storage == CanonicalStorageKind::UB;
+            if (input && ((operand.role == CanonicalOperandRole::Predicate) !=
+                          (value.storage == CanonicalStorageKind::PredicateRegister)))
+              error("predicate_operand_role_mismatch", "Predicate inputs require predicate storage and role",
+                    operandPath, inst->sourceLocation);
             if (isUb && !operand.memoryAccess)
               error("missing_memory_access", "UB operand requires memory metadata",
                     operandPath, inst->sourceLocation);
@@ -578,7 +618,8 @@ CanonicalValidationResult validateCanonicalVfInfo(const CanonicalVfInfo &vfInfo)
           std::vector<const NativeOperandSpec *> expectedInputs;
           std::vector<const NativeOperandSpec *> expectedOutputs;
           for (const auto &operand : catalogSpec->operands) {
-            if (operand.direction == CatalogOperandDirection::Input)
+            if (operand.direction == CatalogOperandDirection::Input &&
+                (vfInfo.schemaVersion == 2 || operand.kind != CatalogArgumentKind::Predicate))
               expectedInputs.push_back(&operand);
             else if (operand.direction == CatalogOperandDirection::Output)
               expectedOutputs.push_back(&operand);
@@ -586,8 +627,7 @@ CanonicalValidationResult validateCanonicalVfInfo(const CanonicalVfInfo &vfInfo)
           auto actualOperands = [](const std::vector<CanonicalOperand> &operands) {
             std::vector<const CanonicalOperand *> result;
             for (const auto &operand : operands)
-              if (operand.role != CanonicalOperandRole::Predicate &&
-                  operand.role != CanonicalOperandRole::Config)
+              if (operand.role != CanonicalOperandRole::Config)
                 result.push_back(&operand);
             return result;
           };
@@ -615,6 +655,8 @@ CanonicalValidationResult validateCanonicalVfInfo(const CanonicalVfInfo &vfInfo)
               auto value = vfInfo.values.find(operand.valueId);
               if (value == vfInfo.values.end())
                 continue;
+              if (catalogSpec->memorySpan && !catalogSpec->forms.count(value->second.dtype))
+                error("catalog_operand_dtype_mismatch", "Operand dtype conflicts with Catalog memory mode", operandPath, inst->sourceLocation);
               const CanonicalStorageKind storage = value->second.storage;
               bool storageMatches = true;
               switch (operandSpec.kind) {
@@ -632,6 +674,8 @@ CanonicalValidationResult validateCanonicalVfInfo(const CanonicalVfInfo &vfInfo)
                                  storage == CanonicalStorageKind::Scalar;
                 break;
               case CatalogArgumentKind::Predicate:
+                storageMatches = storage == CanonicalStorageKind::PredicateRegister;
+                break;
               case CatalogArgumentKind::Config:
                 break;
               }
@@ -699,7 +743,10 @@ CanonicalValidationResult validateCanonicalVfInfo(const CanonicalVfInfo &vfInfo)
               !carriedLogicalIds.insert(carried.logicalId).second)
             error("duplicate_loop_carried_value",
                   "Loop-carried logical_id must be unique", carriedPath);
-          auto entryIt = vfInfo.values.find(carried.entryValueId);
+          const bool exitOnly = !carried.entryValueId;
+          if (exitOnly && (vfInfo.schemaVersion < 2 || !count || *count <= 0))
+            error("invalid_loop_exit_only", "Exit-only definitions require v2 and a proven positive loop count", carriedPath);
+          auto entryIt = vfInfo.values.find(carried.entryValueId.value_or(carried.backEdgeValueId));
           auto backIt = vfInfo.values.find(carried.backEdgeValueId);
           auto exitIt = vfInfo.values.find(carried.exitValueId);
           if (entryIt == vfInfo.values.end() || backIt == vfInfo.values.end() ||
@@ -711,7 +758,7 @@ CanonicalValidationResult validateCanonicalVfInfo(const CanonicalVfInfo &vfInfo)
           const CanonicalValue &entry = entryIt->second;
           const CanonicalValue &back = backIt->second;
           const CanonicalValue &exit = exitIt->second;
-          if (entry.logicalId != carried.logicalId ||
+          if ((!exitOnly && entry.logicalId != carried.logicalId) ||
               exit.logicalId != carried.logicalId)
             error("loop_carried_logical_id_mismatch",
                   "Loop entry and exit logical IDs must match the carried state",
@@ -723,7 +770,7 @@ CanonicalValidationResult validateCanonicalVfInfo(const CanonicalVfInfo &vfInfo)
               entry.storageObjectId != exit.storageObjectId)
             error("loop_carried_type_mismatch",
                   "Loop-carried value metadata must match", carriedPath);
-          if (entry.producerNodeId) {
+          if (!exitOnly && entry.producerNodeId) {
             auto producer = nodeInfo.find(*entry.producerNodeId);
             const bool visible = producer != nodeInfo.end() &&
                 loopInfoIt != nodeInfo.end() &&

@@ -179,7 +179,7 @@ class InstructionFallbackTest(unittest.TestCase):
 
     def test_freeing_preg_removes_producer_profile(self):
         core = self._make_mainline_core_for_isu()
-        preg = "p_detached"
+        preg = core.vector_bank.allocate()
         core.preg_producer_profile[preg] = core.db.resolve_inst(
             "VADD", "fp32", "fp32"
         )

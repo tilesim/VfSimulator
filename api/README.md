@@ -1,7 +1,8 @@
 # API 层
 
 VfSimulator 的 Python、C++ 和 JSON 正式输入合同统一为
-`CanonicalVfInfo v1`。旧 `VFInfo` 和旧 JSON trace 不再进入正式预测 API。
+`CanonicalVfInfo`。v2 显式描述谓词依赖；v1 保留原有无谓词语义，供既有
+canonical 输入兼容使用。旧 `VFInfo` 和旧 JSON trace 不再进入正式预测 API。
 
 ## 正式入口
 
@@ -13,7 +14,7 @@ VfSimulator 的 Python、C++ 和 JSON 正式输入合同统一为
 - `CoreVfCostModel.predict_vf_cycles(vf_info)`：唯一 Python 预测方法，参数必须为
   `CanonicalVfInfo`。
 - `CoreVfCostModel.run_vf_info(vf_info)`：返回完整模拟结果。
-- `CoreVfCostModel.run_payload(payload)`：只接受 CanonicalVfInfo v1 的 JSON 对象，
+- `CoreVfCostModel.run_payload(payload)`：只接受 CanonicalVfInfo 的 JSON 对象，
   不猜测旧格式。
 - C++ `runCanonicalVfInfo(vf_info, db)`：唯一 Native 预测入口。
 - C++ `loadCanonicalJsonVfInfo(path)`：Native canonical JSON 入口。
@@ -55,12 +56,37 @@ cycles = CoreVfCostModel().predict_vf_cycles(vf_info)
 - UB 使用稳定的 `storage_object_id`。operand 可携带 affine memory access；当前
   Core 不自动根据 UB 地址建立依赖，UB 顺序由显式 Membar 控制。
 - loop 显式描述 induction、count、unroll 和 entry/back-edge/exit definitions。
+  v2 允许 `entry_value_id=null` 表示循环内首次定义的仅出口值，适用于 vector 和
+  predicate。该形式要求循环次数（含 params 求值）确定大于零；出口引用最后一轮定义。
 - 未知但语义完整的 opcode 可以通过 validator，timing 缺失由 ParamDB 使用默认值
   并记录 warning。
 - Python/C++ 必须遵循相同的 int64、scalar、枚举和未知字段约束。
 
 canonical JSON 使用可选依赖 `jsonschema`。该依赖只在调用 `InputAPI.load_json()`
 或 `CanonicalJsonVfInfoAdapter` 时延迟加载。
+
+### 谓词寄存器（v2）
+
+版本常量分为 `CURRENT_SCHEMA_VERSION=2`、`SUPPORTED_SCHEMA_VERSIONS={1,2}`
+和 `LEGACY_EMISSION_SCHEMA_VERSION=1`。普通无谓词、无仅出口定义的程序可保持 v1
+输出；需要 v2 语义时，CCE adapter/builder 自动输出 v2。原版本常量名是当前版本的兼容别名，
+不再用它表示默认输出策略。C++ 使用对应的 `kCurrentSchemaVersion`、
+`kSupportedSchemaVersions`、`kLegacyEmissionSchemaVersion`。
+
+- `storage=PredicateRegister`、`dtype=bool`；输入 role 为 `predicate`，输出 role 为
+  `destination`。每个谓词 definition 必须有 producer，不支持 predicate live-in。
+- CCE 的 PSET、VCMP/VCMPS、VSEL 和已登记 masked 运算保留真实依赖。
+  CCE adapter 与 builder 在包含谓词时生成 `schema_version=2`；C++ 直接构造时显式设为 2。
+- v1 禁止携带 PredicateRegister；不会替旧输入猜测或补造全有效 mask。需要模拟
+  谓词开销时，应从原始 CCE 重新导入，或显式构造完整的 v2 输入。
+- 首版仅支持 MODE_ZEROING。MODE_MERGING、未登记的谓词指令及 PST/PLD 回放拒绝执行；
+  缺少 timing 可 fallback 并 warning，缺少谓词语义不允许 fallback。
+- `physical_predicate_registers=32`，与 vector 的 68 个物理资源独立；两类消费者
+  统一使用 `consumer_release_start_offset=4`，动态最后使用后不额外等待同名覆写。
+- `sim_history.json` 记录 `src_predicate_phys`、`dst_predicate_phys` 和两类可用资源；
+  `idu_resource_blocked.json` 区分 `vector_credit`、`predicate_credit` 阻塞。
+- PSET 暂按 ALU/EXU01、占用 SHQ/EXQ 建模；缺失参数的预测不用于精度校准。
+  实现与证据见 `docs/physical_predicate_register_modeling_plan.md`。
 
 ## CCE 前端
 

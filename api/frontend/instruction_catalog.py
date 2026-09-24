@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import json
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from enum import Enum
 from pathlib import Path
 from types import MappingProxyType
@@ -61,6 +61,7 @@ class OperandSpec:
     def storage(self) -> StorageKind | None:
         return {
             ArgumentKind.REGISTER: StorageKind.REGISTER,
+            ArgumentKind.PREDICATE: StorageKind.PREDICATE_REGISTER,
             ArgumentKind.UB: StorageKind.UB,
             ArgumentKind.SCALAR: StorageKind.SCALAR,
         }.get(self.kind)
@@ -92,6 +93,8 @@ class InstructionSpec:
     call_variants: tuple[CallVariant, ...] = ()
     align_state_operation: str | None = None
     align_state_argument_index: int | None = None
+    memory_modes: Mapping[str, InstructionSpec] = field(default_factory=lambda: MappingProxyType({}))
+    memory_span: int | None = None
 
 
 @dataclass(frozen=True)
@@ -127,6 +130,17 @@ class InstructionCatalog:
         aliases: dict[str, str] = {}
         for spec in specs:
             self._validate_spec(spec)
+            for mode, variant in spec.memory_modes.items():
+                self._validate_spec(variant)
+                mode_operands = [o for o in variant.operands if o.name == "mode"]
+                if (variant.opcode != spec.opcode or type(variant.memory_span) is not int
+                    or variant.memory_span <= 0
+                    or variant.instruction_class != InstructionClass.LOAD
+                    or not variant.forms.issubset(spec.forms)
+                    or len(mode_operands) != 1
+                    or mode_operands[0].kind != ArgumentKind.CONFIG
+                    or mode_operands[0].allowed_values != (mode,)):
+                    raise ValueError(f"Invalid memory mode {spec.opcode}.{mode}")
             opcode = spec.opcode
             if opcode in by_opcode:
                 raise ValueError(f"Duplicate canonical opcode: {opcode}")
@@ -235,6 +249,7 @@ class InstructionCatalog:
                 OperandRole.SOURCE,
                 OperandRole.SCALAR,
                 OperandRole.MEMORY,
+                OperandRole.PREDICATE,
             }:
                 raise ValueError(f"Input role mismatch in {spec.opcode}")
             if operand.direction == OperandDirection.IGNORE and operand.role not in {
@@ -309,11 +324,11 @@ class InstructionCatalog:
         ]
         register_outputs = [
             operand for operand in tracked
-            if operand.kind == ArgumentKind.REGISTER
+            if operand.kind in (ArgumentKind.REGISTER, ArgumentKind.PREDICATE)
             and operand.direction == OperandDirection.OUTPUT
         ]
         if spec.instruction_class == InstructionClass.LOAD:
-            if len(memory_inputs) != 1 or memory_outputs or len(register_outputs) != 1:
+            if len(memory_inputs) != 1 or memory_outputs or not register_outputs:
                 raise ValueError(f"Invalid load signature for {spec.opcode}")
         elif spec.instruction_class == InstructionClass.STORE:
             if memory_inputs or len(memory_outputs) != 1 or register_outputs:
@@ -562,7 +577,7 @@ def instruction_catalog_from_dict(payload: Mapping[str, Any]) -> InstructionCata
             or not isinstance(align_state_argument_index, int)
         ):
             raise ValueError(f"{opcode}.align_state_argument_index must be an integer")
-        specs.append(InstructionSpec(
+        spec = InstructionSpec(
             opcode=opcode,
             instruction_class=_enum(
                 InstructionClass, raw.get("class"), f"{opcode}.class"
@@ -586,7 +601,25 @@ def instruction_catalog_from_dict(payload: Mapping[str, Any]) -> InstructionCata
             call_variants=tuple(call_variants),
             align_state_operation=align_state_operation,
             align_state_argument_index=align_state_argument_index,
-        ))
+        )
+        modes = raw.get("memory_modes", {})
+        if not isinstance(modes, Mapping):
+            raise ValueError(f"{opcode}.memory_modes must be an object")
+        variants = {}
+        for mode, declaration in modes.items():
+            if not isinstance(mode, str) or not isinstance(declaration, Mapping):
+                raise ValueError(f"Invalid memory mode for {opcode}")
+            mode_signature = declaration.get("signature")
+            mode_forms = declaration.get("forms")
+            span = declaration.get("span")
+            if (not isinstance(mode_signature, str) or mode_signature not in signatures or not isinstance(mode_forms, list)
+                or not mode_forms or not all(isinstance(f, str) for f in mode_forms)
+                or type(span) is not int or span <= 0):
+                raise ValueError(f"Invalid memory mode declaration: {opcode}.{mode}")
+            variants[mode] = replace(spec, signature=mode_signature,
+                operands=signatures[mode_signature], forms=frozenset(mode_forms),
+                call_variants=(), memory_span=span)
+        specs.append(replace(spec, memory_modes=MappingProxyType(variants)))
     return InstructionCatalog(specs)
 
 

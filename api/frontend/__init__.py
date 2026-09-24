@@ -1,6 +1,9 @@
 from api.frontend.diagnostics import Diagnostic, DiagnosticSeverity, ValidationResult
 from api.frontend.schema import (
     CANONICAL_VF_INFO_SCHEMA_VERSION,
+    CURRENT_SCHEMA_VERSION,
+    SUPPORTED_SCHEMA_VERSIONS,
+    LEGACY_EMISSION_SCHEMA_VERSION,
     AccessKind,
     AffineExpression,
     AffineTerm,
@@ -52,6 +55,9 @@ from api.frontend.instruction_catalog import (
 
 __all__ = [
     "CANONICAL_VF_INFO_SCHEMA_VERSION",
+    "CURRENT_SCHEMA_VERSION",
+    "SUPPORTED_SCHEMA_VERSIONS",
+    "LEGACY_EMISSION_SCHEMA_VERSION",
     "AccessKind",
     "ArgumentKind",
     "AffineExpression",

@@ -67,6 +67,32 @@ class UbSharedIssueSlotsTest(unittest.TestCase):
         self.assertTrue(all(u.state == "running" for u in loads))
         self.assertEqual(store.state, "ready")
 
+    def test_dual_result_load_exhausts_byte_budget_across_both_arbitrations(self):
+        dual = self._uop(0, "LOAD")
+        dual.preg_dst = ["v0", "v1"]
+        second = self._uop(1, "LOAD")
+        second.preg_dst = ["v2", "v3"]
+        store = self._uop(2, "STORE")
+        self.core.LSQ = [dual, second, store]
+        counts = self._issue(100)
+        self.assertEqual(counts, (1, 0, 1))
+        self.assertEqual(self.core._issue_ready_lsu(100, *counts), counts)
+        self.assertIsNone(second.start_cycle)
+        self.assertIsNone(store.start_cycle)
+        self.assertEqual(self._issue(101), (1, 0, 1))
+        self.assertEqual(second.start_cycle, dual.start_cycle + 1)
+
+    def test_store_first_leaves_insufficient_bytes_for_dual_load(self):
+        store = self._uop(0, "STORE")
+        dual = self._uop(1, "LOAD")
+        dual.preg_dst = ["v0", "v1"]
+        single = self._uop(2, "LOAD")
+        self.core.LSQ = [store, dual, single]
+        self.core.freelist.clear()
+        self.assertEqual(self._issue(), (1, 1, 2))
+        self.assertIsNone(dual.start_cycle)
+        self.assertEqual(single.start_cycle, store.start_cycle)
+
     def test_remaining_load_and_store_share_next_cycle(self):
         first_loads = [self._uop(0, "LOAD"), self._uop(1, "LOAD")]
         store = self._uop(2, "STORE")

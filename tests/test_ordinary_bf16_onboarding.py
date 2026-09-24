@@ -16,6 +16,7 @@ class OrdinaryBf16OnboardingTest(unittest.TestCase):
         vf = InputAPI.load_cce(BATCH2, "bf_corrected")
         instructions = [(node.opcode, node.form) for node in vf.context if hasattr(node, "opcode")]
         self.assertEqual(instructions, [
+            ("PSET_B16", "b16"), ("PSET_B32", "b32"),
             ("VLDS", "bf16"),
             ("VCVT_BF16_TO_F32", "bf16_to_f32"),
             ("VCVT_BF16_TO_F32", "bf16_to_f32"),

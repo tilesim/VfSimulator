@@ -49,12 +49,14 @@ struct MembarTimingConfig {
 };
 
 struct UarchConfig {
+  int64_t physicalPredicateRegisters = 32;
   std::optional<MembarTimingConfig> membarTiming;
   int64_t issuePorts = 0;
   bool threePortsMode = false;
   int64_t loadPorts = 0;
   int64_t storePorts = 0;
   int64_t ubSlots = 2;
+  int64_t ubBandwidthBytesPerCycle = 512;
   int64_t lsuStorePriorityPregThreshold = 1;
   int64_t iduPostUpdateReadyLatency = 1;
   int64_t iduWindowWidth = 0;

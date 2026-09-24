@@ -5,6 +5,18 @@
     "vf_drain_cost": 12
   },
   "instructions": {
+    "PSET_B8": {
+      "op_class": "COMPUTE",
+      "forms": {"b8": {"latency": 6, "EXU": "ALU", "dispatch_exu": "EXU01", "dtype": "bool"}}
+    },
+    "PSET_B16": {
+      "op_class": "COMPUTE",
+      "forms": {"b16": {"latency": 6, "EXU": "ALU", "dispatch_exu": "EXU01", "dtype": "bool"}}
+    },
+    "PSET_B32": {
+      "op_class": "COMPUTE",
+      "forms": {"b32": {"latency": 6, "EXU": "ALU", "dispatch_exu": "EXU01", "dtype": "bool"}}
+    },
     "VOR": {
       "op_class": "COMPUTE",
       "forms": {

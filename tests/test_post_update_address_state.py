@@ -155,7 +155,7 @@ class PostUpdateTests(unittest.TestCase):
         vf = parse("__ubuf__ float *p0 = p + 4; __ubuf__ float *p1 = p0;"
                    "vlds(a,p0,64,NORM,POST_UPDATE);vlds(b,p1,0,NORM);"
                    "vlds(c,((__ubuf__ half *&)p0),1,BRC_B16,POST_UPDATE);")
-        first, second, cast = [n.inputs[0].memory_access for n in vf.context]
+        first, second, cast = [n.inputs[0].memory_access for n in vf.context if n.opcode == "VLDS"]
         self.assertEqual(first.offset.constant, 4)
         self.assertEqual(first.post_update_delta_bytes.constant, 256)
         self.assertEqual(first.base_object_id, second.base_object_id)
@@ -164,14 +164,14 @@ class PostUpdateTests(unittest.TestCase):
         self.assertEqual(cast.post_update_delta_bytes.constant, 2)
         encoded = canonical_vf_info_to_dict(vf)
         self.assertEqual(canonical_vf_info_from_dict(encoded), vf)
-        lowered = CoreLoweringPass().lower(vf)["program"][0]["memory_accesses"][0]
+        lowered = CoreLoweringPass().lower(vf)["program"][1]["memory_accesses"][0]
         self.assertEqual(lowered["address_state_id"], first.address_state_id)
         self.assertEqual(lowered["post_update_delta_bytes"]["constant"], 256)
 
     def test_bfloat_width_and_zero_update_are_explicit(self):
         vf = parse("vlds(a,p,0,BRC_B16,POST_UPDATE);vlds(b,p,1,BRC_B16,POST_UPDATE);",
                    "__ubuf__ bfloat16_t *p")
-        accesses = [n.inputs[0].memory_access for n in vf.context]
+        accesses = [n.inputs[0].memory_access for n in vf.context if n.opcode == "VLDS"]
         self.assertEqual([a.post_update_delta_bytes.constant for a in accesses], [0, 2])
         self.assertTrue(all(a.update_mode == "post_update" for a in accesses))
 
@@ -192,7 +192,7 @@ class PostUpdateTests(unittest.TestCase):
 
     def test_invalid_canonical_metadata(self):
         vf = parse("vlds(a,p,1,NORM,POST_UPDATE);")
-        node = vf.context[0]
+        node = vf.context[1]
         operand = node.inputs[0]
         for changes, code in (({"address_state_id": None}, "invalid_address_update"),
                               ({"post_update_delta_bytes": None}, "invalid_address_update"),
@@ -206,7 +206,7 @@ class PostUpdateTests(unittest.TestCase):
 
     def test_delta_affine_validation(self):
         vf = parse("vlds(a,p,1,NORM,POST_UPDATE);")
-        node = vf.context[0]
+        node = vf.context[1]
         operand = node.inputs[0]
         for delta in (AffineExpression(True), AffineExpression(2**63), "bad"):
             memory = replace(operand.memory_access, post_update_delta_bytes=delta)
@@ -299,7 +299,7 @@ class PostUpdateTests(unittest.TestCase):
                              ("update_mode", "none")):
             with self.subTest(field=field), tempfile.TemporaryDirectory() as tmp:
                 payload = canonical_vf_info_to_dict(vf)
-                payload["context"][0]["inputs"][0]["memory_access"][field] = value
+                payload["context"][1]["inputs"][0]["memory_access"][field] = value
                 path = Path(tmp) / "input.json"
                 path.write_text(json.dumps(payload))
                 result = subprocess.run([RUNNER, "--trace", str(path)],

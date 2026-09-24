@@ -24,6 +24,7 @@ class DType(_StrEnum):
 
 class StorageKind(_StrEnum):
     REGISTER = "Register"
+    PREDICATE_REGISTER = "PredicateRegister"
     UB = "UB"
     SCALAR = "Scalar"
 
@@ -91,6 +92,7 @@ VCVT_SPECIALIZATIONS = dict(
 )
 
 STORAGE_ALIASES = {
+    "predicateregister": StorageKind.PREDICATE_REGISTER,
     "register": StorageKind.REGISTER,
     "reg": StorageKind.REGISTER,
     "vreg": StorageKind.REGISTER,

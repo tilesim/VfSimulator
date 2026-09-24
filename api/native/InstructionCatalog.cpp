@@ -30,6 +30,12 @@ struct GeneratedOperand {
   bool optional;
   bool allowIntegerExpression;
 };
+struct GeneratedMemoryMode {
+  const char *opcode;
+  const char *mode;
+  const char *key;
+  int span;
+};
 struct GeneratedPostUpdateDelta {
   const char *opcode;
   int argumentIndex;
@@ -202,6 +208,14 @@ InstructionCatalog::InstructionCatalog() {
                                std::string(entry.target));
     specs_.at(entry.opcode).specializations.emplace(entry.form, entry.target);
   }
+  for (const auto &entry : kGeneratedMemoryModes) {
+    auto spec = std::move(specs_.at(entry.key));
+    spec.opcode = entry.opcode;
+    spec.memorySpan = entry.span;
+    memoryModes_.emplace(entry.key, std::move(spec));
+    specs_.erase(entry.key);
+    aliases_.erase(lower(entry.key));
+  }
 }
 
 std::string InstructionCatalog::canonicalOpcode(const std::string &opcode) const {
@@ -230,6 +244,12 @@ InstructionCatalog::lookup(const std::string &opcode) const {
 const InstructionCatalog &defaultInstructionCatalog() {
   static const InstructionCatalog catalog;
   return catalog;
+}
+
+const NativeInstructionSpec *InstructionCatalog::lookupMemoryMode(
+    const std::string &opcode, const std::string &mode) const {
+  auto spec = memoryModes_.find(canonicalOpcode(opcode) + "@" + mode);
+  return spec == memoryModes_.end() ? nullptr : &spec->second;
 }
 
 } // namespace vfsim

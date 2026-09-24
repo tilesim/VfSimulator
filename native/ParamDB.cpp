@@ -253,6 +253,14 @@ ParamDB::ParamDB(std::filesystem::path baseDir)
 
   if (!uarchRoot.empty()) {
     const auto &obj = uarchRoot;
+    if (const auto *capacity = findKey(obj, "physical_predicate_registers")) {
+      if (!capacity->isInt() || capacity->asInt() <= 0 || capacity->asInt() > 2147483647)
+        throw std::runtime_error("physical_predicate_registers must be a positive int32");
+      bundle_.uarch.physicalPredicateRegisters = capacity->asInt();
+    }
+    if (findKey(obj, "consumer_release_start_offset_by_op") != nullptr)
+      throw std::runtime_error(
+          "consumer_release_start_offset_by_op was removed; use global consumer_release_start_offset");
     if (findKey(obj, "lsu_issue_policy") != nullptr)
       throw std::runtime_error(
           "lsu_issue_policy has been removed; configure "
@@ -293,6 +301,7 @@ ParamDB::ParamDB(std::filesystem::path baseDir)
     bundle_.uarch.loadPorts = readIntField(obj, "load_ports");
     bundle_.uarch.storePorts = readIntField(obj, "store_ports");
     bundle_.uarch.ubSlots = readIntField(obj, "ub_slots", 2);
+    bundle_.uarch.ubBandwidthBytesPerCycle = readIntField(obj, "ub_bandwidth_bytes_per_cycle", 512);
     if (findKey(obj, "lsu_post_update_ready_latency"))
       throw std::runtime_error("lsu_post_update_ready_latency was removed; use idu_post_update_ready_latency (IDU dispatch timing)");
     bundle_.uarch.iduPostUpdateReadyLatency = readIntField(obj, "idu_post_update_ready_latency", 1);
@@ -525,6 +534,11 @@ int64_t ParamDB::forwardingCycles(const std::string &dtype, const std::string &p
         return std::max<int64_t>(0, consIt->second);
     }
   }
+  const auto defaults = bundle_.forwardingByForm.find(qualifyOp(prod, dtype));
+  if (defaults != bundle_.forwardingByForm.end()) {
+    const auto wildcard = defaults->second.find("*");
+    if (wildcard != defaults->second.end()) return std::max<int64_t>(0, wildcard->second);
+  }
   const InstConfig &prodCfg = inst(prod, dtype);
   const InstConfig &consCfg = inst(cons, dtype);
   const bool lsuDefault = configIsLoad(prodCfg, prod) && configIsStore(consCfg, cons);
@@ -561,6 +575,11 @@ int64_t ParamDB::forwardingCycles(const std::string &prod,
         return std::max<int64_t>(0, consIt->second);
       }
     }
+  }
+  const auto defaults = bundle_.forwardingByForm.find(requestedProd);
+  if (defaults != bundle_.forwardingByForm.end()) {
+    const auto wildcard = defaults->second.find("*");
+    if (wildcard != defaults->second.end()) return std::max<int64_t>(0, wildcard->second);
   }
   if (prodForm == consForm)
     return forwardingCycles(prodForm, prod, cons);

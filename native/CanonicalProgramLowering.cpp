@@ -20,6 +20,8 @@ ValueStorageKind storageKind(CanonicalStorageKind storage) {
   switch (storage) {
   case CanonicalStorageKind::Register:
     return ValueStorageKind::Register;
+  case CanonicalStorageKind::PredicateRegister:
+    return ValueStorageKind::PredicateRegister;
   case CanonicalStorageKind::UB:
     return ValueStorageKind::UB;
   case CanonicalStorageKind::Scalar:
@@ -326,14 +328,15 @@ private:
     std::vector<std::string> currentValues;
     currentValues.reserve(loop.carriedValues.size());
     for (const auto &carried : loop.carriedValues)
-      currentValues.push_back(resolve(carried.entryValueId));
+      currentValues.push_back(carried.entryValueId ? resolve(*carried.entryValueId) : std::string{});
 
     for (int64_t base = 0; base < count; base += unroll) {
       std::vector<std::vector<DynamicInst>> lanes;
       for (int64_t lane = 0; lane < unroll; ++lane) {
         const int64_t iteration = base + lane;
         for (size_t index = 0; index < loop.carriedValues.size(); ++index)
-          bindings_[loop.carriedValues[index].entryValueId] = currentValues[index];
+          if (loop.carriedValues[index].entryValueId)
+            bindings_[*loop.carriedValues[index].entryValueId] = currentValues[index];
         frames_.push_back(Frame{loopNumericIds_.at(loop.loopId), loop.loopId,
                                 iteration, base / unroll, topBlock});
         const size_t start = runtime_.instructions.size();
@@ -373,7 +376,7 @@ private:
     for (size_t index = 0; index < loop.carriedValues.size(); ++index) {
       const auto &carried = loop.carriedValues[index];
       bindings_[carried.exitValueId] =
-          count == 0 ? resolve(carried.entryValueId) : currentValues[index];
+          count == 0 ? resolve(carried.entryValueId.value()) : currentValues[index];
     }
   }
 
@@ -485,6 +488,7 @@ integerUarchOverrideFields() {
       {"load_ports", &UarchConfig::loadPorts},
       {"store_ports", &UarchConfig::storePorts},
       {"ub_slots", &UarchConfig::ubSlots},
+      {"ub_bandwidth_bytes_per_cycle", &UarchConfig::ubBandwidthBytesPerCycle},
       {"idu_post_update_ready_latency", &UarchConfig::iduPostUpdateReadyLatency},
       {"lsu_store_priority_preg_threshold",
        &UarchConfig::lsuStorePriorityPregThreshold},
@@ -492,6 +496,7 @@ integerUarchOverrideFields() {
       {"IDU_issue_width", &UarchConfig::iduIssueWidth},
       {"LDQ_width", &UarchConfig::ldqWidth},
       {"vreg_num", &UarchConfig::vregNum},
+      {"physical_predicate_registers", &UarchConfig::physicalPredicateRegisters},
       {"shq_depth", &UarchConfig::shqDepth},
       {"exq_depth", &UarchConfig::exqDepth},
       {"shq_release_delay", &UarchConfig::shqReleaseDelay},

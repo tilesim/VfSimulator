@@ -5,14 +5,22 @@ from enum import Enum
 from typing import Mapping, TypeAlias
 
 
-CANONICAL_VF_INFO_SCHEMA_VERSION = 1
+CURRENT_SCHEMA_VERSION = 2
+SUPPORTED_SCHEMA_VERSIONS = frozenset({1, 2})
+LEGACY_EMISSION_SCHEMA_VERSION = 1
+CANONICAL_VF_INFO_SCHEMA_VERSION = CURRENT_SCHEMA_VERSION
 ScalarValue: TypeAlias = None | bool | int | float | str
 
 
 class StorageKind(str, Enum):
     REGISTER = "Register"
+    PREDICATE_REGISTER = "PredicateRegister"
     UB = "UB"
     SCALAR = "Scalar"
+
+
+def is_renameable_storage(storage: str) -> bool:
+    return storage in (StorageKind.REGISTER, StorageKind.PREDICATE_REGISTER)
 
 
 class InstructionClass(str, Enum):
@@ -131,7 +139,7 @@ class InductionVariable:
 @dataclass(frozen=True)
 class LoopCarriedValue:
     logical_id: str
-    entry_value_id: str
+    entry_value_id: str | None
     back_edge_value_id: str
     exit_value_id: str
 
@@ -166,4 +174,15 @@ class CanonicalVfInfo:
     params: Mapping[str, int] = field(default_factory=dict)
     uarch: Mapping[str, ScalarValue] = field(default_factory=dict)
     source: Mapping[str, ScalarValue] = field(default_factory=dict)
-    schema_version: int = CANONICAL_VF_INFO_SCHEMA_VERSION
+    schema_version: int = LEGACY_EMISSION_SCHEMA_VERSION
+
+
+def emission_schema_version(values, nodes) -> int:
+    """Preserve v1 emission only when the program needs no v2 semantics."""
+    def exit_only(body):
+        return any(isinstance(node, CanonicalLoop) and (
+            any(item.entry_value_id is None for item in node.carried_values)
+            or exit_only(node.body)) for node in body)
+    if any(value.storage == StorageKind.PREDICATE_REGISTER for value in values.values()) or exit_only(nodes):
+        return CURRENT_SCHEMA_VERSION
+    return LEGACY_EMISSION_SCHEMA_VERSION

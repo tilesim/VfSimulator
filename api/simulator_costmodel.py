@@ -43,7 +43,7 @@ class CoreVfCostModel(VfCostModel):
         return int(self.run_vf_info(vf_info)["vf_end_cycle"])
 
     def run_payload(self, payload: Mapping[str, Any]) -> Dict[str, Any]:
-        """Decode and run a CanonicalVfInfo v1 JSON-shaped payload."""
+        """Decode and run a versioned CanonicalVfInfo JSON-shaped payload."""
         return self.run_vf_info(CanonicalJsonVfInfoAdapter.from_payload(payload))
 
     def run_vf_info(self, vf_info: CanonicalVfInfo) -> Dict[str, Any]:

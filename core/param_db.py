@@ -118,9 +118,14 @@ class ParamDB:
 
         self._isa: Dict[str, Any] = _read_json(self._isa_path)
         self._uarch: Dict[str, Any] = _read_json(self._uarch_path)
+        if "consumer_release_start_offset_by_op" in self._uarch:
+            raise ValueError("consumer_release_start_offset_by_op was removed; use global consumer_release_start_offset")
         if "lsu_post_update_ready_latency" in self._uarch:
             raise ValueError("lsu_post_update_ready_latency was removed; use idu_post_update_ready_latency (IDU dispatch timing)")
         latency = self._uarch.get("idu_post_update_ready_latency", 1)
+        capacity = self._uarch.get("physical_predicate_registers", 32)
+        if type(capacity) is not int or not 0 < capacity <= 2**31 - 1:
+            raise ValueError("physical_predicate_registers must be a positive int32")
         if type(latency) is not int or not 0 < latency < 2**63:
             raise ValueError("idu_post_update_ready_latency must be a positive int64")
 
@@ -755,6 +760,12 @@ class ParamDB:
                     return max(0, int(prod_map[c]))
                 except Exception:
                     pass
+
+        if self._is_v2_isa():
+            producer_key = self._join_form_key(p, self._normalize_form_key(p, producer_form) or self._dtype_to_form(dtype))
+            producer_defaults = (self._fwd_table or {}).get(producer_key, {})
+            if "*" in producer_defaults:
+                return max(0, int(producer_defaults["*"]))
 
         if self._is_v2_isa():
             try:

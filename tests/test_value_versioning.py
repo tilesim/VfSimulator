@@ -177,7 +177,7 @@ class ValueVersioningPassTest(unittest.TestCase):
             path.write_text(source, encoding="utf-8")
             canonical = InputAPI.load_cce(path, "scalar_vdup")
 
-        operand = canonical.context[0].inputs[0]
+        operand = canonical.context[1].inputs[0]
         self.assertEqual(operand.role, OperandRole.SOURCE)
         self.assertEqual(canonical.values[operand.value_id].storage.value, "Scalar")
         self.assertTrue(validate_canonical_vf_info(canonical).ok)
@@ -233,7 +233,7 @@ class ValueVersioningPassTest(unittest.TestCase):
             canonical = InputAPI.load_cce(path, "alias_case")
             result = CoreVfCostModel(out_dir=tmpdir).run_vf_info(canonical)
 
-        first_dup, second_dup, add = canonical.context
+        pset, first_dup, second_dup, add = canonical.context
         self.assertEqual(add.inputs[0].value_id, first_dup.outputs[0].value_id)
         self.assertEqual(add.inputs[1].value_id, second_dup.outputs[0].value_id)
         self.assertNotEqual(add.inputs[0].value_id, add.inputs[1].value_id)
@@ -561,7 +561,7 @@ class ValueVersioningPassTest(unittest.TestCase):
             path.write_text(source, encoding="utf-8")
             canonical = InputAPI.load_cce(path, "canonical_vf")
 
-        loop = canonical.context[0]
+        loop = canonical.context[1]
         load = loop.body[0]
         store = loop.body[2]
         self.assertEqual(loop.induction.start, 2)
