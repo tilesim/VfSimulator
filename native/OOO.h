@@ -57,6 +57,7 @@ struct Uop {
   std::string fuType = "ALU";
   std::string dispatchExu;
   int64_t latency = 1;
+  int64_t ubTransferBytes = 0;
 
   std::string state = "blocked";
   int64_t readyCycle = 0;

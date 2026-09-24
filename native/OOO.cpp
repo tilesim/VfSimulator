@@ -10,6 +10,7 @@
 
 #include "native/ControlUnit.h"
 #include "native/ISATraits.h"
+#include "api/native/InstructionCatalog.h"
 
 #include <algorithm>
 #include <cmath>
@@ -918,6 +919,13 @@ void OoOCoreMainline::accept(const DynamicInst &inst) {
   u.staticInstructionId = inst.staticInstructionId;
   u.iterationPath = inst.iterationPath;
   bindAlignState(u, inst);
+  if (u.opClass == "LOAD" || u.opClass == "STORE") {
+    const auto &catalog = defaultInstructionCatalog();
+    const auto *spec = inst.catalogMode.empty() ? catalog.lookup(u.op) : catalog.lookupMemoryMode(u.op, inst.catalogMode);
+    if (!spec || spec->ubTransferBytes <= 0)
+      throw std::runtime_error("Missing Catalog UB transfer semantics: " + u.op);
+    u.ubTransferBytes = spec->ubTransferBytes;
+  }
 
   for (const auto &preg : u.pregSrc) {
     if (preg) {
@@ -1070,9 +1078,9 @@ void OoOCore::issueReadyLsu(
     if (it == lsq_.end() || it->state != "ready")
       continue;
     Uop &u = *it;
-    constexpr int64_t vectorBytes = 256;
-    const int64_t transferBytes = vectorBytes *
-        (u.opClass == "LOAD" ? std::max<int64_t>(1, u.pregDst.size()) : 1);
+    const int64_t transferBytes = u.ubTransferBytes;
+    if (transferBytes <= 0)
+      throw std::runtime_error("Missing Uop UB transfer bytes");
     if (transferBytes > ubBandwidthBytesPerCycle_)
       throw std::runtime_error("UB bandwidth budget cannot fit one LSU transaction");
     if (ubBytesIssued_ + transferBytes > ubBandwidthBytesPerCycle_)

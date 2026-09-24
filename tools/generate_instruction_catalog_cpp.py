@@ -25,7 +25,7 @@ def render_catalog_cpp(payload: Mapping[str, Any]) -> str:
     ]
     for opcode, spec in instructions.items():
         lines.append(
-            "  {%s, %s, %s, %s, %s, %s, %s, %d},"
+            "  {%s, %s, %s, %s, %s, %s, %s, %d, %d},"
             % (
                 _quote(opcode),
                 _quote(spec["class"]),
@@ -35,6 +35,7 @@ def render_catalog_cpp(payload: Mapping[str, Any]) -> str:
                 "true" if spec.get("virtual", False) else "false",
                 _quote(spec.get("align_state_operation", "")),
                 int(spec.get("align_state_argument_index", -1)),
+                spec.get("ub_transfer_bytes", 0),
             )
         )
     lines.append("};")

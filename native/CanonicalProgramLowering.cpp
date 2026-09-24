@@ -209,6 +209,8 @@ private:
     dynamic.type = "inst";
     dynamic.op = instruction.opcode;
     dynamic.form = instruction.form;
+    if (auto mode = instruction.attributes.find("catalog_mode"); mode != instruction.attributes.end())
+      dynamic.catalogMode = std::get<std::string>(mode->second);
     dynamic.staticInstructionId = instruction.instructionId;
     for (const auto &operand : instruction.inputs)
       if (operand.memoryAccess) dynamic.memoryAccesses.push_back(*operand.memoryAccess);

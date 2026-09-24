@@ -95,6 +95,7 @@ class InstructionSpec:
     align_state_argument_index: int | None = None
     memory_modes: Mapping[str, InstructionSpec] = field(default_factory=lambda: MappingProxyType({}))
     memory_span: int | None = None
+    ub_transfer_bytes: int = 0
 
 
 @dataclass(frozen=True)
@@ -164,6 +165,10 @@ class InstructionCatalog:
 
     @staticmethod
     def _validate_spec(spec: InstructionSpec) -> None:
+        if type(spec.ub_transfer_bytes) is not int or not 0 <= spec.ub_transfer_bytes <= 2**63 - 1:
+            raise ValueError(f"Invalid ub_transfer_bytes for {spec.opcode}")
+        if spec.instruction_class in (InstructionClass.LOAD, InstructionClass.STORE) and spec.ub_transfer_bytes == 0:
+            raise ValueError(f"Missing ub_transfer_bytes for {spec.opcode}")
         if not spec.opcode or spec.opcode != spec.opcode.upper():
             raise ValueError(f"Canonical opcode must be non-empty uppercase: {spec.opcode}")
         if not isinstance(spec.instruction_class, InstructionClass):
@@ -601,6 +606,7 @@ def instruction_catalog_from_dict(payload: Mapping[str, Any]) -> InstructionCata
             call_variants=tuple(call_variants),
             align_state_operation=align_state_operation,
             align_state_argument_index=align_state_argument_index,
+            ub_transfer_bytes=raw.get("ub_transfer_bytes", 0),
         )
         modes = raw.get("memory_modes", {})
         if not isinstance(modes, Mapping):
@@ -618,7 +624,8 @@ def instruction_catalog_from_dict(payload: Mapping[str, Any]) -> InstructionCata
                 raise ValueError(f"Invalid memory mode declaration: {opcode}.{mode}")
             variants[mode] = replace(spec, signature=mode_signature,
                 operands=signatures[mode_signature], forms=frozenset(mode_forms),
-                call_variants=(), memory_span=span)
+                call_variants=(), memory_span=span,
+                ub_transfer_bytes=declaration.get("ub_transfer_bytes", spec.ub_transfer_bytes))
         specs.append(replace(spec, memory_modes=MappingProxyType(variants)))
     return InstructionCatalog(specs)
 

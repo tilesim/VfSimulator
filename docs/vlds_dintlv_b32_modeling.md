@@ -105,8 +105,11 @@ python3 cce_code/predicate_select_test/memory_probe.py --kind norm_pairs --offse
 
 按当前实验约定，Python/Native 增加 `ub_bandwidth_bytes_per_cycle=512`。
 这是独立于 load_ports、store_ports、ub_slots 的额外限制，三种约束必须同时满足。
-LOAD 按每个目的向量寄存器 256 B 计费，STORE 暂统一按 256 B 事务计费；
-这是传输预算，不是有效地址 span，广播、ONEPT、部分 mask 不减少预算。
+搬运指令在 Catalog 中显式声明 `ub_transfer_bytes`：普通 VLDS/VSTS 及当前其他
+STORE 为 256，DINTLV_B32 的模式声明覆盖为 512。它独立于输出数量和 memory span，
+不再从物理寄存器推导。进入 OoO 时解析一次并写入 Uop，仲裁只读取 Uop 字段；
+Native lowering 保留 catalog_mode，确保模式选择不会丢失。
+这是传输预算，不是有效地址 span，广播、ONEPT、部分 mask 暂不减少预算。
 
 - 普通 LOAD + LOAD：512 B，允许。
 - 普通 LOAD + STORE：512 B，允许。

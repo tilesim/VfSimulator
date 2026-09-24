@@ -19,6 +19,7 @@ struct GeneratedInstruction {
   bool virtualOpcode;
   const char *alignStateOperation;
   int alignStateArgumentIndex;
+  int64_t ubTransferBytes;
 };
 struct GeneratedOperand {
   const char *opcode;
@@ -135,6 +136,7 @@ InstructionCatalog::InstructionCatalog() {
     spec.virtualOpcode = entry.virtualOpcode;
     spec.alignStateOperation = entry.alignStateOperation;
     spec.alignStateArgumentIndex = entry.alignStateArgumentIndex;
+    spec.ubTransferBytes = entry.ubTransferBytes;
     if (!specs_.emplace(spec.opcode, std::move(spec)).second)
       throw std::runtime_error("Duplicate generated opcode: " +
                                std::string(entry.opcode));

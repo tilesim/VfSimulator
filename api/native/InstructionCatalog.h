@@ -5,6 +5,7 @@
 #define VFSIM_API_NATIVE_INSTRUCTION_CATALOG_H
 
 #include <string>
+#include <cstdint>
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
@@ -57,6 +58,7 @@ struct NativeInstructionSpec {
   std::vector<NativeOperandSpec> operands;
   std::vector<NativeCallVariant> callVariants;
   int memorySpan = 0;
+  int64_t ubTransferBytes = 0;
 };
 
 class InstructionCatalog {

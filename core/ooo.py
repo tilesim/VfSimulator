@@ -46,6 +46,7 @@ class Uop:
     preg_dst: List[str]
     preg_old: List[Optional[str]]
     profile: Optional[InstructionProfile] = None
+    ub_transfer_bytes: int = 0
 
     state: str = "blocked"  # blocked/ready/running/done
     ready_cycle: int = 0

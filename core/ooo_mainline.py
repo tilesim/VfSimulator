@@ -7,6 +7,7 @@ from typing import Any, Deque, Dict, List, Optional, Set, Tuple
 from collections import deque
 
 from core import isu
+from api.frontend.instruction_catalog import DEFAULT_INSTRUCTION_CATALOG
 from core.isa_traits import is_load_op, is_store_op, uses_lsq, uses_shared_shq_credit
 from core.ooo import OoOCore, Uop
 
@@ -420,6 +421,14 @@ class RenameController:
             dst_value_instances=dst_value_instances,
         )
         self.core.bind_align_state(u, inst.get("attributes"))
+        if u.profile.op_class in ("LOAD", "STORE"):
+            spec = DEFAULT_INSTRUCTION_CATALOG.lookup(u.op)
+            mode = (inst.get("attributes") or {}).get("catalog_mode")
+            if mode is not None:
+                spec = spec.memory_modes.get(mode) if spec else None
+            if spec is None or spec.ub_transfer_bytes <= 0:
+                raise ValueError(f"Missing Catalog UB transfer semantics: {u.op} {mode}")
+            u.ub_transfer_bytes = spec.ub_transfer_bytes
         setattr(u, "preg_src_gen", preg_src_gen)
 
         for pd in preg_dst:
@@ -741,9 +750,9 @@ class OoOCoreMainline(OoOCore):
                 break
 
             op_class = u.profile.op_class
-            # Charge full vector transactions, not masked/partial address spans.
-            vector_bytes = 256
-            transfer_bytes = vector_bytes * (max(1, len(u.preg_dst)) if op_class == "LOAD" else 1)
+            transfer_bytes = u.ub_transfer_bytes
+            if transfer_bytes <= 0:
+                raise ValueError("Missing Uop UB transfer bytes")
             if transfer_bytes > self.ub_bandwidth_bytes_per_cycle:
                 raise ValueError("UB bandwidth budget cannot fit one LSU transaction")
             if self.ub_bytes_issued + transfer_bytes > self.ub_bandwidth_bytes_per_cycle:

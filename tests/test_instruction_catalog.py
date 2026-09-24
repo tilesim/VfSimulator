@@ -19,6 +19,17 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 class InstructionCatalogTest(unittest.TestCase):
+    def test_ub_transfer_bytes_are_explicit_and_validated(self):
+        load = DEFAULT_INSTRUCTION_CATALOG.lookup("VLDS")
+        self.assertEqual(load.ub_transfer_bytes, 256)
+        self.assertEqual(load.memory_modes["DINTLV_B32"].ub_transfer_bytes, 512)
+        payload = json.loads((ROOT / "configs/instruction_catalog.json").read_text())
+        for value in (0, -1, True, "512", 1.5, 2**63):
+            invalid = copy.deepcopy(payload)
+            invalid["instructions"]["VLDS"]["memory_modes"]["DINTLV_B32"]["ub_transfer_bytes"] = value
+            with self.subTest(value=value), self.assertRaisesRegex(ValueError, "ub_transfer_bytes"):
+                instruction_catalog_from_dict(invalid)
+
     def test_alias_class_and_signature_are_declared_once(self):
         load = DEFAULT_INSTRUCTION_CATALOG.lookup("vld")
         store = DEFAULT_INSTRUCTION_CATALOG.lookup("vst")
