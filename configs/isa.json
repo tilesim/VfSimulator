@@ -5,6 +5,9 @@
     "vf_drain_cost": 12
   },
   "instructions": {
+    "PSTU":{"op_class":"STORE","forms":{"uint16":{"latency":8,"dtype":"uint16"},"uint32":{"latency":8,"dtype":"uint32"}}},
+    "VLDAS": {"op_class":"LOAD", "forms":{"fp32":{"latency":9,"dtype":"fp32"},"fp16":{"latency":9,"dtype":"fp16"},"int32":{"latency":9,"dtype":"int32"}}},
+    "VLDUS": {"op_class":"LOAD", "forms":{"fp32":{"latency":9,"dtype":"fp32"},"fp16":{"latency":9,"dtype":"fp16"},"int32":{"latency":9,"dtype":"int32"}}},
     "PSET_B8": {
       "op_class": "COMPUTE",
       "forms": {"b8": {"latency": 6, "EXU": "ALU", "dispatch_exu": "EXU01", "dtype": "bool"}}
@@ -782,6 +785,8 @@
     "VSTAS": {
       "op_class": "STORE",
       "forms": {
+        "uint16":{"op_class":"STORE","latency":8,"dtype":"uint16"},
+        "uint32":{"op_class":"STORE","latency":8,"dtype":"uint32"},
         "fp32": {
           "op_class": "STORE",
           "pipeline_startup_cost": 0,

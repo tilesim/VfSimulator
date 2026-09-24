@@ -73,6 +73,7 @@ struct Uop {
   std::string alignStateId;
   std::shared_ptr<AlignGeneration> alignGeneration;
   std::shared_ptr<AlignProducerRecord> alignProducerRecord;
+  std::shared_ptr<AlignProducerRecord> alignLoadProducer;
   int64_t topBlockId = 0;
   std::vector<int64_t> iterStack;
   bool isLastInTopBlock = false;
@@ -258,6 +259,7 @@ protected:
   std::unordered_map<std::string, int64_t> pregReleaseEligibleCycle_;
   std::unordered_map<std::string, int64_t> pregGeneration_;
   std::unordered_map<std::string, std::shared_ptr<AlignGeneration>> alignStateOpen_;
+  std::unordered_map<std::string, std::shared_ptr<AlignProducerRecord>> alignLoadInitializers_;
   std::unordered_map<std::string, int64_t> alignStateNextGeneration_;
   std::unordered_map<int64_t, std::vector<SrcReleaseEvent>> srcReleaseEvents_;
   std::unordered_map<int64_t, int> srcReleaseExpected_;

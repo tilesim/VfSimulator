@@ -59,6 +59,9 @@ struct NativeInstructionSpec {
   std::vector<NativeCallVariant> callVariants;
   int memorySpan = 0;
   int64_t ubTransferBytes = 0;
+  std::string forwardingOpcode;
+  std::unordered_map<std::string, int64_t> implicitPostUpdateBytes;
+  std::unordered_map<std::string, int64_t> memorySpanByForm;
 };
 
 class InstructionCatalog {

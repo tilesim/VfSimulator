@@ -20,6 +20,7 @@ struct GeneratedInstruction {
   const char *alignStateOperation;
   int alignStateArgumentIndex;
   int64_t ubTransferBytes;
+  const char *forwardingOpcode;
 };
 struct GeneratedOperand {
   const char *opcode;
@@ -36,6 +37,12 @@ struct GeneratedMemoryMode {
   const char *mode;
   const char *key;
   int span;
+};
+struct GeneratedMemoryForm {
+  const char *opcode;
+  const char *form;
+  int64_t implicitPostUpdateBytes;
+  int64_t span;
 };
 struct GeneratedPostUpdateDelta {
   const char *opcode;
@@ -137,6 +144,7 @@ InstructionCatalog::InstructionCatalog() {
     spec.alignStateOperation = entry.alignStateOperation;
     spec.alignStateArgumentIndex = entry.alignStateArgumentIndex;
     spec.ubTransferBytes = entry.ubTransferBytes;
+    spec.forwardingOpcode = entry.forwardingOpcode;
     if (!specs_.emplace(spec.opcode, std::move(spec)).second)
       throw std::runtime_error("Duplicate generated opcode: " +
                                std::string(entry.opcode));
@@ -209,6 +217,12 @@ InstructionCatalog::InstructionCatalog() {
       throw std::runtime_error("Generated specialization target is missing: " +
                                std::string(entry.target));
     specs_.at(entry.opcode).specializations.emplace(entry.form, entry.target);
+  }
+  for (const auto &entry : kGeneratedMemoryForms) {
+    auto &spec = specs_.at(entry.opcode);
+    if (entry.implicitPostUpdateBytes)
+      spec.implicitPostUpdateBytes[entry.form] = entry.implicitPostUpdateBytes;
+    if (entry.span) spec.memorySpanByForm[entry.form] = entry.span;
   }
   for (const auto &entry : kGeneratedMemoryModes) {
     auto spec = std::move(specs_.at(entry.key));

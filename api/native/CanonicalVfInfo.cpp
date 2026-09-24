@@ -429,6 +429,21 @@ CanonicalValidationResult validateCanonicalVfInfo(const CanonicalVfInfo &vfInfo)
           if (const auto *text = std::get_if<std::string>(&value); text && *text == "MODE_MERGING")
             error("unsupported_merging_mode", "MODE_MERGING requires an explicit old destination input", nodePath, inst->sourceLocation);
         if (catalogSpec) {
+          for (const auto *operands : {&inst->inputs, &inst->outputs})
+            for (const auto &operand : *operands) {
+              if (!operand.memoryAccess) continue;
+              const auto &memory = *operand.memoryAccess;
+              auto delta = catalogSpec->implicitPostUpdateBytes.find(inst->form);
+              if (delta != catalogSpec->implicitPostUpdateBytes.end() &&
+                  (memory.updateMode != "post_update" || !memory.addressStateId ||
+                   memory.addressStateId->empty() || !memory.postUpdateDeltaBytes ||
+                   memory.postUpdateDeltaBytes->constant != delta->second ||
+                   !memory.postUpdateDeltaBytes->terms.empty()))
+                error("catalog_implicit_update_mismatch", "Memory access must declare its Catalog implicit pointer update", nodePath, inst->sourceLocation);
+              auto span = catalogSpec->memorySpanByForm.find(inst->form);
+              if (span != catalogSpec->memorySpanByForm.end() && memory.span != span->second)
+                error("catalog_memory_span_mismatch", "Memory span conflicts with Catalog form", nodePath, inst->sourceLocation);
+            }
           if (inst->opcode != catalogSpec->opcode)
             error("noncanonical_opcode",
                   "Known opcode must use its canonical Catalog name", nodePath,

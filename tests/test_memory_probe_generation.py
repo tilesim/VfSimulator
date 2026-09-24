@@ -4,6 +4,13 @@ from cce_code.predicate_select_test.memory_probe import make_case
 
 
 class MemoryProbeGenerationTest(unittest.TestCase):
+    def test_vldas_forwarding_probes_have_no_loop(self):
+        for kind in ("vldus_straight", "vldus_no_update"):
+            source, data, golden = make_case(kind, "fp32", 1, 1)
+            self.assertNotIn("for (", source)
+            self.assertEqual(golden, data[4:260])
+            self.assertIn("vldas(state, ptr)", source)
+            self.assertEqual("POST_UPDATE" in source, kind == "vldus_straight")
     def test_paired_load_golden(self):
         for kind, stride in (("dual_pairs", 256), ("norm_pairs", 128)):
             source, data, golden = make_case(kind, "fp32", 0, 8)

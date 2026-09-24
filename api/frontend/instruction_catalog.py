@@ -96,6 +96,9 @@ class InstructionSpec:
     memory_modes: Mapping[str, InstructionSpec] = field(default_factory=lambda: MappingProxyType({}))
     memory_span: int | None = None
     ub_transfer_bytes: int = 0
+    forwarding_opcode: str | None = None
+    implicit_post_update_bytes: Mapping[str, int] = field(default_factory=lambda: MappingProxyType({}))
+    memory_span_by_form: Mapping[str, int] = field(default_factory=lambda: MappingProxyType({}))
 
 
 @dataclass(frozen=True)
@@ -154,6 +157,12 @@ class InstructionCatalog:
                 aliases[key] = opcode
 
         for spec in by_opcode.values():
+            if spec.forwarding_opcode is not None:
+                if not isinstance(spec.forwarding_opcode, str):
+                    raise ValueError(f"Invalid forwarding_opcode for {spec.opcode}")
+                target = by_opcode.get(spec.forwarding_opcode)
+                if target is None or target.forwarding_opcode is not None or target.instruction_class != spec.instruction_class:
+                    raise ValueError(f"Invalid forwarding_opcode for {spec.opcode}")
             for form, target in spec.specializations.items():
                 if not form or target not in by_opcode:
                     raise ValueError(
@@ -165,6 +174,13 @@ class InstructionCatalog:
 
     @staticmethod
     def _validate_spec(spec: InstructionSpec) -> None:
+        for name in ("implicit_post_update_bytes", "memory_span_by_form"):
+            values = getattr(spec, name)
+            if not isinstance(values, Mapping) or any(
+                form not in spec.forms or type(n) is not int or not 0 < n <= 2**63 - 1
+                for form, n in values.items()
+            ):
+                raise ValueError(f"Invalid {name} for {spec.opcode}")
         if type(spec.ub_transfer_bytes) is not int or not 0 <= spec.ub_transfer_bytes <= 2**63 - 1:
             raise ValueError(f"Invalid ub_transfer_bytes for {spec.opcode}")
         if spec.instruction_class in (InstructionClass.LOAD, InstructionClass.STORE) and spec.ub_transfer_bytes == 0:
@@ -183,8 +199,10 @@ class InstructionCatalog:
         elif spec.fixed_form is not None:
             raise ValueError(f"Non-fixed instruction {spec.opcode} cannot set fixed_form")
 
-        if spec.align_state_operation not in (None, "append", "consume"):
+        if spec.align_state_operation not in (None, "append", "consume", "load_init", "load_use"):
             raise ValueError(f"Invalid align state operation in {spec.opcode}")
+        if spec.align_state_operation in ("load_init", "load_use") and spec.instruction_class != InstructionClass.LOAD:
+            raise ValueError(f"Load align operation requires LOAD class: {spec.opcode}")
         if (spec.align_state_operation is None) != (
             spec.align_state_argument_index is None
         ):
@@ -333,7 +351,7 @@ class InstructionCatalog:
             and operand.direction == OperandDirection.OUTPUT
         ]
         if spec.instruction_class == InstructionClass.LOAD:
-            if len(memory_inputs) != 1 or memory_outputs or not register_outputs:
+            if len(memory_inputs) != 1 or memory_outputs or (not register_outputs and spec.align_state_operation != "load_init"):
                 raise ValueError(f"Invalid load signature for {spec.opcode}")
         elif spec.instruction_class == InstructionClass.STORE:
             if memory_inputs or len(memory_outputs) != 1 or register_outputs:
@@ -582,6 +600,12 @@ def instruction_catalog_from_dict(payload: Mapping[str, Any]) -> InstructionCata
             or not isinstance(align_state_argument_index, int)
         ):
             raise ValueError(f"{opcode}.align_state_argument_index must be an integer")
+        memory_form_maps = {}
+        for name in ("implicit_post_update_bytes", "memory_span_by_form"):
+            mapping = raw.get(name, {})
+            if not isinstance(mapping, Mapping):
+                raise ValueError(f"{opcode}.{name} must be an object")
+            memory_form_maps[name] = MappingProxyType(dict(mapping))
         spec = InstructionSpec(
             opcode=opcode,
             instruction_class=_enum(
@@ -607,6 +631,9 @@ def instruction_catalog_from_dict(payload: Mapping[str, Any]) -> InstructionCata
             align_state_operation=align_state_operation,
             align_state_argument_index=align_state_argument_index,
             ub_transfer_bytes=raw.get("ub_transfer_bytes", 0),
+            forwarding_opcode=raw.get("forwarding_opcode"),
+            implicit_post_update_bytes=memory_form_maps["implicit_post_update_bytes"],
+            memory_span_by_form=memory_form_maps["memory_span_by_form"],
         )
         modes = raw.get("memory_modes", {})
         if not isinstance(modes, Mapping):

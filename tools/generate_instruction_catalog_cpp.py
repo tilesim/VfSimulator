@@ -25,7 +25,7 @@ def render_catalog_cpp(payload: Mapping[str, Any]) -> str:
     ]
     for opcode, spec in instructions.items():
         lines.append(
-            "  {%s, %s, %s, %s, %s, %s, %s, %d, %d},"
+            "  {%s, %s, %s, %s, %s, %s, %s, %d, %d, %s},"
             % (
                 _quote(opcode),
                 _quote(spec["class"]),
@@ -36,6 +36,7 @@ def render_catalog_cpp(payload: Mapping[str, Any]) -> str:
                 _quote(spec.get("align_state_operation", "")),
                 int(spec.get("align_state_argument_index", -1)),
                 spec.get("ub_transfer_bytes", 0),
+                _quote(spec.get("forwarding_opcode", "")),
             )
         )
     lines.append("};")
@@ -62,6 +63,13 @@ def render_catalog_cpp(payload: Mapping[str, Any]) -> str:
                     else "false",
                 )
             )
+    lines.append("};")
+    lines.append("static constexpr GeneratedMemoryForm kGeneratedMemoryForms[] = {")
+    for opcode, spec in instructions.items():
+        for form in sorted(set(spec.get("implicit_post_update_bytes", {})) | set(spec.get("memory_span_by_form", {}))):
+            lines.append("  {%s, %s, %d, %d}," % (
+                _quote(opcode), _quote(form), spec.get("implicit_post_update_bytes", {}).get(form, 0),
+                spec.get("memory_span_by_form", {}).get(form, 0)))
     lines.append("};")
     lines.append(
         "static constexpr GeneratedPostUpdateDelta "

@@ -724,6 +724,10 @@ class ParamDB:
         """
         p, parsed_pf = self._split_form_key(producer_op, producer_form)
         c, parsed_cf = self._split_form_key(consumer_op, consumer_form)
+        from api.frontend.instruction_catalog import DEFAULT_INSTRUCTION_CATALOG
+        spec = DEFAULT_INSTRUCTION_CATALOG.lookup(p)
+        if spec is not None and spec.forwarding_opcode is not None:
+            return self._compute_forwarding_cycles(spec.forwarding_opcode, c, dtype, parsed_pf, parsed_cf)
         producer_form = parsed_pf
         consumer_form = parsed_cf
 

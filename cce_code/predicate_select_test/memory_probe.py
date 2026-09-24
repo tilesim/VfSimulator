@@ -60,19 +60,27 @@ def make_case(kind, dtype, offset, iterations):
         vsts(odd, out, 64, NORM_B32, all);'''
         selected = values[offset:offset + 128]
         golden = struct.pack("<128f", *(selected[::2] + selected[1::2]))
-    elif kind == "vldus":
+    elif kind in {"vldus", "vldus_straight", "vldus_no_update"}:
+        if kind == "vldus_no_update" and iterations != 1:
+            raise ValueError("Non-updating initialization probe requires one access")
         if offset * width + iterations * 256 > len(data):
             raise ValueError("Input allocation too small")
+        accesses = (f'''#pragma unroll 1
+        for (int i = 0; i < {iterations}; ++i) {{
+            vldus(value, state, ptr, {lanes}, POST_UPDATE);
+            vsts(value, out, i * {lanes}, NORM_B{width * 8}, all);
+        }}''' if kind == "vldus" else "\n".join(
+            f"vldus(value,state,ptr,{lanes},POST_UPDATE);"
+            f"vsts(value,out,{i*lanes},NORM_B{width*8},all);"
+            for i in range(iterations)))
+        if kind == "vldus_no_update":
+            accesses = f"vldus(value,state,ptr);vsts(value,out,0,NORM_B{width*8},all);"
         body = f'''vector_bool all = pset_b{width * 8}(PAT_ALL);
         vector_align state;
         vector_{vector} value;
         __ubuf__ {ctype} *ptr = input + {offset};
         vldas(state, ptr);
-        #pragma unroll 1
-        for (int i = 0; i < {iterations}; ++i) {{
-            vldus(value, state, ptr, {lanes}, POST_UPDATE);
-            vsts(value, out, i * {lanes}, NORM_B{width * 8}, all);
-        }}'''
+        {accesses}'''
         golden = data[offset * width:offset * width + iterations * 256]
     else:
         if dtype not in ("fp32", "fp16"):
@@ -122,7 +130,7 @@ extern "C" __global__ __aicore__ void memory_probe(
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--kind", choices=["vldsx2", "vldus", "pstu", "dual_pairs", "norm_pairs"], required=True)
+    parser.add_argument("--kind", choices=["vldsx2", "vldus", "vldus_straight", "vldus_no_update", "pstu", "dual_pairs", "norm_pairs"], required=True)
     parser.add_argument("--dtype", choices=["fp32", "fp16", "int32"], default="fp32")
     parser.add_argument("--offset", type=int, default=1)
     parser.add_argument("--iterations", type=int, default=3)

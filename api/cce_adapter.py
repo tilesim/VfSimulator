@@ -411,13 +411,13 @@ class _VFScopeParser:
                 normalize_membar_type(barrier),
                 self._source_location(line),
             )
-        if not low.startswith(("v", "pset_")):
+        op = normalize_opcode(callee)
+        spec = DEFAULT_INSTRUCTION_CATALOG.lookup(op)
+        if spec is None and not low.startswith(("v", "pset_")):
             raise ValueError(
                 f"Unsupported CCE statement in __VEC_SCOPE__: {stmt}"
             )
 
-        op = normalize_opcode(callee)
-        spec = DEFAULT_INSTRUCTION_CATALOG.lookup(op)
         if spec is None:
             return self._bind_generic_compute_call(
                 callee, op, args, self._source_location(line)
@@ -463,7 +463,7 @@ class _VFScopeParser:
             src=src,
             dst=dst,
             instruction_class=spec.instruction_class.value,
-            memory_accesses=self._memory_accesses_for_call(spec, args),
+            memory_accesses=self._memory_accesses_for_call(spec, args, resolved_form),
             source_location=self._source_location(line),
             attributes=attributes,
         )
@@ -744,6 +744,7 @@ class _VFScopeParser:
         self,
         spec: InstructionSpec,
         args: Sequence[str],
+        form: str,
     ) -> tuple[AdapterMemoryAccess, ...]:
         memory_operand = next(
             (
@@ -780,7 +781,9 @@ class _VFScopeParser:
         update_operand = next((o for o in spec.operands if o.name == "update"), None)
         post_update = (update_operand is not None and update_operand.argument_index < len(args)
                        and args[update_operand.argument_index].strip() == "POST_UPDATE")
-        delta_bytes = None
+        delta_bytes = spec.implicit_post_update_bytes.get(form)
+        implicit_update = delta_bytes is not None
+        post_update = post_update or implicit_update
         if post_update:
             if _strip_ub_reference_wrappers(pointer_expression) != pointer_name:
                 raise ValueError("POST_UPDATE requires a pointer variable, not pointer arithmetic")
@@ -790,17 +793,15 @@ class _VFScopeParser:
                 (o for o in spec.operands if o.post_update_delta is not None),
                 None,
             )
-            if delta_operand is None:
+            if delta_operand is None and not implicit_update:
                 raise ValueError("POST_UPDATE has no declared delta rule")
-            raw_delta = args[delta_operand.argument_index].strip()
-            if re.search(r"\bvag_b(?:16|32)\s*\(", raw_delta):
-                raise ValueError("POST_UPDATE with VAG requires address-generator modeling")
-            delta_bytes = self._decode_post_update_delta_bytes(
-                delta_operand,
-                raw_delta,
-                pointer_expression,
-                pointer_name,
-            )
+            if not implicit_update:
+                raw_delta = args[delta_operand.argument_index].strip()
+                if re.search(r"\bvag_b(?:16|32)\s*\(", raw_delta):
+                    raise ValueError("POST_UPDATE with VAG requires address-generator modeling")
+                delta_bytes = self._decode_post_update_delta_bytes(
+                    delta_operand, raw_delta, pointer_expression, pointer_name,
+                )
             self.updated_pointer_states.add(state_id)
             self.all_updated_pointer_states.add(state_id)
         offset: int | str = alias_offset
@@ -814,7 +815,7 @@ class _VFScopeParser:
         mode = None
         if mode_operand is not None and mode_operand.argument_index < len(args):
             mode = args[mode_operand.argument_index].strip()
-        span = spec.memory_span or (1 if mode and (mode.startswith("BRC_") or mode.startswith("ONEPT_")) else None)
+        span = spec.memory_span_by_form.get(form) or spec.memory_span or (1 if mode and (mode.startswith("BRC_") or mode.startswith("ONEPT_")) else None)
         return (
             AdapterMemoryAccess(
                 value_id=base_name,

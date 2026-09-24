@@ -62,6 +62,7 @@ class Uop:
     align_state_id: Optional[str] = None
     align_generation: Optional[AlignGeneration] = None
     align_producer_record: Optional[AlignProducerRecord] = None
+    align_load_producer: Optional[AlignProducerRecord] = None
     top_block_id: int = 0
     iter_stack: List[Any] = field(default_factory=list)
     is_last_in_top_block: bool = False
@@ -137,6 +138,7 @@ class OoOCore:
         self.preg_producer_profile = self.vector_bank.producer_profile
         self.align_state_open: Dict[str, AlignGeneration] = {}
         self.align_state_next_generation: Dict[str, int] = {}
+        self.align_load_initializers: Dict[str, AlignProducerRecord] = {}
 
         # EXU issue history.
         # By default, II is enforced at EXU level (cross-FU), because each EXU
@@ -488,7 +490,13 @@ class OoOCore:
         return t
 
     def _load_ready_cycle(self, u: Uop) -> int:
-        return max(self.vf_startup_cost, int(getattr(u, "lsq_ready_cycle", 0)))
+        ready = max(self.vf_startup_cost, int(getattr(u, "lsq_ready_cycle", 0)))
+        producer = u.align_load_producer
+        if producer is not None:
+            if producer.start_cycle is None:
+                return 10 ** 9
+            ready = max(ready, producer.start_cycle + self.db.get_forwarding_for_profiles(producer.profile, u.profile))
+        return ready
 
     def _blocked_by_control_unit(self, u: Uop) -> bool:
         control_unit = getattr(self, "control_unit", None)
@@ -571,6 +579,19 @@ class OoOCore:
             return
         operation = str(attributes.get("align_state_operation", "")).lower()
         state_id = str(attributes.get("align_state_id", ""))
+        if operation in {"load_init", "load_use"}:
+            if not state_id:
+                raise ValueError("Load align state ID is required")
+            u.align_state_operation, u.align_state_id = operation, state_id
+            if operation == "load_init":
+                record = AlignProducerRecord(u.inst_id, u.stream_seq, u.profile)
+                self.align_load_initializers[state_id] = record
+                u.align_producer_record = record
+            else:
+                if state_id not in self.align_load_initializers:
+                    raise ValueError(f"Uninitialized load align state: {state_id}")
+                u.align_load_producer = self.align_load_initializers[state_id]
+            return
         if operation not in {"append", "consume"} or not state_id:
             return
 

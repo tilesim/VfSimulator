@@ -10,6 +10,7 @@
 
 #include "native/Json.h"
 #include "native/ParamCompat.h"
+#include "api/native/InstructionCatalog.h"
 
 #include <algorithm>
 #include <cctype>
@@ -525,6 +526,9 @@ InstConfig ParamDB::fallbackInst(const std::string &op,
 
 int64_t ParamDB::forwardingCycles(const std::string &dtype, const std::string &prod,
                                   const std::string &cons) const {
+  const auto *spec = defaultInstructionCatalog().lookup(prod);
+  if (spec && !spec->forwardingOpcode.empty())
+    return forwardingCycles(dtype, spec->forwardingOpcode, cons);
   const auto dtypeIt = bundle_.forwarding.find(dtype);
   if (dtypeIt != bundle_.forwarding.end()) {
     const auto prodIt = dtypeIt->second.find(prod);
@@ -557,6 +561,9 @@ int64_t ParamDB::forwardingCycles(const std::string &prod,
                                   const std::string &prodForm,
                                   const std::string &cons,
                                   const std::string &consForm) const {
+  const auto *spec = defaultInstructionCatalog().lookup(prod);
+  if (spec && !spec->forwardingOpcode.empty())
+    return forwardingCycles(spec->forwardingOpcode, prodForm, cons, consForm);
   const std::string requestedProd = qualifyOp(prod, prodForm);
   const std::string requestedCons = qualifyOp(cons, consForm);
   for (const auto &candidate :

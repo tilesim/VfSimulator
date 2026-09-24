@@ -537,6 +537,21 @@ def validate_canonical_vf_info(vf_info: CanonicalVfInfo) -> ValidationResult:
                                 "Instruction must declare its Catalog align-state operation and state ID",
                                 path=node_path,
                             )
+                    implicit_delta = catalog_spec.implicit_post_update_bytes.get(node.form)
+                    expected_span = catalog_spec.memory_span_by_form.get(node.form)
+                    for operand in (*node.inputs, *node.outputs):
+                        memory = operand.memory_access
+                        if memory is None:
+                            continue
+                        if implicit_delta is not None and (
+                            memory.update_mode != "post_update" or not memory.address_state_id
+                            or memory.post_update_delta_bytes is None
+                            or memory.post_update_delta_bytes.constant != implicit_delta
+                            or memory.post_update_delta_bytes.terms
+                        ):
+                            error("catalog_implicit_update_mismatch", "Memory access must declare its Catalog implicit pointer update", path=node_path)
+                        if expected_span is not None and memory.span != expected_span:
+                            error("catalog_memory_span_mismatch", "Memory span conflicts with Catalog form", path=node_path)
                 validate_scalar_map(node.attributes, f"{node_path}.attributes")
                 for operand_index, operand in enumerate(node.inputs):
                     operand_path = f"{node_path}.inputs[{operand_index}]"

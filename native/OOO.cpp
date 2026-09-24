@@ -334,7 +334,14 @@ int64_t OoOCore::computeReadyTimeForSrc(
 }
 
 int64_t OoOCore::computeLoadReadyCycle(const Uop &u) const {
-  return std::max<int64_t>(vfStartupCost_, u.lsqReadyCycle);
+  int64_t ready = std::max<int64_t>(vfStartupCost_, u.lsqReadyCycle);
+  if (u.alignLoadProducer) {
+    const auto &producer = *u.alignLoadProducer;
+    if (!producer.startCycle) return 1000000000;
+    ready = std::max(ready, *producer.startCycle +
+        db_.forwardingCycles(producer.op, producer.form, u.op, u.form));
+  }
+  return ready;
 }
 
 bool OoOCore::blockedByControlUnit(const Uop &u) const {
@@ -400,6 +407,27 @@ OoOCore::computeStoreReadyCycle(const Uop &u) const {
 }
 
 void OoOCore::bindAlignState(Uop &u, const DynamicInst &inst) {
+  if (inst.alignStateOperation == "load_init" || inst.alignStateOperation == "load_use") {
+    if (inst.alignStateId.empty())
+      throw std::runtime_error("Load align state ID is required");
+    u.alignStateOperation = inst.alignStateOperation;
+    u.alignStateId = inst.alignStateId;
+    if (inst.alignStateOperation == "load_init") {
+      auto record = std::make_shared<AlignProducerRecord>();
+      record->instId = u.instId;
+      record->streamSeq = u.streamSeq;
+      record->op = u.op;
+      record->form = u.form;
+      alignLoadInitializers_[inst.alignStateId] = record;
+      u.alignProducerRecord = record;
+    } else {
+      auto found = alignLoadInitializers_.find(inst.alignStateId);
+      if (found == alignLoadInitializers_.end())
+        throw std::runtime_error("Uninitialized load align state: " + inst.alignStateId);
+      u.alignLoadProducer = found->second;
+    }
+    return;
+  }
   if ((inst.alignStateOperation != "append" &&
        inst.alignStateOperation != "consume") ||
       inst.alignStateId.empty())
