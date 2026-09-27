@@ -1,0 +1,23 @@
+{
+  "schema_version": 2,
+  "params": {}, "uarch": {},
+  "source": {"fixture": "Synthetic contract fixture using report B16/B32 forms; not an actual HiVM adapter export"},
+  "storage_objects": {"ub": {"object_id": "ub", "storage": "UB", "shape": [256]}},
+  "values": {
+    "bits": {"definition_id": "bits", "logical_id": "bits", "storage": "Register", "dtype": "uint16"},
+    "mask": {"definition_id": "mask", "logical_id": "mask", "storage": "PredicateRegister", "dtype": "bool", "producer_node_id": "move"},
+    "stored": {"definition_id": "stored", "logical_id": "mem", "storage": "UB", "dtype": "uint32", "storage_object_id": "ub", "producer_node_id": "store"},
+    "flushed": {"definition_id": "flushed", "logical_id": "mem", "storage": "UB", "dtype": "uint32", "storage_object_id": "ub", "producer_node_id": "flush"}
+  },
+  "context": [
+    {"kind": "instruction", "instruction_id": "move", "opcode": "MOVVP", "instruction_class": "compute", "form": "b16",
+     "inputs": [{"value_id": "bits", "role": "source"}], "outputs": [{"value_id": "mask", "role": "destination"}]},
+    {"kind": "instruction", "instruction_id": "store", "opcode": "PSTU", "instruction_class": "store", "form": "b32",
+     "attributes": {"align_state_id": "align", "align_state_operation": "append"},
+     "inputs": [{"value_id": "mask", "role": "predicate"}],
+     "outputs": [{"value_id": "stored", "role": "memory", "memory_access": {"base_object_id": "ub", "access_kind": "write", "offset": {"constant": 0, "terms": []}, "span": 2, "address_state_id": "ptr", "update_mode": "post_update", "post_update_delta_bytes": {"constant": 8, "terms": []}}}]},
+    {"kind": "instruction", "instruction_id": "flush", "opcode": "VSTAS", "instruction_class": "store", "form": "b32",
+     "attributes": {"align_state_id": "align", "align_state_operation": "consume"}, "inputs": [],
+     "outputs": [{"value_id": "flushed", "role": "memory", "memory_access": {"base_object_id": "ub", "access_kind": "write", "offset": {"constant": 0, "terms": []}, "address_state_id": "ptr", "update_mode": "post_update", "post_update_delta_bytes": {"constant": 0, "terms": []}}}]}
+  ]
+}

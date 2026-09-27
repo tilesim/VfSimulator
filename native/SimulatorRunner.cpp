@@ -94,6 +94,7 @@ std::string joinIterationPath(
 }
 
 struct Reservation {
+  int64_t predicate = 0;
   int64_t preg = 0;
   int64_t shqQueue = 0;
   int64_t lsq = 0;
@@ -108,6 +109,8 @@ Reservation reservationForInst(const DynamicInst &inst, const ParamDB &db,
   for (const auto &d : inst.dst) {
     if (valueStorage.isRegister(d))
       ++out.preg;
+    if (valueStorage.isPredicate(d))
+      ++out.predicate;
   }
   if (usesShqQueue(db, inst.op, form))
     out.shqQueue = 1;
@@ -128,6 +131,7 @@ void dumpIDULog(const std::vector<IDUDispatchRecord> &records, const std::string
        << ",\"src\":" << joinJsonArray(r.src)
        << ",\"top_block_id\":" << r.topBlockId
        << ",\"vreg\":" << r.vreg
+       << ",\"predicate_phys_free\":" << r.predicatePhysFree
        << ",\"SHQ_QUEUE\":" << r.shqQueue
        << ",\"LSQ\":" << r.lsq
        << ",\"SHQ\":" << r.shq
@@ -135,7 +139,7 @@ void dumpIDULog(const std::vector<IDUDispatchRecord> &records, const std::string
        << ",\"iteration_path\":" << joinIterationPath(r.iterationPath)
        << ",\"stream_seq\":" << r.streamSeq
        << ",\"event\":\"" << r.event << "\"";
-    if (r.event == "blocked") os << ",\"blocked_reason\":\"address_state\"";
+    if (r.event == "blocked") os << ",\"blocked_reason\":\"" << r.blockedReason << "\"";
     os << ",\"address_dependencies\":[";
     for (size_t i = 0; i < r.addressDependencies.size(); ++i) {
       const auto &d = r.addressDependencies[i];
@@ -232,6 +236,7 @@ SimulationResult runSimulation(IFU &ifu,
   ooo.setControlUnit(&controlUnit);
 
   int64_t iduPregCredit = ooo.getFreePreg();
+  int64_t iduPredicateCredit = ooo.getFreePredicate();
   int64_t iduShqCredit = ooo.getFreeShq();
   int64_t iduPendingShqQueue = 0;
   int64_t iduPendingLsq = 0;
@@ -252,6 +257,7 @@ SimulationResult runSimulation(IFU &ifu,
     auto visibleDelta = ooo.updateIduVisibility(cycle);
     if (useExplicitIduCreditBank) {
       iduPregCredit += visibleDelta["preg_free"];
+      iduPredicateCredit += visibleDelta["predicate_free"];
       iduShqCredit += visibleDelta["shq_release"];
     }
 
@@ -269,6 +275,7 @@ SimulationResult runSimulation(IFU &ifu,
     if (debugCycles)
       std::cerr << "[vfsim] cycle " << cycle << " fill_idu begin\n";
     int64_t pendingPreg = 0;
+    int64_t pendingPredicate = 0;
     int64_t pendingShqQueue = 0;
     int64_t pendingLsq = 0;
     int64_t pendingShq = 0;
@@ -276,6 +283,7 @@ SimulationResult runSimulation(IFU &ifu,
       for (const auto &item : iduToOooPipe) {
         const auto r = reservationForInst(item.second, idu.db(), fallbackDtype, valueStorage);
         pendingPreg += r.preg;
+        pendingPredicate += r.predicate;
         pendingShqQueue += r.shqQueue;
         pendingLsq += r.lsq;
         pendingShq += r.shq;
@@ -331,6 +339,7 @@ SimulationResult runSimulation(IFU &ifu,
     budget.theoreticalLimitMode = false;
     budget.theoreticalLimitVloopOnly = false;
     budget.freePreg = useExplicitIduCreditBank ? iduPregCredit : std::max<int64_t>(0, ooo.getFreePreg() - pendingPreg);
+    budget.freePredicate = useExplicitIduCreditBank ? iduPredicateCredit : std::max<int64_t>(0, ooo.getFreePredicate() - pendingPredicate);
     budget.freeShqQueue = std::max<int64_t>(0, ooo.getFreeShqQueue() - pendingShqQueue);
     budget.freeLsq = std::max<int64_t>(0, ooo.getFreeLsq() - pendingLsq);
     budget.freeShq = useExplicitIduCreditBank ? iduShqCredit : std::max<int64_t>(0, ooo.getFreeShq() - pendingShq);
@@ -349,6 +358,7 @@ SimulationResult runSimulation(IFU &ifu,
       if (useExplicitIduCreditBank) {
         const auto r = reservationForInst(inst, idu.db(), fallbackDtype, valueStorage);
         iduPregCredit = std::max<int64_t>(0, iduPregCredit - r.preg);
+        iduPredicateCredit -= r.predicate;
         iduShqCredit = std::max<int64_t>(0, iduShqCredit - r.shq);
         if (iduToOooDelay > 0) {
           iduPendingShqQueue += r.shqQueue;
@@ -387,6 +397,7 @@ SimulationResult runSimulation(IFU &ifu,
       ooo.dumpSimpleLogs(resultsDir + "/start_by_cycle.json", resultsDir + "/done_by_cycle.json");
       dumpDispatchLog(idu, resultsDir + "/idu_to_ooo.json");
       dumpIDULog(idu.addressBlockLog(), resultsDir + "/idu_address_blocked.json");
+      dumpIDULog(idu.resourceBlockLog(), resultsDir + "/idu_resource_blocked.json");
       dumpVloopTrace(idu, resultsDir + "/vloop_trace.json");
       dumpModelWarnings(idu.db(), resultsDir + "/model_warnings.json");
       controlUnit.dumpHistory(resultsDir + "/membar_history.json");
@@ -410,6 +421,7 @@ SimulationResult runSimulation(IFU &ifu,
     ooo.dumpSimpleLogs(resultsDir + "/start_by_cycle.json", resultsDir + "/done_by_cycle.json");
     dumpDispatchLog(idu, resultsDir + "/idu_to_ooo.json");
     dumpIDULog(idu.addressBlockLog(), resultsDir + "/idu_address_blocked.json");
+    dumpIDULog(idu.resourceBlockLog(), resultsDir + "/idu_resource_blocked.json");
     dumpVloopTrace(idu, resultsDir + "/vloop_trace.json");
     dumpModelWarnings(idu.db(), resultsDir + "/model_warnings.json");
     controlUnit.dumpHistory(resultsDir + "/membar_history.json");

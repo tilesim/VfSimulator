@@ -276,6 +276,7 @@ std::vector<DynamicInst> IDU::dispatch(int64_t cycle, const IDUDispatchBudget &b
     return {};
 
   int64_t credits = budget.theoreticalLimitMode ? (1LL << 60) : budget.freePreg;
+  int64_t predicateCredits = budget.theoreticalLimitMode ? (1LL << 60) : budget.freePredicate;
   int64_t shqQueueFree = budget.theoreticalLimitMode ? (1LL << 60) : budget.freeShqQueue;
   int64_t lsqFree = budget.theoreticalLimitMode ? (1LL << 60) : budget.freeLsq;
   int64_t shqFree = budget.theoreticalLimitMode ? (1LL << 60) : budget.freeShq;
@@ -342,8 +343,20 @@ std::vector<DynamicInst> IDU::dispatch(int64_t cycle, const IDUDispatchBudget &b
       if (valueStorage_.isRegister(d))
         ++dstCount;
     }
-    if (credits < dstCount)
+    int64_t predicateCount = 0;
+    for (const auto &d : inst.dst)
+      predicateCount += valueStorage_.isPredicate(d);
+    if (credits < dstCount || predicateCredits < predicateCount) {
+      IDUDispatchRecord record;
+      record.cycle = cycle; record.instId = inst.instId; record.op = inst.op;
+      record.staticInstructionId = inst.staticInstructionId;
+      record.iterationPath = inst.iterationPath; record.streamSeq = inst.streamSeq;
+      record.event = "blocked";
+      record.blockedReason = credits < dstCount ? "vector_credit" : "predicate_credit";
+      record.vreg = credits; record.predicatePhysFree = predicateCredits;
+      resourceBlockLog_.push_back(std::move(record));
       break;
+    }
 
     const auto dependencies = addressStates_.dependencies(inst.memoryAccesses);
     if (!addressStates_.canDispatch(inst.memoryAccesses, cycle)) {
@@ -364,6 +377,7 @@ std::vector<DynamicInst> IDU::dispatch(int64_t cycle, const IDUDispatchBudget &b
     addressStates_.notifyDispatch(inst.instId, inst.memoryAccesses, cycle);
     addressDependencies.push_back(dependencies);
     credits -= dstCount;
+    predicateCredits -= predicateCount;
     if (usesLsq(db_, inst.op, form)) {
       --lsqFree;
       if (usesSharedShqCredit(db_, inst.op, form))
@@ -393,6 +407,7 @@ std::vector<DynamicInst> IDU::dispatch(int64_t cycle, const IDUDispatchBudget &b
         inst.streamSeq,
         addressDependencies[dispatchIndex++],
     });
+    dispatchLog_.back().predicatePhysFree = budget.freePredicate;
     updateLastDispatch(inst, cycle);
     triggerNextVloops(inst, cycle);
   }

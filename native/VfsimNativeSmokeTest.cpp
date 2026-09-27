@@ -307,7 +307,8 @@ void verifyNativeUbSharedSlotsAndPregPressure(const ParamDB &db) {
   require(std::get<0>(relaxed) > std::get<1>(relaxed),
           "ready loads must take priority over an older store when pregs remain");
 
-  const auto pressured = runCase(1, "pressured");
+  // Three accepted vector destinations exhaust three physical registers.
+  const auto pressured = runCase(3, "pressured");
   require(std::get<0>(pressured) == std::get<1>(pressured),
           "preg pressure must issue one store and one load through shared UB slots");
   require(std::get<2>(pressured) > std::get<1>(pressured),
@@ -372,6 +373,29 @@ void verifyNativeVectorAlignGenerations(const ParamDB &db) {
           "a later VSTUS must not pollute the preceding sealed generation");
   require(secondConsumer == secondProducer + 1,
           "the next VSTAS must wait for its own VSTUS generation");
+}
+
+void verifyRemovedPerOpReleaseConfig() {
+  const auto root = std::filesystem::temp_directory_path() /
+                    "vfsim_native_removed_per_op_release";
+  writeText(root / "configs" / "isa.json", R"({"instructions":{}})");
+  for (const auto *value : {"{}", "{\"VADD\":1}", "null", "0"}) {
+    writeText(root / "configs" / "uarch.json",
+              std::string("{\"consumer_release_start_offset\":4,") +
+              "\"consumer_release_start_offset_by_op\":" + value + "}");
+    bool rejected = false;
+    try {
+      ParamDB invalid(root);
+    } catch (const std::runtime_error &error) {
+      const std::string message = error.what();
+      rejected = message.find("consumer_release_start_offset_by_op") != std::string::npos &&
+                 message.find("use global consumer_release_start_offset") != std::string::npos;
+    }
+    require(rejected, "Native ParamDB must reject removed per-op release config");
+  }
+  writeText(root / "configs" / "uarch.json",
+            R"({"consumer_release_start_offset":4})");
+  ParamDB valid(root);
 }
 
 ParamDB makeDurationTestDb() {
@@ -994,6 +1018,7 @@ int main() {
   try {
     const std::filesystem::path root = std::filesystem::path(VFSIM_SOURCE_ROOT);
     ParamDB db(root);
+    verifyRemovedPerOpReleaseConfig();
     verifyInstructionFallback(db);
     verifyOrdinaryVorVciParams(root);
     verifyOrdinaryNarrowParams(root);

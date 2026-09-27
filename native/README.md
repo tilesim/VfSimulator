@@ -28,10 +28,17 @@
   [Membar 时序模型](../docs/membar_timing_model.md)。
 - `CanonicalProgramLowering`：处理已验证的 canonical definition、loop-carried
   binding、动态身份和值生命周期标记。
-- `CanonicalJsonVfInfoAdapter`：读取并校验语言无关的 canonical JSON v1。
+- `CanonicalJsonVfInfoAdapter`：读取并校验语言无关的 canonical JSON v1/v2；谓词寄存器使用 v2。
 - 共享配置结构：显式、可移植地描述跨语言配置 schema。
 
 公开运行入口：
+
+本轮 C++ 同步基于主线 `566c398`，包含独立的物理谓词寄存器池、统一 last-use
+释放、双输出指令，以及按 Catalog 声明的 `ub_transfer_bytes` 进行共享 UB 带宽仲裁。
+`vector_align` 仅维护状态依赖，不分配 vector/predicate 物理寄存器。
+新增覆盖包括 PSET、谓词比较/逻辑、MOVVP、PSTU、VLDAS/VLDUS、
+VLDS DINTLV_B32 和 VINTLV/VDINTLV。实测值与近似参数的区别见
+[谓词参数记录](../docs/predicate_timing_coverage.md)及各指令建模文档。
 
 - `runCanonicalVfInfo()`：唯一正式预测入口，跳过 legacy value lowering、vreg
   live-range normalization 和 single-super-iteration rewriting。

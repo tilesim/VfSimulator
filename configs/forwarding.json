@@ -2,6 +2,20 @@
   "schema_version": 2,
   "defaults": 3,
   "forwarding": {
+    "VINTLV.fp32":{"VSTS.fp32":9,"VSTS.b32":9},
+    "VINTLV.b32":{"VSTS.fp32":9,"VSTS.b32":9},
+    "VDINTLV.fp32":{"VSTS.fp32":9,"VSTS.b32":9},
+    "VDINTLV.b32":{"VSTS.fp32":9,"VSTS.b32":9},
+    "PSTU.b16":{"VSTAS.uint16":1,"VSTAS.b16":1,"VSTAS.fp16":1},
+    "PSTU.b32":{"VSTAS.uint32":1,"VSTAS.b32":1,"VSTAS.fp32":1},
+    "PSTU.uint16":{"VSTAS.uint16":1,"VSTAS.b16":1,"VSTAS.fp16":1},
+    "PSTU.uint32":{"VSTAS.uint32":1,"VSTAS.b32":1,"VSTAS.fp32":1},
+    "VLDAS.fp32":{"*":1},
+    "VLDAS.fp16":{"*":1},
+    "VLDAS.int32":{"*":1},
+    "PSET_B8.b8": {"*": 2},
+    "PSET_B16.b16": {"*": 2},
+    "PSET_B32.b32": {"*": 2},
     "VLDS.uint32": {
       "VOR.b32": 6
     },

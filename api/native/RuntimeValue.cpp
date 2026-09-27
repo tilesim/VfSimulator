@@ -25,6 +25,8 @@ std::string valueStorageName(ValueStorageKind storage) {
   switch (storage) {
   case ValueStorageKind::Register:
     return "Register";
+  case ValueStorageKind::PredicateRegister:
+    return "PredicateRegister";
   case ValueStorageKind::UB:
     return "UB";
   case ValueStorageKind::Scalar:

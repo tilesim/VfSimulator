@@ -32,6 +32,7 @@ struct IDUDispatchBudget {
   int64_t issueBudget = 0;
   bool theoreticalLimitMode = false;
   bool theoreticalLimitVloopOnly = false;
+  int64_t freePredicate = 32;
 };
 
 struct IDUDispatchRecord {
@@ -50,6 +51,8 @@ struct IDUDispatchRecord {
   int64_t streamSeq = -1;
   std::vector<AddressDependency> addressDependencies;
   std::string event = "dispatch";
+  int64_t predicatePhysFree = 0;
+  std::string blockedReason = "address_state";
 };
 
 struct VloopTraceRecord {
@@ -81,6 +84,7 @@ public:
   const std::deque<DynamicInst> &window() const noexcept { return window_; }
   const std::vector<IDUDispatchRecord> &dispatchLog() const noexcept { return dispatchLog_; }
   const std::vector<IDUDispatchRecord> &addressBlockLog() const noexcept { return addressBlockLog_; }
+  const std::vector<IDUDispatchRecord> &resourceBlockLog() const noexcept { return resourceBlockLog_; }
   const std::vector<VloopTraceRecord> &vloopTrace() const noexcept { return vloopTrace_; }
 
 private:
@@ -127,6 +131,7 @@ private:
   std::vector<VloopTraceRecord> vloopTrace_;
   std::vector<IDUDispatchRecord> dispatchLog_;
   std::vector<IDUDispatchRecord> addressBlockLog_;
+  std::vector<IDUDispatchRecord> resourceBlockLog_;
 
   void initVloopStarts();
   std::optional<int64_t> nextNonemptyTopBlock(int64_t start) const;

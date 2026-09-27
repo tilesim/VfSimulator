@@ -272,10 +272,12 @@ Python/C++ 对比至少包括：动态指令顺序、IDU dispatch_cycle、地址
   后者为 `[producer_inst_id, delay]` 列表，可结合 producer 的 start 检查时序。
 - 未更改 IDU、向量数据 forwarding、UB 带宽或 membar 模型。
 
-### 10.2 明确拒绝的 CCE 形式
+### 10.2 CCE 支持边界
 
-- POST_UPDATE 搭配 VAG 地址生成器，或搭配无法解码增量的 VSSTB 复合配置。
-  VSSTB 的 NO_UPDATE 仍可解析；不能再把 POST_UPDATE 静默当成不更新。
+- `VSSTB` 复合配置已由 Catalog 声明为 `(block_stride << 16) |
+  post_update_stride`；低 16 位以 32 字节 block 为单位生成更新量，高 16 位不
+  参与指针更新。配置必须能在前端解析为整数常量。
+- POST_UPDATE 搭配 VAG 地址生成器仍明确拒绝。
 - POST_UPDATE 的目标是指针算术表达式而不是可识别的指针变量。
 - 循环内声明并重复初始化的指针自身执行 POST_UPDATE。
 - 复制已更新指针产生新 alias，以及在循环内快照会被更新的外层指针。

@@ -27,6 +27,7 @@ struct DynamicInst {
   std::vector<std::string> dst;
   std::string alignStateOperation;
   std::string alignStateId;
+  std::string catalogMode;
   std::vector<CanonicalMemoryAccess> memoryAccesses;
   std::vector<bool> srcValueRelease;
   std::vector<bool> dstValueKeep;
