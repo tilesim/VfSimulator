@@ -18,6 +18,8 @@ from vfsimulator.api.frontend.instruction_catalog import (
     FormRule,
     InstructionSpec,
     OperandDirection,
+    OperandSpec,
+    PostUpdateDeltaEncoding,
 )
 from vfsimulator.api.frontend.schema import CanonicalVfInfo, SourceLocation
 from vfsimulator.api.frontend.adapter_ir import (
@@ -38,7 +40,7 @@ _FUNC_RE = re.compile(
     r"\bvoid\s+(?P<name>[A-Za-z_]\w*)\s*\((?P<params>.*?)\)\s*\{",
     re.DOTALL,
 )
-_PRAGMA_UNROLL_RE = re.compile(r"#\s*pragma\s+unroll\s*\(\s*(\d+)\s*\)")
+_PRAGMA_UNROLL_RE = re.compile(r"#\s*pragma\s+unroll\s*(?:\(\s*(\d+)\s*\)|(\d+)\b)")
 _VECTOR_DECL_STMT_RE = re.compile(r"^\s*vector_([A-Za-z0-9_]+)\s+([^;]+)\s*$")
 _LOCAL_SCALAR_DECL_RE = re.compile(
     r"^\s*(?:(?:const|constexpr|volatile|static)\s+)*"
@@ -179,12 +181,21 @@ class _VFScopeParser:
             if dtype != "align"
         }
         self.register_names = set(self.register_dtypes)
+        self._predicate_serial = 0
+        self._predicate_prefix: list[AdapterInstruction] = []
         self.ub_names = {
             name for name, storage in scope.param_storage.items() if storage == "UB"
         }
         self.ub_aliases: Dict[str, tuple[str, str]] = {
             name: (name, "0") for name in self.ub_names
         }
+        self._pointer_serial = 0
+        self.pointer_states = {name: self._new_pointer_state(name) for name in sorted(self.ub_names)}
+        self.updated_pointer_states: set[str] = set()
+        self.all_updated_pointer_states: set[str] = set()
+        self.loop_pointer_states: set[str] = set()
+        self.loop_pointer_sources: dict[str, str] = {}
+        self._block_induction_variables = frozenset()
         self.ub_dtypes: Dict[str, str] = {
             name: dtype
             for name, dtype in scope.param_dtypes.items()
@@ -194,17 +205,28 @@ class _VFScopeParser:
             name for name, storage in scope.param_storage.items() if storage == "Scalar"
         }
         self.offset_scalar_names = set(self.scalar_names)
-        self.local_scalar_dtypes: Dict[str, str] = {}
+        self.local_scalar_dtypes: Dict[str, str] = {
+            name: dtype
+            for name, dtype in scope.param_dtypes.items()
+            if name in self.scalar_names
+        }
         self.local_scalar_initializers: Dict[str, str] = {}
         self._record_function_scope_scalar_declarations(scope.declaration_source)
         self._record_function_scope_ub_pointer_declarations(scope.declaration_source)
 
     def parse(self) -> List[AdapterNode]:
-        return self._parse_block(
+        nodes = self._parse_block(
             self.scope.source,
             frozenset(),
             self.scope.start_line,
         )
+        for state in self.loop_pointer_sources:
+            source = self.loop_pointer_sources[state]
+            while source in self.loop_pointer_sources:
+                source = self.loop_pointer_sources[source]
+            if source in self.all_updated_pointer_states:
+                raise ValueError("Cannot snapshot an updated pointer in a loop-local alias")
+        return nodes
 
     def _parse_block(
         self,
@@ -223,6 +245,9 @@ class _VFScopeParser:
         saved_ub_names = set(self.ub_names)
         saved_ub_aliases = dict(self.ub_aliases)
         saved_ub_dtypes = dict(self.ub_dtypes)
+        saved_pointer_states = dict(self.pointer_states)
+        saved_induction_variables = self._block_induction_variables
+        self._block_induction_variables = induction_variables
         try:
             return self._parse_block_contents(text, induction_variables, base_line)
         finally:
@@ -237,6 +262,10 @@ class _VFScopeParser:
             self.ub_names = saved_ub_names
             self.ub_aliases = saved_ub_aliases
             self.ub_dtypes = saved_ub_dtypes
+            self.pointer_states = saved_pointer_states
+            self._block_induction_variables = saved_induction_variables
+            # Updates to outer pointers survive lexical block exit.
+            self.updated_pointer_states.intersection_update(self.pointer_states.values())
 
     def _parse_block_contents(
         self,
@@ -255,7 +284,7 @@ class _VFScopeParser:
 
             pragma = _PRAGMA_UNROLL_RE.match(text, pos)
             if pragma:
-                pending_unroll = int(pragma.group(1))
+                pending_unroll = int(pragma.group(1) or pragma.group(2))
                 pos = pragma.end()
                 continue
 
@@ -307,7 +336,7 @@ class _VFScopeParser:
                 base_line + text[:pos].count("\n"),
             )
             if node is not None:
-                nodes.append(node)
+                nodes.extend(node if isinstance(node, list) else [node])
             pos = stmt_end + 1
 
         return nodes
@@ -320,8 +349,20 @@ class _VFScopeParser:
     ) -> AdapterNode | None:
         if not stmt:
             return None
+        self._predicate_prefix = []
         if stmt.startswith("vector_"):
             self._record_vector_decl_statement(stmt)
+            declaration = _VECTOR_DECL_STMT_RE.fullmatch(stmt.strip().rstrip(";").strip())
+            if declaration and declaration.group(1) == "bool":
+                result = []
+                for item in _split_args(declaration.group(2)):
+                    if "=" in item:
+                        name, initializer = item.split("=", 1)
+                        node = self._parse_statement(
+                            f"{name.strip()} = {initializer.strip()};", induction_variables, line
+                        )
+                        result.extend(node if isinstance(node, list) else [node])
+                return result
             return None
         if _LOCAL_SCALAR_DECL_RE.fullmatch(stmt):
             self._record_local_scalar_decl_statement(stmt)
@@ -340,10 +381,14 @@ class _VFScopeParser:
                     f"Register alias assignment requires declared vector values: {stmt}"
                 )
             return AdapterAlias(
-                destination=AdapterValue(dst, "Register", self.register_dtypes.get(dst)),
-                source=AdapterValue(src, "Register", self.register_dtypes.get(src)),
+                destination=self._typed_register(dst),
+                source=self._typed_register(src),
                 source_location=self._source_location(line),
             )
+        assignment = re.fullmatch(r"([A-Za-z_]\w*)\s*=\s*(pset_b(?:8|16|32))\s*\((.*)\)\s*;", stmt, re.DOTALL)
+        if assignment:
+            name, call, arguments = assignment.groups()
+            return self._parse_statement(f"{call}({name}, {arguments});", induction_variables, line)
         smem_bar = re.match(r"SMEM_BAR\s*\.\s*([A-Za-z_]\w*)\s*;", stmt, re.IGNORECASE)
         if smem_bar:
             return AdapterMembar(
@@ -360,60 +405,85 @@ class _VFScopeParser:
         callee = match.group(1)
         args = _split_args(match.group(2))
         low = callee.lower()
-        if low.startswith("pset_"):
-            return None
         if low in {"mem_bar", "membar"} or "barrier" in low:
             barrier = args[0] if args else None
             return AdapterMembar(
                 normalize_membar_type(barrier),
                 self._source_location(line),
             )
-        if not low.startswith("v"):
+        op = normalize_opcode(callee)
+        spec = DEFAULT_INSTRUCTION_CATALOG.lookup(op)
+        if spec is None and not low.startswith(("v", "pset_")):
             raise ValueError(
                 f"Unsupported CCE statement in __VEC_SCOPE__: {stmt}"
             )
 
-        op = normalize_opcode(callee)
-        spec = DEFAULT_INSTRUCTION_CATALOG.lookup(op)
         if spec is None:
             return self._bind_generic_compute_call(
                 callee, op, args, self._source_location(line)
             )
+        if spec.virtual and spec.form_rule == FormRule.CONVERSION and len(args) >= 2:
+            dst_dtype = self.register_dtypes.get(_base_identifier(args[0]))
+            src_dtype = self.register_dtypes.get(_base_identifier(args[1]))
+            if dst_dtype and src_dtype:
+                form = f"{compact_dtype(src_dtype)}_to_{compact_dtype(dst_dtype)}"
+                op = DEFAULT_INSTRUCTION_CATALOG.specialize(op, form)
+                spec = DEFAULT_INSTRUCTION_CATALOG.lookup(op)
+        catalog_mode = None
+        for mode, variant in spec.memory_modes.items():
+            mode_operand = next(o for o in variant.operands if o.name == "mode")
+            if len(args) > mode_operand.argument_index and args[mode_operand.argument_index].strip() == mode:
+                catalog_mode, spec = mode, variant
+                break
         src, dst = self._bind_catalog_call(
             callee, spec, args, induction_variables
         )
+        if len(dst) > 1:
+            if len({value.value_id for value in dst}) != len(dst):
+                raise ValueError("Multi-result destinations must be distinct")
+            register_values = [value for value in (*src, *dst) if value.storage == "Register"]
+            if len({value.dtype for value in register_values}) > 1:
+                raise ValueError("Multi-result register operands must have matching dtypes")
         form = _infer_inst_form(op, dst, src)
         if form is None:
             form = self._infer_memory_form(spec, args)
         resolved_op, resolved_form = DEFAULT_INSTRUCTION_CATALOG.resolve_and_validate_form(
             op, form
         )
+        for operand in spec.operands:
+            allowed = operand.allowed_values_by_form.get(resolved_form)
+            if allowed is not None and operand.argument_index < len(args) and args[operand.argument_index].strip() not in allowed:
+                raise ValueError(f"{callee} {resolved_form} argument {operand.name} is outside its allowed values")
         attributes: dict[str, str] = {}
+        if catalog_mode is not None:
+            if resolved_form not in spec.forms or any(value.dtype != dst[0].dtype for value in dst):
+                raise ValueError(f"Unsupported destination types for {op} {catalog_mode}")
+            if len({value.value_id for value in dst}) != len(dst):
+                raise ValueError("Multi-result load destinations must be distinct")
+            attributes["catalog_mode"] = catalog_mode
         if spec.align_state_argument_index is not None:
             state_name = _base_identifier(args[spec.align_state_argument_index])
             attributes = {
                 "align_state_operation": str(spec.align_state_operation),
                 "align_state_id": self.align_state_ids[state_name],
             }
-        return AdapterInstruction(
+        instruction = AdapterInstruction(
             name=resolved_op,
             form=resolved_form,
             src=src,
             dst=dst,
             instruction_class=spec.instruction_class.value,
-            memory_accesses=self._memory_accesses_for_call(spec, args),
+            memory_accesses=self._memory_accesses_for_call(spec, args, resolved_form),
             source_location=self._source_location(line),
             attributes=attributes,
-            supplemental_inputs=tuple(
-                AdapterValue(args[operand.argument_index].strip(), "Scalar")
-                for operand in spec.operands
-                if operand.direction == OperandDirection.INPUT
-                and operand.kind
-                in {ArgumentKind.SCALAR, ArgumentKind.REGISTER_OR_SCALAR}
-                and operand.argument_index < len(args)
-                and _is_numeric_scalar_literal(args[operand.argument_index])
-            ),
         )
+        for producer in self._predicate_prefix:
+            producer.source_location = instruction.source_location
+        return [*self._predicate_prefix, instruction] if self._predicate_prefix else instruction
+
+    def _typed_register(self, name: str) -> AdapterValue:
+        dtype = self.register_dtypes.get(name)
+        return AdapterValue(name, "PredicateRegister" if dtype == "bool" else "Register", dtype)
 
     def _bind_catalog_call(
         self,
@@ -486,7 +556,7 @@ class _VFScopeParser:
                 )
             return None
         if kind == ArgumentKind.REGISTER:
-            if name not in self.register_names:
+            if name not in self.register_names or self.register_dtypes.get(name) == "bool":
                 raise ValueError(
                     f"{callee} argument {index} must be a declared vector register: {arg}"
                 )
@@ -504,7 +574,7 @@ class _VFScopeParser:
             return AdapterValue(ub_reference[0], "UB")
         if kind in {ArgumentKind.SCALAR, ArgumentKind.REGISTER_OR_SCALAR}:
             if name in self.register_names:
-                if kind == ArgumentKind.SCALAR:
+                if kind == ArgumentKind.SCALAR or self.register_dtypes.get(name) == "bool":
                     raise ValueError(
                         f"{callee} argument {index} must be scalar: {arg}"
                     )
@@ -518,19 +588,35 @@ class _VFScopeParser:
                     f"{callee} argument {index} cannot use a UB object as scalar: {arg}"
                 )
             if name in self.scalar_names:
-                return AdapterValue(name, "Scalar")
+                return AdapterValue(
+                    name,
+                    "Scalar",
+                    _cce_scalar_dtype_to_form(
+                        self.local_scalar_dtypes.get(name, "")
+                    ),
+                )
             if _is_numeric_scalar_literal(arg):
-                return None
+                return AdapterValue(arg.strip(), "Scalar", _cast_numeric_scalar_dtype(arg))
             raise ValueError(
                 f"{callee} argument {index} must be a declared scalar or literal: {arg}"
             )
         if kind == ArgumentKind.PREDICATE:
-            text = arg.strip().lower()
-            if (
-                re.fullmatch(r"pset_[a-z0-9_]+\s*\(.*\)", text, re.DOTALL)
-                or self.register_dtypes.get(name) == "bool"
-            ):
-                return None
+            inline = re.fullmatch(r"(pset_b(?:8|16|32))\s*\((.*)\)", arg.strip(), re.DOTALL)
+            if inline and operand_spec.direction == OperandDirection.INPUT:
+                name = f"__predicate_inline_{self._predicate_serial}"
+                self._predicate_serial += 1
+                self.register_names.add(name)
+                self.register_dtypes[name] = "bool"
+                inline_spec = DEFAULT_INSTRUCTION_CATALOG.lookup(inline.group(1))
+                source, destination = self._bind_catalog_call(
+                    inline.group(1), inline_spec, [name, *_split_args(inline.group(2))], induction_variables
+                )
+                self._predicate_prefix.append(AdapterInstruction(
+                    inline_spec.opcode, source, destination, form=inline_spec.fixed_form,
+                    instruction_class="compute",
+                ))
+            if self.register_dtypes.get(name) == "bool":
+                return self._typed_register(name)
             raise ValueError(
                 f"{callee} argument {index} must be a predicate: {arg}"
             )
@@ -638,6 +724,9 @@ class _VFScopeParser:
     ) -> AdapterInstruction:
         if not args:
             raise ValueError(f"{callee} expects at least one destination operand")
+        if any(self.register_dtypes.get(_base_identifier(arg)) == "bool"
+               or "pset_" in arg for arg in args):
+            raise ValueError(f"Predicate semantics require a complete Catalog signature: {callee}")
         dst = [self._register_operand(args[0])]
         src = [
             operand
@@ -665,6 +754,7 @@ class _VFScopeParser:
         self,
         spec: InstructionSpec,
         args: Sequence[str],
+        form: str,
     ) -> tuple[AdapterMemoryAccess, ...]:
         memory_operand = next(
             (
@@ -695,8 +785,37 @@ class _VFScopeParser:
         if ub_reference is None:
             return ()
         base_name, alias_offset = ub_reference
+        pointer_expression = args[memory_operand.argument_index]
+        pointer_name = _strip_ub_reference_wrappers(pointer_expression).split("+", 1)[0].strip()
+        state_id = self.pointer_states[pointer_name]
+        update_operand = next((o for o in spec.operands if o.name == "update"), None)
+        post_update = (update_operand is not None and update_operand.argument_index < len(args)
+                       and args[update_operand.argument_index].strip() == "POST_UPDATE")
+        delta_bytes = spec.implicit_post_update_bytes.get(form)
+        implicit_update = delta_bytes is not None
+        post_update = post_update or implicit_update
+        if post_update:
+            if _strip_ub_reference_wrappers(pointer_expression) != pointer_name:
+                raise ValueError("POST_UPDATE requires a pointer variable, not pointer arithmetic")
+            if state_id in self.loop_pointer_states:
+                raise ValueError("POST_UPDATE on a loop-local reinitialized pointer is not yet supported")
+            delta_operand = next(
+                (o for o in spec.operands if o.post_update_delta is not None),
+                None,
+            )
+            if delta_operand is None and not implicit_update:
+                raise ValueError("POST_UPDATE has no declared delta rule")
+            if not implicit_update:
+                raw_delta = args[delta_operand.argument_index].strip()
+                if re.search(r"\bvag_b(?:16|32)\s*\(", raw_delta):
+                    raise ValueError("POST_UPDATE with VAG requires address-generator modeling")
+                delta_bytes = self._decode_post_update_delta_bytes(
+                    delta_operand, raw_delta, pointer_expression, pointer_name,
+                )
+            self.updated_pointer_states.add(state_id)
+            self.all_updated_pointer_states.add(state_id)
         offset: int | str = alias_offset
-        if offset_operand is not None and offset_operand.argument_index < len(args):
+        if not post_update and offset_operand is not None and offset_operand.argument_index < len(args):
             raw_offset = args[offset_operand.argument_index].strip()
             if not re.fullmatch(r"vag_b(?:16|32)\s*\(.*\)", raw_offset, re.DOTALL):
                 expanded_offset = self._expand_offset_expression(raw_offset)
@@ -706,7 +825,7 @@ class _VFScopeParser:
         mode = None
         if mode_operand is not None and mode_operand.argument_index < len(args):
             mode = args[mode_operand.argument_index].strip()
-        span = 1 if mode and (mode.startswith("BRC_") or mode.startswith("ONEPT_")) else None
+        span = spec.memory_span_by_form.get(form) or spec.memory_span or (1 if mode and (mode.startswith("BRC_") or mode.startswith("ONEPT_")) else None)
         return (
             AdapterMemoryAccess(
                 value_id=base_name,
@@ -718,8 +837,54 @@ class _VFScopeParser:
                 offset=offset,
                 span=span,
                 mode=mode,
+                address_state_id=state_id,
+                update_mode="post_update" if post_update else "none",
+                post_update_delta_bytes=delta_bytes,
             ),
         )
+
+    def _decode_post_update_delta_bytes(
+        self,
+        operand: OperandSpec,
+        raw_delta: str,
+        pointer_expression: str,
+        pointer_name: str,
+    ) -> int | str:
+        rule = operand.post_update_delta
+        if rule is None:
+            raise ValueError("POST_UPDATE has no declared delta rule")
+        if rule.encoding == PostUpdateDeltaEncoding.UNSIGNED_BIT_FIELD:
+            value = _eval_int_expr(
+                raw_delta,
+                self._resolved_integer_scalar_constants(),
+            )
+            if value is None or value < 0 or value >= 1 << 64:
+                raise ValueError(
+                    "POST_UPDATE packed configuration must resolve to an unsigned "
+                    "64-bit integer constant"
+                )
+            mask = (1 << rule.bit_width) - 1
+            return ((value >> rule.bit_offset) & mask) * rule.unit_bytes
+
+        dtype = self.ub_dtypes.get(pointer_name)
+        casts = re.findall(
+            r"\(\s*(?:(?:const|volatile)\s+)*__ubuf__\s+"
+            r"(?:(?:const|volatile)\s+)*(\w+)\s*[*&]+\s*\)",
+            pointer_expression,
+        )
+        if "__ubuf__" in pointer_expression and not casts:
+            raise ValueError(
+                f"Unsupported POST_UPDATE pointer cast: {pointer_expression}"
+            )
+        if casts:
+            dtype = _cce_scalar_dtype_to_form(casts[0])
+        width_dtype = dtype.removesuffix("_t") if dtype else None
+        width = {"fp32": 4, "fp16": 2, "bf16": 2, "int32": 4,
+                 "uint32": 4, "int16": 2, "uint16": 2,
+                 "int8": 1, "uint8": 1}.get(width_dtype)
+        if width is None:
+            raise ValueError(f"Unknown POST_UPDATE pointer element width: {dtype}")
+        return f"({self._expand_offset_expression(raw_delta)}) * {width}"
 
     @staticmethod
     def _combine_offset_expressions(lhs: str, rhs: str) -> str:
@@ -799,7 +964,13 @@ class _VFScopeParser:
         if ub_reference is not None:
             return AdapterValue(ub_reference[0], "UB")
         if name in self.scalar_names:
-            return AdapterValue(name, "Scalar")
+            return AdapterValue(
+                name,
+                "Scalar",
+                _cce_scalar_dtype_to_form(
+                    self.local_scalar_dtypes.get(name, "")
+                ),
+            )
         return None
 
     def _record_vector_decl_statement(self, stmt: str) -> None:
@@ -827,6 +998,11 @@ class _VFScopeParser:
         state_id = f"{self.scope.kernel_name}:align:{self._align_state_serial}:{name}"
         self._align_state_serial += 1
         return state_id
+
+    def _new_pointer_state(self, name: str) -> str:
+        state = f"{self.scope.kernel_name}:pointer:{self._pointer_serial}:{name}"
+        self._pointer_serial += 1
+        return state
 
     def _record_function_scope_scalar_declarations(self, source: str) -> None:
         for segment in source.split(";"):
@@ -878,6 +1054,10 @@ class _VFScopeParser:
         name = match.group("name")
         dtype = _cce_scalar_dtype_to_form(match.group("dtype"))
         initializer = match.group("initializer").strip()
+        source_name = _strip_ub_reference_wrappers(initializer).split("+", 1)[0].strip()
+        source_state = self.pointer_states.get(source_name)
+        if self.pointer_states.get(source_name) in self.updated_pointer_states:
+            raise ValueError(f"Cannot snapshot an updated pointer alias: {stmt}")
         ub_reference = self._parse_ub_reference(initializer)
         if ub_reference is None:
             raise ValueError(
@@ -886,6 +1066,11 @@ class _VFScopeParser:
         self.ub_names.add(name)
         self.ub_aliases[name] = ub_reference
         self.ub_dtypes[name] = dtype
+        self.pointer_states[name] = self._new_pointer_state(name)
+        if self._block_induction_variables:
+            self.loop_pointer_states.add(self.pointer_states[name])
+            if source_state is not None:
+                self.loop_pointer_sources[self.pointer_states[name]] = source_state
 
     def _loop_count_from_header(self, header: str) -> tuple[int, str, int, int]:
         parts = [part.strip() for part in header.split(";")]
@@ -904,9 +1089,10 @@ class _VFScopeParser:
         if cond_match.group(1) != var:
             raise ValueError(f"Unsupported for-loop variable mismatch: {header}")
 
-        start = _resolve_count_expr(init_match.group(2), self.loop_params)
-        bound = _resolve_count_expr(cond_match.group(3), self.loop_params)
-        step = _resolve_loop_step(step_expr, var, self.loop_params)
+        integer_constants = self._resolved_integer_scalar_constants()
+        start = _resolve_count_expr(init_match.group(2), integer_constants)
+        bound = _resolve_count_expr(cond_match.group(3), integer_constants)
+        step = _resolve_loop_step(step_expr, var, integer_constants)
         if step <= 0:
             raise ValueError(f"Only positive for-loop steps are supported: {header}")
 
@@ -955,25 +1141,37 @@ def _parse_param_dtypes(params: str) -> Dict[str, str]:
     dtypes: Dict[str, str] = {}
     for raw in _split_args(params):
         cleaned = raw.strip()
-        if "__ubuf__" not in cleaned:
-            continue
         match = re.search(
             r"__ubuf__\s+([A-Za-z_]\w*)\s*\*\s*([A-Za-z_]\w*)",
             cleaned,
         )
+        if match is None:
+            match = re.fullmatch(
+                r"(?:(?:const|volatile)\s+)*"
+                r"(u?int(?:8|16|32|64)_t|size_t|unsigned|signed|short|int|"
+                r"long|float|double|half)\s+([A-Za-z_]\w*)"
+                r"(?:\s*=\s*.+)?",
+                cleaned,
+            )
         if match:
             dtypes[match.group(2)] = _cce_scalar_dtype_to_form(match.group(1))
     return dtypes
 
 
 def _cce_scalar_dtype_to_form(dtype: str) -> str:
+    normalized = dtype.lower()
     aliases = {
         "float": "fp32",
         "half": "fp16",
         "bfloat16": "bf16",
         "bfloat16_t": "bf16",
     }
-    return aliases.get(dtype.lower(), str(normalize_dtype(dtype, default=dtype.lower())))
+    if re.fullmatch(r"u?int(?:8|16|32|64)_t", normalized):
+        normalized = normalized[:-2]
+    return aliases.get(
+        normalized,
+        str(normalize_dtype(normalized, default=normalized)),
+    )
 
 
 def _infer_call_argument_constants(source: str, scope: CCEVFScope) -> Dict[str, int]:
@@ -1097,11 +1295,21 @@ def _vector_dtype_to_form(dtype: str) -> str:
 
 def _is_numeric_scalar_literal(value: str) -> bool:
     text = value.strip()
+    text = re.sub(r"^\(\s*(?:u?int(?:8|16|32|64)_t|unsigned|signed|int)\s*\)\s*", "", text)
     text = re.sub(r"^[()]|[()]$", "", text).strip()
+    if re.fullmatch(r"[+-]?(?:0[xX][0-9a-fA-F]+|[0-9]+)(?:[uU](?:[lL]{1,2})?|[lL]{1,2}[uU]?)?", text):
+        return True
     return bool(re.fullmatch(
         r"[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?[fFlL]?",
         text,
     ))
+
+
+def _cast_numeric_scalar_dtype(value: str) -> str | None:
+    match = re.match(
+        r"^\(\s*(u?int(?:8|16|32|64))_t\s*\)", value.strip()
+    )
+    return normalize_dtype(match.group(1)) if match else None
 
 
 def _is_integer_scalar_dtype(dtype: str) -> bool:
@@ -1199,8 +1407,8 @@ def _infer_inst_form(
     src: Sequence[AdapterValue],
 ) -> str | None:
     op = normalize_opcode(op)
-    src_dtype = next((operand.dtype for operand in src if operand.dtype), None)
-    dst_dtype = next((operand.dtype for operand in dst if operand.dtype), None)
+    src_dtype = next((operand.dtype for operand in src if operand.dtype and operand.storage != "PredicateRegister"), None)
+    dst_dtype = next((operand.dtype for operand in dst if operand.dtype and operand.storage != "PredicateRegister"), None)
     spec = DEFAULT_INSTRUCTION_CATALOG.lookup(op)
     if spec and spec.form_rule == FormRule.FIXED:
         return spec.fixed_form

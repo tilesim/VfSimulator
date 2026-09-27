@@ -14,7 +14,7 @@ from vfsimulator.api.input_symbols import (
 )
 
 
-AdapterStorageKind: TypeAlias = Literal["Register", "UB", "Scalar"]
+AdapterStorageKind: TypeAlias = Literal["Register", "PredicateRegister", "UB", "Scalar"]
 
 
 @dataclass(frozen=True)
@@ -42,6 +42,9 @@ class AdapterMemoryAccess:
     offset: int | str = 0
     span: int | None = None
     mode: str | None = None
+    address_state_id: str | None = None
+    update_mode: str = "none"
+    post_update_delta_bytes: int | str | None = None
 
 
 @dataclass
@@ -92,6 +95,7 @@ class AdapterProgram:
     params: dict[str, int] = field(default_factory=dict)
     default_dtype: str = "fp32"
     uarch: dict[str, Any] = field(default_factory=dict)
+    live_in_values: tuple[str, ...] = ()
 
 
 def _storage_from_id(value_id: str) -> AdapterStorageKind:
@@ -221,6 +225,7 @@ def normalize_adapter_program(program: AdapterProgram) -> AdapterProgram:
         params=dict(program.params),
         default_dtype=str(normalize_dtype(program.default_dtype, default="fp32")),
         uarch=dict(program.uarch),
+        live_in_values=tuple(program.live_in_values),
     )
 
 

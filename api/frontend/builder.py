@@ -5,7 +5,7 @@ from typing import Iterable, Mapping
 
 from api.frontend.diagnostics import Diagnostic
 from api.frontend.schema import (
-    CANONICAL_VF_INFO_SCHEMA_VERSION,
+    emission_schema_version,
     CanonicalInstruction,
     CanonicalLoop,
     CanonicalMembar,
@@ -277,7 +277,7 @@ class VfInfoBuilder:
             params=dict(self._params),
             uarch=dict(self._uarch),
             source=dict(self._source),
-            schema_version=CANONICAL_VF_INFO_SCHEMA_VERSION,
+            schema_version=emission_schema_version(self._values, self._context),
         )
         validation = validate_canonical_vf_info(vf_info)
         if not validation.ok:

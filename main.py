@@ -164,7 +164,7 @@ def build_uarch(
     return uarch
 
 
-def scan_instruction_fallback_warnings(program, db: ParamDB, dtype: str) -> None:
+def scan_instruction_fallback_warnings(program, db: ParamDB, fallback_dtype: str) -> None:
     def visit(node):
         if isinstance(node, list):
             for item in node:
@@ -175,8 +175,8 @@ def scan_instruction_fallback_warnings(program, db: ParamDB, dtype: str) -> None
         ntype = node.get("type")
         if ntype == "inst":
             op = str(node.get("op", ""))
-            form = str(node.get("form", "") or dtype)
-            db.get_inst_form(op, form=form, dtype=dtype)
+            form = str(node.get("form", "") or fallback_dtype)
+            db.get_inst_form(op, form=form, dtype=fallback_dtype)
             return
         if ntype == "loop":
             visit(node.get("body", []))
@@ -186,18 +186,10 @@ def scan_instruction_fallback_warnings(program, db: ParamDB, dtype: str) -> None
 
 def write_warning_log(
     results_dir: str,
-    vreg_warnings: list[Dict[str, Any]],
     instruction_warnings: list[Dict[str, Any]],
 ) -> None:
-    if not vreg_warnings and not instruction_warnings:
+    if not instruction_warnings:
         return
-    print("[WARN] Low-confidence scenario detected:")
-    for warning in vreg_warnings:
-        print(
-            "[WARN]",
-            f"{warning['loop_path']}: expanded_vreg_namespace={warning['expanded_vreg_namespace']}",
-            f"> preg_num={warning['preg_num']}",
-        )
     if instruction_warnings:
         unsupported = sum(
             1
@@ -216,7 +208,6 @@ def write_warning_log(
     if dump_model_warnings(
         results_dir,
         instruction_warnings=instruction_warnings,
-        vreg_warnings=vreg_warnings,
     ):
         print(f"Wrote {os.path.join(results_dir, 'model_warnings.json')}")
 
@@ -235,7 +226,7 @@ def main():
     lowering.ensure_current_core_compatible(vf_info)
     trace = lowering.lower(vf_info)
 
-    dtype = trace.get("dtype", "fp32")
+    fallback_dtype = trace.get("fallback_dtype", "fp32")
     params = trace.get("params", {}) or {}
     values = trace.get("values", {}) or {}
     program = trace.get("program")
@@ -243,7 +234,7 @@ def main():
         raise RuntimeError("trace.json missing key 'program'")
     db = ParamDB(base_dir=base_dir)
     print("[INFO] input contract = CanonicalVfInfo v1")
-    scan_instruction_fallback_warnings(program, db, dtype)
+    scan_instruction_fallback_warnings(program, db, fallback_dtype)
 
     analyzer = ProgramAnalyzer(params, values=values)
     top_block_loop_bounds = analyzer.infer_top_block_loop_bounds(program)
@@ -265,7 +256,7 @@ def main():
         linear,
         params,
         pdb=db,
-        dtype=dtype,
+        dtype=fallback_dtype,
         structured_value_identity=True,
         structured_dynamic_instruction_limit=dynamic_instruction_limit,
     )
@@ -278,7 +269,7 @@ def main():
         loop_bounds=loop_bounds,
         total_top_blocks=total_top_blocks,
         top_block_loop_bounds=top_block_loop_bounds,
-        dtype=dtype,
+        dtype=fallback_dtype,
         empty_top_blocks=empty_top_blocks,
     )
 
@@ -286,7 +277,7 @@ def main():
     if not os.path.isabs(results_dir):
         results_dir = os.path.join(base_dir, results_dir)
 
-    ooo = create_ooo_core(uarch, db, dtype=dtype, values=values)
+    ooo = create_ooo_core(uarch, db, dtype=fallback_dtype, values=values)
     sim_result = run_simulation(
         ifu=ifu,
         idu=idu,
@@ -299,11 +290,7 @@ def main():
 
     print("Done. cycles_executed =", int(sim_result["cycles_executed"]))
 
-    vreg_capacity_warnings = analyzer.collect_vreg_capacity_warnings(
-        program,
-        int(ooo.preg_num),
-    )
-    write_warning_log(results_dir, vreg_capacity_warnings, db.get_warnings())
+    write_warning_log(results_dir, db.get_warnings())
 
     print(f"Wrote {os.path.join(results_dir, 'sim_history.json')}")
     print(f"Wrote Perfetto trace to {sim_result['trace_path']}")

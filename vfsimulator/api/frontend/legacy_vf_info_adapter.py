@@ -89,6 +89,9 @@ class LegacyVfInfoAdapter:
             raise TypeError(f"Unsupported legacy VFInfo node: {type(node).__name__}")
 
         return AdapterProgram(
+            # Legacy vector slots were externally initialized, unlike CCE locals.
+            live_in_values=tuple(name for name, value in vf_info.values.items()
+                                 if value.storage == "Register"),
             context=[convert_node(node) for node in vf_info.context],
             values={
                 value_id: AdapterValue(
@@ -123,6 +126,7 @@ class LegacyVfInfoAdapter:
                     operand
                     for operand in spec.operands
                     if operand.direction == OperandDirection.INPUT
+                    and operand.kind != ArgumentKind.PREDICATE
                 ]
                 actual_count = len(node.src) + len(node.supplemental_inputs)
                 missing = expected_inputs[actual_count:]

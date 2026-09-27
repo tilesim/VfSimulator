@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import json
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from enum import Enum
 from pathlib import Path
 from types import MappingProxyType
@@ -32,6 +32,19 @@ class ArgumentKind(str, Enum):
     ALIGN_STATE = "align_state"
 
 
+class PostUpdateDeltaEncoding(str, Enum):
+    ELEMENT_COUNT = "element_count"
+    UNSIGNED_BIT_FIELD = "unsigned_bit_field"
+
+
+@dataclass(frozen=True)
+class PostUpdateDeltaSpec:
+    encoding: PostUpdateDeltaEncoding
+    bit_offset: int = 0
+    bit_width: int = 0
+    unit_bytes: int = 0
+
+
 @dataclass(frozen=True)
 class OperandSpec:
     name: str
@@ -42,11 +55,14 @@ class OperandSpec:
     optional: bool = False
     allowed_values: tuple[str, ...] = ()
     allow_integer_expression: bool = False
+    post_update_delta: PostUpdateDeltaSpec | None = None
+    allowed_values_by_form: Mapping[str, tuple[str, ...]] = field(default_factory=lambda: MappingProxyType({}))
 
     @property
     def storage(self) -> StorageKind | None:
         return {
             ArgumentKind.REGISTER: StorageKind.REGISTER,
+            ArgumentKind.PREDICATE: StorageKind.PREDICATE_REGISTER,
             ArgumentKind.UB: StorageKind.UB,
             ArgumentKind.SCALAR: StorageKind.SCALAR,
         }.get(self.kind)
@@ -78,6 +94,12 @@ class InstructionSpec:
     call_variants: tuple[CallVariant, ...] = ()
     align_state_operation: str | None = None
     align_state_argument_index: int | None = None
+    memory_modes: Mapping[str, InstructionSpec] = field(default_factory=lambda: MappingProxyType({}))
+    memory_span: int | None = None
+    ub_transfer_bytes: int = 0
+    forwarding_opcode: str | None = None
+    implicit_post_update_bytes: Mapping[str, int] = field(default_factory=lambda: MappingProxyType({}))
+    memory_span_by_form: Mapping[str, int] = field(default_factory=lambda: MappingProxyType({}))
 
 
 @dataclass(frozen=True)
@@ -113,6 +135,17 @@ class InstructionCatalog:
         aliases: dict[str, str] = {}
         for spec in specs:
             self._validate_spec(spec)
+            for mode, variant in spec.memory_modes.items():
+                self._validate_spec(variant)
+                mode_operands = [o for o in variant.operands if o.name == "mode"]
+                if (variant.opcode != spec.opcode or type(variant.memory_span) is not int
+                    or variant.memory_span <= 0
+                    or variant.instruction_class != InstructionClass.LOAD
+                    or not variant.forms.issubset(spec.forms)
+                    or len(mode_operands) != 1
+                    or mode_operands[0].kind != ArgumentKind.CONFIG
+                    or mode_operands[0].allowed_values != (mode,)):
+                    raise ValueError(f"Invalid memory mode {spec.opcode}.{mode}")
             opcode = spec.opcode
             if opcode in by_opcode:
                 raise ValueError(f"Duplicate canonical opcode: {opcode}")
@@ -125,6 +158,12 @@ class InstructionCatalog:
                 aliases[key] = opcode
 
         for spec in by_opcode.values():
+            if spec.forwarding_opcode is not None:
+                if not isinstance(spec.forwarding_opcode, str):
+                    raise ValueError(f"Invalid forwarding_opcode for {spec.opcode}")
+                target = by_opcode.get(spec.forwarding_opcode)
+                if target is None or target.forwarding_opcode is not None or target.instruction_class != spec.instruction_class:
+                    raise ValueError(f"Invalid forwarding_opcode for {spec.opcode}")
             for form, target in spec.specializations.items():
                 if not form or target not in by_opcode:
                     raise ValueError(
@@ -136,6 +175,17 @@ class InstructionCatalog:
 
     @staticmethod
     def _validate_spec(spec: InstructionSpec) -> None:
+        for name in ("implicit_post_update_bytes", "memory_span_by_form"):
+            values = getattr(spec, name)
+            if not isinstance(values, Mapping) or any(
+                form not in spec.forms or type(n) is not int or not 0 < n <= 2**63 - 1
+                for form, n in values.items()
+            ):
+                raise ValueError(f"Invalid {name} for {spec.opcode}")
+        if type(spec.ub_transfer_bytes) is not int or not 0 <= spec.ub_transfer_bytes <= 2**63 - 1:
+            raise ValueError(f"Invalid ub_transfer_bytes for {spec.opcode}")
+        if spec.instruction_class in (InstructionClass.LOAD, InstructionClass.STORE) and spec.ub_transfer_bytes == 0:
+            raise ValueError(f"Missing ub_transfer_bytes for {spec.opcode}")
         if not spec.opcode or spec.opcode != spec.opcode.upper():
             raise ValueError(f"Canonical opcode must be non-empty uppercase: {spec.opcode}")
         if not isinstance(spec.instruction_class, InstructionClass):
@@ -150,8 +200,10 @@ class InstructionCatalog:
         elif spec.fixed_form is not None:
             raise ValueError(f"Non-fixed instruction {spec.opcode} cannot set fixed_form")
 
-        if spec.align_state_operation not in (None, "append", "consume"):
+        if spec.align_state_operation not in (None, "append", "consume", "load_init", "load_use"):
             raise ValueError(f"Invalid align state operation in {spec.opcode}")
+        if spec.align_state_operation in ("load_init", "load_use") and spec.instruction_class != InstructionClass.LOAD:
+            raise ValueError(f"Load align operation requires LOAD class: {spec.opcode}")
         if (spec.align_state_operation is None) != (
             spec.align_state_argument_index is None
         ):
@@ -159,6 +211,12 @@ class InstructionCatalog:
 
         indexes: set[int] = set()
         for operand in spec.operands:
+            if not isinstance(operand.allowed_values_by_form, Mapping) or any(
+                form not in spec.forms or not isinstance(values, tuple) or not values
+                or any(not isinstance(v, str) or v not in operand.allowed_values for v in values)
+                for form, values in operand.allowed_values_by_form.items()
+            ):
+                raise ValueError(f"Invalid form-specific allowed values in {spec.opcode}")
             if (
                 isinstance(operand.argument_index, bool)
                 or not isinstance(operand.argument_index, int)
@@ -185,6 +243,33 @@ class InstructionCatalog:
                 raise ValueError(
                     f"Only config operands may allow integer expressions in {spec.opcode}"
                 )
+            delta = operand.post_update_delta
+            if delta is not None:
+                if operand.kind != ArgumentKind.CONFIG or not operand.allow_integer_expression:
+                    raise ValueError(
+                        f"POST_UPDATE delta operand must be an integer config in {spec.opcode}"
+                    )
+                if delta.encoding == PostUpdateDeltaEncoding.ELEMENT_COUNT:
+                    if delta.bit_offset or delta.bit_width or delta.unit_bytes:
+                        raise ValueError(
+                            f"Element-count POST_UPDATE delta has invalid fields in {spec.opcode}"
+                        )
+                elif delta.encoding == PostUpdateDeltaEncoding.UNSIGNED_BIT_FIELD:
+                    if (
+                        isinstance(delta.bit_offset, bool)
+                        or not isinstance(delta.bit_offset, int)
+                        or delta.bit_offset < 0
+                        or isinstance(delta.bit_width, bool)
+                        or not isinstance(delta.bit_width, int)
+                        or delta.bit_width <= 0
+                        or delta.bit_offset + delta.bit_width > 64
+                        or isinstance(delta.unit_bytes, bool)
+                        or not isinstance(delta.unit_bytes, int)
+                        or delta.unit_bytes <= 0
+                    ):
+                        raise ValueError(
+                            f"Invalid bit-field POST_UPDATE delta in {spec.opcode}"
+                        )
             if operand.direction == OperandDirection.OUTPUT and operand.role not in {
                 OperandRole.DESTINATION,
                 OperandRole.MEMORY,
@@ -194,6 +279,7 @@ class InstructionCatalog:
                 OperandRole.SOURCE,
                 OperandRole.SCALAR,
                 OperandRole.MEMORY,
+                OperandRole.PREDICATE,
             }:
                 raise ValueError(f"Input role mismatch in {spec.opcode}")
             if operand.direction == OperandDirection.IGNORE and operand.role not in {
@@ -203,6 +289,8 @@ class InstructionCatalog:
                 raise ValueError(f"Ignored operand role mismatch in {spec.opcode}")
         if indexes and indexes != set(range(max(indexes) + 1)):
             raise ValueError(f"Argument indexes must be contiguous in {spec.opcode}")
+        if sum(operand.post_update_delta is not None for operand in spec.operands) > 1:
+            raise ValueError(f"Multiple POST_UPDATE delta operands in {spec.opcode}")
         if spec.align_state_argument_index is not None:
             state_operands = [
                 operand for operand in spec.operands
@@ -266,17 +354,17 @@ class InstructionCatalog:
         ]
         register_outputs = [
             operand for operand in tracked
-            if operand.kind == ArgumentKind.REGISTER
+            if operand.kind in (ArgumentKind.REGISTER, ArgumentKind.PREDICATE)
             and operand.direction == OperandDirection.OUTPUT
         ]
         if spec.instruction_class == InstructionClass.LOAD:
-            if len(memory_inputs) != 1 or memory_outputs or len(register_outputs) != 1:
+            if len(memory_inputs) != 1 or memory_outputs or (not register_outputs and spec.align_state_operation != "load_init"):
                 raise ValueError(f"Invalid load signature for {spec.opcode}")
         elif spec.instruction_class == InstructionClass.STORE:
             if memory_inputs or len(memory_outputs) != 1 or register_outputs:
                 raise ValueError(f"Invalid store signature for {spec.opcode}")
         elif spec.instruction_class == InstructionClass.COMPUTE:
-            if memory_inputs or memory_outputs or len(register_outputs) != 1:
+            if memory_inputs or memory_outputs or not register_outputs:
                 raise ValueError(f"Invalid compute signature for {spec.opcode}")
 
     @property
@@ -397,6 +485,13 @@ def instruction_catalog_from_dict(payload: Mapping[str, Any]) -> InstructionCata
             optional = raw.get("optional", False)
             allowed_values = raw.get("allowed_values", [])
             allow_integer_expression = raw.get("allow_integer_expression", False)
+            raw_post_update_delta = raw.get("post_update_delta")
+            form_values = raw.get("allowed_values_by_form", {})
+            if not isinstance(form_values, Mapping) or any(
+                not isinstance(k, str) or not isinstance(v, list)
+                for k, v in form_values.items()
+            ):
+                raise ValueError(f"{name}.allowed_values_by_form must map forms to arrays")
             if not isinstance(operand_name, str) or not operand_name:
                 raise ValueError(f"{name}.name must be a non-empty string")
             if not isinstance(optional, bool):
@@ -409,6 +504,20 @@ def instruction_catalog_from_dict(payload: Mapping[str, Any]) -> InstructionCata
                 raise ValueError(
                     f"{name}.allow_integer_expression must be boolean"
                 )
+            post_update_delta = None
+            if raw_post_update_delta is not None:
+                if not isinstance(raw_post_update_delta, Mapping):
+                    raise ValueError(f"{name}.post_update_delta must be an object")
+                post_update_delta = PostUpdateDeltaSpec(
+                    encoding=_enum(
+                        PostUpdateDeltaEncoding,
+                        raw_post_update_delta.get("encoding"),
+                        f"{name}.post_update_delta.encoding",
+                    ),
+                    bit_offset=raw_post_update_delta.get("bit_offset", 0),
+                    bit_width=raw_post_update_delta.get("bit_width", 0),
+                    unit_bytes=raw_post_update_delta.get("unit_bytes", 0),
+                )
             operands.append(OperandSpec(
                 name=operand_name,
                 argument_index=raw.get("argument_index"),
@@ -420,6 +529,8 @@ def instruction_catalog_from_dict(payload: Mapping[str, Any]) -> InstructionCata
                 optional=optional,
                 allowed_values=tuple(allowed_values),
                 allow_integer_expression=allow_integer_expression,
+                post_update_delta=post_update_delta,
+                allowed_values_by_form=MappingProxyType({k: tuple(v) for k, v in form_values.items()}),
             ))
         signatures[name] = tuple(operands)
 
@@ -503,7 +614,13 @@ def instruction_catalog_from_dict(payload: Mapping[str, Any]) -> InstructionCata
             or not isinstance(align_state_argument_index, int)
         ):
             raise ValueError(f"{opcode}.align_state_argument_index must be an integer")
-        specs.append(InstructionSpec(
+        memory_form_maps = {}
+        for name in ("implicit_post_update_bytes", "memory_span_by_form"):
+            mapping = raw.get(name, {})
+            if not isinstance(mapping, Mapping):
+                raise ValueError(f"{opcode}.{name} must be an object")
+            memory_form_maps[name] = MappingProxyType(dict(mapping))
+        spec = InstructionSpec(
             opcode=opcode,
             instruction_class=_enum(
                 InstructionClass, raw.get("class"), f"{opcode}.class"
@@ -527,7 +644,30 @@ def instruction_catalog_from_dict(payload: Mapping[str, Any]) -> InstructionCata
             call_variants=tuple(call_variants),
             align_state_operation=align_state_operation,
             align_state_argument_index=align_state_argument_index,
-        ))
+            ub_transfer_bytes=raw.get("ub_transfer_bytes", 0),
+            forwarding_opcode=raw.get("forwarding_opcode"),
+            implicit_post_update_bytes=memory_form_maps["implicit_post_update_bytes"],
+            memory_span_by_form=memory_form_maps["memory_span_by_form"],
+        )
+        modes = raw.get("memory_modes", {})
+        if not isinstance(modes, Mapping):
+            raise ValueError(f"{opcode}.memory_modes must be an object")
+        variants = {}
+        for mode, declaration in modes.items():
+            if not isinstance(mode, str) or not isinstance(declaration, Mapping):
+                raise ValueError(f"Invalid memory mode for {opcode}")
+            mode_signature = declaration.get("signature")
+            mode_forms = declaration.get("forms")
+            span = declaration.get("span")
+            if (not isinstance(mode_signature, str) or mode_signature not in signatures or not isinstance(mode_forms, list)
+                or not mode_forms or not all(isinstance(f, str) for f in mode_forms)
+                or type(span) is not int or span <= 0):
+                raise ValueError(f"Invalid memory mode declaration: {opcode}.{mode}")
+            variants[mode] = replace(spec, signature=mode_signature,
+                operands=signatures[mode_signature], forms=frozenset(mode_forms),
+                call_variants=(), memory_span=span,
+                ub_transfer_bytes=declaration.get("ub_transfer_bytes", spec.ub_transfer_bytes))
+        specs.append(replace(spec, memory_modes=MappingProxyType(variants)))
     return InstructionCatalog(specs)
 
 
@@ -551,6 +691,8 @@ __all__ = [
     "InstructionSpec",
     "OperandDirection",
     "OperandSpec",
+    "PostUpdateDeltaEncoding",
+    "PostUpdateDeltaSpec",
     "instruction_catalog_from_dict",
     "load_instruction_catalog",
 ]

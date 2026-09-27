@@ -38,6 +38,8 @@ class CanonicalCoreLoweringTest(unittest.TestCase):
 
         payload = CoreLoweringPass().lower(vf_info)
 
+        self.assertEqual(payload["fallback_dtype"], "fp32")
+        self.assertNotIn("dtype", payload)
         loop = payload["program"][0]
         load = loop["body"][0]
         self.assertEqual(loop["name"], "loop.row")

@@ -1,9 +1,10 @@
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import asdict, dataclass, field
 from typing import Any, Dict, List, TypeAlias
 
 from vfsimulator.api.frontend.schema import StorageKind
+from vfsimulator.api.frontend.adapter_ir import AdapterMemoryAccess as VfSimMemoryAccess
 from vfsimulator.api.input_symbols import normalize_dtype, MembarType
 
 
@@ -34,6 +35,8 @@ class VfSimValue:
         if not isinstance(self.value_id, str) or not self.value_id:
             raise ValueError("VfSimValue requires a non-empty name")
         object.__setattr__(self, "storage", StorageKind(self.storage))
+        if self.storage is StorageKind.PREDICATE_REGISTER and str(normalize_dtype(self.dtype)) != 'bool':
+            raise ValueError("PredicateRegister requires bool dtype")
         if not self.dtype:
             raise ValueError("VfSimValue requires an explicit dtype")
         object.__setattr__(self, "dtype", str(normalize_dtype(self.dtype)))
@@ -62,10 +65,14 @@ class VfSimInst:
     dst: List[str] = field(default_factory=list)
     form: str | None = None
     config: Dict[str, Any] | None = None
+    memory_accesses: tuple[VfSimMemoryAccess, ...] = ()
 
     def __post_init__(self) -> None:
         if not isinstance(self.op, str) or not self.op:
             raise ValueError("VfSimInst.op must be a non-empty string")
+        self.memory_accesses = tuple(self.memory_accesses)
+        if any(not isinstance(access, VfSimMemoryAccess) for access in self.memory_accesses):
+            raise TypeError("memory_accesses must contain VfSimMemoryAccess objects")
         _validate_str_list(self.src, "VfSimInst.src")
         _validate_str_list(self.dst, "VfSimInst.dst")
         if self.form is not None and (not isinstance(self.form, str) or not self.form):
@@ -80,6 +87,8 @@ class VfSimInst:
             "src": list(self.src),
             "dst": list(self.dst),
         }
+        if self.memory_accesses:
+            node["memory_accesses"] = [asdict(access) for access in self.memory_accesses]
         if self.form:
             node["form"] = self.form
         if self.config:

@@ -7,6 +7,7 @@ from typing import Any, Deque, Dict, List, Optional, Set, Tuple
 from collections import deque
 
 from core import isu
+from api.frontend.instruction_catalog import DEFAULT_INSTRUCTION_CATALOG
 from core.isa_traits import is_load_op, is_store_op, uses_lsq, uses_shared_shq_credit
 from core.ooo import OoOCore, Uop
 
@@ -28,30 +29,23 @@ class PregLifecycleController:
     def can_free_preg(self, preg: str) -> bool:
         if self.core.theoretical_limit_mode:
             return False
-        if not preg or preg in self.core.freelist:
-            return False
-        if self.is_current_mapping(preg):
-            return False
-        if self.core.preg_consumer_count.get(preg, 0) > 0:
-            return False
-        if preg in self.core.preg_pending:
-            return False
-        eligible = self.core.preg_release_eligible_cycle.get(preg)
-        if eligible is not None and self.core.cycle < eligible:
-            return False
-        return True
+        return self.core.physical_banks[preg].can_free(preg, self.core.cycle)
 
     def try_free_preg(self, preg: str) -> bool:
-        if not self.can_free_preg(preg):
+        if self.core.theoretical_limit_mode:
             return False
-        self.core.preg_producer.pop(preg, None)
-        self.core.preg_producer_uop.pop(preg, None)
-        self.core.preg_producer_profile.pop(preg, None)
-        self.core.preg_pending.discard(preg)
-        self.core.preg_consumer_count.pop(preg, None)
-        self.core.preg_release_eligible_cycle.pop(preg, None)
-        self.core.preg_bypass_producer_done.discard(preg)
-        self.core.freelist.append(preg)
+        bank = self.core.physical_banks[preg]
+        if not bank.try_free(preg, self.core.cycle):
+            return False
+        if bank is self.core.predicate_bank:
+            delay = self.core.idu_visible_preg_delay if self.core.enable_credit_visibility_delay else 0
+            if delay <= 0:
+                self.core.visible_predicate_free += 1
+                self.core.idu_mailbox_predicate_release_delta += 1
+            else:
+                time = self.core.cycle + delay
+                self.core.visible_predicate_free_events[time] = self.core.visible_predicate_free_events.get(time, 0) + 1
+            return True
         if self.core.enable_credit_visibility_delay:
             delay = int(self.core.idu_visible_preg_delay)
             if delay <= 0:
@@ -83,12 +77,7 @@ class PregLifecycleController:
             return
         if u.start_cycle is None:
             return
-        op_offset = int(
-            self.core.consumer_release_start_offset_by_op.get(
-                str(u.op), self.core.consumer_release_start_offset
-            )
-        )
-        release_cycle = int(u.start_cycle) + op_offset
+        release_cycle = int(u.start_cycle) + self.core.consumer_release_start_offset
         src_gens: List[Optional[int]] = list(
             getattr(u, "preg_src_gen", [None] * len(u.preg_src))
         )
@@ -233,8 +222,13 @@ class SHQResourceController:
         return OoOCore.get_free_preg(self.core)
 
     def update_idu_visibility(self, cycle: int) -> Dict[str, int]:
+        predicate_delta = self.core.idu_mailbox_predicate_release_delta
+        self.core.idu_mailbox_predicate_release_delta = 0
+        released = self.core.visible_predicate_free_events.pop(cycle, 0)
+        self.core.visible_predicate_free += released
+        predicate_delta += released
         if not self.core.enable_credit_visibility_delay:
-            return {"preg_free": 0, "shq_release": 0}
+            return {"preg_free": 0, "predicate_free": predicate_delta, "shq_release": 0}
         preg_delta = int(self.core.idu_mailbox_preg_release_delta)
         shq_delta = int(self.core.idu_mailbox_shq_release_delta)
         self.core.idu_mailbox_preg_release_delta = 0
@@ -252,7 +246,7 @@ class SHQResourceController:
             )
             shq_delta += shq_release
 
-        return {"preg_free": preg_delta, "shq_release": shq_delta}
+        return {"preg_free": preg_delta, "predicate_free": predicate_delta, "shq_release": shq_delta}
 
 
 class RenameController:
@@ -261,7 +255,7 @@ class RenameController:
 
     def accept(self, inst: Dict[str, Any]) -> None:
         op = str(inst.get("op"))
-        form = str(inst.get("form", "") or self.core.dtype)
+        form = str(inst.get("form", "") or self.core.fallback_dtype)
         profile = self.core._profile(op, form)
         inst_id = int(inst.get("inst_id", inst.get("id", -1)))
         iter_stack = list(inst.get("iter_stack", []))
@@ -325,6 +319,11 @@ class RenameController:
             dsts = []
 
         preg_src: List[str | None] = []
+        if not self.core.theoretical_limit_mode:
+            for bank in (self.core.vector_bank, self.core.predicate_bank):
+                required = sum(self.core.is_vreg(d) and self.core.bank_for_value(d) is bank for d in dsts)
+                if required > len(bank.freelist):
+                    raise RuntimeError(f"Atomic rename precheck failed: {bank.name} credit")
         preg_src_gen: List[Optional[int]] = []
         released_rat_pregs: List[str] = []
         for index, s in enumerate(srcs):
@@ -339,6 +338,8 @@ class RenameController:
                 preg = self.core.RAT.get(source_key)
                 if preg is None and instance is not None:
                     preg = self.core.RAT.get(s)
+                if preg is None and self.core.value_storage.is_predicate(s):
+                    raise RuntimeError(f"Predicate source has no renamed producer: {s}")
                 if (
                     index < len(src_value_instance_release)
                     and src_value_instance_release[index]
@@ -368,7 +369,11 @@ class RenameController:
                 new_p = f"p{self.core.next_dynamic_preg_id}"
                 self.core.next_dynamic_preg_id += 1
             else:
-                new_p = self.core.freelist.popleft()
+                new_p = self.core.bank_for_value(d).allocate()
+            bank = self.core.bank_for_value(d)
+            self.core.physical_banks[new_p] = bank
+            if bank is self.core.predicate_bank:
+                self.core.visible_predicate_free -= 1
             instance = (
                 dst_value_instances[index]
                 if index < len(dst_value_instances)
@@ -385,7 +390,7 @@ class RenameController:
                 self.core.RAT[destination_key] = new_p
             preg_dst.append(new_p)
             preg_old.append(old_p)
-            preg_alloc_count += 1
+            preg_alloc_count += int(bank is self.core.vector_bank)
             self.core.preg_generation[new_p] = (
                 int(self.core.preg_generation.get(new_p, 0)) + 1
             )
@@ -416,6 +421,14 @@ class RenameController:
             dst_value_instances=dst_value_instances,
         )
         self.core.bind_align_state(u, inst.get("attributes"))
+        if u.profile.op_class in ("LOAD", "STORE"):
+            spec = DEFAULT_INSTRUCTION_CATALOG.lookup(u.op)
+            mode = (inst.get("attributes") or {}).get("catalog_mode")
+            if mode is not None:
+                spec = spec.memory_modes.get(mode) if spec else None
+            if spec is None or spec.ub_transfer_bytes <= 0:
+                raise ValueError(f"Missing Catalog UB transfer semantics: {u.op} {mode}")
+            u.ub_transfer_bytes = spec.ub_transfer_bytes
         setattr(u, "preg_src_gen", preg_src_gen)
 
         for pd in preg_dst:
@@ -487,20 +500,16 @@ class OoOCoreMainline(OoOCore):
         self.preg_lifecycle = PregLifecycleController(self)
         self.shq_resources = SHQResourceController(self)
         self.rename_unit = RenameController(self)
-        self.preg_consumer_count: Dict[str, int] = {}
+        self.preg_consumer_count = self.vector_bank.consumer_count
         # Mainline source release rule:
         #   eligible = consumer.start_cycle + consumer_release_start_offset
         self.consumer_release_start_offset: int = int(
             uarch.get("consumer_release_start_offset", 0)
         )
-        raw_offset_by_op = uarch.get("consumer_release_start_offset_by_op", {}) or {}
-        self.consumer_release_start_offset_by_op: Dict[str, int] = {
-            str(k): int(v) for k, v in dict(raw_offset_by_op).items()
-        }
-        self.preg_release_eligible_cycle: Dict[str, int] = {}
+        self.preg_release_eligible_cycle = self.vector_bank.release_eligible_cycle
         # Physical-register versioning to avoid stale delayed-release events
         # touching a reused preg instance.
-        self.preg_generation: Dict[str, int] = {}
+        self.preg_generation = self.vector_bank.generation
         self.require_producer_done_for_preg_free: bool = bool(
             uarch.get("require_producer_done_for_preg_free", True)
         )
@@ -517,7 +526,15 @@ class OoOCoreMainline(OoOCore):
             uarch.get("overwrite_predst_release_delay", 0)
         )
         self.src_release_events: Dict[int, List[SrcReleaseEvent]] = {}
-        self.preg_bypass_producer_done: Set[str] = set()
+        self.preg_bypass_producer_done = self.vector_bank.bypass_producer_done
+        # Physical IDs are bank-qualified; dataflow uses one dependency map while
+        # allocation, membership and credits remain independent for each bank.
+        for field in ("rat", "producer", "producer_uop", "producer_profile", "pending",
+                      "consumer_count", "generation", "release_eligible_cycle", "bypass_producer_done"):
+            setattr(self.predicate_bank, field, getattr(self.vector_bank, field))
+        self.visible_predicate_free = self.predicate_bank.capacity
+        self.idu_mailbox_predicate_release_delta = 0
+        self.visible_predicate_free_events: Dict[int, int] = {}
         self.overwrite_release_events: Dict[int, List[str]] = {}
         self.src_release_scheduled_inst_ids: Set[int] = set()
         # Start-release accounting for assertion checks in pure start-based mode.
@@ -711,6 +728,9 @@ class OoOCoreMainline(OoOCore):
         membar_blocked_logged_ids: Optional[Set[int]] = None,
     ) -> Tuple[int, int, int]:
         """Issue pressure-ranked ready LSU operations within shared UB limits."""
+        if self.ub_budget_cycle != cycle:
+            self.ub_budget_cycle = cycle
+            self.ub_bytes_issued = 0
         if cycle < self.vf_startup_cost or issued_total >= self.ub_slots:
             return issued_loads, issued_stores, issued_total
 
@@ -730,6 +750,13 @@ class OoOCoreMainline(OoOCore):
                 break
 
             op_class = u.profile.op_class
+            transfer_bytes = u.ub_transfer_bytes
+            if transfer_bytes <= 0:
+                raise ValueError("Missing Uop UB transfer bytes")
+            if transfer_bytes > self.ub_bandwidth_bytes_per_cycle:
+                raise ValueError("UB bandwidth budget cannot fit one LSU transaction")
+            if self.ub_bytes_issued + transfer_bytes > self.ub_bandwidth_bytes_per_cycle:
+                continue
             if op_class == "LOAD" and issued_loads >= self.load_ports:
                 continue
             if op_class == "STORE" and issued_stores >= self.store_ports:
@@ -775,6 +802,7 @@ class OoOCoreMainline(OoOCore):
                     setattr(u, "shq_tracked", False)
 
             issued_total += 1
+            self.ub_bytes_issued += transfer_bytes
             self._log("start", u)
             self._log_start_simple(u)
             issued.append(u)

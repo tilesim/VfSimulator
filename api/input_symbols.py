@@ -17,11 +17,15 @@ class DType(_StrEnum):
     BF16 = "bf16"
     INT32 = "int32"
     UINT32 = "uint32"
+    UINT16 = "uint16"
+    INT8 = "int8"
+    UINT8 = "uint8"
     BOOL = "bool"
 
 
 class StorageKind(_StrEnum):
     REGISTER = "Register"
+    PREDICATE_REGISTER = "PredicateRegister"
     UB = "UB"
     SCALAR = "Scalar"
 
@@ -52,26 +56,38 @@ DTYPE_ALIASES = {
     "int32": DType.INT32,
     "u32": DType.UINT32,
     "uint32": DType.UINT32,
+    "u16": DType.UINT16,
+    "uint16": DType.UINT16,
+    "s8": DType.INT8,
+    "int8": DType.INT8,
+    "u8": DType.UINT8,
+    "uint8": DType.UINT8,
     "bool": DType.BOOL,
     "boolean": DType.BOOL,
     "predicate": DType.BOOL,
 }
 
 FORM_DTYPE_ALIASES = {
+    "u16": DType.UINT16,
     "f32": DType.FP32,
     "f16": DType.FP16,
     "bf16": DType.BF16,
     "s32": DType.INT32,
     "i32": DType.INT32,
     "u32": DType.UINT32,
+    "s8": DType.INT8,
+    "u8": DType.UINT8,
 }
 
 DTYPE_TO_COMPACT = {
+    DType.UINT16.value: "u16",
     DType.FP32.value: "f32",
     DType.FP16.value: "f16",
     DType.BF16.value: "bf16",
     DType.INT32.value: "s32",
     DType.UINT32.value: "u32",
+    DType.INT8.value: "s8",
+    DType.UINT8.value: "u8",
     DType.BOOL.value: "bool",
 }
 
@@ -81,6 +97,7 @@ VCVT_SPECIALIZATIONS = dict(
 )
 
 STORAGE_ALIASES = {
+    "predicateregister": StorageKind.PREDICATE_REGISTER,
     "register": StorageKind.REGISTER,
     "reg": StorageKind.REGISTER,
     "vreg": StorageKind.REGISTER,

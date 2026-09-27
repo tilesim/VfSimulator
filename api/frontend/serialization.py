@@ -63,6 +63,14 @@ def _operand_to_dict(value: CanonicalOperand) -> dict[str, Any]:
             "access_kind": value.memory_access.access_kind.value,
             "span": value.memory_access.span,
             "alias_group": value.memory_access.alias_group,
+            "address_state_id": value.memory_access.address_state_id,
+            "update_mode": value.memory_access.update_mode,
+            "post_update_delta_bytes": (
+                {"constant": value.memory_access.post_update_delta_bytes.constant,
+                 "terms": [{"variable_id": t.variable_id, "coefficient": t.coefficient}
+                           for t in value.memory_access.post_update_delta_bytes.terms]}
+                if value.memory_access.post_update_delta_bytes is not None else None
+            ),
         }
     return {
         "value_id": value.value_id,
@@ -194,6 +202,15 @@ def _operand(value: Mapping[str, Any]) -> CanonicalOperand:
             access_kind=AccessKind(memory_value["access_kind"]),
             span=memory_value.get("span"),
             alias_group=memory_value.get("alias_group"),
+            address_state_id=memory_value.get("address_state_id"),
+            update_mode=memory_value.get("update_mode", "none"),
+            post_update_delta_bytes=(
+                AffineExpression(
+                    constant=memory_value["post_update_delta_bytes"]["constant"],
+                    terms=tuple(AffineTerm(**term) for term in
+                                memory_value["post_update_delta_bytes"].get("terms", [])),
+                ) if memory_value.get("post_update_delta_bytes") is not None else None
+            ),
         )
     return CanonicalOperand(
         value_id=value["value_id"],

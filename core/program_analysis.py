@@ -49,60 +49,6 @@ class ProgramAnalyzer:
             for x in body:
                 yield from self.iter_insts(x)
 
-    def collect_vreg_capacity_warnings(
-        self,
-        program: List[Dict[str, Any]],
-        preg_num: int,
-    ) -> List[Dict[str, Any]]:
-        warnings: List[Dict[str, Any]] = []
-
-        def walk(nodes: Any, path: str) -> None:
-            if not isinstance(nodes, list):
-                return
-            loop_idx = 0
-            for node in nodes:
-                if not isinstance(node, dict):
-                    continue
-                if node.get("type") != "loop":
-                    continue
-
-                loop_idx += 1
-                loop_path = f"{path}.loop{loop_idx}"
-                unroll = self.resolve_unroll_value(node.get("unroll", 1))
-                body = node.get("body", [])
-
-                vregs = set()
-                for inst in self.iter_insts(body):
-                    for x in inst.get("src", []) or []:
-                        if self.is_vreg_name(x):
-                            vregs.add(x)
-                    for x in inst.get("dst", []) or []:
-                        if self.is_vreg_name(x):
-                            vregs.add(x)
-
-                base_vreg_namespace = len(vregs)
-                expanded_vreg_namespace = base_vreg_namespace * max(1, unroll)
-
-                if expanded_vreg_namespace > preg_num:
-                    warnings.append(
-                        {
-                            "kind": "vreg_namespace_overflow_risk",
-                            "loop_path": loop_path,
-                            "preg_num": int(preg_num),
-                            "base_vreg_namespace": int(base_vreg_namespace),
-                            "unroll": int(unroll),
-                            "expanded_vreg_namespace": int(expanded_vreg_namespace),
-                            "message": (
-                                "Unroll-expanded virtual-register namespace exceeds physical register count. "
-                                "Prediction may be low-confidence for this case."
-                            ),
-                        }
-                    )
-
-                walk(body, loop_path)
-
-        walk(program, "program")
-        return warnings
 
     def infer_nested_bounds_from_loop(self, loop_node: Dict[str, Any]) -> List[int]:
         bounds: List[int] = []

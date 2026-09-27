@@ -73,6 +73,12 @@ def validate_uarch_overrides(uarch: Any) -> ValidationResult:
             continue
 
         expected_type = UARCH_FIELD_TYPES.get(key)
+        if key == "physical_predicate_registers" and type(value) is int and not 0 < value <= 2**31 - 1:
+            diagnostics.append(Diagnostic(
+                "invalid_predicate_capacity", DiagnosticSeverity.ERROR,
+                "physical_predicate_registers must be a positive int32",
+                context={"path": path},
+            ))
         type_matches = (
             expected_type is None
             or (expected_type == "integer" and type(value) is int)
@@ -98,7 +104,11 @@ def validate_uarch_overrides(uarch: Any) -> ValidationResult:
         Diagnostic(
             "deprecated_uarch_field",
             DiagnosticSeverity.ERROR,
-            "Deprecated uarch field is no longer accepted",
+            ("lsu_post_update_ready_latency was removed; use idu_post_update_ready_latency (IDU dispatch timing)"
+             if name == "lsu_post_update_ready_latency"
+             else "consumer_release_start_offset_by_op was removed; use global consumer_release_start_offset"
+             if name == "consumer_release_start_offset_by_op"
+             else "Deprecated uarch field is no longer accepted"),
             context={"path": f"uarch.{name}", "field": name},
         )
         for name in sorted(DEPRECATED_UARCH_FIELDS & uarch.keys())

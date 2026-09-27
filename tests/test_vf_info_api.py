@@ -288,7 +288,8 @@ class VfInfoApiTest(unittest.TestCase):
         cce_info = parse_cce_vf_info(ROOT / "cce_code/tadd_tcvt_tadd.dsl")
 
         for vf_info in (json_info, cce_info):
-            forms = [inst.form for inst in vf_info.context[0].body]
+            loop = next(node for node in vf_info.context if hasattr(node, "body"))
+            forms = [inst.form for inst in loop.body]
             self.assertIn("f32_to_f16", forms)
             self.assertIn("fp16", forms)
             self.assertEqual(vf_info.values[next(
@@ -305,7 +306,7 @@ class VfInfoApiTest(unittest.TestCase):
             vector_f16 vreg_x_exp_even_f16;
             vector_bool preg_low_half = pset_b16(PAT_ALL);
             vpack((vector_u16 &)vreg_x_exp_even_f16, (vector_u32 &)vreg_x_exp_even_f16, LOWER);
-            vsstb(vreg_x_exp_even_f16, ((__ubuf__ half *&)nz_buffer_Ptr), kVsstbConfig, preg_low_half, POST_UPDATE);
+            vsstb(vreg_x_exp_even_f16, ((__ubuf__ half *&)nz_buffer_Ptr), kVsstbConfig, preg_low_half, NO_UPDATE);
           }
         }
         """
@@ -314,24 +315,58 @@ class VfInfoApiTest(unittest.TestCase):
             path.write_text(source, encoding="utf-8")
             vf_info = parse_cce_vf_info(path, kernel_name="softmax_vf")
 
-        insts = vf_info.context
+            path.write_text(source.replace("NO_UPDATE", "POST_UPDATE"), encoding="utf-8")
+            post_update_info = parse_cce_vf_info(path, kernel_name="softmax_vf")
+
+            path.write_text(
+                source.replace("| 1u", "| 2u").replace("NO_UPDATE", "POST_UPDATE"),
+                encoding="utf-8",
+            )
+            two_block_info = parse_cce_vf_info(path, kernel_name="softmax_vf")
+
+            path.write_text(
+                source.replace("128 + 1", "255 + 1").replace(
+                    "NO_UPDATE", "POST_UPDATE"
+                ),
+                encoding="utf-8",
+            )
+            different_stride_info = parse_cce_vf_info(
+                path, kernel_name="softmax_vf"
+            )
+
+        insts = vf_info.context[1:]
         self.assertEqual(insts[0].name, "VPACK")
         self.assertEqual(insts[0].src, ["vreg_x_exp_even_f16"])
         self.assertEqual(insts[0].dst, ["vreg_x_exp_even_f16"])
         self.assertEqual(insts[0].form, "b32")
         self.assertEqual(insts[1].name, "VSSTB")
-        self.assertEqual(insts[1].src, ["vreg_x_exp_even_f16"])
+        self.assertEqual(insts[1].src, ["vreg_x_exp_even_f16", "preg_low_half"])
         self.assertEqual(insts[1].dst, ["nz_buffer_Ptr"])
         self.assertEqual(insts[1].form, "b16")
         self.assertEqual(vf_info.values["vreg_x_exp_even_f16"].dtype, "fp16")
         self.assertEqual(vf_info.values["nz_buffer_Ptr"].storage, "UB")
+        no_update = vf_info.context[2].memory_accesses[0]
+        one_block_update = post_update_info.context[2].memory_accesses[0]
+        two_block_update = two_block_info.context[2].memory_accesses[0]
+        different_stride_update = (
+            different_stride_info.context[2].memory_accesses[0]
+        )
+        self.assertEqual(no_update.update_mode, "none")
+        self.assertIsNone(no_update.post_update_delta_bytes)
+        self.assertEqual(one_block_update.update_mode, "post_update")
+        self.assertEqual(one_block_update.post_update_delta_bytes, 32)
+        self.assertEqual(two_block_update.post_update_delta_bytes, 64)
+        self.assertEqual(different_stride_update.post_update_delta_bytes, 32)
 
     def test_cce_adapter_parses_symbolic_division_loop_bound(self):
         source = """
         void loop_bound_vf(__ubuf__ float *a) {
           constexpr uint16_t kRows = 128;
+          constexpr uint16_t kStart = 4;
+          constexpr uint16_t kStepBase = 2;
+          constexpr uint16_t kStep = kStepBase * 2;
           __VEC_SCOPE__ {
-            for (uint16_t i = 0; i < kRows / 4; ++i) {
+            for (uint16_t i = kStart; i < kRows / 2; i += kStep) {
               vector_f32 v0;
               vlds(v0, a, 0, NORM);
             }
@@ -344,10 +379,12 @@ class VfInfoApiTest(unittest.TestCase):
             vf_info = parse_cce_vf_info(
                 path,
                 kernel_name="loop_bound_vf",
-                loop_params={"kRows": 128},
             )
 
-        self.assertEqual(vf_info.context[0].count, 32)
+        loop = vf_info.context[0]
+        self.assertEqual(loop.count, 15)
+        self.assertEqual(loop.induction_start, 4)
+        self.assertEqual(loop.induction_step, 4)
 
     def test_cce_adapter_parses_vmulscvt_conversion_form(self):
         source = """
@@ -364,8 +401,8 @@ class VfInfoApiTest(unittest.TestCase):
             path.write_text(source, encoding="utf-8")
             vf_info = parse_cce_vf_info(path, kernel_name="vmulscvt_vf")
 
-        self.assertEqual(vf_info.context[0].name, "VMULSCVT")
-        self.assertEqual(vf_info.context[0].form, "f32_to_f16")
+        self.assertEqual(vf_info.context[1].name, "VMULSCVT")
+        self.assertEqual(vf_info.context[1].form, "f32_to_f16")
 
     def test_cce_adapter_accepts_binary_mode_operand(self):
         source = """
@@ -383,9 +420,9 @@ class VfInfoApiTest(unittest.TestCase):
             path.write_text(source, encoding="utf-8")
             vf_info = parse_cce_vf_info(path, kernel_name="binary_mode_vf")
 
-        self.assertEqual(vf_info.context[0].name, "VMAX")
-        self.assertEqual(vf_info.context[0].src, ["lhs", "rhs"])
-        self.assertEqual(vf_info.context[0].dst, ["dst"])
+        self.assertEqual(vf_info.context[1].name, "VMAX")
+        self.assertEqual(vf_info.context[1].src, ["lhs", "rhs", "pred"])
+        self.assertEqual(vf_info.context[1].dst, ["dst"])
 
     def test_cce_adapter_registers_first_vector_decl_inside_loop(self):
         source = """
@@ -407,12 +444,12 @@ class VfInfoApiTest(unittest.TestCase):
             path.write_text(source, encoding="utf-8")
             vf_info = parse_cce_vf_info(path, kernel_name="loop_decl_vf")
 
-        loop = vf_info.context[0]
+        loop = vf_info.context[1]
         vmuls = next(inst for inst in loop.body if getattr(inst, "name", None) == "VMULS")
         vexpdif = next(inst for inst in loop.body if getattr(inst, "name", None) == "VEXPDIF")
-        self.assertEqual(vmuls.src, ["x0"])
+        self.assertEqual(vmuls.src, ["x0", "0.125f", "pred"])
         self.assertEqual(vmuls.dst, ["x0"])
-        self.assertEqual(vexpdif.src, ["x0", "x0"])
+        self.assertEqual(vexpdif.src, ["x0", "x0", "pred"])
         self.assertEqual(vexpdif.dst, ["exp0"])
 
     def test_cce_catalog_binder_rejects_missing_or_misordered_operands(self):
@@ -603,7 +640,7 @@ class VfInfoApiTest(unittest.TestCase):
             vf_info = parse_cce_vf_info(path, kernel_name="valid")
         self.assertEqual(
             [node.name for node in vf_info.context],
-            ["VLDS", "VSTS", "VDUP", "VDUP"],
+            ["PSET_B32", "VLDS", "VSTS", "VDUP", "VDUP"],
         )
 
     def test_cce_vector_align_stores_use_state_attributes(self):
@@ -789,7 +826,7 @@ class VfInfoApiTest(unittest.TestCase):
             path = Path(tmpdir) / "local_float.dsl"
             path.write_text(source, encoding="utf-8")
             vf_info = parse_cce_vf_info(path, kernel_name="valid")
-        self.assertEqual(vf_info.context[0].src, ["src", "scale"])
+        self.assertEqual(vf_info.context[1].src, ["src", "scale", "mask"])
 
     def test_cce_local_scalar_initializer_is_validated_only_for_offsets(self):
         source = """
@@ -806,7 +843,7 @@ class VfInfoApiTest(unittest.TestCase):
             path = Path(tmpdir) / "delayed_scalar.dsl"
             path.write_text(source, encoding="utf-8")
             vf_info = parse_cce_vf_info(path, kernel_name="valid")
-        self.assertEqual(vf_info.context[0].src, ["src", "tid"])
+        self.assertEqual(vf_info.context[1].src, ["src", "tid", "mask"])
 
         offset_source = """
             void bad(__ubuf__ float *input) {
@@ -850,7 +887,7 @@ class VfInfoApiTest(unittest.TestCase):
                 ):
                     parse_cce_vf_info(path, kernel_name="bad")
 
-    def test_cce_standalone_pset_remains_an_explicit_noop(self):
+    def test_cce_standalone_pset_requires_destination(self):
         source = """
             void valid() {
               __VEC_SCOPE__ {
@@ -864,8 +901,8 @@ class VfInfoApiTest(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmpdir:
             path = Path(tmpdir) / "pset_noop.dsl"
             path.write_text(source, encoding="utf-8")
-            vf_info = parse_cce_vf_info(path, kernel_name="valid")
-        self.assertEqual([node.name for node in vf_info.context], ["VADD"])
+            with self.assertRaisesRegex(ValueError, "must be a predicate"):
+                parse_cce_vf_info(path, kernel_name="valid")
 
     def test_cce_adapter_parses_mem_bar_call(self):
         source = """

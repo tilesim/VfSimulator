@@ -79,7 +79,7 @@ def _resolve_signed_int(x: Any, params: Dict[str, Any], default: int) -> int:
 
 @dataclass
 class LoopCarriedBinding:
-    entry_value_id: str
+    entry_value_id: str | None
     back_edge_value_id: str
     exit_value_id: str
     current_value_id: str
@@ -116,7 +116,7 @@ class IFUUnroll:
         self.nodes = [dict(x) for x in (linear_nodes or [])]
         self.params = dict(params or {})
         self.db = pdb
-        self.dtype = str(dtype)
+        self.fallback_dtype = str(dtype)
         self.structured_value_identity = bool(structured_value_identity)
         uarch = self.db.get_uarch() if self.db is not None else {}
         configured_limit = (
@@ -412,15 +412,17 @@ class IFUUnroll:
             back_edge_value = carried.get("back_edge_value_id")
             if not all(
                 isinstance(item, str)
-                for item in (entry_value, back_edge_value, exit_value)
-            ):
+                for item in (back_edge_value, exit_value)
+            ) or (entry_value is not None and not isinstance(entry_value, str)):
                 continue
             self.value_aliases.pop(exit_value, None)
-            resolved_entry = self._resolve_dynamic_value(entry_value)
+            resolved_entry = self._resolve_dynamic_value(entry_value) if entry_value is not None else ""
             entry_instance = self._dynamic_instance_for_reference(
                 entry_value, resolved_entry
-            )
+            ) if entry_value is not None else None
             if zero_iterations:
+                if entry_value is None:
+                    raise ValueError("Exit-only definition in zero-iteration loop")
                 self.value_aliases[exit_value] = resolved_entry
                 self.dynamic_value_bindings[exit_value] = entry_instance
                 continue

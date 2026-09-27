@@ -1,6 +1,9 @@
 from vfsimulator.api.frontend.diagnostics import Diagnostic, DiagnosticSeverity, ValidationResult
 from vfsimulator.api.frontend.schema import (
     CANONICAL_VF_INFO_SCHEMA_VERSION,
+    CURRENT_SCHEMA_VERSION,
+    SUPPORTED_SCHEMA_VERSIONS,
+    LEGACY_EMISSION_SCHEMA_VERSION,
     AccessKind,
     AffineExpression,
     AffineTerm,
@@ -44,12 +47,17 @@ from vfsimulator.api.frontend.instruction_catalog import (
     InstructionSpec,
     OperandDirection,
     OperandSpec,
+    PostUpdateDeltaEncoding,
+    PostUpdateDeltaSpec,
     instruction_catalog_from_dict,
     load_instruction_catalog,
 )
 
 __all__ = [
     "CANONICAL_VF_INFO_SCHEMA_VERSION",
+    "CURRENT_SCHEMA_VERSION",
+    "SUPPORTED_SCHEMA_VERSIONS",
+    "LEGACY_EMISSION_SCHEMA_VERSION",
     "AccessKind",
     "ArgumentKind",
     "AffineExpression",
@@ -81,6 +89,8 @@ __all__ = [
     "OperandRole",
     "OperandDirection",
     "OperandSpec",
+    "PostUpdateDeltaEncoding",
+    "PostUpdateDeltaSpec",
     "SourceLocation",
     "ScalarValue",
     "StorageKind",

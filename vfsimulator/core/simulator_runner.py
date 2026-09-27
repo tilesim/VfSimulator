@@ -32,7 +32,8 @@ def _inst_reservation(
     shq_queue = 1 if uses_shq_queue(op, pdb, form) else 0
     lsq = 1 if uses_lsq(op, pdb, form) else 0
     shq = 1 if uses_shared_shq_credit(op, pdb, form) else 0
-    return {"preg": preg, "shq_queue": shq_queue, "lsq": lsq, "shq": shq}
+    predicate = sum(value_storage.is_predicate(d) for d in dsts)
+    return {"preg": preg, "predicate": predicate, "shq_queue": shq_queue, "lsq": lsq, "shq": shq}
 
 
 def _inst_matches_op_class(inst: Dict[str, Any], pdb: Any, dtype: str, op_class: str) -> bool:
@@ -72,12 +73,16 @@ def _has_pending_prior_lsu(
 
 
 class _IDUCreditProxy:
-    def __init__(self, core, preg: int, shq_queue: int, lsq: int, shq: int):
+    def __init__(self, core, preg: int, shq_queue: int, lsq: int, shq: int, predicate: int = 0):
         self.core = core
         self.preg = int(preg)
+        self.predicate = predicate
         self.shq_queue = int(shq_queue)
         self.lsq = int(lsq)
         self.shq = int(shq)
+
+    def get_free_predicate(self):
+        return max(0, self.core.get_free_predicate() - self.predicate)
 
     def get_free_preg(self):
         return max(0, int(self.core.get_free_preg()) - self.preg)
@@ -96,11 +101,9 @@ def dump_model_warnings(
     results_dir: str,
     *,
     instruction_warnings: list[Dict[str, Any]] | None = None,
-    vreg_warnings: list[Dict[str, Any]] | None = None,
 ) -> bool:
     instruction_warnings = list(instruction_warnings or [])
-    vreg_warnings = list(vreg_warnings or [])
-    if not instruction_warnings and not vreg_warnings:
+    if not instruction_warnings:
         return False
     if not os.path.exists(results_dir):
         os.makedirs(results_dir)
@@ -109,7 +112,8 @@ def dump_model_warnings(
         json.dump(
             {
                 "has_warning": True,
-                "vreg_capacity_warnings": vreg_warnings,
+                # Preserve the log shape for existing readers; old heuristic removed.
+                "vreg_capacity_warnings": [],
                 "instruction_fallback_warnings": instruction_warnings,
             },
             f,
@@ -149,11 +153,11 @@ def run_simulation(
     value_storage = ValueStorageLookup(values)
     idu.value_storage = value_storage
     pdb = getattr(ooo, "db", None)
-    dtype = str(getattr(ooo, "dtype", "fp32"))
+    fallback_dtype = str(getattr(ooo, "fallback_dtype", "fp32"))
     membar_config = uarch.get("membar_timing")
     control_unit = (
-        TimedControlUnit(pdb, dtype, membar_config, issue_floor=ooo.vf_startup_cost)
-        if "membar_timing" in uarch else ControlUnit(pdb, dtype)
+        TimedControlUnit(pdb, fallback_dtype, membar_config, issue_floor=ooo.vf_startup_cost)
+        if "membar_timing" in uarch else ControlUnit(pdb, fallback_dtype)
     )
     setattr(ooo, "control_unit", control_unit)
     idu_to_ooo_delay = int(uarch.get("idu_to_ooo_delay", 0))
@@ -162,6 +166,7 @@ def run_simulation(
         uarch.get("use_explicit_idu_credit_bank", False)
     )
     idu_preg_credit = int(ooo.get_free_preg())
+    idu_predicate_credit = int(ooo.get_free_predicate())
     idu_shq_credit = int(ooo.get_free_shq())
     idu_pending_shq_queue = 0
     idu_pending_lsq = 0
@@ -174,12 +179,13 @@ def run_simulation(
         visible_delta = ooo.update_idu_visibility(cycle)
         if use_explicit_idu_credit_bank:
             idu_preg_credit += int(visible_delta.get("preg_free", 0))
+            idu_predicate_credit += int(visible_delta.get("predicate_free", 0))
             idu_shq_credit += int(visible_delta.get("shq_release", 0))
 
         while idu_to_ooo_pipe and idu_to_ooo_pipe[0][0] <= cycle:
             _, inst = idu_to_ooo_pipe.popleft()
             if use_explicit_idu_credit_bank:
-                r = _inst_reservation(inst, value_storage, pdb, dtype)
+                r = _inst_reservation(inst, value_storage, pdb, fallback_dtype)
                 idu_pending_shq_queue = max(
                     0, int(idu_pending_shq_queue) - int(r["shq_queue"])
                 )
@@ -187,10 +193,12 @@ def run_simulation(
             ooo.accept(inst)
 
         pending_preg = pending_shq_queue = pending_lsq = pending_shq = 0
+        pending_predicate = 0
         if not use_explicit_idu_credit_bank:
             for _, inst in idu_to_ooo_pipe:
-                r = _inst_reservation(inst, value_storage, pdb, dtype)
+                r = _inst_reservation(inst, value_storage, pdb, fallback_dtype)
                 pending_preg += int(r["preg"])
+                pending_predicate += r["predicate"]
                 pending_shq_queue += int(r["shq_queue"])
                 pending_lsq += int(r["lsq"])
                 pending_shq += int(r["shq"])
@@ -217,7 +225,7 @@ def run_simulation(
                 stream_seq=seq,
                 op_class=cls,
                 pdb=pdb,
-                dtype=dtype,
+                dtype=fallback_dtype,
             ),
             cycle=cycle,
             has_pending_dispatch=lambda seq: any(
@@ -232,6 +240,7 @@ def run_simulation(
         if use_explicit_idu_credit_bank:
             idu_credit_proxy = _IDUCreditProxy(ooo, 0, 0, 0, 0)
             idu_credit_proxy.get_free_preg = lambda: max(0, int(idu_preg_credit))
+            idu_credit_proxy.get_free_predicate = lambda: max(0, idu_predicate_credit)
             idu_credit_proxy.get_free_shq = lambda: max(0, int(idu_shq_credit))
             idu_credit_proxy.get_free_shq_queue = lambda: max(
                 0, int(ooo.get_free_shq_queue()) - int(idu_pending_shq_queue)
@@ -241,14 +250,15 @@ def run_simulation(
             )
         else:
             idu_credit_proxy = _IDUCreditProxy(
-                ooo, pending_preg, pending_shq_queue, pending_lsq, pending_shq
+                ooo, pending_preg, pending_shq_queue, pending_lsq, pending_shq, pending_predicate
             )
 
         to_send = idu.dispatch(cycle, idu_credit_proxy)
         for inst in to_send:
             if use_explicit_idu_credit_bank:
-                r = _inst_reservation(inst, value_storage, pdb, dtype)
+                r = _inst_reservation(inst, value_storage, pdb, fallback_dtype)
                 idu_preg_credit = max(0, int(idu_preg_credit) - int(r["preg"]))
+                idu_predicate_credit -= r["predicate"]
                 idu_shq_credit = max(0, int(idu_shq_credit) - int(r["shq"]))
                 if idu_to_ooo_delay > 0:
                     idu_pending_shq_queue += int(r["shq_queue"])
@@ -303,6 +313,8 @@ def run_simulation(
             issue_ports=int(getattr(ooo, "issue_ports", 2)),
         )
         idu.dump_dispatch_log(os.path.join(results_dir, "idu_to_ooo.json"))
+        idu.dump_address_block_log(os.path.join(results_dir, "idu_address_blocked.json"))
+        idu.dump_resource_block_log(os.path.join(results_dir, "idu_resource_blocked.json"))
         idu.dump_vloop_trace(os.path.join(results_dir, "vloop_trace.json"))
         if pdb is not None and hasattr(pdb, "get_warnings"):
             dump_model_warnings(

@@ -97,7 +97,7 @@ class CoreLoweringPass:
             }
 
         return {
-            "dtype": "fp32",
+            "fallback_dtype": "fp32",
             "params": dict(vf_info.params),
             "uarch": dict(vf_info.uarch),
             "values": values,
@@ -266,6 +266,12 @@ class CoreLoweringPass:
                         "access_kind": memory.access_kind.value,
                         "span": memory.span,
                         "alias_group": memory.alias_group,
+                        "address_state_id": memory.address_state_id,
+                        "update_mode": memory.update_mode,
+                        "post_update_delta_bytes": (
+                            _affine_expression(memory.post_update_delta_bytes)
+                            if memory.post_update_delta_bytes is not None else None
+                        ),
                     }
                 )
         return accesses

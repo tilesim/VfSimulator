@@ -37,6 +37,8 @@ from .schema import (
     MemoryAccess,
     OperandRole,
     StorageKind,
+    is_renameable_storage,
+    emission_schema_version,
 )
 from .validator import validate_canonical_vf_info
 
@@ -149,13 +151,16 @@ class ValueVersioningPass:
         self._params = dict(normalized.params)
         self._node_ids = set()
 
-        environment: dict[str, str] = {}
+        environment: dict[str, str | None] = {}
+        for logical_id in normalized.live_in_values:
+            self._ensure_entry(logical_id, environment)
         context, _ = self._version_nodes(
             normalized.context,
             environment,
             frozenset(),
         )
         canonical = CanonicalVfInfo(
+            schema_version=emission_schema_version(self._values, context),
             context=tuple(context),
             values=dict(self._values),
             storage_objects=dict(self._storage_objects),
@@ -218,7 +223,9 @@ class ValueVersioningPass:
         )
         return definition_id
 
-    def _ensure_entry(self, logical_id: str, environment: dict[str, str]) -> str:
+    def _ensure_entry(self, logical_id: str, environment: dict[str, str | None]) -> str:
+        if logical_id in environment and environment[logical_id] is None:
+            raise ValueError(f"Value {logical_id} is undefined after a possibly empty loop")
         definition_id = environment.get(logical_id)
         if definition_id is None:
             definition_id = self._new_definition(logical_id, producer_node_id=None)
@@ -232,11 +239,11 @@ class ValueVersioningPass:
                 written.update(
                     str(value_id)
                     for value_id in node.dst
-                    if self._logical_values[str(value_id)].storage == "Register"
+                    if is_renameable_storage(self._logical_values[str(value_id)].storage)
                 )
             elif isinstance(node, AdapterAlias):
                 destination_id = str(node.destination)
-                if self._logical_values[destination_id].storage == "Register":
+                if is_renameable_storage(self._logical_values[destination_id].storage):
                     written.add(destination_id)
             elif isinstance(node, AdapterLoop):
                 written.update(self._written_registers(node.body))
@@ -245,9 +252,9 @@ class ValueVersioningPass:
     def _version_nodes(
         self,
         nodes: Iterable[AdapterNode],
-        environment: dict[str, str],
+        environment: dict[str, str | None],
         induction_variables: frozenset[str],
-    ) -> tuple[list[CanonicalNode], dict[str, str]]:
+    ) -> tuple[list[CanonicalNode], dict[str, str | None]]:
         output: list[CanonicalNode] = []
         current = dict(environment)
         for node in nodes:
@@ -266,7 +273,7 @@ class ValueVersioningPass:
                 destination_id = str(node.destination)
                 source = self._logical_values[source_id]
                 destination = self._logical_values[destination_id]
-                if source.storage != "Register" or destination.storage != "Register":
+                if not is_renameable_storage(source.storage) or source.storage != destination.storage:
                     raise ValueError("VFAlias requires register source and destination")
                 if source.dtype != destination.dtype or source.shape != destination.shape:
                     raise ValueError(
@@ -285,14 +292,17 @@ class ValueVersioningPass:
                 raise TypeError(f"Unsupported adapter node: {type(node).__name__}")
         return output, current
 
+
     def _version_instruction(
         self,
         node: AdapterInstruction,
-        environment: dict[str, str],
+        environment: dict[str, str | None],
         induction_variables: frozenset[str],
-    ) -> tuple[CanonicalInstruction, dict[str, str]]:
+    ) -> tuple[CanonicalInstruction, dict[str, str | None]]:
         instruction_id = self._next_node_id("instruction")
         spec = DEFAULT_INSTRUCTION_CATALOG.lookup(node.name)
+        if spec is not None and "catalog_mode" in node.attributes:
+            spec = spec.memory_modes[node.attributes["catalog_mode"]]
         if node.instruction_class is not None:
             instruction_class = InstructionClass(node.instruction_class)
         elif spec is not None:
@@ -405,6 +415,13 @@ class ValueVersioningPass:
                     ),
                     access_kind=access_kind,
                     span=access.span if access is not None else None,
+                    address_state_id=access.address_state_id if access else None,
+                    update_mode=access.update_mode if access else "none",
+                    post_update_delta_bytes=(
+                        _affine_expression(access.post_update_delta_bytes,
+                            params=self._params, induction_variables=induction_variables)
+                        if access and access.post_update_delta_bytes is not None else None
+                    ),
                 ),
             )
         role = catalog_role or (
@@ -421,15 +438,18 @@ class ValueVersioningPass:
     def _version_loop(
         self,
         node: AdapterLoop,
-        environment: dict[str, str],
+        environment: dict[str, str | None],
         parent_induction_variables: frozenset[str],
-    ) -> tuple[CanonicalLoop, dict[str, str]]:
+    ) -> tuple[CanonicalLoop, dict[str, str | None]]:
         loop_id = self._next_node_id("loop", node.loop_id)
         variable_id = node.induction_variable or f"iter_{_safe_id(loop_id)}"
         written = sorted(self._written_registers(node.body))
+        first_reads = self._read_before_write(node.body)
         entry_environment = dict(environment)
         entries = {
-            logical_id: self._ensure_entry(logical_id, entry_environment)
+            logical_id: (self._ensure_entry(logical_id, entry_environment)
+                         if environment.get(logical_id) is not None or logical_id in first_reads
+                         else None)
             for logical_id in written
         }
         body, body_environment = self._version_nodes(
@@ -441,8 +461,12 @@ class ValueVersioningPass:
         carried: list[LoopCarriedValue] = []
         current = dict(environment)
         exit_by_back_edge: dict[str, str] = {}
+        count = self._resolved_count(node.count)
         for logical_id in written:
             back_edge_id = body_environment[logical_id]
+            if back_edge_id is None or (entries[logical_id] is None and (count is None or count <= 0)):
+                current[logical_id] = None
+                continue
             exit_id = self._new_definition(logical_id, producer_node_id=loop_id)
             exit_by_back_edge[back_edge_id] = exit_id
             carried.append(
@@ -455,10 +479,7 @@ class ValueVersioningPass:
             )
             current[logical_id] = exit_id
 
-        count = node.count
-        if isinstance(count, str):
-            count = self._params.get(count, int(count) if count.lstrip("+-").isdigit() else 1)
-        if int(count) != 0:
+        if count is not None and count > 0:
             for logical_id, definition_id in body_environment.items():
                 if logical_id not in written:
                     current[logical_id] = exit_by_back_edge.get(
@@ -481,6 +502,31 @@ class ValueVersioningPass:
             ),
             current,
         )
+
+    def _resolved_count(self, count):
+        if isinstance(count, int):
+            return count
+        return self._params.get(count, int(count) if count.lstrip("+-").isdigit() else None)
+
+    def _read_before_write(self, nodes):
+        defined, reads = set(), set()
+        for node in nodes:
+            if isinstance(node, AdapterLoop):
+                reads.update(self._read_before_write(node.body) - defined)
+                count = self._resolved_count(node.count)
+                if count is not None and count > 0:
+                    defined.update(self._written_registers(node.body))
+                continue
+            if isinstance(node, AdapterInstruction):
+                sources, destinations = [*node.src, *node.supplemental_inputs], node.dst
+            elif isinstance(node, AdapterAlias):
+                sources, destinations = [node.source], [node.destination]
+            else:
+                continue
+            reads.update(str(value) for value in sources if str(value) not in defined
+                         and is_renameable_storage(self._logical_values[str(value)].storage))
+            defined.update(str(value) for value in destinations)
+        return reads
 
 
 __all__ = ["ValueVersioningPass"]

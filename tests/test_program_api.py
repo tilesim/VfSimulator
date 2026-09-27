@@ -103,7 +103,7 @@ def test_memory_bitwidth_form_and_storage_shape():
         'reg': VfSimValue('reg', StorageKind.REGISTER, 'bf16'),
     }, body=[VfSimInst('VLDS', ['view'], ['reg'])])
     inst = program_to_canonical(p).context[0]
-    assert inst.form == 'b16'
+    assert inst.form == 'bf16'
     assert inst.inputs[0].memory_access.offset.constant == 18
 
 
@@ -129,18 +129,19 @@ def test_loop_affine_offsets_and_reused_source_loop_names():
 
 
 @pytest.mark.parametrize('dtype', ['fp16', 'fp32'])
-@pytest.mark.parametrize('with_predicate', [False, True])
-def test_comparison_form_uses_data_inputs_not_bool_result(dtype, with_predicate):
+def test_comparison_form_uses_data_inputs_not_bool_result(dtype):
     p = VfSimProgram(values={
         'lhs': VfSimValue('lhs', StorageKind.REGISTER, dtype),
         'rhs': VfSimValue('rhs', StorageKind.REGISTER, dtype),
-        'result': VfSimValue('result', StorageKind.REGISTER, 'bool'),
-        'predicate': VfSimValue('predicate', StorageKind.REGISTER, 'bool'),
-    }, body=[VfSimInst('VCMP_EQ', ['lhs', 'rhs'] + (['predicate'] if with_predicate else []), ['result'])])
+        'result': VfSimValue('result', StorageKind.PREDICATE_REGISTER, 'bool'),
+        'predicate': VfSimValue('predicate', StorageKind.PREDICATE_REGISTER, 'bool'),
+    }, body=[VfSimInst('PSET_B32', [], ['predicate']),
+             VfSimInst('VCMP_EQ', ['lhs', 'rhs', 'predicate'], ['result'])])
     inferred = program_to_canonical(p)
-    inst = inferred.context[0]
+    inst = inferred.context[1]
     assert inst.form == dtype
     assert inst.outputs[0].dtype == 'bool'
-    assert len(inst.inputs) == 2
-    p.body[0].form = dtype
+    assert len(inst.inputs) == 3
+    assert inst.inputs[-1].value_id == inferred.context[0].outputs[0].value_id
+    p.body[1].form = dtype
     assert program_to_canonical(p) == inferred

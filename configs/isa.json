@@ -5,6 +5,89 @@
     "vf_drain_cost": 12
   },
   "instructions": {
+    "VINTLV": {"op_class":"COMPUTE","forms":{"fp32":{"latency":11,"EXU":"ALU","dispatch_exu":"EXU0_ONLY","dtype":"fp32"},"b32":{"latency":11,"EXU":"ALU","dispatch_exu":"EXU0_ONLY","dtype":"fp32"}}},
+    "VDINTLV": {"op_class":"COMPUTE","forms":{"fp32":{"latency":11,"EXU":"ALU","dispatch_exu":"EXU0_ONLY","dtype":"fp32"},"b32":{"latency":11,"EXU":"ALU","dispatch_exu":"EXU0_ONLY","dtype":"fp32"}}},
+    "MOVVP": {"op_class":"COMPUTE","forms":{"b16":{"latency":16,"EXU":"ALU","dispatch_exu":"EXU01","dtype":"uint16"},"b32":{"latency":16,"EXU":"ALU","dispatch_exu":"EXU01","dtype":"uint32"},"uint16":{"latency":16,"EXU":"ALU","dispatch_exu":"EXU01","dtype":"uint16"},"uint32":{"latency":16,"EXU":"ALU","dispatch_exu":"EXU01","dtype":"uint32"}}},
+    "PAND": {"op_class":"COMPUTE","forms":{"b8":{"latency":7,"EXU":"ALU","dispatch_exu":"EXU01","dtype":"bool"}}},
+    "POR": {"op_class":"COMPUTE","forms":{"b8":{"latency":7,"EXU":"ALU","dispatch_exu":"EXU01","dtype":"bool"}}},
+    "VCMP_NE": {"op_class":"COMPUTE","forms":{"fp32":{"latency":6,"EXU":"ALU","dispatch_exu":"EXU01","dtype":"fp32"}}},
+    "VCMP_GT": {"op_class":"COMPUTE","forms":{"fp32":{"latency":6,"EXU":"ALU","dispatch_exu":"EXU01","dtype":"fp32"}}},
+    "VCMP_GE": {"op_class":"COMPUTE","forms":{"fp32":{"latency":6,"EXU":"ALU","dispatch_exu":"EXU01","dtype":"fp32"}}},
+    "VCMP_LT": {"op_class":"COMPUTE","forms":{"fp32":{"latency":6,"EXU":"ALU","dispatch_exu":"EXU01","dtype":"fp32"}}},
+    "VCMP_LE": {"op_class":"COMPUTE","forms":{"fp32":{"latency":6,"EXU":"ALU","dispatch_exu":"EXU01","dtype":"fp32"}}},
+    "VCMPS_EQ": {"op_class":"COMPUTE","forms":{"fp32":{"latency":6,"EXU":"ALU","dispatch_exu":"EXU01","dtype":"fp32"}}},
+    "VCMPS_NE": {"op_class":"COMPUTE","forms":{"fp32":{"latency":6,"EXU":"ALU","dispatch_exu":"EXU01","dtype":"fp32"}}},
+    "VCMPS_GT": {"op_class":"COMPUTE","forms":{"fp32":{"latency":6,"EXU":"ALU","dispatch_exu":"EXU01","dtype":"fp32"}}},
+    "VCMPS_GE": {"op_class":"COMPUTE","forms":{"fp32":{"latency":6,"EXU":"ALU","dispatch_exu":"EXU01","dtype":"fp32"}}},
+    "VCMPS_LT": {"op_class":"COMPUTE","forms":{"fp32":{"latency":6,"EXU":"ALU","dispatch_exu":"EXU01","dtype":"fp32"}}},
+    "VCMPS_LE": {"op_class":"COMPUTE","forms":{"fp32":{"latency":6,"EXU":"ALU","dispatch_exu":"EXU01","dtype":"fp32"}}},
+    "PSTU":{"op_class":"STORE","forms":{"b16":{"latency":8,"dtype":"uint16"},"b32":{"latency":8,"dtype":"uint32"},"uint16":{"latency":8,"dtype":"uint16"},"uint32":{"latency":8,"dtype":"uint32"}}},
+    "VLDAS": {"op_class":"LOAD", "forms":{"fp32":{"latency":9,"dtype":"fp32"},"fp16":{"latency":9,"dtype":"fp16"},"int32":{"latency":9,"dtype":"int32"}}},
+    "VLDUS": {"op_class":"LOAD", "forms":{"fp32":{"latency":9,"dtype":"fp32"},"fp16":{"latency":9,"dtype":"fp16"},"int32":{"latency":9,"dtype":"int32"}}},
+    "PSET_B8": {
+      "op_class": "COMPUTE",
+      "forms": {"b8": {"latency": 6, "EXU": "ALU", "dispatch_exu": "EXU01", "dtype": "bool"}}
+    },
+    "PSET_B16": {
+      "op_class": "COMPUTE",
+      "forms": {"b16": {"latency": 6, "EXU": "ALU", "dispatch_exu": "EXU01", "dtype": "bool"}}
+    },
+    "PSET_B32": {
+      "op_class": "COMPUTE",
+      "forms": {"b32": {"latency": 6, "EXU": "ALU", "dispatch_exu": "EXU01", "dtype": "bool"}}
+    },
+    "VOR": {
+      "op_class": "COMPUTE",
+      "forms": {
+        "b32": {
+          "latency": 6,
+          "EXU": "ALU",
+          "dispatch_exu": "EXU01",
+          "src_dtypes": ["uint32", "uint32"],
+          "dst_dtypes": ["uint32"],
+          "dtype": "uint32"
+        }
+      }
+    },
+    "VCI": {
+      "op_class": "COMPUTE",
+      "forms": {
+        "int32": {
+          "latency": 7,
+          "EXU": "ALU",
+          "dispatch_exu": "EXU01",
+          "src_dtypes": ["int32"],
+          "dst_dtypes": ["int32"],
+          "dtype": "int32"
+        }
+      }
+    },
+    "VSQRT": {
+      "op_class": "COMPUTE",
+      "forms": {
+        "fp32": {
+          "latency": 17,
+          "EXU": "SFU",
+          "dispatch_exu": "EXU01",
+          "src_dtypes": ["fp32"],
+          "dst_dtypes": ["fp32"],
+          "dtype": "fp32"
+        }
+      }
+    },
+    "VLN": {
+      "op_class": "COMPUTE",
+      "forms": {
+        "fp32": {
+          "latency": 18,
+          "EXU": "SFU",
+          "dispatch_exu": "EXU01",
+          "src_dtypes": ["fp32"],
+          "dst_dtypes": ["fp32"],
+          "dtype": "fp32"
+        }
+      }
+    },
     "VADDS": {
       "op_class": "COMPUTE",
       "forms": {
@@ -718,6 +801,8 @@
     "VSTAS": {
       "op_class": "STORE",
       "forms": {
+        "uint16":{"op_class":"STORE","latency":8,"dtype":"uint16"},
+        "uint32":{"op_class":"STORE","latency":8,"dtype":"uint32"},
         "fp32": {
           "op_class": "STORE",
           "pipeline_startup_cost": 0,
@@ -786,6 +871,14 @@
             "fp16"
           ],
           "dtype": "fp16"
+        },
+        "int8": {
+          "latency": 6,
+          "EXU": "ALU",
+          "dispatch_exu": "EXU01",
+          "src_dtypes": ["int8"],
+          "dst_dtypes": ["int8"],
+          "dtype": "int8"
         }
       }
     },
@@ -969,6 +1062,32 @@
             "bf16"
           ],
           "dtype": "bf16"
+        }
+      }
+    },
+    "VCVT_BF16_TO_F32": {
+      "op_class": "COMPUTE",
+      "forms": {
+        "bf16_to_f32": {
+          "latency": 7,
+          "EXU": "ALU",
+          "dispatch_exu": "EXU01",
+          "src_dtypes": ["bf16"],
+          "dst_dtypes": ["fp32"],
+          "dtype": "fp32"
+        }
+      }
+    },
+    "VCVT_S32_TO_U8": {
+      "op_class": "COMPUTE",
+      "forms": {
+        "s32_to_u8": {
+          "latency": 7,
+          "EXU": "ALU",
+          "dispatch_exu": "EXU01",
+          "src_dtypes": ["int32"],
+          "dst_dtypes": ["uint8"],
+          "dtype": "uint8"
         }
       }
     },
@@ -1169,6 +1288,14 @@
             "fp16"
           ],
           "dtype": "fp16"
+        },
+        "int8": {
+          "latency": 6,
+          "EXU": "ALU",
+          "dispatch_exu": "EXU01",
+          "src_dtypes": ["int8"],
+          "dst_dtypes": ["int8"],
+          "dtype": "int8"
         }
       }
     },

@@ -1,3 +1,4 @@
+import pytest
 import subprocess
 import sys
 from pathlib import Path
@@ -5,6 +6,7 @@ from pathlib import Path
 from api.frontend.serialization import canonical_vf_info_to_dict
 from api.program_adapter import program_to_canonical
 from tests.test_program_api import program
+from tests.test_program_predicates import predicate_program
 import vfsimulator as packaged
 from vfsimulator.api.frontend.serialization import canonical_vf_info_to_dict as package_dict
 
@@ -13,8 +15,9 @@ def test_package_sources_are_synchronized():
     subprocess.run([sys.executable, str(Path(__file__).resolve().parents[1]/'tools/sync_python_package.py'), '--check'], check=True)
 
 
-def test_packaged_api_matches_root(tmp_path):
-    root = program()
+@pytest.mark.parametrize('factory', [program, predicate_program])
+def test_packaged_api_matches_root(tmp_path, factory):
+    root = factory()
     def convert(n):
         if hasattr(n, 'body'):
             return packaged.VfSimLoop(n.count, [convert(x) for x in n.body], n.name, n.unroll)

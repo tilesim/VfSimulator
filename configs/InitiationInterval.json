@@ -2,6 +2,15 @@
   "schema_version": 2,
   "defaults": 1,
   "InitiationInterval": {
+    "VCI.int32": {
+      "VCI.int32": 2
+    },
+    "VSQRT.fp32": {
+      "VSQRT.fp32": 4
+    },
+    "VLN.fp32": {
+      "VLN.fp32": 4
+    },
     "VADDS.fp32": {
       "VADDS.fp32": 1,
       "VMULS.fp32": 1,

@@ -44,11 +44,11 @@ def _read_json(path: str) -> Dict[str, Any]:
         return json.load(f)
 
 
-# Parsed-content cache for the immutable config JSONs loaded in ParamDB.__post_init__.
+# Parsed-content cache for config JSONs loaded in ParamDB.__post_init__.
 # Keyed by (abspath, mtime_ns, size) so editing a config on disk invalidates the
-# entry. ParamDB never mutates the parsed isa/uarch/forwarding/II structures, so
-# the same object can be shared across instances. Without this cache, hot paths
-# that construct a ParamDB per prediction re-read and re-parse ~80 KB of JSON
+# entry. ParamDB treats parsed isa/uarch/forwarding/II structures as read-only;
+# public config accessors return deep copies to protect these shared objects.
+# Without this cache, callers constructing a ParamDB per prediction re-parse JSON
 # on every call.
 _JSON_CONTENT_CACHE: Dict[tuple, Dict[str, Any]] = {}
 
@@ -145,6 +145,16 @@ class ParamDB:
 
         self._isa: Dict[str, Any] = _read_json_cached(self._isa_path)
         self._uarch: Dict[str, Any] = _read_json_cached(self._uarch_path)
+        if "consumer_release_start_offset_by_op" in self._uarch:
+            raise ValueError("consumer_release_start_offset_by_op was removed; use global consumer_release_start_offset")
+        if "lsu_post_update_ready_latency" in self._uarch:
+            raise ValueError("lsu_post_update_ready_latency was removed; use idu_post_update_ready_latency (IDU dispatch timing)")
+        latency = self._uarch.get("idu_post_update_ready_latency", 1)
+        capacity = self._uarch.get("physical_predicate_registers", 32)
+        if type(capacity) is not int or not 0 < capacity <= 2**31 - 1:
+            raise ValueError("physical_predicate_registers must be a positive int32")
+        if type(latency) is not int or not 0 < latency < 2**63:
+            raise ValueError("idu_post_update_ready_latency must be a positive int64")
 
         self._defaults: Dict[str, Any] = self._isa.get("defaults", {}) or {}
         self._insts: Dict[str, Any] = self._isa.get("instructions", {}) or {}
@@ -283,12 +293,12 @@ class ParamDB:
     # ---------------- public API ----------------
 
     def get_uarch(self) -> Dict[str, Any]:
-        """Return uarch dict as-is."""
-        return dict(self._uarch)
+        """Return an independent snapshot, including nested runtime settings."""
+        return deepcopy(self._uarch)
 
     def get_defaults(self) -> Dict[str, Any]:
         """Return ISA defaults section (may be empty)."""
-        return dict(self._defaults)
+        return deepcopy(self._defaults)
 
     # ---------------- warning / fallback helpers ----------------
 
@@ -374,12 +384,12 @@ class ParamDB:
         opu = op.upper()
         node = self._insts.get(opu, {})
         if not isinstance(node, dict) or dtype not in node:
-            return self._fallback_inst_form_params(
+            return deepcopy(self._fallback_inst_form_params(
                 opu,
                 form=dtype,
                 dtype=dtype,
                 kind="unsupported_isa_op",
-            )
+            ))
 
         inst_params = node.get(dtype, {}) or {}
         if not isinstance(inst_params, dict):
@@ -388,7 +398,7 @@ class ParamDB:
         merged = _deep_merge(self._defaults, inst_params)
         merged["op"] = opu
         merged["dtype"] = dtype
-        return merged
+        return deepcopy(merged)
 
     def _is_v2_isa(self) -> bool:
         return self._isa_schema_version >= 2
@@ -741,6 +751,10 @@ class ParamDB:
         """
         p, parsed_pf = self._split_form_key(producer_op, producer_form)
         c, parsed_cf = self._split_form_key(consumer_op, consumer_form)
+        from api.frontend.instruction_catalog import DEFAULT_INSTRUCTION_CATALOG
+        spec = DEFAULT_INSTRUCTION_CATALOG.lookup(p)
+        if spec is not None and spec.forwarding_opcode is not None:
+            return self._compute_forwarding_cycles(spec.forwarding_opcode, c, dtype, parsed_pf, parsed_cf)
         producer_form = parsed_pf
         consumer_form = parsed_cf
 
@@ -777,6 +791,12 @@ class ParamDB:
                     return max(0, int(prod_map[c]))
                 except Exception:
                     pass
+
+        if self._is_v2_isa():
+            producer_key = self._join_form_key(p, self._normalize_form_key(p, producer_form) or self._dtype_to_form(dtype))
+            producer_defaults = (self._fwd_table or {}).get(producer_key, {})
+            if "*" in producer_defaults:
+                return max(0, int(producer_defaults["*"]))
 
         if self._is_v2_isa():
             try:

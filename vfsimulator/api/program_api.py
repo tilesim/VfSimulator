@@ -30,7 +30,7 @@ def predict_from_program(
         path.write_text(json.dumps(canonical_vf_info_to_dict(canonical), indent=2), encoding='utf-8')
     base_dir = Path(config_root) if config_root is not None else Path(__file__).resolve().parents[1]
     result = CoreVfCostModel(
-        base_dir=base_dir, out_dir=out_dir, dtype=program.dtype,
+        base_dir=base_dir, out_dir=out_dir, fallback_dtype=program.dtype,
         dump_results=dump_results,
     ).run_vf_info(canonical)
     return {'cycles': int(result['vf_end_cycle']), 'model': model, 'raw': result,
