@@ -88,7 +88,15 @@ int main() {
           "NORM") != 1 ||
       instructionCatalog.lookup("VLDS")->callVariants.size() != 2 ||
       !instructionCatalog.lookup("VLDS")->operands[2].allowIntegerExpression ||
+      instructionCatalog.lookup("VLDS")->operands[2].postUpdateDeltaEncoding !=
+          "element_count" ||
       instructionCatalog.lookup("VLDS")->operands[3].allowIntegerExpression ||
+      instructionCatalog.lookup("VSSTB")->operands[2]
+              .postUpdateDeltaEncoding != "unsigned_bit_field" ||
+      instructionCatalog.lookup("VSSTB")->operands[2]
+              .postUpdateDeltaBitWidth != 16 ||
+      instructionCatalog.lookup("VSSTB")->operands[2]
+              .postUpdateDeltaUnitBytes != 32 ||
       instructionCatalog.lookup("VDUP")->callVariants[1].argumentValues.at(3).count(
           "POS_LOWEST") != 1 ||
       instructionCatalog.lookup("VSTUS")->alignStateOperation != "append" ||
@@ -277,12 +285,24 @@ int main() {
         "native canonical uarch override differs from Python: cycles=" +
         std::to_string(canonicalUarchResult.cyclesExecuted) +
         ", end=" + std::to_string(canonicalUarchResult.vfEndCycle));
-  CanonicalVfInfo deprecatedUarchContract = canonicalContract;
-  deprecatedUarchContract.uarch["load_done_latency"] = int64_t{99};
-  if (!hasDiagnostic(validateCanonicalVfInfo(deprecatedUarchContract),
-                     "deprecated_uarch_field"))
-    throw std::runtime_error(
-        "native validator accepted deprecated load_done_latency override");
+  for (const auto *field : {"load_done_latency", "consumer_release_start_offset_by_op"}) {
+    CanonicalVfInfo deprecatedUarchContract = canonicalContract;
+    deprecatedUarchContract.uarch[field] = int64_t{99};
+    const auto validation = validateCanonicalVfInfo(deprecatedUarchContract);
+    if (!hasDiagnostic(validation, "deprecated_uarch_field"))
+      throw std::runtime_error(
+          std::string("native validator accepted deprecated override: ") + field);
+    if (std::string(field) == "consumer_release_start_offset_by_op") {
+      bool hasReplacement = false;
+      for (const auto &diagnostic : validation.diagnostics)
+        hasReplacement = hasReplacement ||
+            (diagnostic.code == "deprecated_uarch_field" &&
+             diagnostic.message.find("use global consumer_release_start_offset") !=
+                 std::string::npos);
+      if (!hasReplacement)
+        throw std::runtime_error("deprecated release override must name its replacement");
+    }
+  }
   for (const auto &[name, value] :
        std::vector<std::pair<std::string, CanonicalScalar>>{
            {"issue_ports", std::string("2")},

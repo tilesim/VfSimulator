@@ -7,6 +7,7 @@ from typing import Any, Dict, Mapping
 
 
 REGISTER = "Register"
+PREDICATE_REGISTER = "PredicateRegister"
 UB = "UB"
 SCALAR = "Scalar"
 _LANE_SUFFIX_RE = re.compile(r"^(?P<base>.+)_lane\d+$")
@@ -39,8 +40,8 @@ def normalize_value_storage(values: Any | None) -> Dict[str, str]:
         else:
             storage = getattr(raw, "storage", None) or getattr(raw, "location", None)
             value_id = str(getattr(raw, "value_id", None) or getattr(raw, "name", None) or value_id)
-        if storage in (REGISTER, UB, SCALAR):
-            out[value_id] = str(storage)
+        if storage in (REGISTER, PREDICATE_REGISTER, UB, SCALAR):
+            out[value_id] = str(getattr(storage, "value", storage))
     return out
 
 
@@ -62,6 +63,12 @@ class ValueStorageLookup:
 
     def is_register(self, name: Any) -> bool:
         return self.storage_of(name) == REGISTER
+
+    def is_predicate(self, name: Any) -> bool:
+        return self.storage_of(name) == PREDICATE_REGISTER
+
+    def is_renameable(self, name: Any) -> bool:
+        return self.storage_of(name) in (REGISTER, PREDICATE_REGISTER)
 
     def is_ub(self, name: Any) -> bool:
         return self.storage_of(name) == UB

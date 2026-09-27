@@ -10,7 +10,7 @@
 
 namespace vfsim {
 
-enum class ValueStorageKind { Register, UB, Scalar };
+enum class ValueStorageKind { Register, PredicateRegister, UB, Scalar };
 
 struct ValueInfo {
   std::string valueId;

@@ -57,6 +57,7 @@ struct Uop {
   std::string fuType = "ALU";
   std::string dispatchExu;
   int64_t latency = 1;
+  int64_t ubTransferBytes = 0;
 
   std::string state = "blocked";
   int64_t readyCycle = 0;
@@ -72,6 +73,7 @@ struct Uop {
   std::string alignStateId;
   std::shared_ptr<AlignGeneration> alignGeneration;
   std::shared_ptr<AlignProducerRecord> alignProducerRecord;
+  std::shared_ptr<AlignProducerRecord> alignLoadProducer;
   int64_t topBlockId = 0;
   std::vector<int64_t> iterStack;
   bool isLastInTopBlock = false;
@@ -119,6 +121,10 @@ struct HistoryRecord {
   std::string staticInstructionId;
   std::vector<std::pair<std::string, int64_t>> iterationPath;
   int64_t streamSeq = -1;
+  int64_t vectorPhysFree = 0;
+  int64_t predicatePhysFree = 0;
+  std::vector<std::string> srcPredicatePhys;
+  std::vector<std::string> dstPredicatePhys;
 };
 
 struct SimpleLogRecord {
@@ -139,6 +145,7 @@ public:
   virtual ~OoOCore() = default;
 
   int getFreePreg() const;
+  int getFreePredicate() const;
   int getFreeShqQueue() const;
   int getFreeLsq() const;
   int getFreeShq() const;
@@ -177,6 +184,9 @@ protected:
   bool threePortsMode_ = false;
   int storePorts_ = 1;
   int ubSlots_ = 2;
+  int64_t ubBandwidthBytesPerCycle_ = 512;
+  int64_t ubBudgetCycle_ = -1;
+  int64_t ubBytesIssued_ = 0;
   int lsuStorePriorityPregThreshold_ = 1;
   int shqDepth_ = 58;
   int lsqDepth_ = 24;
@@ -187,6 +197,13 @@ protected:
   int64_t lastDoneCycle_ = 0;
 
   std::deque<std::string> freelist_;
+  std::deque<std::string> predicateFreelist_;
+  std::unordered_set<std::string> predicatePhysicalIds_;
+  std::unordered_set<std::string> vectorPhysicalIds_;
+  std::unordered_set<std::string> allocatedPhysicalIds_;
+  int visiblePredicateFree_ = 0;
+  int iduMailboxPredicateReleaseDelta_ = 0;
+  std::unordered_map<int64_t, int> visiblePredicateFreeEvents_;
   std::unordered_map<std::string, std::string> rat_;
   int64_t nextDynamicPregId_ = 0;
 
@@ -242,6 +259,7 @@ protected:
   std::unordered_map<std::string, int64_t> pregReleaseEligibleCycle_;
   std::unordered_map<std::string, int64_t> pregGeneration_;
   std::unordered_map<std::string, std::shared_ptr<AlignGeneration>> alignStateOpen_;
+  std::unordered_map<std::string, std::shared_ptr<AlignProducerRecord>> alignLoadInitializers_;
   std::unordered_map<std::string, int64_t> alignStateNextGeneration_;
   std::unordered_map<int64_t, std::vector<SrcReleaseEvent>> srcReleaseEvents_;
   std::unordered_map<int64_t, int> srcReleaseExpected_;

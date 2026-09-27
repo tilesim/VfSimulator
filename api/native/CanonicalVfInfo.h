@@ -5,6 +5,7 @@
 #define VFSIM_API_NATIVE_CANONICAL_VF_INFO_H
 
 #include <cstdint>
+#include <array>
 #include <map>
 #include <memory>
 #include <optional>
@@ -15,12 +16,15 @@
 
 namespace vfsim {
 
-constexpr int64_t kCanonicalVfInfoSchemaVersion = 1;
+constexpr int64_t kCurrentSchemaVersion = 2;
+constexpr std::array<int64_t, 2> kSupportedSchemaVersions{1, 2};
+constexpr int64_t kLegacyEmissionSchemaVersion = 1;
+constexpr int64_t kCanonicalVfInfoSchemaVersion = kCurrentSchemaVersion;
 
 using CanonicalScalar = std::variant<std::monostate, bool, int64_t, double, std::string>;
 using CanonicalIntegerExpression = std::variant<int64_t, std::string>;
 
-enum class CanonicalStorageKind { Unknown, Register, UB, Scalar };
+enum class CanonicalStorageKind { Unknown, Register, PredicateRegister, UB, Scalar };
 enum class CanonicalInstructionClass { Unknown, Load, Store, Compute, Control };
 enum class CanonicalOperandRole { Unknown, Source, Destination, Memory, Scalar, Predicate, Config };
 enum class CanonicalAccessKind { Unknown, Read, Write };
@@ -112,7 +116,7 @@ struct CanonicalInductionVariable {
 
 struct CanonicalLoopCarriedValue {
   std::string logicalId;
-  std::string entryValueId;
+  std::optional<std::string> entryValueId;
   std::string backEdgeValueId;
   std::string exitValueId;
 };
@@ -141,7 +145,7 @@ struct CanonicalLoop {
 };
 
 struct CanonicalVfInfo {
-  int64_t schemaVersion = kCanonicalVfInfoSchemaVersion;
+  int64_t schemaVersion = kLegacyEmissionSchemaVersion;
   std::vector<CanonicalNode> context;
   std::unordered_map<std::string, CanonicalValue> values;
   std::unordered_map<std::string, CanonicalStorageObject> storageObjects;

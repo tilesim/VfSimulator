@@ -6,7 +6,7 @@
   "additionalProperties": false,
   "required": ["schema_version", "context", "values"],
   "properties": {
-    "schema_version": {"const": 1},
+    "schema_version": {"enum": [1, 2]},
     "context": {"type": "array", "items": {"$ref": "#/$defs/node"}},
     "values": {
       "type": "object",
@@ -61,7 +61,7 @@
       "properties": {
         "definition_id": {"type": "string", "minLength": 1},
         "logical_id": {"type": "string", "minLength": 1},
-        "storage": {"enum": ["Register", "UB", "Scalar"]},
+        "storage": {"enum": ["Register", "PredicateRegister", "UB", "Scalar"]},
         "dtype": {"type": "string", "minLength": 1},
         "shape": {"type": "array", "items": {"type": "integer", "minimum": 0, "maximum": 9223372036854775807}},
         "producer_node_id": {"type": ["string", "null"]},
@@ -167,7 +167,7 @@
       "required": ["logical_id", "entry_value_id", "back_edge_value_id", "exit_value_id"],
       "properties": {
         "logical_id": {"type": "string", "minLength": 1},
-        "entry_value_id": {"type": "string", "minLength": 1},
+        "entry_value_id": {"type": ["string", "null"], "minLength": 1},
         "back_edge_value_id": {"type": "string", "minLength": 1},
         "exit_value_id": {"type": "string", "minLength": 1}
       }

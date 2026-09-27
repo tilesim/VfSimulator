@@ -19,6 +19,8 @@ struct GeneratedInstruction {
   bool virtualOpcode;
   const char *alignStateOperation;
   int alignStateArgumentIndex;
+  int64_t ubTransferBytes;
+  const char *forwardingOpcode;
 };
 struct GeneratedOperand {
   const char *opcode;
@@ -30,6 +32,26 @@ struct GeneratedOperand {
   bool optional;
   bool allowIntegerExpression;
 };
+struct GeneratedMemoryMode {
+  const char *opcode;
+  const char *mode;
+  const char *key;
+  int span;
+};
+struct GeneratedMemoryForm {
+  const char *opcode;
+  const char *form;
+  int64_t implicitPostUpdateBytes;
+  int64_t span;
+};
+struct GeneratedPostUpdateDelta {
+  const char *opcode;
+  int argumentIndex;
+  const char *encoding;
+  int bitOffset;
+  int bitWidth;
+  int unitBytes;
+};
 struct GeneratedAllowedValue {
   const char *opcode;
   int argumentIndex;
@@ -39,6 +61,12 @@ struct GeneratedCallVariant {
   const char *opcode;
   int variantIndex;
   int argumentCount;
+};
+struct GeneratedFormAllowedValue {
+  const char *opcode;
+  int argumentIndex;
+  const char *form;
+  const char *value;
 };
 struct GeneratedCallVariantValue {
   const char *opcode;
@@ -121,6 +149,8 @@ InstructionCatalog::InstructionCatalog() {
     spec.virtualOpcode = entry.virtualOpcode;
     spec.alignStateOperation = entry.alignStateOperation;
     spec.alignStateArgumentIndex = entry.alignStateArgumentIndex;
+    spec.ubTransferBytes = entry.ubTransferBytes;
+    spec.forwardingOpcode = entry.forwardingOpcode;
     if (!specs_.emplace(spec.opcode, std::move(spec)).second)
       throw std::runtime_error("Duplicate generated opcode: " +
                                std::string(entry.opcode));
@@ -137,6 +167,20 @@ InstructionCatalog::InstructionCatalog() {
     operand.allowIntegerExpression = entry.allowIntegerExpression;
     specs_.at(entry.opcode).operands.push_back(std::move(operand));
   }
+  for (const auto &entry : kGeneratedPostUpdateDeltas) {
+    auto &operands = specs_.at(entry.opcode).operands;
+    auto operand = std::find_if(
+        operands.begin(), operands.end(), [&](const NativeOperandSpec &candidate) {
+          return candidate.argumentIndex == entry.argumentIndex;
+        });
+    if (operand == operands.end())
+      throw std::runtime_error("Generated POST_UPDATE delta references missing operand: " +
+                               std::string(entry.opcode));
+    operand->postUpdateDeltaEncoding = entry.encoding;
+    operand->postUpdateDeltaBitOffset = entry.bitOffset;
+    operand->postUpdateDeltaBitWidth = entry.bitWidth;
+    operand->postUpdateDeltaUnitBytes = entry.unitBytes;
+  }
   for (const auto &entry : kGeneratedAllowedValues) {
     auto &operands = specs_.at(entry.opcode).operands;
     auto operand = std::find_if(
@@ -147,6 +191,15 @@ InstructionCatalog::InstructionCatalog() {
       throw std::runtime_error("Generated allowed value references missing operand: " +
                                std::string(entry.opcode));
     operand->allowedValues.emplace(entry.value);
+  }
+  for (const auto &entry : kGeneratedFormAllowedValues) {
+    auto &operands = specs_.at(entry.opcode).operands;
+    auto operand = std::find_if(operands.begin(), operands.end(), [&](const NativeOperandSpec &candidate) {
+      return candidate.argumentIndex == entry.argumentIndex;
+    });
+    if (operand == operands.end())
+      throw std::runtime_error("Generated form-specific value references missing operand");
+    operand->allowedValuesByForm[entry.form].emplace(entry.value);
   }
   for (const auto &entry : kGeneratedCallVariants) {
     auto &variants = specs_.at(entry.opcode).callVariants;
@@ -180,6 +233,20 @@ InstructionCatalog::InstructionCatalog() {
                                std::string(entry.target));
     specs_.at(entry.opcode).specializations.emplace(entry.form, entry.target);
   }
+  for (const auto &entry : kGeneratedMemoryForms) {
+    auto &spec = specs_.at(entry.opcode);
+    if (entry.implicitPostUpdateBytes)
+      spec.implicitPostUpdateBytes[entry.form] = entry.implicitPostUpdateBytes;
+    if (entry.span) spec.memorySpanByForm[entry.form] = entry.span;
+  }
+  for (const auto &entry : kGeneratedMemoryModes) {
+    auto spec = std::move(specs_.at(entry.key));
+    spec.opcode = entry.opcode;
+    spec.memorySpan = entry.span;
+    memoryModes_.emplace(entry.key, std::move(spec));
+    specs_.erase(entry.key);
+    aliases_.erase(lower(entry.key));
+  }
 }
 
 std::string InstructionCatalog::canonicalOpcode(const std::string &opcode) const {
@@ -208,6 +275,12 @@ InstructionCatalog::lookup(const std::string &opcode) const {
 const InstructionCatalog &defaultInstructionCatalog() {
   static const InstructionCatalog catalog;
   return catalog;
+}
+
+const NativeInstructionSpec *InstructionCatalog::lookupMemoryMode(
+    const std::string &opcode, const std::string &mode) const {
+  auto spec = memoryModes_.find(canonicalOpcode(opcode) + "@" + mode);
+  return spec == memoryModes_.end() ? nullptr : &spec->second;
 }
 
 } // namespace vfsim

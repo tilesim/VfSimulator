@@ -11,7 +11,7 @@ from api.frontend.instruction_catalog import (
     OperandDirection,
 )
 from api.frontend.schema import (
-    CANONICAL_VF_INFO_SCHEMA_VERSION,
+    SUPPORTED_SCHEMA_VERSIONS,
     AccessKind,
     AffineExpression,
     CanonicalInstruction,
@@ -154,12 +154,12 @@ def validate_canonical_vf_info(vf_info: CanonicalVfInfo) -> ValidationResult:
     if (
         isinstance(vf_info.schema_version, bool)
         or not isinstance(vf_info.schema_version, int)
-        or vf_info.schema_version != CANONICAL_VF_INFO_SCHEMA_VERSION
+        or vf_info.schema_version not in SUPPORTED_SCHEMA_VERSIONS
     ):
         error(
             "unsupported_schema_version",
             f"Unsupported CanonicalVfInfo schema version {vf_info.schema_version}",
-            supported_version=CANONICAL_VF_INFO_SCHEMA_VERSION,
+            supported_versions=sorted(SUPPORTED_SCHEMA_VERSIONS),
             actual_version=vf_info.schema_version,
         )
 
@@ -207,6 +207,13 @@ def validate_canonical_vf_info(vf_info: CanonicalVfInfo) -> ValidationResult:
             error("unsupported_storage", "Value has unsupported storage", path=path)
         if not value.dtype:
             error("missing_value_dtype", "Value must declare dtype", path=path)
+        if value.storage == StorageKind.PREDICATE_REGISTER:
+            if vf_info.schema_version != 2:
+                error("predicate_requires_schema_v2", "PredicateRegister requires schema version 2", path=path)
+            if value.dtype != "bool":
+                error("predicate_dtype_mismatch", "PredicateRegister requires bool dtype", path=path)
+            if value.producer_node_id is None:
+                error("predicate_live_in_not_supported", "Predicate values require an explicit producer", path=path)
         for index, dim in enumerate(value.shape):
             validate_int64(dim, f"{path}.shape[{index}]", minimum=0)
         validate_location(value.source_location, f"{path}.source_location")
@@ -337,6 +344,11 @@ def validate_canonical_vf_info(vf_info: CanonicalVfInfo) -> ValidationResult:
                 )
         if operand.dtype is not None and operand.dtype != value.dtype:
             error("operand_dtype_mismatch", "Operand dtype differs from value", path=path)
+        if direction == "input" and (
+            (operand.role == OperandRole.PREDICATE)
+            != (value.storage == StorageKind.PREDICATE_REGISTER)
+        ):
+            error("predicate_operand_role_mismatch", "Predicate inputs require predicate storage and role", path=path)
         memory = operand.memory_access
         if value.storage == StorageKind.UB and memory is None:
             error("missing_memory_access", "UB operand requires memory metadata", path=path)
@@ -461,6 +473,24 @@ def validate_canonical_vf_info(vf_info: CanonicalVfInfo) -> ValidationResult:
                 if not node.form:
                     error("missing_instruction_form", "Instruction form is required", path=node_path)
                 catalog_spec = DEFAULT_INSTRUCTION_CATALOG.lookup(node.opcode)
+                if "catalog_mode" in node.attributes:
+                    mode = node.attributes["catalog_mode"]
+                    mode_spec = catalog_spec.memory_modes.get(mode) if catalog_spec and isinstance(mode, str) else None
+                    if mode_spec is None:
+                        error("unsupported_catalog_mode", "Unknown Catalog memory mode", path=node_path)
+                    else:
+                        catalog_spec = mode_spec
+                        if any(o.memory_access is not None and o.memory_access.span != mode_spec.memory_span for o in node.inputs):
+                            error("catalog_memory_span_mismatch", "Memory span conflicts with Catalog mode", path=node_path)
+                has_predicate = any(
+                    vf_info.values.get(operand.value_id) is not None
+                    and vf_info.values[operand.value_id].storage == StorageKind.PREDICATE_REGISTER
+                    for operand in (*node.inputs, *node.outputs)
+                )
+                if catalog_spec is None and has_predicate:
+                    error("unsupported_predicate_semantics", "Predicate instructions require a complete Catalog signature", path=node_path)
+                if "MODE_MERGING" in node.attributes.values():
+                    error("unsupported_merging_mode", "MODE_MERGING requires an explicit old destination input", path=node_path)
                 if catalog_spec is not None:
                     if node.opcode != catalog_spec.opcode:
                         error(
@@ -507,6 +537,21 @@ def validate_canonical_vf_info(vf_info: CanonicalVfInfo) -> ValidationResult:
                                 "Instruction must declare its Catalog align-state operation and state ID",
                                 path=node_path,
                             )
+                    implicit_delta = catalog_spec.implicit_post_update_bytes.get(node.form)
+                    expected_span = catalog_spec.memory_span_by_form.get(node.form)
+                    for operand in (*node.inputs, *node.outputs):
+                        memory = operand.memory_access
+                        if memory is None:
+                            continue
+                        if implicit_delta is not None and (
+                            memory.update_mode != "post_update" or not memory.address_state_id
+                            or memory.post_update_delta_bytes is None
+                            or memory.post_update_delta_bytes.constant != implicit_delta
+                            or memory.post_update_delta_bytes.terms
+                        ):
+                            error("catalog_implicit_update_mismatch", "Memory access must declare its Catalog implicit pointer update", path=node_path)
+                        if expected_span is not None and memory.span != expected_span:
+                            error("catalog_memory_span_mismatch", "Memory span conflicts with Catalog form", path=node_path)
                 validate_scalar_map(node.attributes, f"{node_path}.attributes")
                 for operand_index, operand in enumerate(node.inputs):
                     operand_path = f"{node_path}.inputs[{operand_index}]"
@@ -595,6 +640,7 @@ def validate_canonical_vf_info(vf_info: CanonicalVfInfo) -> ValidationResult:
                         operand
                         for operand in catalog_spec.operands
                         if operand.direction == OperandDirection.INPUT
+                        and (vf_info.schema_version == 2 or operand.kind != ArgumentKind.PREDICATE)
                     ]
                     expected_outputs = [
                         operand
@@ -605,7 +651,7 @@ def validate_canonical_vf_info(vf_info: CanonicalVfInfo) -> ValidationResult:
                         operand
                         for operand in node.inputs
                         if operand.role
-                        not in (OperandRole.PREDICATE, OperandRole.CONFIG)
+                        != OperandRole.CONFIG
                     ]
                     actual_outputs = [
                         operand
@@ -640,8 +686,11 @@ def validate_canonical_vf_info(vf_info: CanonicalVfInfo) -> ValidationResult:
                             value = vf_info.values.get(operand.value_id)
                             if value is None:
                                 continue
+                            if catalog_spec.memory_span is not None and value.dtype not in catalog_spec.forms:
+                                error("catalog_operand_dtype_mismatch", "Operand dtype conflicts with Catalog memory mode", path=operand_path)
                             allowed_storage = {
                                 ArgumentKind.REGISTER: {StorageKind.REGISTER},
+                                ArgumentKind.PREDICATE: {StorageKind.PREDICATE_REGISTER},
                                 ArgumentKind.UB: {StorageKind.UB},
                                 ArgumentKind.SCALAR: {StorageKind.SCALAR},
                                 ArgumentKind.REGISTER_OR_SCALAR: {
@@ -694,13 +743,16 @@ def validate_canonical_vf_info(vf_info: CanonicalVfInfo) -> ValidationResult:
                     entry = vf_info.values.get(carried.entry_value_id)
                     back_edge = vf_info.values.get(carried.back_edge_value_id)
                     exit_value = vf_info.values.get(carried.exit_value_id)
-                    definitions = (entry, back_edge, exit_value)
+                    exit_only = carried.entry_value_id is None
+                    if exit_only and (vf_info.schema_version < 2 or count is None or count <= 0):
+                        error("invalid_loop_exit_only", "Exit-only definitions require v2 and a proven positive loop count", path=carried_path)
+                    definitions = (back_edge, exit_value) if exit_only else (entry, back_edge, exit_value)
                     if any(value is None for value in definitions):
                         error("unknown_loop_carried_value", "Unknown loop-carried definition", path=carried_path)
                         continue
-                    assert entry is not None and back_edge is not None and exit_value is not None
+                    assert back_edge is not None and exit_value is not None
                     if (
-                        entry.logical_id != carried.logical_id
+                        (entry is not None and entry.logical_id != carried.logical_id)
                         or exit_value.logical_id != carried.logical_id
                     ):
                         error(
@@ -714,7 +766,7 @@ def validate_canonical_vf_info(vf_info: CanonicalVfInfo) -> ValidationResult:
                     }
                     if len(metadata) != 1:
                         error("loop_carried_type_mismatch", "Loop-carried value metadata must match", path=carried_path)
-                    if entry.producer_node_id is not None:
+                    if entry is not None and entry.producer_node_id is not None:
                         if not definition_visible_before_loop(entry, loop_info):
                             error("loop_entry_not_visible", "Loop entry is not visible before loop", path=carried_path)
                     if carried.back_edge_value_id != carried.entry_value_id:

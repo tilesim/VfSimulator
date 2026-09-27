@@ -50,6 +50,14 @@ public:
     return storageOf(name) == ValueStorageKind::Register;
   }
 
+  bool isPredicate(const std::string &name) const {
+    return storageOf(name) == ValueStorageKind::PredicateRegister;
+  }
+
+  bool isRenameable(const std::string &name) const {
+    return isRegister(name) || isPredicate(name);
+  }
+
   bool isUB(const std::string &name) const {
     return storageOf(name) == ValueStorageKind::UB;
   }

@@ -5,6 +5,7 @@
 #define VFSIM_API_NATIVE_INSTRUCTION_CATALOG_H
 
 #include <string>
+#include <cstdint>
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
@@ -31,7 +32,12 @@ struct NativeOperandSpec {
   CatalogArgumentKind kind = CatalogArgumentKind::Register;
   bool optional = false;
   bool allowIntegerExpression = false;
+  std::string postUpdateDeltaEncoding;
+  int postUpdateDeltaBitOffset = 0;
+  int postUpdateDeltaBitWidth = 0;
+  int postUpdateDeltaUnitBytes = 0;
   std::unordered_set<std::string> allowedValues;
+  std::unordered_map<std::string, std::unordered_set<std::string>> allowedValuesByForm;
 };
 
 struct NativeCallVariant {
@@ -52,6 +58,11 @@ struct NativeInstructionSpec {
   std::unordered_map<std::string, std::string> specializations;
   std::vector<NativeOperandSpec> operands;
   std::vector<NativeCallVariant> callVariants;
+  int memorySpan = 0;
+  int64_t ubTransferBytes = 0;
+  std::string forwardingOpcode;
+  std::unordered_map<std::string, int64_t> implicitPostUpdateBytes;
+  std::unordered_map<std::string, int64_t> memorySpanByForm;
 };
 
 class InstructionCatalog {
@@ -60,12 +71,15 @@ public:
   std::string specializeOpcode(const std::string &opcode,
                                const std::string &form) const;
   const NativeInstructionSpec *lookup(const std::string &opcode) const;
+  const NativeInstructionSpec *lookupMemoryMode(const std::string &opcode,
+                                               const std::string &mode) const;
 
 private:
   friend const InstructionCatalog &defaultInstructionCatalog();
   InstructionCatalog();
 
   std::unordered_map<std::string, NativeInstructionSpec> specs_;
+  std::unordered_map<std::string, NativeInstructionSpec> memoryModes_;
   std::unordered_map<std::string, std::string> aliases_;
 };
 

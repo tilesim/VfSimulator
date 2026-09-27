@@ -112,6 +112,8 @@ std::optional<CanonicalSourceLocation> sourceLocation(const json::Value *value) 
 CanonicalStorageKind storageKind(const std::string &value) {
   if (value == "Register")
     return CanonicalStorageKind::Register;
+  if (value == "PredicateRegister")
+    return CanonicalStorageKind::PredicateRegister;
   if (value == "UB")
     return CanonicalStorageKind::UB;
   if (value == "Scalar")
@@ -305,7 +307,8 @@ CanonicalNode node(const json::Value &value) {
             "canonical loop carried value");
         result.carriedValues.push_back(CanonicalLoopCarriedValue{
             required(carried, "logical_id").asString(),
-            required(carried, "entry_value_id").asString(),
+            required(carried, "entry_value_id").isNull() ? std::nullopt :
+                std::optional<std::string>{required(carried, "entry_value_id").asString()},
             required(carried, "back_edge_value_id").asString(),
             required(carried, "exit_value_id").asString()});
       }

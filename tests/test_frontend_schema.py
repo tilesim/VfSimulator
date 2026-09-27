@@ -447,15 +447,19 @@ class CanonicalVfInfoValidatorTest(unittest.TestCase):
         self.assertIn("invalid_dependency_operand_index", codes)
 
     def test_deprecated_uarch_field_is_rejected(self):
-        vf_info = replace(
-            self._valid_vf_info(),
-            uarch={"load_done_latency": 99},
-        )
-
-        codes = {
-            item.code for item in validate_canonical_vf_info(vf_info).errors
-        }
-        self.assertIn("deprecated_uarch_field", codes)
+        for name in ("load_done_latency", "consumer_release_start_offset_by_op"):
+            with self.subTest(field=name):
+                vf_info = replace(self._valid_vf_info(), uarch={name: 99})
+                codes = {
+                    item.code for item in validate_canonical_vf_info(vf_info).errors
+                }
+                self.assertIn("deprecated_uarch_field", codes)
+                if name == "consumer_release_start_offset_by_op":
+                    diagnostics = validate_canonical_vf_info(vf_info).errors
+                    self.assertTrue(any(
+                        "use global consumer_release_start_offset" in item.message
+                        for item in diagnostics
+                    ))
 
     def test_uarch_override_requires_cross_language_json_scalars(self):
         vf_info = replace(

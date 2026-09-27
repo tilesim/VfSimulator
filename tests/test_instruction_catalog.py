@@ -19,6 +19,17 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 class InstructionCatalogTest(unittest.TestCase):
+    def test_ub_transfer_bytes_are_explicit_and_validated(self):
+        load = DEFAULT_INSTRUCTION_CATALOG.lookup("VLDS")
+        self.assertEqual(load.ub_transfer_bytes, 256)
+        self.assertEqual(load.memory_modes["DINTLV_B32"].ub_transfer_bytes, 512)
+        payload = json.loads((ROOT / "configs/instruction_catalog.json").read_text())
+        for value in (0, -1, True, "512", 1.5, 2**63):
+            invalid = copy.deepcopy(payload)
+            invalid["instructions"]["VLDS"]["memory_modes"]["DINTLV_B32"]["ub_transfer_bytes"] = value
+            with self.subTest(value=value), self.assertRaisesRegex(ValueError, "ub_transfer_bytes"):
+                instruction_catalog_from_dict(invalid)
+
     def test_alias_class_and_signature_are_declared_once(self):
         load = DEFAULT_INSTRUCTION_CATALOG.lookup("vld")
         store = DEFAULT_INSTRUCTION_CATALOG.lookup("vst")
@@ -136,6 +147,12 @@ class InstructionCatalogTest(unittest.TestCase):
             "integer_expression_non_config": lambda data: data["signatures"]["binary"][1].update(
                 allow_integer_expression=True
             ),
+            "unknown_post_update_encoding": lambda data: data["signatures"]["vsstb"][2][
+                "post_update_delta"
+            ].update(encoding="unknown"),
+            "invalid_post_update_bit_width": lambda data: data["signatures"]["vsstb"][2][
+                "post_update_delta"
+            ].update(bit_width=0),
             "operand_name_number": lambda data: data["signatures"]["binary"][0].update(
                 name=7
             ),
@@ -188,6 +205,13 @@ class InstructionCatalogTest(unittest.TestCase):
         )
         self.assertTrue(offset.allow_integer_expression)
         self.assertTrue(vsstb_config.allow_integer_expression)
+        self.assertEqual(offset.post_update_delta.encoding.value, "element_count")
+        self.assertEqual(
+            vsstb_config.post_update_delta.encoding.value,
+            "unsigned_bit_field",
+        )
+        self.assertEqual(vsstb_config.post_update_delta.bit_width, 16)
+        self.assertEqual(vsstb_config.post_update_delta.unit_bytes, 32)
         self.assertFalse(mode.allow_integer_expression)
         self.assertEqual(
             set(mode.allowed_values),

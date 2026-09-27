@@ -10,6 +10,7 @@ import json
 
 from core.isa_traits import is_compute_op, is_load_op, is_store_op
 from core.instruction_profile import InstructionProfile
+from core.physical_register_bank import PhysicalRegisterBank
 from core.value_storage import ValueStorageLookup
 
 
@@ -45,6 +46,7 @@ class Uop:
     preg_dst: List[str]
     preg_old: List[Optional[str]]
     profile: Optional[InstructionProfile] = None
+    ub_transfer_bytes: int = 0
 
     state: str = "blocked"  # blocked/ready/running/done
     ready_cycle: int = 0
@@ -60,6 +62,7 @@ class Uop:
     align_state_id: Optional[str] = None
     align_generation: Optional[AlignGeneration] = None
     align_producer_record: Optional[AlignProducerRecord] = None
+    align_load_producer: Optional[AlignProducerRecord] = None
     top_block_id: int = 0
     iter_stack: List[Any] = field(default_factory=list)
     is_last_in_top_block: bool = False
@@ -85,6 +88,11 @@ class OoOCore:
         self.issue_ports = int(uarch.get("issue_ports", 2))  # total EXU count
         self.store_ports = int(uarch.get("store_ports", 1))
         self.ub_slots = int(uarch.get("ub_slots", 2))
+        self.ub_bandwidth_bytes_per_cycle = int(uarch.get("ub_bandwidth_bytes_per_cycle", 512))
+        if self.ub_bandwidth_bytes_per_cycle <= 0:
+            raise ValueError("ub_bandwidth_bytes_per_cycle must be positive")
+        self.ub_budget_cycle = -1
+        self.ub_bytes_issued = 0
         if self.load_ports <= 0 or self.store_ports <= 0 or self.ub_slots <= 0:
             raise ValueError("load_ports, store_ports, and ub_slots must be positive")
         if "lsu_issue_policy" in uarch:
@@ -106,8 +114,17 @@ class OoOCore:
         self.vf_drain_cost = int(defaults.get("vf_drain_cost", 0))
 
         # rename
-        self.freelist: Deque[str] = deque([f"p{i}" for i in range(self.preg_num)])
-        self.RAT: Dict[Any, str] = {}
+        self.vector_bank = PhysicalRegisterBank(self.preg_num, name="vector", prefix="p")
+        self.predicate_bank = PhysicalRegisterBank(
+            uarch.get("physical_predicate_registers", 32), name="predicate", prefix="pred"
+        )
+        self.physical_banks = {
+            physical_id: bank
+            for bank in (self.vector_bank, self.predicate_bank)
+            for physical_id in bank.physical_ids
+        }
+        self.freelist = self.vector_bank.freelist
+        self.RAT = self.vector_bank.rat
         self.next_dynamic_preg_id: int = self.preg_num
 
         # queues
@@ -116,11 +133,12 @@ class OoOCore:
         self.ROB: Deque[Uop] = deque()
 
         # dependency tracking
-        self.preg_producer: Dict[str, Tuple[str, str, int, str]] = {}
-        self.preg_producer_uop: Dict[str, Uop] = {}
-        self.preg_producer_profile: Dict[str, InstructionProfile] = {}
+        self.preg_producer = self.vector_bank.producer
+        self.preg_producer_uop = self.vector_bank.producer_uop
+        self.preg_producer_profile = self.vector_bank.producer_profile
         self.align_state_open: Dict[str, AlignGeneration] = {}
         self.align_state_next_generation: Dict[str, int] = {}
+        self.align_load_initializers: Dict[str, AlignProducerRecord] = {}
 
         # EXU issue history.
         # By default, II is enforced at EXU level (cross-FU), because each EXU
@@ -152,7 +170,7 @@ class OoOCore:
         self.history: List[Dict[str, Any]] = []
         self.debug = bool(uarch.get("debug", False))
 
-        self.preg_pending = set()
+        self.preg_pending = self.vector_bank.pending
         self.ooo_to_shq_delay = int(uarch.get("ooo_to_shq_delay", 1))
         self.ooo_to_lsq_delay = int(uarch.get("ooo_to_lsq_delay", 1))
         self.enforce_same_cycle_src_hazard = bool(uarch.get("enforce_same_cycle_src_hazard", True))
@@ -173,7 +191,17 @@ class OoOCore:
         self.cyc_done_log: List[Dict[str, Any]] = []
 
     def is_vreg(self, name: Any) -> bool:
-        return self.value_storage.is_register(name)
+        return self.value_storage.is_renameable(name)
+
+    def bank_for_value(self, name: Any):
+        return self.predicate_bank if self.value_storage.is_predicate(name) else self.vector_bank
+
+    def get_free_predicate(self) -> int:
+        if self.theoretical_limit_mode:
+            return 10**18
+        if getattr(self, "enable_credit_visibility_delay", False):
+            return self.visible_predicate_free
+        return len(self.predicate_bank.freelist)
 
     def is_mem(self, name: Any) -> bool:
         return self.value_storage.is_ub(name)
@@ -199,6 +227,10 @@ class OoOCore:
             "src": u.src,
             "dst": u.dst,
             "preg_src": u.preg_src,
+            "src_predicate_phys": [p for p in u.preg_src if self.physical_banks.get(p) is self.predicate_bank],
+            "dst_predicate_phys": [p for p in u.preg_dst if self.physical_banks.get(p) is self.predicate_bank],
+            "vector_phys_free": len(self.vector_bank.freelist),
+            "predicate_phys_free": len(self.predicate_bank.freelist),
             "preg_dst": u.preg_dst,
             "preg_old": u.preg_old,
             "producer_op_for_store": u.producer_op_for_store,
@@ -458,7 +490,13 @@ class OoOCore:
         return t
 
     def _load_ready_cycle(self, u: Uop) -> int:
-        return max(self.vf_startup_cost, int(getattr(u, "lsq_ready_cycle", 0)))
+        ready = max(self.vf_startup_cost, int(getattr(u, "lsq_ready_cycle", 0)))
+        producer = u.align_load_producer
+        if producer is not None:
+            if producer.start_cycle is None:
+                return 10 ** 9
+            ready = max(ready, producer.start_cycle + self.db.get_forwarding_for_profiles(producer.profile, u.profile))
+        return ready
 
     def _blocked_by_control_unit(self, u: Uop) -> bool:
         control_unit = getattr(self, "control_unit", None)
@@ -541,6 +579,19 @@ class OoOCore:
             return
         operation = str(attributes.get("align_state_operation", "")).lower()
         state_id = str(attributes.get("align_state_id", ""))
+        if operation in {"load_init", "load_use"}:
+            if not state_id:
+                raise ValueError("Load align state ID is required")
+            u.align_state_operation, u.align_state_id = operation, state_id
+            if operation == "load_init":
+                record = AlignProducerRecord(u.inst_id, u.stream_seq, u.profile)
+                self.align_load_initializers[state_id] = record
+                u.align_producer_record = record
+            else:
+                if state_id not in self.align_load_initializers:
+                    raise ValueError(f"Uninitialized load align state: {state_id}")
+                u.align_load_producer = self.align_load_initializers[state_id]
+            return
         if operation not in {"append", "consume"} or not state_id:
             return
 

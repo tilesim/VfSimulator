@@ -10,6 +10,7 @@
 
 #include "native/ControlUnit.h"
 #include "native/ISATraits.h"
+#include "api/native/InstructionCatalog.h"
 
 #include <algorithm>
 #include <cmath>
@@ -119,6 +120,9 @@ OoOCore::OoOCore(const UarchConfig &uarch, const ParamDB &db, std::string dtype,
   threePortsMode_ = uarch.threePortsMode;
   storePorts_ = static_cast<int>(uarch.storePorts);
   ubSlots_ = static_cast<int>(uarch.ubSlots);
+  ubBandwidthBytesPerCycle_ = uarch.ubBandwidthBytesPerCycle;
+  if (ubBandwidthBytesPerCycle_ <= 0)
+    throw std::runtime_error("ub_bandwidth_bytes_per_cycle must be positive");
   lsuStorePriorityPregThreshold_ =
       static_cast<int>(uarch.lsuStorePriorityPregThreshold);
   if (loadPorts_ <= 0 || storePorts_ <= 0 || ubSlots_ <= 0)
@@ -133,9 +137,19 @@ OoOCore::OoOCore(const UarchConfig &uarch, const ParamDB &db, std::string dtype,
   vfStartupCost_ = static_cast<int>(db_.isaDefaults().vfStartupCost);
   vfDrainCost_ = static_cast<int>(db_.isaDefaults().vfDrainCost);
   freelist_.clear();
-  for (int i = 0; i < pregNum_; ++i)
+  for (int i = 0; i < pregNum_; ++i) {
     freelist_.push_back("p" + std::to_string(i));
+    vectorPhysicalIds_.insert(freelist_.back());
+  }
   visiblePregFree_ = pregNum_;
+  if (uarch.physicalPredicateRegisters <= 0 || uarch.physicalPredicateRegisters > 2147483647)
+    throw std::runtime_error("physical_predicate_registers must be positive");
+  for (int64_t i = 0; i < uarch.physicalPredicateRegisters; ++i) {
+    const auto id = "pred" + std::to_string(i);
+    predicateFreelist_.push_back(id);
+    predicatePhysicalIds_.insert(id);
+  }
+  visiblePredicateFree_ = static_cast<int>(uarch.physicalPredicateRegisters);
   lastIssueCycleALU_.assign(issuePorts_, -1000000000);
   lastIssueCycleSFU_.assign(issuePorts_, -1000000000);
   lastOpALU_.assign(issuePorts_, "");
@@ -244,9 +258,23 @@ bool OoOCore::hasPendingLsuBefore(int64_t streamSeq,
   return false;
 }
 
+int OoOCore::getFreePredicate() const {
+  if (theoreticalLimitMode_)
+    return 1000000000;
+  return enableCreditVisibilityDelay_ ? visiblePredicateFree_ : static_cast<int>(predicateFreelist_.size());
+}
+
 std::unordered_map<std::string, int> OoOCore::updateIduVisibility(int64_t cycle) {
+  int predicateDelta = iduMailboxPredicateReleaseDelta_;
+  iduMailboxPredicateReleaseDelta_ = 0;
+  auto pred = visiblePredicateFreeEvents_.find(cycle);
+  if (pred != visiblePredicateFreeEvents_.end()) {
+    visiblePredicateFree_ += pred->second;
+    predicateDelta += pred->second;
+    visiblePredicateFreeEvents_.erase(pred);
+  }
   if (!enableCreditVisibilityDelay_)
-    return std::unordered_map<std::string, int>{{"preg_free", 0}, {"shq_release", 0}};
+    return std::unordered_map<std::string, int>{{"preg_free", 0}, {"predicate_free", predicateDelta}, {"shq_release", 0}};
   int pregDelta = iduMailboxPregReleaseDelta_;
   int shqDelta = iduMailboxShqReleaseDelta_;
   iduMailboxPregReleaseDelta_ = 0;
@@ -264,7 +292,7 @@ std::unordered_map<std::string, int> OoOCore::updateIduVisibility(int64_t cycle)
     shqDelta += sit->second;
     visibleShqReleaseEvents_.erase(sit);
   }
-  return std::unordered_map<std::string, int>{{"preg_free", pregDelta}, {"shq_release", shqDelta}};
+  return std::unordered_map<std::string, int>{{"preg_free", pregDelta}, {"predicate_free", predicateDelta}, {"shq_release", shqDelta}};
 }
 
 int64_t OoOCore::vfEndCycle() const {
@@ -283,7 +311,7 @@ std::string OoOCore::classifyOpClass(const std::string &op,
 }
 
 bool OoOCore::isRegisterValue(const std::string &name) const {
-  return valueStorage_.isRegister(name);
+  return valueStorage_.isRenameable(name);
 }
 
 int64_t OoOCore::computeReadyTimeForSrc(
@@ -306,7 +334,14 @@ int64_t OoOCore::computeReadyTimeForSrc(
 }
 
 int64_t OoOCore::computeLoadReadyCycle(const Uop &u) const {
-  return std::max<int64_t>(vfStartupCost_, u.lsqReadyCycle);
+  int64_t ready = std::max<int64_t>(vfStartupCost_, u.lsqReadyCycle);
+  if (u.alignLoadProducer) {
+    const auto &producer = *u.alignLoadProducer;
+    if (!producer.startCycle) return 1000000000;
+    ready = std::max(ready, *producer.startCycle +
+        db_.forwardingCycles(producer.op, producer.form, u.op, u.form));
+  }
+  return ready;
 }
 
 bool OoOCore::blockedByControlUnit(const Uop &u) const {
@@ -372,6 +407,27 @@ OoOCore::computeStoreReadyCycle(const Uop &u) const {
 }
 
 void OoOCore::bindAlignState(Uop &u, const DynamicInst &inst) {
+  if (inst.alignStateOperation == "load_init" || inst.alignStateOperation == "load_use") {
+    if (inst.alignStateId.empty())
+      throw std::runtime_error("Load align state ID is required");
+    u.alignStateOperation = inst.alignStateOperation;
+    u.alignStateId = inst.alignStateId;
+    if (inst.alignStateOperation == "load_init") {
+      auto record = std::make_shared<AlignProducerRecord>();
+      record->instId = u.instId;
+      record->streamSeq = u.streamSeq;
+      record->op = u.op;
+      record->form = u.form;
+      alignLoadInitializers_[inst.alignStateId] = record;
+      u.alignProducerRecord = record;
+    } else {
+      auto found = alignLoadInitializers_.find(inst.alignStateId);
+      if (found == alignLoadInitializers_.end())
+        throw std::runtime_error("Uninitialized load align state: " + inst.alignStateId);
+      u.alignLoadProducer = found->second;
+    }
+    return;
+  }
   if ((inst.alignStateOperation != "append" &&
        inst.alignStateOperation != "consume") ||
       inst.alignStateId.empty())
@@ -494,6 +550,15 @@ void OoOCore::log(const std::string &event, const Uop &u) {
       u.doneCycle, u.src, u.dst, u.pregSrc, u.pregDst, u.pregOld,
       u.producerOpForStore, u.producerStartForStore, u.staticInstructionId,
       u.iterationPath, u.streamSeq});
+  auto &record = history_.back();
+  record.vectorPhysFree = static_cast<int64_t>(freelist_.size());
+  record.predicatePhysFree = static_cast<int64_t>(predicateFreelist_.size());
+  for (const auto &preg : u.pregSrc)
+    if (preg && predicatePhysicalIds_.count(*preg))
+      record.srcPredicatePhys.push_back(*preg);
+  for (const auto &preg : u.pregDst)
+    if (predicatePhysicalIds_.count(preg))
+      record.dstPredicatePhys.push_back(preg);
 }
 
 void OoOCore::logMembarBlocked(Uop &u) {
@@ -535,6 +600,10 @@ void OoOCore::dumpHistory(const std::string &path) const {
        << "\"dst\":" << joinJsonArray(h.dst) << ","
        << "\"preg_src\":" << joinJsonArray(h.pregSrc) << ","
        << "\"preg_dst\":" << joinJsonArray(h.pregDst) << ","
+       << "\"vector_phys_free\":" << h.vectorPhysFree << ","
+       << "\"predicate_phys_free\":" << h.predicatePhysFree << ","
+       << "\"src_predicate_phys\":" << joinJsonArray(h.srcPredicatePhys) << ","
+       << "\"dst_predicate_phys\":" << joinJsonArray(h.dstPredicatePhys) << ","
        << "\"preg_old\":" << joinJsonArray(h.pregOld) << ","
        << "\"producer_op_for_store\":" << (h.producerOpForStore ? "\"" + jsonEscape(*h.producerOpForStore) + "\"" : "null") << ","
        << "\"producer_start_for_store\":" << (h.producerStartForStore ? std::to_string(*h.producerStartForStore) : "null") << ","
@@ -633,6 +702,14 @@ void OoOCore::runSrcReleaseEvents(int64_t cycle) {
 }
 
 bool OoOCore::tryFreePreg(const std::string &preg, int64_t cycle) {
+  if (theoreticalLimitMode_)
+    return false;
+  const bool predicate = predicatePhysicalIds_.count(preg) != 0;
+  if (!predicate && !vectorPhysicalIds_.count(preg))
+    throw std::runtime_error("Unknown physical register ID: " + preg);
+  if (!allocatedPhysicalIds_.count(preg))
+    return false;
+  auto &freelist = predicate ? predicateFreelist_ : freelist_;
   if (preg.empty() || isCurrentMapping(preg))
     return false;
   auto cntIt = pregConsumerCount_.find(preg);
@@ -641,7 +718,7 @@ bool OoOCore::tryFreePreg(const std::string &preg, int64_t cycle) {
   auto eligIt = pregReleaseEligibleCycle_.find(preg);
   if (eligIt != pregReleaseEligibleCycle_.end() && cycle < eligIt->second)
     return false;
-  if (std::find(freelist_.begin(), freelist_.end(), preg) != freelist_.end())
+  if (std::find(freelist.begin(), freelist.end(), preg) != freelist.end())
     return false;
   if (pregPending_.count(preg))
     return false;
@@ -649,7 +726,17 @@ bool OoOCore::tryFreePreg(const std::string &preg, int64_t cycle) {
   pregPending_.erase(preg);
   pregConsumerCount_.erase(preg);
   pregReleaseEligibleCycle_.erase(preg);
-  freelist_.push_back(preg);
+  allocatedPhysicalIds_.erase(preg);
+  freelist.push_back(preg);
+  if (predicate) {
+    if (!enableCreditVisibilityDelay_ || iduVisiblePregDelay_ <= 0) {
+      ++visiblePredicateFree_;
+      ++iduMailboxPredicateReleaseDelta_;
+    } else {
+      ++visiblePredicateFreeEvents_[cycle + iduVisiblePregDelay_];
+    }
+    return true;
+  }
   if (enableCreditVisibilityDelay_) {
     if (iduVisiblePregDelay_ <= 0) {
       ++visiblePregFree_;
@@ -817,6 +904,15 @@ void OoOCoreMainline::accept(const DynamicInst &inst) {
   u.latency = std::max<int64_t>(1, profile.latency);
   u.src = inst.src;
   u.dst = inst.dst;
+  int vectorRequired = 0, predicateRequired = 0;
+  for (const auto &destination : inst.dst) {
+    vectorRequired += valueStorage_.isRegister(destination);
+    predicateRequired += valueStorage_.isPredicate(destination);
+  }
+  if (!theoreticalLimitMode_ &&
+      (vectorRequired > static_cast<int>(freelist_.size()) ||
+       predicateRequired > static_cast<int>(predicateFreelist_.size())))
+    throw std::runtime_error("Atomic rename precheck failed: physical register credit");
   std::vector<std::string> releasedRatPregs;
   for (size_t sourceIndex = 0; sourceIndex < inst.src.size(); ++sourceIndex) {
     const auto &s = inst.src[sourceIndex];
@@ -827,6 +923,8 @@ void OoOCoreMainline::accept(const DynamicInst &inst) {
     }
     auto it = rat_.find(s);
     if (it == rat_.end()) {
+      if (valueStorage_.isPredicate(s))
+        throw std::runtime_error("Predicate source has no renamed producer: " + s);
       u.pregSrc.push_back(std::nullopt);
       u.pregSrcGen.push_back(std::nullopt);
     } else {
@@ -849,6 +947,13 @@ void OoOCoreMainline::accept(const DynamicInst &inst) {
   u.staticInstructionId = inst.staticInstructionId;
   u.iterationPath = inst.iterationPath;
   bindAlignState(u, inst);
+  if (u.opClass == "LOAD" || u.opClass == "STORE") {
+    const auto &catalog = defaultInstructionCatalog();
+    const auto *spec = inst.catalogMode.empty() ? catalog.lookup(u.op) : catalog.lookupMemoryMode(u.op, inst.catalogMode);
+    if (!spec || spec->ubTransferBytes <= 0)
+      throw std::runtime_error("Missing Catalog UB transfer semantics: " + u.op);
+    u.ubTransferBytes = spec->ubTransferBytes;
+  }
 
   for (const auto &preg : u.pregSrc) {
     if (preg) {
@@ -866,11 +971,18 @@ void OoOCoreMainline::accept(const DynamicInst &inst) {
       continue;
     }
     std::string newPreg;
-    if (theoreticalLimitMode_ || freelist_.empty()) {
+    const bool predicate = valueStorage_.isPredicate(d);
+    auto &freelist = predicate ? predicateFreelist_ : freelist_;
+    if (theoreticalLimitMode_) {
       newPreg = "p" + std::to_string(nextDynamicPregId_++);
+      if (predicate)
+        predicatePhysicalIds_.insert(newPreg);
     } else {
-      newPreg = freelist_.front();
-      freelist_.pop_front();
+      newPreg = freelist.front();
+      const auto &ids = predicate ? predicatePhysicalIds_ : vectorPhysicalIds_;
+      if (!ids.count(newPreg) || !allocatedPhysicalIds_.insert(newPreg).second)
+        throw std::runtime_error("Corrupt physical register freelist");
+      freelist.pop_front();
     }
     std::string oldPreg;
     auto rit = rat_.find(d);
@@ -887,7 +999,10 @@ void OoOCoreMainline::accept(const DynamicInst &inst) {
     pregConsumerCount_[newPreg] = 0;
     pregPending_.insert(newPreg);
     pregReleaseEligibleCycle_.erase(newPreg);
-    ++allocCount;
+    if (predicate)
+      --visiblePredicateFree_;
+    else
+      ++allocCount;
   }
   if (enableCreditVisibilityDelay_ && allocCount > 0)
     visiblePregFree_ = std::max(0, visiblePregFree_ - allocCount);
@@ -952,6 +1067,10 @@ void OoOCore::updateLsqReadyStates(int64_t cycle, bool storesOnly) {
 void OoOCore::issueReadyLsu(
     int64_t cycle, int &issuedLoads, int &issuedStores, int &issuedTotal,
     std::unordered_set<int64_t> &membarBlockedLoggedIds) {
+  if (ubBudgetCycle_ != cycle) {
+    ubBudgetCycle_ = cycle;
+    ubBytesIssued_ = 0;
+  }
   if (cycle < vfStartupCost_ || issuedTotal >= ubSlots_)
     return;
 
@@ -987,6 +1106,13 @@ void OoOCore::issueReadyLsu(
     if (it == lsq_.end() || it->state != "ready")
       continue;
     Uop &u = *it;
+    const int64_t transferBytes = u.ubTransferBytes;
+    if (transferBytes <= 0)
+      throw std::runtime_error("Missing Uop UB transfer bytes");
+    if (transferBytes > ubBandwidthBytesPerCycle_)
+      throw std::runtime_error("UB bandwidth budget cannot fit one LSU transaction");
+    if (ubBytesIssued_ + transferBytes > ubBandwidthBytesPerCycle_)
+      continue;
     if (u.opClass == "LOAD" && issuedLoads >= loadPorts_)
       continue;
     if (u.opClass == "STORE" && issuedStores >= storePorts_)
@@ -1025,6 +1151,7 @@ void OoOCore::issueReadyLsu(
       }
     }
     ++issuedTotal;
+    ubBytesIssued_ += transferBytes;
 
     if (auto *robU = findRobUop(u.instId)) {
       robU->producerOpForStore = u.producerOpForStore;
