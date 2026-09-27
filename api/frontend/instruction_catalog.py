@@ -56,6 +56,7 @@ class OperandSpec:
     allowed_values: tuple[str, ...] = ()
     allow_integer_expression: bool = False
     post_update_delta: PostUpdateDeltaSpec | None = None
+    allowed_values_by_form: Mapping[str, tuple[str, ...]] = field(default_factory=lambda: MappingProxyType({}))
 
     @property
     def storage(self) -> StorageKind | None:
@@ -210,6 +211,12 @@ class InstructionCatalog:
 
         indexes: set[int] = set()
         for operand in spec.operands:
+            if not isinstance(operand.allowed_values_by_form, Mapping) or any(
+                form not in spec.forms or not isinstance(values, tuple) or not values
+                or any(not isinstance(v, str) or v not in operand.allowed_values for v in values)
+                for form, values in operand.allowed_values_by_form.items()
+            ):
+                raise ValueError(f"Invalid form-specific allowed values in {spec.opcode}")
             if (
                 isinstance(operand.argument_index, bool)
                 or not isinstance(operand.argument_index, int)
@@ -357,7 +364,7 @@ class InstructionCatalog:
             if memory_inputs or len(memory_outputs) != 1 or register_outputs:
                 raise ValueError(f"Invalid store signature for {spec.opcode}")
         elif spec.instruction_class == InstructionClass.COMPUTE:
-            if memory_inputs or memory_outputs or len(register_outputs) != 1:
+            if memory_inputs or memory_outputs or not register_outputs:
                 raise ValueError(f"Invalid compute signature for {spec.opcode}")
 
     @property
@@ -479,6 +486,12 @@ def instruction_catalog_from_dict(payload: Mapping[str, Any]) -> InstructionCata
             allowed_values = raw.get("allowed_values", [])
             allow_integer_expression = raw.get("allow_integer_expression", False)
             raw_post_update_delta = raw.get("post_update_delta")
+            form_values = raw.get("allowed_values_by_form", {})
+            if not isinstance(form_values, Mapping) or any(
+                not isinstance(k, str) or not isinstance(v, list)
+                for k, v in form_values.items()
+            ):
+                raise ValueError(f"{name}.allowed_values_by_form must map forms to arrays")
             if not isinstance(operand_name, str) or not operand_name:
                 raise ValueError(f"{name}.name must be a non-empty string")
             if not isinstance(optional, bool):
@@ -517,6 +530,7 @@ def instruction_catalog_from_dict(payload: Mapping[str, Any]) -> InstructionCata
                 allowed_values=tuple(allowed_values),
                 allow_integer_expression=allow_integer_expression,
                 post_update_delta=post_update_delta,
+                allowed_values_by_form=MappingProxyType({k: tuple(v) for k, v in form_values.items()}),
             ))
         signatures[name] = tuple(operands)
 

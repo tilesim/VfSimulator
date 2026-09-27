@@ -438,12 +438,22 @@ class _VFScopeParser:
         src, dst = self._bind_catalog_call(
             callee, spec, args, induction_variables
         )
+        if len(dst) > 1:
+            if len({value.value_id for value in dst}) != len(dst):
+                raise ValueError("Multi-result destinations must be distinct")
+            register_values = [value for value in (*src, *dst) if value.storage == "Register"]
+            if len({value.dtype for value in register_values}) > 1:
+                raise ValueError("Multi-result register operands must have matching dtypes")
         form = _infer_inst_form(op, dst, src)
         if form is None:
             form = self._infer_memory_form(spec, args)
         resolved_op, resolved_form = DEFAULT_INSTRUCTION_CATALOG.resolve_and_validate_form(
             op, form
         )
+        for operand in spec.operands:
+            allowed = operand.allowed_values_by_form.get(resolved_form)
+            if allowed is not None and operand.argument_index < len(args) and args[operand.argument_index].strip() not in allowed:
+                raise ValueError(f"{callee} {resolved_form} argument {operand.name} is outside its allowed values")
         attributes: dict[str, str] = {}
         if catalog_mode is not None:
             if resolved_form not in spec.forms or any(value.dtype != dst[0].dtype for value in dst):
@@ -1287,6 +1297,8 @@ def _is_numeric_scalar_literal(value: str) -> bool:
     text = value.strip()
     text = re.sub(r"^\(\s*(?:u?int(?:8|16|32|64)_t|unsigned|signed|int)\s*\)\s*", "", text)
     text = re.sub(r"^[()]|[()]$", "", text).strip()
+    if re.fullmatch(r"[+-]?(?:0[xX][0-9a-fA-F]+|[0-9]+)(?:[uU](?:[lL]{1,2})?|[lL]{1,2}[uU]?)?", text):
+        return True
     return bool(re.fullmatch(
         r"[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?[fFlL]?",
         text,

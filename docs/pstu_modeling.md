@@ -36,6 +36,8 @@ PSTU 不经过 compute EXU 的成对 II 仲裁；连续 STORE 发射仍由 store
 | uint16 | 16 B | 16 B | 8 |
 
 隐式推进被转换为 Canonical 的 `post_update_delta_bytes`，由统一地址状态机制处理。
+Canonical入口同时接受b16/b32，分别与uint16/uint32使用相同latency、span和推进值。
+到VSTAS的同位宽b/uint/fp形式均显式配置forwarding=1，不依赖全局form猜测。
 Python/C++ validator 均检查该推进值和 span。地址载荷大小与 UB 事务预算是两个字段，
 不得用物理目的寄存器数量推导。额外 POST_UPDATE 参数或非变量指针表达式明确拒绝。
 

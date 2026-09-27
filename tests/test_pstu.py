@@ -103,7 +103,8 @@ class PredicateStoreTest(unittest.TestCase):
         flushes = [r for r in rows if r["op"] == "VSTAS"]
         loads = [r for r in rows if r["op"] == "VLDS"]
         db = ParamDB(base_dir=str(ROOT))
-        forwarding = db.get_forwarding_cycles("VCMP_GT", "PSTU", "fp32", "uint32", "fp32")
+        forwarding = db.get_forwarding_cycles(
+            "VCMP_GT", "PSTU", producer_form="fp32", consumer_form="uint32")
         for compare, store, flush in zip(compares, stores, flushes):
             self.assertEqual(store["preg_src"], compare["preg_dst"])
             self.assertGreaterEqual(store["cy"], compare["cy"] + forwarding)

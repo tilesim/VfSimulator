@@ -62,6 +62,12 @@ struct GeneratedCallVariant {
   int variantIndex;
   int argumentCount;
 };
+struct GeneratedFormAllowedValue {
+  const char *opcode;
+  int argumentIndex;
+  const char *form;
+  const char *value;
+};
 struct GeneratedCallVariantValue {
   const char *opcode;
   int variantIndex;
@@ -185,6 +191,15 @@ InstructionCatalog::InstructionCatalog() {
       throw std::runtime_error("Generated allowed value references missing operand: " +
                                std::string(entry.opcode));
     operand->allowedValues.emplace(entry.value);
+  }
+  for (const auto &entry : kGeneratedFormAllowedValues) {
+    auto &operands = specs_.at(entry.opcode).operands;
+    auto operand = std::find_if(operands.begin(), operands.end(), [&](const NativeOperandSpec &candidate) {
+      return candidate.argumentIndex == entry.argumentIndex;
+    });
+    if (operand == operands.end())
+      throw std::runtime_error("Generated form-specific value references missing operand");
+    operand->allowedValuesByForm[entry.form].emplace(entry.value);
   }
   for (const auto &entry : kGeneratedCallVariants) {
     auto &variants = specs_.at(entry.opcode).callVariants;

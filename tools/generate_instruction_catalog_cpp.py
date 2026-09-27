@@ -105,6 +105,14 @@ def render_catalog_cpp(payload: Mapping[str, Any]) -> str:
                     )
                 )
     lines.append("};")
+    lines.append("static constexpr GeneratedFormAllowedValue kGeneratedFormAllowedValues[] = {")
+    for opcode, spec in instructions.items():
+        for operand in signatures[spec["signature"]]:
+            for form, values in operand.get("allowed_values_by_form", {}).items():
+                for value in values:
+                    lines.append("  {%s, %d, %s, %s}," % (
+                        _quote(opcode), operand["argument_index"], _quote(form), _quote(value)))
+    lines.append("};")
     lines.append("static constexpr GeneratedCallVariant kGeneratedCallVariants[] = {")
     for opcode, spec in instructions.items():
         for variant_index, variant in enumerate(spec.get("call_variants", [])):
