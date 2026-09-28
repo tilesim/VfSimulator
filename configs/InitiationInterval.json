@@ -2,6 +2,7 @@
   "schema_version": 2,
   "defaults": 1,
   "InitiationInterval": {
+    "VAXPY.fp32": {"VAXPY.fp32":1},
     "VCI.int32": {
       "VCI.int32": 2
     },

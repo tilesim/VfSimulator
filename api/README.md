@@ -88,6 +88,22 @@ canonical JSON 使用可选依赖 `jsonschema`。该依赖只在调用 `InputAPI
 - PSET 暂按 ALU/EXU01、占用 SHQ/EXQ 建模；缺失参数的预测不用于精度校准。
   实现与证据见 `docs/physical_predicate_register_modeling_plan.md`。
 
+### 读写操作数
+
+Catalog 的 `direction=read_write` 表示同一个 vector 参数读取旧值并写入新值。
+目前用于 FP32 `VAXPY(dst, src, scalar, predicate[, MODE_ZEROING])`。
+CCE binder 将该参数同时加入 src/dst；版本化先读旧 definition，再生成新 definition。
+输入侧 role 为 `source`，输出侧为 `destination`，不向核心引入特殊的读写 role。
+
+直接构造 canonical 输入时，VAXPY 的输入顺序为旧 dst、src、scalar、predicate，
+输出为新 dst。新旧 dst 必须使用不同的 SSA value_id；不能省略旧 dst 输入，
+也不能让输入引用本条指令自己的输出。旧 Python VFInst 接口同样需要显式列出旧 dst 输入。
+Python/C++ 校验均使用这一签名，调度、重命名和 last-use 仍走统一逻辑。
+
+固定 read_write 不等于已支持 MODE_MERGING。目前该模式仍拒绝；
+后续按指令 mode 扩展 Catalog 的访问属性解析时，需要同步输入签名校验和依赖测试，
+不能仅放开 mode 字符串或在 OoO 中按 opcode 特判。
+
 ## CCE 前端
 
 CCE parser 使用 `api/frontend/adapter_ir.py` 中的私有 `AdapterProgram` 表示尚未

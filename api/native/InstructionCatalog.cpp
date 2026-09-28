@@ -113,6 +113,8 @@ CatalogOperandDirection parseDirection(const std::string &value) {
     return CatalogOperandDirection::Input;
   if (value == "output")
     return CatalogOperandDirection::Output;
+  if (value == "read_write")
+    return CatalogOperandDirection::ReadWrite;
   if (value == "ignore")
     return CatalogOperandDirection::Ignore;
   throw std::runtime_error("Invalid generated operand direction: " + value);

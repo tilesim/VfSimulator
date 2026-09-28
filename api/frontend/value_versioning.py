@@ -18,7 +18,7 @@ from .adapter_ir import (
     normalize_adapter_program,
 )
 
-from .instruction_catalog import DEFAULT_INSTRUCTION_CATALOG, OperandDirection
+from .instruction_catalog import DEFAULT_INSTRUCTION_CATALOG
 from .schema import (
     AccessKind,
     AffineExpression,
@@ -313,13 +313,11 @@ class ValueVersioningPass:
         access_by_value = {item.value_id: item for item in node.memory_accesses}
         input_roles = [
             operand.role
-            for operand in (spec.operands if spec is not None else ())
-            if operand.direction == OperandDirection.INPUT
+            for operand in (spec.input_operands if spec is not None else ())
         ]
         output_roles = [
             operand.role
-            for operand in (spec.operands if spec is not None else ())
-            if operand.direction == OperandDirection.OUTPUT
+            for operand in (spec.output_operands if spec is not None else ())
         ]
         current = dict(environment)
         inputs: list[CanonicalOperand] = []

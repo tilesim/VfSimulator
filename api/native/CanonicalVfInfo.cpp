@@ -633,10 +633,12 @@ CanonicalValidationResult validateCanonicalVfInfo(const CanonicalVfInfo &vfInfo)
           std::vector<const NativeOperandSpec *> expectedInputs;
           std::vector<const NativeOperandSpec *> expectedOutputs;
           for (const auto &operand : catalogSpec->operands) {
-            if (operand.direction == CatalogOperandDirection::Input &&
+            if ((operand.direction == CatalogOperandDirection::Input ||
+                 operand.direction == CatalogOperandDirection::ReadWrite) &&
                 (vfInfo.schemaVersion == 2 || operand.kind != CatalogArgumentKind::Predicate))
               expectedInputs.push_back(&operand);
-            else if (operand.direction == CatalogOperandDirection::Output)
+            if (operand.direction == CatalogOperandDirection::Output ||
+                operand.direction == CatalogOperandDirection::ReadWrite)
               expectedOutputs.push_back(&operand);
           }
           auto actualOperands = [](const std::vector<CanonicalOperand> &operands) {
@@ -663,7 +665,10 @@ CanonicalValidationResult validateCanonicalVfInfo(const CanonicalVfInfo &vfInfo)
               const auto &operandSpec = *expected[operandIndex];
               const std::string operandPath = nodePath + "." + direction + "[" +
                                               std::to_string(operandIndex) + "]";
-              if (operandRoleName(operand.role) != operandSpec.role)
+              const auto expectedRole =
+                  direction == "inputs" && operandSpec.direction == CatalogOperandDirection::ReadWrite
+                      ? "source" : operandSpec.role;
+              if (operandRoleName(operand.role) != expectedRole)
                 error("catalog_operand_role_mismatch",
                       "Operand role conflicts with Catalog signature", operandPath,
                       inst->sourceLocation);

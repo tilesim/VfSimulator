@@ -8,7 +8,6 @@ from api.frontend.diagnostics import Diagnostic, DiagnosticSeverity, ValidationR
 from api.frontend.instruction_catalog import (
     ArgumentKind,
     DEFAULT_INSTRUCTION_CATALOG,
-    OperandDirection,
 )
 from api.frontend.schema import (
     SUPPORTED_SCHEMA_VERSIONS,
@@ -638,14 +637,12 @@ def validate_canonical_vf_info(vf_info: CanonicalVfInfo) -> ValidationResult:
                 if catalog_spec is not None:
                     expected_inputs = [
                         operand
-                        for operand in catalog_spec.operands
-                        if operand.direction == OperandDirection.INPUT
-                        and (vf_info.schema_version == 2 or operand.kind != ArgumentKind.PREDICATE)
+                        for operand in catalog_spec.input_operands
+                        if (vf_info.schema_version == 2 or operand.kind != ArgumentKind.PREDICATE)
                     ]
                     expected_outputs = [
                         operand
-                        for operand in catalog_spec.operands
-                        if operand.direction == OperandDirection.OUTPUT
+                        for operand in catalog_spec.output_operands
                     ]
                     actual_inputs = [
                         operand

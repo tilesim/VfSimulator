@@ -19,6 +19,7 @@ class FormRule(str, Enum):
 class OperandDirection(str, Enum):
     INPUT = "input"
     OUTPUT = "output"
+    READ_WRITE = "read_write"
     IGNORE = "ignore"
 
 
@@ -100,6 +101,24 @@ class InstructionSpec:
     forwarding_opcode: str | None = None
     implicit_post_update_bytes: Mapping[str, int] = field(default_factory=lambda: MappingProxyType({}))
     memory_span_by_form: Mapping[str, int] = field(default_factory=lambda: MappingProxyType({}))
+
+    @property
+    def input_operands(self) -> tuple[OperandSpec, ...]:
+        return tuple(
+            replace(op, direction=OperandDirection.INPUT, role=OperandRole.SOURCE)
+            if op.direction == OperandDirection.READ_WRITE else op
+            for op in self.operands
+            if op.direction in (OperandDirection.INPUT, OperandDirection.READ_WRITE)
+        )
+
+    @property
+    def output_operands(self) -> tuple[OperandSpec, ...]:
+        return tuple(
+            replace(op, direction=OperandDirection.OUTPUT)
+            if op.direction == OperandDirection.READ_WRITE else op
+            for op in self.operands
+            if op.direction in (OperandDirection.OUTPUT, OperandDirection.READ_WRITE)
+        )
 
 
 @dataclass(frozen=True)
@@ -275,6 +294,11 @@ class InstructionCatalog:
                 OperandRole.MEMORY,
             }:
                 raise ValueError(f"Output role mismatch in {spec.opcode}")
+            if operand.direction == OperandDirection.READ_WRITE and (
+                operand.kind != ArgumentKind.REGISTER
+                or operand.role != OperandRole.DESTINATION
+            ):
+                raise ValueError(f"Read-write operand must be a vector destination in {spec.opcode}")
             if operand.direction == OperandDirection.INPUT and operand.role not in {
                 OperandRole.SOURCE,
                 OperandRole.SCALAR,
@@ -355,7 +379,7 @@ class InstructionCatalog:
         register_outputs = [
             operand for operand in tracked
             if operand.kind in (ArgumentKind.REGISTER, ArgumentKind.PREDICATE)
-            and operand.direction == OperandDirection.OUTPUT
+            and operand.direction in (OperandDirection.OUTPUT, OperandDirection.READ_WRITE)
         ]
         if spec.instruction_class == InstructionClass.LOAD:
             if len(memory_inputs) != 1 or memory_outputs or (not register_outputs and spec.align_state_operation != "load_init"):

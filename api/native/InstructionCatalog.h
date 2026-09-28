@@ -13,7 +13,7 @@
 namespace vfsim {
 
 enum class CatalogInstructionClass { Load, Store, Compute, Control };
-enum class CatalogOperandDirection { Input, Output, Ignore };
+enum class CatalogOperandDirection { Input, Output, ReadWrite, Ignore };
 enum class CatalogArgumentKind {
   Register,
   UB,

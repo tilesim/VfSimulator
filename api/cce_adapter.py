@@ -533,9 +533,9 @@ class _VFScopeParser:
             )
             if operand is None or operand_spec.direction == OperandDirection.IGNORE:
                 continue
-            if operand_spec.direction == OperandDirection.INPUT:
+            if operand_spec.direction in (OperandDirection.INPUT, OperandDirection.READ_WRITE):
                 src.append(operand)
-            else:
+            if operand_spec.direction in (OperandDirection.OUTPUT, OperandDirection.READ_WRITE):
                 dst.append(operand)
         return src, dst
 
