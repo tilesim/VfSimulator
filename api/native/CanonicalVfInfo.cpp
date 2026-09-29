@@ -413,9 +413,10 @@ CanonicalValidationResult validateCanonicalVfInfo(const CanonicalVfInfo &vfInfo)
             error("unsupported_catalog_mode", "Unknown Catalog memory mode", nodePath, inst->sourceLocation);
           else {
             catalogSpec = variant;
-            for (const auto &operand : inst->inputs)
-              if (operand.memoryAccess && operand.memoryAccess->span != variant->memorySpan)
-                error("catalog_memory_span_mismatch", "Memory span conflicts with Catalog mode", nodePath, inst->sourceLocation);
+            for (const auto *operands : {&inst->inputs, &inst->outputs})
+              for (const auto &operand : *operands)
+                if (operand.memoryAccess && operand.memoryAccess->span != variant->memorySpan)
+                  error("catalog_memory_span_mismatch", "Memory span conflicts with Catalog mode", nodePath, inst->sourceLocation);
           }
         }
         for (const auto *operands : {&inst->inputs, &inst->outputs})
@@ -675,7 +676,12 @@ CanonicalValidationResult validateCanonicalVfInfo(const CanonicalVfInfo &vfInfo)
               auto value = vfInfo.values.find(operand.valueId);
               if (value == vfInfo.values.end())
                 continue;
-              if (catalogSpec->memorySpan && !catalogSpec->forms.count(value->second.dtype))
+              if (!operandSpec.allowedDtypes.empty() && !operandSpec.allowedDtypes.count(value->second.dtype))
+                error("catalog_operand_dtype_mismatch", "Operand dtype conflicts with Catalog signature", operandPath, inst->sourceLocation);
+              if (catalogSpec->memorySpan &&
+                  (value->second.storage == CanonicalStorageKind::Register ||
+                   value->second.storage == CanonicalStorageKind::UB) &&
+                  !catalogSpec->forms.count(value->second.dtype))
                 error("catalog_operand_dtype_mismatch", "Operand dtype conflicts with Catalog memory mode", operandPath, inst->sourceLocation);
               const CanonicalStorageKind storage = value->second.storage;
               bool storageMatches = true;

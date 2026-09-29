@@ -194,6 +194,15 @@ InstructionCatalog::InstructionCatalog() {
                                std::string(entry.opcode));
     operand->allowedValues.emplace(entry.value);
   }
+  for (const auto &entry : kGeneratedAllowedDtypes) {
+    auto &operands = specs_.at(entry.opcode).operands;
+    auto operand = std::find_if(operands.begin(), operands.end(), [&](const NativeOperandSpec &candidate) {
+      return candidate.argumentIndex == entry.argumentIndex;
+    });
+    if (operand == operands.end())
+      throw std::runtime_error("Generated dtype constraint references missing operand");
+    operand->allowedDtypes.emplace(entry.value);
+  }
   for (const auto &entry : kGeneratedFormAllowedValues) {
     auto &operands = specs_.at(entry.opcode).operands;
     auto operand = std::find_if(operands.begin(), operands.end(), [&](const NativeOperandSpec &candidate) {

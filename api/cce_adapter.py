@@ -571,7 +571,8 @@ class _VFScopeParser:
                 raise ValueError(
                     f"{callee} argument {index} must be a declared UB object: {arg}"
                 )
-            return AdapterValue(ub_reference[0], "UB")
+            dtype = self.ub_dtypes.get(ub_reference[0])
+            return AdapterValue(ub_reference[0], "UB", _cce_scalar_dtype_to_form(dtype) if dtype else None)
         if kind in {ArgumentKind.SCALAR, ArgumentKind.REGISTER_OR_SCALAR}:
             if name in self.register_names:
                 if kind == ArgumentKind.SCALAR or self.register_dtypes.get(name) == "bool":
@@ -1161,6 +1162,9 @@ def _parse_param_dtypes(params: str) -> Dict[str, str]:
 def _cce_scalar_dtype_to_form(dtype: str) -> str:
     normalized = dtype.lower()
     aliases = {
+        "int": "int32",
+        "unsigned": "uint32",
+        "unsigned int": "uint32",
         "float": "fp32",
         "half": "fp16",
         "bfloat16": "bf16",

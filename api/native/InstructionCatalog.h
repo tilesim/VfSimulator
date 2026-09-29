@@ -37,6 +37,7 @@ struct NativeOperandSpec {
   int postUpdateDeltaBitWidth = 0;
   int postUpdateDeltaUnitBytes = 0;
   std::unordered_set<std::string> allowedValues;
+  std::unordered_set<std::string> allowedDtypes;
   std::unordered_map<std::string, std::unordered_set<std::string>> allowedValuesByForm;
 };
 
