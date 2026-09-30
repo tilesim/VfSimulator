@@ -105,6 +105,18 @@ int main() {
           CatalogArgumentKind::AlignState)
     throw std::runtime_error("native generated instruction catalog mismatch");
 
+  auto packed = decodeCanonicalVfInfoJson(json::parseFile(
+      std::filesystem::path(VFSIM_SOURCE_ROOT) /
+      "tests/fixtures/canonical_vf_info/v2_plt_packed_fp16.json"));
+  if (!validateCanonicalVfInfo(packed).ok())
+    throw std::runtime_error("PLT/packed fp16 fixture rejected");
+  if (instructionCatalog.lookupMemoryMode("VSTS", "PK_B32")->ubTransferBytes != 256 ||
+      instructionCatalog.lookupMemoryMode("VLDS", "UNPK_B16")->memorySpan != 64)
+    throw std::runtime_error("Packed payload/transaction width mismatch");
+  packed.values.at("count.0").dtype = "fp32";
+  if (validateCanonicalVfInfo(packed).ok())
+    throw std::runtime_error("PLT accepted floating-point element count");
+
   const auto sharedFixtureJson = json::parseFile(
       std::filesystem::path(VFSIM_SOURCE_ROOT) /
       "tests/fixtures/canonical_vf_info/v1_valid_loop.json");

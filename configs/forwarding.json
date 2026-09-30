@@ -2,6 +2,7 @@
   "schema_version": 2,
   "defaults": 3,
   "forwarding": {
+    "VAXPY.fp32": {"VAXPY.fp32":5,"VSTS.fp32":7},
     "VINTLV.fp32":{"VSTS.fp32":9,"VSTS.b32":9},
     "VINTLV.b32":{"VSTS.fp32":9,"VSTS.b32":9},
     "VDINTLV.fp32":{"VSTS.fp32":9,"VSTS.b32":9},
@@ -361,6 +362,7 @@
       "VSTS.fp32": 4
     },
     "VLDS.fp32": {
+      "VAXPY.fp32": 6,
       "VSQRT.fp32": 6,
       "VLN.fp32": 6,
       "VADDS.fp32": 6,

@@ -40,6 +40,12 @@
 VLDS DINTLV_B32 和 VINTLV/VDINTLV。实测值与近似参数的区别见
 [谓词参数记录](../docs/predicate_timing_coverage.md)及各指令建模文档。
 
+后续同步来自 `vfinfo-core-api-unification` 的 `bdea3dc` 和 `e641c82`：
+增加 read-write operand/VAXPY、PLT，以及 VLDS UNPK_B16 / VSTS PK_B32。
+PLT 的 scalar 输入目前不建模 scalar producer 时序；packed 模式的有效载荷为
+128B，UB 仲裁预算仍保守取 256B。参数证据和限制见
+[PLT 与 packed memory 支持](../docs/plt_packed_memory_support.md)。
+
 - `runCanonicalVfInfo()`：唯一正式预测入口，跳过 legacy value lowering、vreg
   live-range normalization 和 single-super-iteration rewriting。
 - `loadCanonicalJsonVfInfo()`：Native JSON runner 的唯一输入解析入口。
