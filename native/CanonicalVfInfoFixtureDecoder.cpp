@@ -199,7 +199,7 @@ CanonicalOperand operand(const json::Value &value) {
       rejectUnknownFields(
           memoryObject,
           {"base_object_id", "offset", "access_kind", "span", "alias_group",
-           "address_state_id", "update_mode", "post_update_delta_bytes"},
+           "address_state_id", "update_mode", "post_update_delta_bytes", "address_unit_bytes"},
           "canonical memory_access");
       CanonicalMemoryAccess memory;
       memory.baseObjectId = required(memoryObject, "base_object_id").asString();
@@ -223,6 +223,7 @@ CanonicalOperand operand(const json::Value &value) {
       else
         throw std::runtime_error("unsupported canonical access kind: " + access);
       memory.span = optionalInt(memoryObject, "span");
+      memory.addressUnitBytes = optionalInt(memoryObject, "address_unit_bytes");
       memory.aliasGroup = optionalString(memoryObject, "alias_group");
       memory.addressStateId = optionalString(memoryObject, "address_state_id");
       if (const auto *mode = find(memoryObject, "update_mode"))
