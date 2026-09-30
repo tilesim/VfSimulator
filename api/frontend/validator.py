@@ -385,6 +385,10 @@ def validate_canonical_vf_info(vf_info: CanonicalVfInfo) -> ValidationResult:
         if memory.span is not None:
             validate_int64(memory.span, f"{path}.memory_access.span", minimum=1,
                            code="invalid_memory_span")
+        if memory.address_unit_bytes is not None and (
+            type(memory.address_unit_bytes) is not int or memory.address_unit_bytes not in (1, 2, 4, 8)
+        ):
+            error("invalid_address_unit", "Address unit must be 1, 2, 4 or 8 bytes", path=path)
         if memory.address_state_id is not None and (
             not isinstance(memory.address_state_id, str) or not memory.address_state_id
         ):
@@ -551,6 +555,8 @@ def validate_canonical_vf_info(vf_info: CanonicalVfInfo) -> ValidationResult:
                             error("catalog_implicit_update_mismatch", "Memory access must declare its Catalog implicit pointer update", path=node_path)
                         if expected_span is not None and memory.span != expected_span:
                             error("catalog_memory_span_mismatch", "Memory span conflicts with Catalog form", path=node_path)
+                        if memory.address_unit_bytes != catalog_spec.memory_address_unit_bytes:
+                            error("catalog_memory_address_unit_mismatch", "Address unit conflicts with Catalog", path=node_path)
                 validate_scalar_map(node.attributes, f"{node_path}.attributes")
                 for operand_index, operand in enumerate(node.inputs):
                     operand_path = f"{node_path}.inputs[{operand_index}]"

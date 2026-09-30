@@ -71,6 +71,7 @@ def _operand_to_dict(value: CanonicalOperand) -> dict[str, Any]:
                            for t in value.memory_access.post_update_delta_bytes.terms]}
                 if value.memory_access.post_update_delta_bytes is not None else None
             ),
+            "address_unit_bytes": value.memory_access.address_unit_bytes,
         }
     return {
         "value_id": value.value_id,
@@ -211,6 +212,7 @@ def _operand(value: Mapping[str, Any]) -> CanonicalOperand:
                                 memory_value["post_update_delta_bytes"].get("terms", [])),
                 ) if memory_value.get("post_update_delta_bytes") is not None else None
             ),
+            address_unit_bytes=memory_value.get("address_unit_bytes"),
         )
     return CanonicalOperand(
         value_id=value["value_id"],

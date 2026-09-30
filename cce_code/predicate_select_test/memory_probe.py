@@ -20,7 +20,50 @@ def make_case(kind, dtype, offset, iterations, active_elements=37):
     values = [i % 251 - 125 for i in range(allocation // width)]
     data = struct.pack(f"<{len(values)}{fmt}", *values)
     init_output = ""
-    if kind == "unpack_pack_tail":
+    if kind.startswith("predicate_"):
+        if dtype != "fp32" or iterations != 1:
+            raise ValueError("Predicate spill probes require fp32, iterations=1")
+        # A B32 predicate uses one bit per four byte lanes; preserve all 256 bits.
+        mask = sum(1 << (4 * i) for i in range(0, 64, 2)).to_bytes(32, "little")
+        data = data[:768] + mask + data[800:]
+        prefix = '''vector_f32 x,y,z;
+        vector_bool all=pset_b32(PAT_ALL),p,q;
+        vlds(x,input,0,NORM);vlds(y,input,64,NORM);
+        __ubuf__ uint32_t *bits=(__ubuf__ uint32_t *)input;
+        __ubuf__ uint32_t *saved=(__ubuf__ uint32_t *)out;'''
+        if kind == "predicate_compare_store":
+            body = prefix + "vcmp_eq(p,x,x,all);psts(p,saved,32,NORM);"
+            init_output = "copy_gm_to_ubuf_align_v2(out, inputGM, 0, 1, 256, 0, 0, 0, 0, 0, 0);"
+            golden = data[:32] + bytes([0x11])*32 + data[64:256]
+        elif kind.startswith("predicate_pset_store"):
+            bits = 32 if kind.endswith("32") else 16 if kind.endswith("16") else 8
+            body = f"vector_bool p=pset_b{bits}(PAT_ALL);__ubuf__ uint32_t *saved=(__ubuf__ uint32_t *)out;psts(p,saved,32,NORM);"
+            init_output = "copy_gm_to_ubuf_align_v2(out, inputGM, 0, 1, 256, 0, 0, 0, 0, 0, 0);"
+            golden = data[:32] + sum(1 << i for i in range(0,256,bits//8)).to_bytes(32,"little") + data[64:256]
+        else:
+            body = prefix + "plds(p,bits,768,NORM);"
+            if kind == "predicate_load_store":
+                body += "psts(p,saved,32,NORM);"
+                init_output = "copy_gm_to_ubuf_align_v2(out, inputGM, 0, 1, 256, 0, 0, 0, 0, 0, 0);"
+                golden = data[:32] + mask + data[64:256]
+            elif kind == "predicate_load_masked_store":
+                init_output = "copy_gm_to_ubuf_align_v2(out, inputGM, 0, 1, 256, 0, 0, 0, 0, 0, 0);"
+                body += "vsts(y,out,0,NORM_B32,p);vsts(x,out,64,NORM_B32,all);"
+                golden = struct.pack("<64f", *[values[64+i] if i%2==0 else values[i] for i in range(64)]) + data[:256]
+            else:
+                if kind == "predicate_load_compute":
+                    body += "vadds(z,x,1.0f,p,MODE_ZEROING);"
+                    result = [values[i]+1 if i%2==0 else 0 for i in range(64)]
+                else:
+                    if kind == "predicate_load_logic":
+                        body += "pand(q,p,p,all);"
+                    if kind == "predicate_load_compare":
+                        body += "vcmp_eq(q,x,x,p);"
+                    body += f"vsel(z,x,y,{'q' if kind in ('predicate_load_logic','predicate_load_compare') else 'p'});"
+                    result = [values[i] if i%2==0 else values[64+i] for i in range(64)]
+                body += "vsts(z,out,0,NORM_B32,all);"
+                golden = struct.pack("<64f", *result)
+    elif kind == "unpack_pack_tail":
         if dtype != "fp16" or offset != 0 or iterations != 1:
             raise ValueError("Packed tail probe requires fp16, offset=0, iterations=1")
         init_output = "copy_gm_to_ubuf_align_v2(out, inputGM, 0, 1, 256, 0, 0, 0, 0, 0, 0);"
@@ -143,7 +186,7 @@ extern "C" __global__ __aicore__ void memory_probe(
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--kind", choices=["vldsx2", "vldus", "vldus_straight", "vldus_no_update", "pstu", "dual_pairs", "norm_pairs", "unpack_pack_tail"], required=True)
+    parser.add_argument("--kind", choices=["vldsx2", "vldus", "vldus_straight", "vldus_no_update", "pstu", "dual_pairs", "norm_pairs", "unpack_pack_tail", "predicate_compare_store", "predicate_pset_store", "predicate_pset_store16", "predicate_pset_store32", "predicate_load_store", "predicate_load_select", "predicate_load_compute", "predicate_load_logic", "predicate_load_compare", "predicate_load_masked_store"], required=True)
     parser.add_argument("--dtype", choices=["fp32", "fp16", "int32"], default="fp32")
     parser.add_argument("--offset", type=int, default=1)
     parser.add_argument("--iterations", type=int, default=3)

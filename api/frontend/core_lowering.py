@@ -265,6 +265,7 @@ class CoreLoweringPass:
                         "offset": _affine_expression(memory.offset),
                         "access_kind": memory.access_kind.value,
                         "span": memory.span,
+                        "address_unit_bytes": memory.address_unit_bytes,
                         "alias_group": memory.alias_group,
                         "address_state_id": memory.address_state_id,
                         "update_mode": memory.update_mode,

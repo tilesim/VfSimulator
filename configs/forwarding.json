@@ -2,6 +2,7 @@
   "schema_version": 2,
   "defaults": 3,
   "forwarding": {
+    "PLDS.b8":{"VSEL.fp32":6,"VADDS.fp32":6,"PAND.b8":6,"VCMP_EQ.fp32":6,"PSTS.b8":8,"VSTS.fp32":8},
     "VMOV.fp32":{"VMOV.fp32":2,"VMOV.b32":2,"VAXPY.fp32":2,"VSTS.fp32":4,"VSTS.b32":4},
     "VMOV.b32":{"VMOV.fp32":2,"VMOV.b32":2,"VAXPY.fp32":2,"VSTS.fp32":4,"VSTS.b32":4},
     "VDUP.b32":{"VMOV.fp32":2,"VMOV.b32":2},
@@ -17,9 +18,9 @@
     "VLDAS.fp32":{"*":1},
     "VLDAS.fp16":{"*":1},
     "VLDAS.int32":{"*":1},
-    "PSET_B8.b8": {"*": 2},
-    "PSET_B16.b16": {"*": 2},
-    "PSET_B32.b32": {"*": 2},
+    "PSET_B8.b8": {"PSTS.b8":4,"*": 2},
+    "PSET_B16.b16": {"PSTS.b8":4,"*": 2},
+    "PSET_B32.b32": {"PSTS.b8":4,"*": 2},
     "VLDS.uint32": {
       "VOR.b32": 6
     },
@@ -825,6 +826,7 @@
       "VSHLS.fp32": 2
     },
     "VCMP_EQ.fp32": {
+      "PSTS.b8": 4,
       "VMAX.fp32": 4,
       "VSUB.fp32": 4,
       "VADD.fp32": 4,

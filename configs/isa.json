@@ -5,6 +5,8 @@
     "vf_drain_cost": 12
   },
   "instructions": {
+    "PLDS": {"op_class":"LOAD","forms":{"b8":{"latency":9,"dtype":"bool"}}},
+    "PSTS": {"op_class":"STORE","forms":{"b8":{"latency":9,"dtype":"bool"}}},
     "VMOV": {"op_class":"COMPUTE","forms":{"fp32":{"latency":6,"EXU":"ALU","dispatch_exu":"EXU01","dtype":"fp32"},"b32":{"latency":6,"EXU":"ALU","dispatch_exu":"EXU01","dtype":"fp32"}}},
     "PLT": {"op_class":"COMPUTE","forms":{"b32":{"latency":6,"EXU":"ALU","dispatch_exu":"EXU01","dtype":"bool"}}},
     "VAXPY": {"op_class":"COMPUTE","forms":{"fp32":{"latency":9,"EXU":"ALU","dispatch_exu":"EXU01","dtype":"fp32"}}},

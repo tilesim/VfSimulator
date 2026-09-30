@@ -413,6 +413,7 @@ class ValueVersioningPass:
                     ),
                     access_kind=access_kind,
                     span=access.span if access is not None else None,
+                    address_unit_bytes=access.address_unit_bytes if access else None,
                     address_state_id=access.address_state_id if access else None,
                     update_mode=access.update_mode if access else "none",
                     post_update_delta_bytes=(

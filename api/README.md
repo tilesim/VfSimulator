@@ -166,6 +166,14 @@ last-use/keep 标记和稳定 UB object。旧 vreg normalization、字符串 `_l
 
 ## POST_UPDATE 地址状态
 
+`PSTS(predicate, ptr, byte_offset, NORM)` / `PLDS(predicate, ptr, byte_offset, NORM)`
+支持完整谓词位图的保存/恢复，Canonical form 为 `b8`。它们通过谓词物理寄存器池
+建立数据依赖，不使用 vector_align，也不占用向量物理寄存器。
+其 `MemoryAccess.address_unit_bytes=1`、`span=32`；offset 和 span 都以字节计。
+普通访存的 `address_unit_bytes` 缺省，继续使用内存元素单位。该字段不改变
+`post_update_delta_bytes` 本身的字节单位。参数与实测记录见
+[PSTS/PLDS 建模](../docs/predicate_spill_memory_modeling.md)。
+
 Canonical `MemoryAccess` 可提供 `address_state_id`、`update_mode`（`none` 或
 `post_update`）和 `post_update_delta_bytes`（affine expression）。更新必须同时
 提供状态与增量；零增量仍是一条更新事件。普通访问也应提供所读取的状态 ID，

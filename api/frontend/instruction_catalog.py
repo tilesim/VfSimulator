@@ -102,6 +102,7 @@ class InstructionSpec:
     forwarding_opcode: str | None = None
     implicit_post_update_bytes: Mapping[str, int] = field(default_factory=lambda: MappingProxyType({}))
     memory_span_by_form: Mapping[str, int] = field(default_factory=lambda: MappingProxyType({}))
+    memory_address_unit_bytes: int | None = None
 
     @property
     def input_operands(self) -> tuple[OperandSpec, ...]:
@@ -196,6 +197,11 @@ class InstructionCatalog:
 
     @staticmethod
     def _validate_spec(spec: InstructionSpec) -> None:
+        if spec.memory_address_unit_bytes is not None and (
+            type(spec.memory_address_unit_bytes) is not int
+            or spec.memory_address_unit_bytes not in (1, 2, 4, 8)
+        ):
+            raise ValueError(f"Invalid memory_address_unit_bytes for {spec.opcode}")
         for name in ("implicit_post_update_bytes", "memory_span_by_form"):
             values = getattr(spec, name)
             if not isinstance(values, Mapping) or any(
@@ -682,6 +688,7 @@ def instruction_catalog_from_dict(payload: Mapping[str, Any]) -> InstructionCata
             forwarding_opcode=raw.get("forwarding_opcode"),
             implicit_post_update_bytes=memory_form_maps["implicit_post_update_bytes"],
             memory_span_by_form=memory_form_maps["memory_span_by_form"],
+            memory_address_unit_bytes=raw.get("memory_address_unit_bytes"),
         )
         modes = raw.get("memory_modes", {})
         if not isinstance(modes, Mapping):

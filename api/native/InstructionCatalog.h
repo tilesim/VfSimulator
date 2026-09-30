@@ -64,6 +64,7 @@ struct NativeInstructionSpec {
   std::string forwardingOpcode;
   std::unordered_map<std::string, int64_t> implicitPostUpdateBytes;
   std::unordered_map<std::string, int64_t> memorySpanByForm;
+  int memoryAddressUnitBytes = 0;
 };
 
 class InstructionCatalog {

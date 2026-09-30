@@ -110,7 +110,8 @@
         "alias_group": {"type": ["string", "null"]},
         "address_state_id": {"type": ["string", "null"], "minLength": 1},
         "update_mode": {"enum": ["none", "post_update"]},
-        "post_update_delta_bytes": {"anyOf": [{"$ref": "#/$defs/affineExpression"}, {"type": "null"}]}
+        "post_update_delta_bytes": {"anyOf": [{"$ref": "#/$defs/affineExpression"}, {"type": "null"}]},
+        "address_unit_bytes": {"enum": [null, 1, 2, 4, 8]}
       }
     },
     "operand": {
