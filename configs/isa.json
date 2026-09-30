@@ -1025,7 +1025,7 @@
       "op_class": "COMPUTE",
       "forms": {
         "f32_to_f16": {
-          "pipeline_startup_cost": 6,
+          "pipeline_startup_cost": 8,
           "latency": 7,
           "pipeline_drain_cost": 5,
           "data_load_cost": 9,
@@ -1095,7 +1095,7 @@
       "op_class": "COMPUTE",
       "forms": {
         "f32_to_s32": {
-          "pipeline_startup_cost": 6,
+          "pipeline_startup_cost": 9,
           "latency": 8,
           "pipeline_drain_cost": 6,
           "data_load_cost": 9,
@@ -1383,6 +1383,42 @@
             "fp16"
           ],
           "dtype": "fp16"
+        }
+      }
+    },
+    "PLT_B16": {
+      "op_class": "COMPUTE",
+      "forms": {
+        "b16": {
+          "pipeline_startup_cost": 1,
+          "latency": 3,
+          "pipeline_drain_cost": 0,
+          "data_load_cost": 0,
+          "data_store_cost": 0,
+          "throughput": 1,
+          "EXU": "ALU",
+          "dispatch_exu": "EXU01",
+          "src_dtypes": ["b16"],
+          "dst_dtypes": ["bool"],
+          "dtype": "b16"
+        }
+      }
+    },
+    "PLT_B32": {
+      "op_class": "COMPUTE",
+      "forms": {
+        "b32": {
+          "pipeline_startup_cost": 1,
+          "latency": 6,
+          "pipeline_drain_cost": 0,
+          "data_load_cost": 0,
+          "data_store_cost": 0,
+          "throughput": 1,
+          "EXU": "ALU",
+          "dispatch_exu": "EXU01",
+          "src_dtypes": ["b32"],
+          "dst_dtypes": ["bool"],
+          "dtype": "b32"
         }
       }
     }

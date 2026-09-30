@@ -133,9 +133,16 @@ def program_to_canonical(program: VfSimProgram):
                 form = candidates[0].dtype
                 if form not in spec.forms:
                     form = {"bf16": "b16", "int32": "b32", "uint32": "b32"}.get(form, form)
-        if form is not None:
+        # ``vfsim_fallback`` is emitted by a source-faithful lowerer for an
+        # instruction whose ISA form is not present in the catalog/timing
+        # database.  Keep the original opcode and inferred form intact so
+        # ParamDB can issue its documented unsupported-form/op fallback.
+        # Validating here would reject e.g. ``VAND.s16`` before ParamDB has a
+        # chance to create that fallback event.
+        is_fallback = bool((node.config or {}).get("vfsim_fallback"))
+        if form is not None and not is_fallback:
             opcode, form = DEFAULT_INSTRUCTION_CATALOG.resolve_and_validate_form(opcode, form)
-        if spec is not None and form not in spec.forms and not spec.virtual:
+        if spec is not None and form not in spec.forms and not spec.virtual and not is_fallback:
             raise ValueError(f'{node.op}: unsupported form {form!r} for selected Catalog signature')
         supplied = {access.value_id: access for access in node.memory_accesses}
         if len(supplied) != len(node.memory_accesses):

@@ -504,25 +504,31 @@ def validate_canonical_vf_info(vf_info: CanonicalVfInfo) -> ValidationResult:
                             "Instruction class conflicts with Catalog semantics",
                             path=node_path,
                         )
-                    try:
-                        resolved_opcode, _ = (
-                            DEFAULT_INSTRUCTION_CATALOG.resolve_and_validate_form(
-                                node.opcode, node.form
+                    # A source-faithful frontend may retain an instruction
+                    # whose form is not in this catalog.  In that explicit
+                    # fallback mode ParamDB supplies the documented default
+                    # event, so rejecting it here would make the fallback
+                    # unreachable.
+                    if not bool(node.attributes.get("vfsim_fallback")):
+                        try:
+                            resolved_opcode, _ = (
+                                DEFAULT_INSTRUCTION_CATALOG.resolve_and_validate_form(
+                                    node.opcode, node.form
+                                )
                             )
-                        )
-                        if resolved_opcode != node.opcode:
-                            error(
-                                "catalog_specialization_required",
-                                "Virtual opcode/form must use its specialized opcode",
-                                path=node_path,
-                            )
-                    except ValueError:
-                        if not catalog_spec.virtual:
-                            error(
-                                "catalog_instruction_form_mismatch",
-                                "Instruction form conflicts with Catalog semantics",
-                                path=node_path,
-                            )
+                            if resolved_opcode != node.opcode:
+                                error(
+                                    "catalog_specialization_required",
+                                    "Virtual opcode/form must use its specialized opcode",
+                                    path=node_path,
+                                )
+                        except ValueError:
+                            if not catalog_spec.virtual:
+                                error(
+                                    "catalog_instruction_form_mismatch",
+                                    "Instruction form conflicts with Catalog semantics",
+                                    path=node_path,
+                                )
                     if catalog_spec.align_state_operation is not None:
                         if (
                             node.attributes.get("align_state_operation")
