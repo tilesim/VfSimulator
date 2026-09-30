@@ -10,7 +10,7 @@ import subprocess
 import tempfile
 
 
-def make_case(kind, dtype, offset, iterations):
+def make_case(kind, dtype, offset, iterations, active_elements=37):
     types = {"fp32": ("float", "f32", "f", 4),
              "fp16": ("half", "f16", "e", 2),
              "int32": ("int32_t", "s32", "i", 4)}
@@ -20,7 +20,20 @@ def make_case(kind, dtype, offset, iterations):
     values = [i % 251 - 125 for i in range(allocation // width)]
     data = struct.pack(f"<{len(values)}{fmt}", *values)
     init_output = ""
-    if kind in {"dual_pairs", "norm_pairs"}:
+    if kind == "unpack_pack_tail":
+        if dtype != "fp16" or offset != 0 or iterations != 1:
+            raise ValueError("Packed tail probe requires fp16, offset=0, iterations=1")
+        init_output = "copy_gm_to_ubuf_align_v2(out, inputGM, 0, 1, 256, 0, 0, 0, 0, 0, 0);"
+        if not 0 <= active_elements <= 64:
+            raise ValueError("Packed probe active elements must be between 0 and 64")
+        body = f'''uint32_t count = {active_elements};
+        vector_bool tail = plt_b32(count, POST_UPDATE);
+        vector_f16 value;
+        vlds(value, input, 64, UNPK_B16);
+        vsts(value, out, 0, PK_B32, tail);'''
+        written_bytes = active_elements * 2
+        golden = data[128:128+written_bytes] + data[written_bytes:256]
+    elif kind in {"dual_pairs", "norm_pairs"}:
         if dtype != "fp32" or offset != 0:
             raise ValueError("Paired throughput probe requires FP32, offset zero")
         dual = kind == "dual_pairs"
@@ -130,14 +143,15 @@ extern "C" __global__ __aicore__ void memory_probe(
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--kind", choices=["vldsx2", "vldus", "vldus_straight", "vldus_no_update", "pstu", "dual_pairs", "norm_pairs"], required=True)
+    parser.add_argument("--kind", choices=["vldsx2", "vldus", "vldus_straight", "vldus_no_update", "pstu", "dual_pairs", "norm_pairs", "unpack_pack_tail"], required=True)
     parser.add_argument("--dtype", choices=["fp32", "fp16", "int32"], default="fp32")
     parser.add_argument("--offset", type=int, default=1)
     parser.add_argument("--iterations", type=int, default=3)
+    parser.add_argument("--active-elements", type=int, default=37)
     args = parser.parse_args()
     if args.offset < 0 or args.iterations < 1:
         parser.error("offset must be nonnegative and iterations positive")
-    source, data, golden = make_case(args.kind, args.dtype, args.offset, args.iterations)
+    source, data, golden = make_case(args.kind, args.dtype, args.offset, args.iterations, args.active_elements)
     work = Path(tempfile.mkdtemp(prefix="vfsim-memory-probe-"))
     print(f"Artifacts: {work}", flush=True)
     (work / "kernel.cce").write_text(source)

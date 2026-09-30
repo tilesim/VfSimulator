@@ -413,9 +413,10 @@ CanonicalValidationResult validateCanonicalVfInfo(const CanonicalVfInfo &vfInfo)
             error("unsupported_catalog_mode", "Unknown Catalog memory mode", nodePath, inst->sourceLocation);
           else {
             catalogSpec = variant;
-            for (const auto &operand : inst->inputs)
-              if (operand.memoryAccess && operand.memoryAccess->span != variant->memorySpan)
-                error("catalog_memory_span_mismatch", "Memory span conflicts with Catalog mode", nodePath, inst->sourceLocation);
+            for (const auto *operands : {&inst->inputs, &inst->outputs})
+              for (const auto &operand : *operands)
+                if (operand.memoryAccess && operand.memoryAccess->span != variant->memorySpan)
+                  error("catalog_memory_span_mismatch", "Memory span conflicts with Catalog mode", nodePath, inst->sourceLocation);
           }
         }
         for (const auto *operands : {&inst->inputs, &inst->outputs})
@@ -633,10 +634,12 @@ CanonicalValidationResult validateCanonicalVfInfo(const CanonicalVfInfo &vfInfo)
           std::vector<const NativeOperandSpec *> expectedInputs;
           std::vector<const NativeOperandSpec *> expectedOutputs;
           for (const auto &operand : catalogSpec->operands) {
-            if (operand.direction == CatalogOperandDirection::Input &&
+            if ((operand.direction == CatalogOperandDirection::Input ||
+                 operand.direction == CatalogOperandDirection::ReadWrite) &&
                 (vfInfo.schemaVersion == 2 || operand.kind != CatalogArgumentKind::Predicate))
               expectedInputs.push_back(&operand);
-            else if (operand.direction == CatalogOperandDirection::Output)
+            if (operand.direction == CatalogOperandDirection::Output ||
+                operand.direction == CatalogOperandDirection::ReadWrite)
               expectedOutputs.push_back(&operand);
           }
           auto actualOperands = [](const std::vector<CanonicalOperand> &operands) {
@@ -663,14 +666,22 @@ CanonicalValidationResult validateCanonicalVfInfo(const CanonicalVfInfo &vfInfo)
               const auto &operandSpec = *expected[operandIndex];
               const std::string operandPath = nodePath + "." + direction + "[" +
                                               std::to_string(operandIndex) + "]";
-              if (operandRoleName(operand.role) != operandSpec.role)
+              const auto expectedRole =
+                  direction == "inputs" && operandSpec.direction == CatalogOperandDirection::ReadWrite
+                      ? "source" : operandSpec.role;
+              if (operandRoleName(operand.role) != expectedRole)
                 error("catalog_operand_role_mismatch",
                       "Operand role conflicts with Catalog signature", operandPath,
                       inst->sourceLocation);
               auto value = vfInfo.values.find(operand.valueId);
               if (value == vfInfo.values.end())
                 continue;
-              if (catalogSpec->memorySpan && !catalogSpec->forms.count(value->second.dtype))
+              if (!operandSpec.allowedDtypes.empty() && !operandSpec.allowedDtypes.count(value->second.dtype))
+                error("catalog_operand_dtype_mismatch", "Operand dtype conflicts with Catalog signature", operandPath, inst->sourceLocation);
+              if (catalogSpec->memorySpan &&
+                  (value->second.storage == CanonicalStorageKind::Register ||
+                   value->second.storage == CanonicalStorageKind::UB) &&
+                  !catalogSpec->forms.count(value->second.dtype))
                 error("catalog_operand_dtype_mismatch", "Operand dtype conflicts with Catalog memory mode", operandPath, inst->sourceLocation);
               const CanonicalStorageKind storage = value->second.storage;
               bool storageMatches = true;

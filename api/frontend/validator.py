@@ -8,7 +8,6 @@ from api.frontend.diagnostics import Diagnostic, DiagnosticSeverity, ValidationR
 from api.frontend.instruction_catalog import (
     ArgumentKind,
     DEFAULT_INSTRUCTION_CATALOG,
-    OperandDirection,
 )
 from api.frontend.schema import (
     SUPPORTED_SCHEMA_VERSIONS,
@@ -480,7 +479,7 @@ def validate_canonical_vf_info(vf_info: CanonicalVfInfo) -> ValidationResult:
                         error("unsupported_catalog_mode", "Unknown Catalog memory mode", path=node_path)
                     else:
                         catalog_spec = mode_spec
-                        if any(o.memory_access is not None and o.memory_access.span != mode_spec.memory_span for o in node.inputs):
+                        if any(o.memory_access is not None and o.memory_access.span != mode_spec.memory_span for o in (*node.inputs, *node.outputs)):
                             error("catalog_memory_span_mismatch", "Memory span conflicts with Catalog mode", path=node_path)
                 has_predicate = any(
                     vf_info.values.get(operand.value_id) is not None
@@ -638,14 +637,12 @@ def validate_canonical_vf_info(vf_info: CanonicalVfInfo) -> ValidationResult:
                 if catalog_spec is not None:
                     expected_inputs = [
                         operand
-                        for operand in catalog_spec.operands
-                        if operand.direction == OperandDirection.INPUT
-                        and (vf_info.schema_version == 2 or operand.kind != ArgumentKind.PREDICATE)
+                        for operand in catalog_spec.input_operands
+                        if (vf_info.schema_version == 2 or operand.kind != ArgumentKind.PREDICATE)
                     ]
                     expected_outputs = [
                         operand
-                        for operand in catalog_spec.operands
-                        if operand.direction == OperandDirection.OUTPUT
+                        for operand in catalog_spec.output_operands
                     ]
                     actual_inputs = [
                         operand
@@ -686,7 +683,11 @@ def validate_canonical_vf_info(vf_info: CanonicalVfInfo) -> ValidationResult:
                             value = vf_info.values.get(operand.value_id)
                             if value is None:
                                 continue
-                            if catalog_spec.memory_span is not None and value.dtype not in catalog_spec.forms:
+                            if operand_spec.allowed_dtypes and value.dtype not in operand_spec.allowed_dtypes:
+                                error("catalog_operand_dtype_mismatch", "Operand dtype conflicts with Catalog signature", path=operand_path)
+                            if (catalog_spec.memory_span is not None
+                                and value.storage in (StorageKind.REGISTER, StorageKind.UB)
+                                and value.dtype not in catalog_spec.forms):
                                 error("catalog_operand_dtype_mismatch", "Operand dtype conflicts with Catalog memory mode", path=operand_path)
                             allowed_storage = {
                                 ArgumentKind.REGISTER: {StorageKind.REGISTER},

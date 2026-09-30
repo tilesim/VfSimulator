@@ -113,6 +113,8 @@ CatalogOperandDirection parseDirection(const std::string &value) {
     return CatalogOperandDirection::Input;
   if (value == "output")
     return CatalogOperandDirection::Output;
+  if (value == "read_write")
+    return CatalogOperandDirection::ReadWrite;
   if (value == "ignore")
     return CatalogOperandDirection::Ignore;
   throw std::runtime_error("Invalid generated operand direction: " + value);
@@ -191,6 +193,15 @@ InstructionCatalog::InstructionCatalog() {
       throw std::runtime_error("Generated allowed value references missing operand: " +
                                std::string(entry.opcode));
     operand->allowedValues.emplace(entry.value);
+  }
+  for (const auto &entry : kGeneratedAllowedDtypes) {
+    auto &operands = specs_.at(entry.opcode).operands;
+    auto operand = std::find_if(operands.begin(), operands.end(), [&](const NativeOperandSpec &candidate) {
+      return candidate.argumentIndex == entry.argumentIndex;
+    });
+    if (operand == operands.end())
+      throw std::runtime_error("Generated dtype constraint references missing operand");
+    operand->allowedDtypes.emplace(entry.value);
   }
   for (const auto &entry : kGeneratedFormAllowedValues) {
     auto &operands = specs_.at(entry.opcode).operands;

@@ -178,7 +178,9 @@ private:
     if (spec == nullptr)
       return result;
     for (const auto &item : spec->operands)
-      if (item.direction == direction)
+      if (item.direction == direction ||
+          (item.direction == CatalogOperandDirection::ReadWrite &&
+           (direction == CatalogOperandDirection::Input || direction == CatalogOperandDirection::Output)))
         result.push_back(&item);
     std::sort(result.begin(), result.end(), [](const auto *lhs, const auto *rhs) {
       return lhs->argumentIndex < rhs->argumentIndex;
@@ -217,7 +219,8 @@ private:
                     ? CanonicalOperandRole::Scalar
                     : CanonicalOperandRole::Source;
       if (index < expectedInputs.size())
-        role = canonicalRole(expectedInputs[index]->role);
+        role = expectedInputs[index]->direction == CatalogOperandDirection::ReadWrite
+                   ? CanonicalOperandRole::Source : canonicalRole(expectedInputs[index]->role);
       result.inputs.push_back(
           operand(ensureEntry(logicalId, environment), logicalId, role, false));
     }

@@ -13,7 +13,7 @@
 namespace vfsim {
 
 enum class CatalogInstructionClass { Load, Store, Compute, Control };
-enum class CatalogOperandDirection { Input, Output, Ignore };
+enum class CatalogOperandDirection { Input, Output, ReadWrite, Ignore };
 enum class CatalogArgumentKind {
   Register,
   UB,
@@ -37,6 +37,7 @@ struct NativeOperandSpec {
   int postUpdateDeltaBitWidth = 0;
   int postUpdateDeltaUnitBytes = 0;
   std::unordered_set<std::string> allowedValues;
+  std::unordered_set<std::string> allowedDtypes;
   std::unordered_map<std::string, std::unordered_set<std::string>> allowedValuesByForm;
 };
 

@@ -19,6 +19,7 @@ class FormRule(str, Enum):
 class OperandDirection(str, Enum):
     INPUT = "input"
     OUTPUT = "output"
+    READ_WRITE = "read_write"
     IGNORE = "ignore"
 
 
@@ -54,6 +55,7 @@ class OperandSpec:
     kind: ArgumentKind
     optional: bool = False
     allowed_values: tuple[str, ...] = ()
+    allowed_dtypes: tuple[str, ...] = ()
     allow_integer_expression: bool = False
     post_update_delta: PostUpdateDeltaSpec | None = None
     allowed_values_by_form: Mapping[str, tuple[str, ...]] = field(default_factory=lambda: MappingProxyType({}))
@@ -101,6 +103,24 @@ class InstructionSpec:
     implicit_post_update_bytes: Mapping[str, int] = field(default_factory=lambda: MappingProxyType({}))
     memory_span_by_form: Mapping[str, int] = field(default_factory=lambda: MappingProxyType({}))
 
+    @property
+    def input_operands(self) -> tuple[OperandSpec, ...]:
+        return tuple(
+            replace(op, direction=OperandDirection.INPUT, role=OperandRole.SOURCE)
+            if op.direction == OperandDirection.READ_WRITE else op
+            for op in self.operands
+            if op.direction in (OperandDirection.INPUT, OperandDirection.READ_WRITE)
+        )
+
+    @property
+    def output_operands(self) -> tuple[OperandSpec, ...]:
+        return tuple(
+            replace(op, direction=OperandDirection.OUTPUT)
+            if op.direction == OperandDirection.READ_WRITE else op
+            for op in self.operands
+            if op.direction in (OperandDirection.OUTPUT, OperandDirection.READ_WRITE)
+        )
+
 
 @dataclass(frozen=True)
 class CatalogTimingDifference:
@@ -140,7 +160,8 @@ class InstructionCatalog:
                 mode_operands = [o for o in variant.operands if o.name == "mode"]
                 if (variant.opcode != spec.opcode or type(variant.memory_span) is not int
                     or variant.memory_span <= 0
-                    or variant.instruction_class != InstructionClass.LOAD
+                    or variant.instruction_class not in (InstructionClass.LOAD, InstructionClass.STORE)
+                    or variant.instruction_class != spec.instruction_class
                     or not variant.forms.issubset(spec.forms)
                     or len(mode_operands) != 1
                     or mode_operands[0].kind != ArgumentKind.CONFIG
@@ -211,6 +232,10 @@ class InstructionCatalog:
 
         indexes: set[int] = set()
         for operand in spec.operands:
+            if not isinstance(operand.allowed_dtypes, tuple) or any(
+                not isinstance(dtype, str) or not dtype for dtype in operand.allowed_dtypes
+            ):
+                raise ValueError(f"Invalid allowed_dtypes in {spec.opcode}")
             if not isinstance(operand.allowed_values_by_form, Mapping) or any(
                 form not in spec.forms or not isinstance(values, tuple) or not values
                 or any(not isinstance(v, str) or v not in operand.allowed_values for v in values)
@@ -275,6 +300,11 @@ class InstructionCatalog:
                 OperandRole.MEMORY,
             }:
                 raise ValueError(f"Output role mismatch in {spec.opcode}")
+            if operand.direction == OperandDirection.READ_WRITE and (
+                operand.kind != ArgumentKind.REGISTER
+                or operand.role != OperandRole.DESTINATION
+            ):
+                raise ValueError(f"Read-write operand must be a vector destination in {spec.opcode}")
             if operand.direction == OperandDirection.INPUT and operand.role not in {
                 OperandRole.SOURCE,
                 OperandRole.SCALAR,
@@ -355,7 +385,7 @@ class InstructionCatalog:
         register_outputs = [
             operand for operand in tracked
             if operand.kind in (ArgumentKind.REGISTER, ArgumentKind.PREDICATE)
-            and operand.direction == OperandDirection.OUTPUT
+            and operand.direction in (OperandDirection.OUTPUT, OperandDirection.READ_WRITE)
         ]
         if spec.instruction_class == InstructionClass.LOAD:
             if len(memory_inputs) != 1 or memory_outputs or (not register_outputs and spec.align_state_operation != "load_init"):
@@ -504,6 +534,9 @@ def instruction_catalog_from_dict(payload: Mapping[str, Any]) -> InstructionCata
                 raise ValueError(
                     f"{name}.allow_integer_expression must be boolean"
                 )
+            allowed_dtypes = raw.get("allowed_dtypes", [])
+            if not isinstance(allowed_dtypes, list) or any(not isinstance(d, str) or not d for d in allowed_dtypes):
+                raise ValueError(f"{name}.allowed_dtypes must be an array of strings")
             post_update_delta = None
             if raw_post_update_delta is not None:
                 if not isinstance(raw_post_update_delta, Mapping):
@@ -528,6 +561,7 @@ def instruction_catalog_from_dict(payload: Mapping[str, Any]) -> InstructionCata
                 kind=_enum(ArgumentKind, raw.get("kind"), f"{name}.kind"),
                 optional=optional,
                 allowed_values=tuple(allowed_values),
+                allowed_dtypes=tuple(allowed_dtypes),
                 allow_integer_expression=allow_integer_expression,
                 post_update_delta=post_update_delta,
                 allowed_values_by_form=MappingProxyType({k: tuple(v) for k, v in form_values.items()}),

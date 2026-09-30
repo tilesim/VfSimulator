@@ -1,0 +1,209 @@
+{
+  "schema_version": 2,
+  "context": [
+    {
+      "kind": "instruction",
+      "instruction_id": "instruction.0",
+      "opcode": "PLT",
+      "instruction_class": "compute",
+      "form": "b32",
+      "inputs": [
+        {
+          "value_id": "count.0",
+          "role": "scalar",
+          "dtype": null,
+          "memory_access": null
+        }
+      ],
+      "outputs": [
+        {
+          "value_id": "mask.def0",
+          "role": "destination",
+          "dtype": "bool",
+          "memory_access": null
+        },
+        {
+          "value_id": "count.1",
+          "role": "destination",
+          "dtype": null,
+          "memory_access": null
+        }
+      ],
+      "dependencies": [],
+      "attributes": {
+        "active_elements": 37
+      },
+      "source_location": null
+    },
+    {
+      "kind": "instruction",
+      "instruction_id": "instruction.1",
+      "opcode": "VLDS",
+      "instruction_class": "load",
+      "form": "fp16",
+      "inputs": [
+        {
+          "value_id": "input.def1",
+          "role": "memory",
+          "dtype": "fp16",
+          "memory_access": {
+            "base_object_id": "ub.input",
+            "offset": {
+              "constant": 64,
+              "terms": []
+            },
+            "access_kind": "read",
+            "span": 64,
+            "alias_group": null,
+            "address_state_id": "vf:pointer:0:input",
+            "update_mode": "none",
+            "post_update_delta_bytes": null
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "value_id": "x.def2",
+          "role": "destination",
+          "dtype": "fp16",
+          "memory_access": null
+        }
+      ],
+      "dependencies": [],
+      "attributes": {
+        "catalog_mode": "UNPK_B16"
+      },
+      "source_location": null
+    },
+    {
+      "kind": "instruction",
+      "instruction_id": "instruction.2",
+      "opcode": "VSTS",
+      "instruction_class": "store",
+      "form": "fp16",
+      "inputs": [
+        {
+          "value_id": "x.def2",
+          "role": "source",
+          "dtype": "fp16",
+          "memory_access": null
+        },
+        {
+          "value_id": "mask.def0",
+          "role": "predicate",
+          "dtype": "bool",
+          "memory_access": null
+        }
+      ],
+      "outputs": [
+        {
+          "value_id": "out.def3",
+          "role": "memory",
+          "dtype": "fp16",
+          "memory_access": {
+            "base_object_id": "ub.out",
+            "offset": {
+              "constant": 0,
+              "terms": []
+            },
+            "access_kind": "write",
+            "span": 64,
+            "alias_group": null,
+            "address_state_id": "vf:pointer:1:out",
+            "update_mode": "none",
+            "post_update_delta_bytes": null
+          }
+        }
+      ],
+      "dependencies": [],
+      "attributes": {
+        "catalog_mode": "PK_B32"
+      },
+      "source_location": null
+    }
+  ],
+  "values": {
+    "mask.def0": {
+      "definition_id": "mask.def0",
+      "logical_id": "mask",
+      "storage": "PredicateRegister",
+      "dtype": "bool",
+      "shape": [],
+      "producer_node_id": "instruction.0",
+      "storage_object_id": null,
+      "source_location": null
+    },
+    "input.def1": {
+      "definition_id": "input.def1",
+      "logical_id": "input",
+      "storage": "UB",
+      "dtype": "fp16",
+      "shape": [],
+      "producer_node_id": null,
+      "storage_object_id": "ub.input",
+      "source_location": null
+    },
+    "x.def2": {
+      "definition_id": "x.def2",
+      "logical_id": "x",
+      "storage": "Register",
+      "dtype": "fp16",
+      "shape": [
+        64
+      ],
+      "producer_node_id": "instruction.1",
+      "storage_object_id": null,
+      "source_location": null
+    },
+    "out.def3": {
+      "definition_id": "out.def3",
+      "logical_id": "out",
+      "storage": "UB",
+      "dtype": "fp16",
+      "shape": [],
+      "producer_node_id": "instruction.2",
+      "storage_object_id": "ub.out",
+      "source_location": null
+    },
+    "count.0": {
+      "definition_id": "count.0",
+      "logical_id": "count",
+      "storage": "Scalar",
+      "dtype": "uint32",
+      "shape": [],
+      "producer_node_id": null,
+      "storage_object_id": null,
+      "source_location": null
+    },
+    "count.1": {
+      "definition_id": "count.1",
+      "logical_id": "count",
+      "storage": "Scalar",
+      "dtype": "uint32",
+      "shape": [],
+      "producer_node_id": "instruction.0",
+      "storage_object_id": null,
+      "source_location": null
+    }
+  },
+  "storage_objects": {
+    "ub.input": {
+      "object_id": "ub.input",
+      "storage": "UB",
+      "shape": [],
+      "source_location": null
+    },
+    "ub.out": {
+      "object_id": "ub.out",
+      "storage": "UB",
+      "shape": [],
+      "source_location": null
+    }
+  },
+  "params": {},
+  "uarch": {},
+  "source": {
+    "adapter": "contract_fixture",
+    "description": "PLT tail=37, UNPK_B16 and PK_B32, logical vector<64xf16>"
+  }
+}

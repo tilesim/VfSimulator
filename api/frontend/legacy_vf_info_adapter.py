@@ -16,7 +16,6 @@ from .adapter_ir import (
 from .instruction_catalog import (
     DEFAULT_INSTRUCTION_CATALOG,
     ArgumentKind,
-    OperandDirection,
 )
 from .schema import CanonicalVfInfo, ScalarValue
 from .value_versioning import ValueVersioningPass
@@ -124,9 +123,8 @@ class LegacyVfInfoAdapter:
                     continue
                 expected_inputs = [
                     operand
-                    for operand in spec.operands
-                    if operand.direction == OperandDirection.INPUT
-                    and operand.kind != ArgumentKind.PREDICATE
+                    for operand in spec.input_operands
+                    if operand.kind != ArgumentKind.PREDICATE
                 ]
                 actual_count = len(node.src) + len(node.supplemental_inputs)
                 missing = expected_inputs[actual_count:]

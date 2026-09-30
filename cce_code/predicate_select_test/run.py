@@ -3,6 +3,7 @@ import argparse
 import json
 import os
 import operator
+import re
 from pathlib import Path
 import shutil
 import struct
@@ -14,7 +15,8 @@ from forwarding_source import vadd_gap_source
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--probe", choices=["predicate_select_fp32", "pset_vadd_i16", "pset_vadd_single",
-                                           "pset_vdup_single", "pset_vadd_gap", "predicate_compute", "vintlv", "vdintlv"],
+                                           "pset_vdup_single", "pset_vadd_gap", "predicate_compute", "vintlv", "vdintlv",
+                                           "vaxpy_single", "vaxpy_chain", "vaxpy_src_chain", "vaxpy_independent"],
                         default="predicate_select_fp32")
     parser.add_argument("--gap", type=int, choices=range(25), default=0)
     parser.add_argument("--reverse-stores", action="store_true", help="Reverse the two rearrangement output stores")
@@ -25,12 +27,33 @@ def main():
     args = parser.parse_args()
     elements = 1024 if args.probe == "pset_vadd_i16" else 64
     rearrange = args.probe in ("vintlv", "vdintlv")
-    output_elements = elements * 2 if rearrange else elements
+    output_elements = elements * (8 if args.probe == "vaxpy_independent" else 2 if rearrange else 1)
     here = Path(__file__).resolve().parent
     cann = Path(os.environ.get("ACL_PATH", "/home/lenovo/Ascend/ascend-toolkit/cann-9.0.0-beta.1"))
     work = Path(tempfile.mkdtemp(prefix="vfsim-predicate-select-"))
     print(f"Artifacts: {work}", flush=True)
-    if rearrange:
+    if args.probe.startswith("vaxpy_"):
+        source = (here.parent / "predicate_select_fp32.cce").read_text()
+        start = source.index("        vcmp_gt(")
+        end = source.index("\n    }", start)
+        repetitions = {"vaxpy_single": 1, "vaxpy_chain": 16, "vaxpy_src_chain": 16,
+                       "vaxpy_independent": 4}[args.probe]
+        body = (
+            "        vaxpy(va, vb, 2.0f, all, MODE_ZEROING);\n" * repetitions
+            + "        vsts(va, out, 0, NORM_B32, all);")
+        if args.probe == "vaxpy_src_chain":
+            body = ("        yes = va;\n        vaxpy(yes, vb, 2.0f, all, MODE_ZEROING);\n"
+                    "        vb = yes;\n") * repetitions + "        vsts(vb, out, 0, NORM_B32, all);"
+        if args.probe == "vaxpy_independent":
+            body = "\n".join(
+                [f"        vector_f32 d{i};\n        vlds(d{i}, a, 0, NORM);" for i in range(8)]
+                + [f"        vaxpy(d{i}, vb, {i+2}.0f, all, MODE_ZEROING);" for _ in range(repetitions) for i in range(8)]
+                + [f"        vsts(d{i}, out, {64*i}, NORM_B32, all);" for i in range(8)])
+            source = source.replace("out, 0, 1, 256,", "out, 0, 1, 2048,")
+        source = source[:start] + body + source[end:]
+        source = source.replace("predicate_select_fp32", args.probe)
+        (work / "kernel.cce").write_text(source)
+    elif rearrange:
         source = (here.parent / "predicate_select_fp32.cce").read_text()
         start = source.index("        vcmp_gt(")
         end = source.index("\n    }", start)
@@ -88,6 +111,14 @@ def main():
     a = [(i - 32) * 0.25 for i in range(elements)]
     b = [x + (-0.5, 0.5, 0.0)[i % 3] for i, x in enumerate(a)]
     expected = [x + 1.0 if x > y else y - 1.0 for x, y in zip(a, b)]
+    if args.probe.startswith("vaxpy_"):
+        expected = [x + 2.0 * repetitions * y for x, y in zip(a, b)]
+        if args.probe == "vaxpy_independent":
+            expected = [x + (j+2) * repetitions * y for j in range(8) for x, y in zip(a, b)]
+        elif args.probe == "vaxpy_src_chain":
+            expected = list(b)
+            for _ in range(repetitions):
+                expected = [x + 2*y for x, y in zip(a, expected)]
     if args.probe in ("pset_vadd_i16", "pset_vadd_single"):
         expected = [x + y for x, y in zip(a, b)]
     if args.probe == "pset_vdup_single":
@@ -131,7 +162,10 @@ def main():
     actual_bytes = (work / "output.bin").read_bytes()
     actual = struct.unpack(f"<{output_elements}f", actual_bytes)
     mismatches = [i for i in range(output_elements) if actual_bytes[4*i:4*i+4] != reference[4*i:4*i+4]]
-    formulas = {"vintlv": "out = interleave(a,b)", "vdintlv": "out = even(a+b), odd(a+b)",
+    formulas = {"vaxpy_single": "out = a + 2*b", "vaxpy_chain": "out = a + 16*2*b",
+                "vaxpy_src_chain": "x = b; repeat 16 times: x = a + 2*x",
+                "vaxpy_independent": "8 independent accumulators: out[j] = a + 4*(j+2)*b",
+                "vintlv": "out = interleave(a,b)", "vdintlv": "out = even(a+b), odd(a+b)",
                 "pset_vdup_single": "out = 1",
                 "predicate_compute": f"out = {args.operation}(a, b or 0) ? a + 1 : b - 1",
                 "pset_vadd_gap": "out = a + b" if args.target_pattern == "PAT_ALL" else
@@ -147,6 +181,23 @@ def main():
                   equal_lanes=sum(x == y for x,y in zip(a,b)),
                   comparison="FP32 bitwise equality", soc="A5 / dav-c310-vec",
                   formula=formulas.get(args.probe, "out = a + b"), commands=commands)
+    if args.probe.startswith("vaxpy_"):
+        pattern = re.compile(r"\[info\] \[(\d+)\].*?\(ID: (\d+)\) (RV_\w+)")
+        def events(filename):
+            return [(int(cycle), int(iid), op) for cycle, iid, op in
+                    pattern.findall((work / filename).read_text())]
+        issued = events("core0.veccore0.instr_popped_log.dump")
+        done = {iid: cycle for cycle, iid, _ in events("core0.veccore0.instr_log.dump")}
+        axpy = [(cycle, iid) for cycle, iid, op in issued if op == "RV_VAXPY"]
+        expected_count = repetitions * (8 if args.probe == "vaxpy_independent" else 1)
+        if len(axpy) != expected_count:
+            raise AssertionError(f"Expected {expected_count} RV_VAXPY, compiled {len(axpy)}")
+        report["vaxpy_timing"] = {
+            "instruction_count": len(axpy),
+            "latencies": sorted({done[iid] - cycle for cycle, iid in axpy}),
+            "start_cycles": [cycle for cycle, _ in axpy],
+            "adjacent_start_gaps": [b[0] - a[0] for a, b in zip(axpy, axpy[1:])],
+        }
     (work / "validation.json").write_text(json.dumps(report, indent=2) + "\n")
     print(json.dumps(report, indent=2), flush=True)
     if mismatches:
