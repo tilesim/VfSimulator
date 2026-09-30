@@ -18,6 +18,7 @@ Python/C++ 共用 Catalog、参数和生成的 C++ 表，不增加调度器特�
 | forwarding(VDUP, VMOV) | 2 | 单条及原 GeLU_grad 日志 |
 | forwarding(VLDS, VMOV) | 6 | FP32 NORM load 独立探针 |
 | forwarding(VMOV, VMOV) | 2 | 16 条依赖链 |
+| forwarding(VMOV, VAXPY.fp32) | 2 | 旧目的值、普通源输入分别实测 |
 | forwarding(VMOV, VSTS) | 4 | 单条及依赖链末尾 store |
 | II(VMOV, VMOV) | 1 | 8 条不同值独立链，同端口相邻发射 |
 
@@ -30,12 +31,14 @@ python3 cce_code/predicate_select_test/run.py --probe vmov_single
 python3 cce_code/predicate_select_test/run.py --probe vmov_chain
 python3 cce_code/predicate_select_test/run.py --probe vmov_independent
 python3 cce_code/predicate_select_test/run.py --probe vmov_load
+python3 cce_code/predicate_select_test/run.py --probe vmov_axpy_dst
+python3 cce_code/predicate_select_test/run.py --probe vmov_axpy_src
 ```
 
 使用 CANN 9.0.0-beta.1、`dav-c310-vec`、`-O2`、misched=0。
 脚本输出目录包含 kernel.cce、host.cpp、validation.json（含命令）、二进制输入/输出/golden，
 以及 core0 的 instr_log、instr_popped_log、EXU.dump。校验是 FP32 逐字节比较。
-脚本断言 VMOV 数量为 1/16/32，避免编译器消除复制后仍宣称获得 II。
+脚本断言 VMOV 数量为 1/8/16/32，避免编译器消除复制后仍宣称获得时序参数。
 
 本次原始记录：
 
@@ -45,6 +48,13 @@ python3 cce_code/predicate_select_test/run.py --probe vmov_load
 | 依赖链 | `/tmp/vfsim-predicate-select-ns11j7o8` | VMOV start=1651,1653,...,1681；VSTS start=1685 |
 | 独立链 | `/tmp/vfsim-predicate-select-4vk13jrk` | 两端口 VMOV 从 popped=1652 起连续双发，EXU 日志周期比 popped 大 1 |
 | load 输入 | `/tmp/vfsim-predicate-select-45thv2vc` | VLDS start=1646；VMOV start=1652；VSTS start=1656；64 个 FP32 元素逐字节校验通过 |
+| VAXPY 旧目的值 | `/tmp/vfsim-predicate-select-uhyx8804` | 最后一条 VMOV start=1665；VAXPY start=1667 |
+| VAXPY 普通源 | `/tmp/vfsim-predicate-select-z5zamx8v` | 最后一条 VMOV start=1666；VAXPY start=1668 |
+
+VAXPY 探针分别验证 `out = vmov(a) + 2*b` 和 `out = b + 2*vmov(a)`。
+8 条原地 VMOV 链延迟目标输入，使另一条 load 和 PSET 提前就绪。
+两种位置均为 2 cycle，因此配置为统一的 `VMOV.fp32/b32 -> VAXPY.fp32 = 2`，
+无需按 operand 位置修改调度逻辑。此处不代表 FP16 VAXPY 或其他 consumer 已实测。
 
 Load 输入参数登记为 `VLDS.fp32 -> VMOV.fp32/b32 = 6`，由 Python/Native 共用。
 本次未独立测量 FP16、其他 load mode 到 VMOV 的时序，不扩展为这些模式的实测结论。

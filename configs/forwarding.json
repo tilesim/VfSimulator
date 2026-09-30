@@ -2,8 +2,8 @@
   "schema_version": 2,
   "defaults": 3,
   "forwarding": {
-    "VMOV.fp32":{"VMOV.fp32":2,"VMOV.b32":2,"VSTS.fp32":4,"VSTS.b32":4},
-    "VMOV.b32":{"VMOV.fp32":2,"VMOV.b32":2,"VSTS.fp32":4,"VSTS.b32":4},
+    "VMOV.fp32":{"VMOV.fp32":2,"VMOV.b32":2,"VAXPY.fp32":2,"VSTS.fp32":4,"VSTS.b32":4},
+    "VMOV.b32":{"VMOV.fp32":2,"VMOV.b32":2,"VAXPY.fp32":2,"VSTS.fp32":4,"VSTS.b32":4},
     "VDUP.b32":{"VMOV.fp32":2,"VMOV.b32":2},
     "VAXPY.fp32": {"VAXPY.fp32":5,"VSTS.fp32":7},
     "VINTLV.fp32":{"VSTS.fp32":9,"VSTS.b32":9},
