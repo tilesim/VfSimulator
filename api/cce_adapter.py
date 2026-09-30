@@ -786,6 +786,16 @@ class _VFScopeParser:
         if ub_reference is None:
             return ()
         base_name, alias_offset = ub_reference
+        if spec.memory_address_unit_bytes is not None:
+            dtype = _cce_scalar_dtype_to_form(self.ub_dtypes.get(base_name, ""))
+            width = {"fp32":4,"int32":4,"uint32":4,"fp16":2,"bf16":2,
+                     "int16":2,"uint16":2,"int8":1,"uint8":1}.get(dtype)
+            if width is None:
+                raise ValueError(f"Unknown pointer width for {spec.opcode}: {dtype}")
+            # The alias is pointer arithmetic; the instruction offset has its own unit.
+            if spec.memory_address_unit_bytes != 1:
+                raise ValueError("Only byte-addressed fixed-unit CCE memory operands are supported")
+            alias_offset = f"({alias_offset}) * {width}"
         pointer_expression = args[memory_operand.argument_index]
         pointer_name = _strip_ub_reference_wrappers(pointer_expression).split("+", 1)[0].strip()
         state_id = self.pointer_states[pointer_name]
@@ -837,6 +847,7 @@ class _VFScopeParser:
                 ),
                 offset=offset,
                 span=span,
+                address_unit_bytes=spec.memory_address_unit_bytes,
                 mode=mode,
                 address_state_id=state_id,
                 update_mode="post_update" if post_update else "none",

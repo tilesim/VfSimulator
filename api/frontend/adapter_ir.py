@@ -45,6 +45,7 @@ class AdapterMemoryAccess:
     address_state_id: str | None = None
     update_mode: str = "none"
     post_update_delta_bytes: int | str | None = None
+    address_unit_bytes: int | None = None
 
 
 @dataclass

@@ -9,8 +9,58 @@ static void require(bool ok, const char *message) {
   if (!ok) throw std::runtime_error(message);
 }
 
+static void testPredicateSpill(ParamDB &db) {
+  CanonicalVfInfo vf;
+  vf.schemaVersion = 2;
+  vf.storageObjects.emplace("ub", CanonicalStorageObject{"ub", CanonicalStorageKind::UB});
+  CanonicalValue memory;
+  memory.definitionId = "memory.in"; memory.logicalId = "memory";
+  memory.storage = CanonicalStorageKind::UB; memory.dtype = "uint32";
+  memory.storageObjectId = "ub";
+  vf.values.emplace(memory.definitionId, memory);
+  memory.definitionId = "memory.out"; memory.producerNodeId = "store";
+  vf.values.emplace(memory.definitionId, memory);
+  CanonicalValue predicate;
+  predicate.definitionId = "predicate"; predicate.logicalId = "predicate";
+  predicate.storage = CanonicalStorageKind::PredicateRegister;
+  predicate.dtype = "bool"; predicate.producerNodeId = "load";
+  vf.values.emplace(predicate.definitionId, predicate);
+  CanonicalMemoryAccess access;
+  access.baseObjectId = "ub"; access.offset.constant = -1376;
+  access.span = 32; access.addressUnitBytes = 1;
+  access.accessKind = CanonicalAccessKind::Read;
+  CanonicalInstruction load;
+  load.instructionId = "load"; load.opcode = "PLDS"; load.form = "b8";
+  load.instructionClass = CanonicalInstructionClass::Load;
+  load.inputs = {{"memory.in", CanonicalOperandRole::Memory, "uint32", access}};
+  load.outputs = {{"predicate", CanonicalOperandRole::Destination, "bool"}};
+  CanonicalInstruction store;
+  store.instructionId = "store"; store.opcode = "PSTS"; store.form = "b8";
+  store.instructionClass = CanonicalInstructionClass::Store;
+  store.inputs = {{"predicate", CanonicalOperandRole::Predicate, "bool"}};
+  access.accessKind = CanonicalAccessKind::Write;
+  store.outputs = {{"memory.out", CanonicalOperandRole::Memory, "uint32", access}};
+  vf.context = {CanonicalNode::makeInstruction(load), CanonicalNode::makeInstruction(store)};
+  require(validateCanonicalVfInfo(vf).ok(), "predicate memory contract");
+  require(db.inst("PLDS", "b8").latency == 9 && db.inst("PSTS", "b8").latency == 9,
+          "predicate memory latency");
+  require(db.forwardingCycles("PLDS", "b8", "PSTS", "b8") == 8, "predicate reload forwarding");
+  auto result = runCanonicalVfInfo(vf, db, "", 1000);
+  require(result.cyclesExecuted < 1000, "predicate load/store must finish");
+  auto lowered = lowerCanonicalProgram(vf);
+  OoOCoreMainline core(db.uarch(), db, "fp32", lowered.values);
+  core.accept(lowered.instructions[0]);
+  require(core.getFreePreg() == db.uarch().vregNum, "PLDS cannot allocate a vector register");
+  require(core.getFreePredicate() == db.uarch().physicalPredicateRegisters - 1,
+          "PLDS must allocate a predicate register");
+  load.inputs[0].memoryAccess->addressUnitBytes.reset();
+  vf.context[0] = CanonicalNode::makeInstruction(load);
+  require(!validateCanonicalVfInfo(vf).ok(), "byte offset cannot silently become element offset");
+}
+
 int main() {
   ParamDB db(VFSIM_SOURCE_ROOT);
+  testPredicateSpill(db);
   for (const auto &form : {"b8", "b16", "b32"}) {
     const std::string op = std::string("PSET_B") + (std::string(form).substr(1));
     require(db.inst(op, form).latency == 6, "PSET assumed latency");

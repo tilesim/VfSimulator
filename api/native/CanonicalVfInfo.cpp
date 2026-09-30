@@ -444,6 +444,8 @@ CanonicalValidationResult validateCanonicalVfInfo(const CanonicalVfInfo &vfInfo)
               auto span = catalogSpec->memorySpanByForm.find(inst->form);
               if (span != catalogSpec->memorySpanByForm.end() && memory.span != span->second)
                 error("catalog_memory_span_mismatch", "Memory span conflicts with Catalog form", nodePath, inst->sourceLocation);
+              if (memory.addressUnitBytes.value_or(0) != catalogSpec->memoryAddressUnitBytes)
+                error("catalog_memory_address_unit_mismatch", "Address unit conflicts with Catalog", nodePath, inst->sourceLocation);
             }
           if (inst->opcode != catalogSpec->opcode)
             error("noncanonical_opcode",
@@ -574,6 +576,9 @@ CanonicalValidationResult validateCanonicalVfInfo(const CanonicalVfInfo &vfInfo)
               }
             };
             validateAffine(memory.offset);
+            if (memory.addressUnitBytes && *memory.addressUnitBytes != 1 &&
+                *memory.addressUnitBytes != 2 && *memory.addressUnitBytes != 4 && *memory.addressUnitBytes != 8)
+              error("invalid_address_unit", "Address unit must be 1, 2, 4 or 8 bytes", operandPath, inst->sourceLocation);
             if (memory.postUpdateDeltaBytes)
               validateAffine(*memory.postUpdateDeltaBytes);
           }

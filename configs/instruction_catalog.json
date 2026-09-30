@@ -1,6 +1,18 @@
 {
   "schema_version": 1,
   "signatures": {
+    "predicate_load": [
+      {"name":"dst","argument_index":0,"direction":"output","role":"destination","kind":"predicate"},
+      {"name":"memory","argument_index":1,"direction":"input","role":"memory","kind":"ub"},
+      {"name":"offset","argument_index":2,"direction":"ignore","role":"config","kind":"config","allow_integer_expression":true},
+      {"name":"mode","argument_index":3,"direction":"ignore","role":"config","kind":"config","allowed_values":["NORM"]}
+    ],
+    "predicate_store": [
+      {"name":"src","argument_index":0,"direction":"input","role":"predicate","kind":"predicate"},
+      {"name":"memory","argument_index":1,"direction":"output","role":"memory","kind":"ub"},
+      {"name":"offset","argument_index":2,"direction":"ignore","role":"config","kind":"config","allow_integer_expression":true},
+      {"name":"mode","argument_index":3,"direction":"ignore","role":"config","kind":"config","allowed_values":["NORM"]}
+    ],
     "vector_move": [
       {"name":"dst","argument_index":0,"direction":"output","role":"destination","kind":"register"},
       {"name":"src","argument_index":1,"direction":"input","role":"source","kind":"register"}
@@ -189,6 +201,8 @@
     ]
   },
   "instructions": {
+    "PLDS": {"class":"load","forms":["b8"],"signature":"predicate_load","form_rule":"fixed","fixed_form":"b8","ub_transfer_bytes":256,"memory_span_by_form":{"b8":32},"memory_address_unit_bytes":1},
+    "PSTS": {"class":"store","forms":["b8"],"signature":"predicate_store","form_rule":"fixed","fixed_form":"b8","ub_transfer_bytes":256,"memory_span_by_form":{"b8":32},"memory_address_unit_bytes":1},
     "PLT": {"class":"compute","signature":"predicate_from_count","forms":["b8","b16","b32"],"timing_optional":true},
     "PSTU":{"class":"store","signature":"predicate_store_unaligned","forms":["uint16","uint32","b16","b32"],"ub_transfer_bytes":256,"align_state_operation":"append","align_state_argument_index":0,"implicit_post_update_bytes":{"uint16":16,"uint32":8,"b16":16,"b32":8},"memory_span_by_form":{"uint16":8,"uint32":2,"b16":8,"b32":2}},
     "VLDAS":{"class":"load","signature":"load_align_init","forms":["fp32","fp16","int32"],"ub_transfer_bytes":256,"align_state_operation":"load_init","align_state_argument_index":0},

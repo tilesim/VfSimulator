@@ -79,6 +79,8 @@ class MemoryAccess:
     address_state_id: str | None = None
     update_mode: str = "none"
     post_update_delta_bytes: AffineExpression | None = None
+    # None keeps element-based offsets/spans; a fixed unit overrides the memory dtype.
+    address_unit_bytes: int | None = None
 
 
 @dataclass(frozen=True)
