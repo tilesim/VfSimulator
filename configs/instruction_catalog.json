@@ -1,6 +1,10 @@
 {
   "schema_version": 1,
   "signatures": {
+    "vector_move": [
+      {"name":"dst","argument_index":0,"direction":"output","role":"destination","kind":"register"},
+      {"name":"src","argument_index":1,"direction":"input","role":"source","kind":"register"}
+    ],
     "accumulate_scalar": [
       {"name":"dst","argument_index":0,"direction":"read_write","role":"destination","kind":"register"},
       {"name":"src","argument_index":1,"direction":"input","role":"source","kind":"register"},
@@ -189,6 +193,7 @@
     "PSTU":{"class":"store","signature":"predicate_store_unaligned","forms":["uint16","uint32","b16","b32"],"ub_transfer_bytes":256,"align_state_operation":"append","align_state_argument_index":0,"implicit_post_update_bytes":{"uint16":16,"uint32":8,"b16":16,"b32":8},"memory_span_by_form":{"uint16":8,"uint32":2,"b16":8,"b32":2}},
     "VLDAS":{"class":"load","signature":"load_align_init","forms":["fp32","fp16","int32"],"ub_transfer_bytes":256,"align_state_operation":"load_init","align_state_argument_index":0},
     "VLDUS":{"class":"load","signature":"load_unaligned","forms":["fp32","fp16","int32"],"ub_transfer_bytes":256,"align_state_operation":"load_use","align_state_argument_index":1,"forwarding_opcode":"VLDS","call_variants":[{"argument_count":3},{"argument_count":5,"argument_values":{"4":["POST_UPDATE"]}}]},
+    "VMOV": {"class":"compute","signature":"vector_move","forms":["fp32","b32"]},
     "VINTLV": {"class":"compute","signature":"rearrange_pair","forms":["fp32","b32"]},
     "VDINTLV": {"class":"compute","signature":"rearrange_pair","forms":["fp32","b32"]},
     "MOVVP": {"class":"compute","signature":"vector_to_predicate","forms":["uint16","uint32","b16","b32"]},
