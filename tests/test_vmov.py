@@ -62,6 +62,33 @@ class VectorMoveTest(unittest.TestCase):
             self.assertEqual((profile.latency, profile.fu_type, profile.dispatch_exu), (6, "ALU", "EXU01"))
             self.assertEqual(db.get_ii_for_profiles(profile, profile), 1)
 
+    def test_vaxpy_old_destination_and_source_forwarding(self):
+        for form in ("fp32", "b32"):
+            for dst, src, operand_index in (("x", "y", 0), ("y", "x", 1)):
+                vf = parse("mask=pset_b32(PAT_ALL);vlds(x,a,0,NORM);vlds(y,a,64,NORM);"
+                           + "vmov(x,x);" * 8
+                           + f"vaxpy({dst},{src},2.0f,mask,MODE_ZEROING);vsts({dst},out,0,NORM_B32,mask);")
+                vf = replace(vf, context=tuple(replace(n, form=form) if n.opcode == "VMOV" else n
+                                               for n in vf.context))
+                with self.subTest(form=form, operand_index=operand_index), tempfile.TemporaryDirectory() as tmp:
+                    root = Path(tmp)
+                    result = CoreVfCostModel(out_dir=root / "python").run_vf_info(vf)
+                    starts = records(root / "python/start_by_cycle.json")
+                    last_move = max((r for r in starts if r["op"] == "VMOV"), key=lambda r: r["inst_id"])
+                    axpy = next(r for r in starts if r["op"] == "VAXPY")
+                    self.assertEqual(axpy["preg_src"][operand_index], last_move["preg_dst"][0])
+                    self.assertEqual(axpy["cy"] - last_move["cy"], 2)
+                    runner = os.environ.get("VFSIM_NATIVE_RUNNER")
+                    if runner:
+                        path = root / "input.json"
+                        path.write_text(json.dumps(canonical_vf_info_to_dict(vf)))
+                        proc = subprocess.run([runner, "--trace", str(path), "--out-dir", str(root / "native")],
+                                              capture_output=True, text=True, timeout=30)
+                        self.assertEqual(proc.returncode, 0, proc.stderr)
+                        self.assertIn(f"vfEndCycle={result['vf_end_cycle']}", proc.stdout)
+                        key = lambda rows: sorted((r["inst_id"], r["op"], r["cy"]) for r in rows)
+                        self.assertEqual(key(starts), key(records(root / "native/start_by_cycle.json")))
+
     def test_load_to_move_forwarding(self):
         for form in ("fp32", "b32"):
             vf = parse("mask=pset_b32(PAT_ALL);vlds(x,a,0,NORM);"

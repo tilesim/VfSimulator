@@ -17,7 +17,8 @@ def main():
     parser.add_argument("--probe", choices=["predicate_select_fp32", "pset_vadd_i16", "pset_vadd_single",
                                            "pset_vdup_single", "pset_vadd_gap", "predicate_compute", "vintlv", "vdintlv",
                                            "vaxpy_single", "vaxpy_chain", "vaxpy_src_chain", "vaxpy_independent",
-                                           "vmov_single", "vmov_chain", "vmov_independent", "vmov_load"],
+                                           "vmov_single", "vmov_chain", "vmov_independent", "vmov_load",
+                                           "vmov_axpy_dst", "vmov_axpy_src"],
                         default="predicate_select_fp32")
     parser.add_argument("--gap", type=int, choices=range(25), default=0)
     parser.add_argument("--reverse-stores", action="store_true", help="Reverse the two rearrangement output stores")
@@ -40,7 +41,14 @@ def main():
         body = "        vdup(va, 1.5f, all, MODE_ZEROING);\n"
         if args.probe == "vmov_load":
             body = "        vlds(va, a, 0, NORM);\n"
-        if args.probe == "vmov_independent":
+        if args.probe in ("vmov_axpy_dst", "vmov_axpy_src"):
+            body = ("        vlds(va, a, 0, NORM);\n"
+                    "        vlds(vb, b, 0, NORM);\n"
+                    + "        vmov(va, va);\n" * 8)
+            dst, src = ("va", "vb") if args.probe == "vmov_axpy_dst" else ("vb", "va")
+            body += (f"        vaxpy({dst}, {src}, 2.0f, all, MODE_ZEROING);\n"
+                     f"        vsts({dst}, out, 0, NORM_B32, all);")
+        elif args.probe == "vmov_independent":
             body += "\n".join(
                 [f"        vector_f32 d{i};\n        vdup(d{i}, {i+1}.5f, all, MODE_ZEROING);" for i in range(8)]
                 + [f"        vmov(d{i}, d{i});" for _ in range(4) for i in range(8)]
@@ -138,6 +146,10 @@ def main():
             expected = list(a)
         if args.probe == "vmov_independent":
             expected = [j + 1.5 for j in range(8) for _ in range(elements)]
+        if args.probe == "vmov_axpy_dst":
+            expected = [x + 2*y for x, y in zip(a, b)]
+        if args.probe == "vmov_axpy_src":
+            expected = [y + 2*x for x, y in zip(a, b)]
     if args.probe.startswith("vaxpy_"):
         expected = [x + 2.0 * repetitions * y for x, y in zip(a, b)]
         if args.probe == "vaxpy_independent":
@@ -190,6 +202,8 @@ def main():
     actual = struct.unpack(f"<{output_elements}f", actual_bytes)
     mismatches = [i for i in range(output_elements) if actual_bytes[4*i:4*i+4] != reference[4*i:4*i+4]]
     formulas = {"vmov_single": "out = vmov(vdup(1.5))",
+                "vmov_axpy_dst": "out = vmov(a) + 2*b; 8 dependent moves delay old destination",
+                "vmov_axpy_src": "out = b + 2*vmov(a); 8 dependent moves delay source",
                 "vmov_load": "out = vmov(vlds(a))",
                 "vmov_chain": "out = 16 dependent vmov copies of 1.5",
                 "vmov_independent": "8 independent vmov chains: out[j] = j + 1.5",
@@ -236,7 +250,8 @@ def main():
         done = {int(i): int(c) for c, i, _ in
                 pattern.findall((work / "core0.veccore0.instr_log.dump").read_text())}
         moves = [(c, i) for c, i, op in issued if op == "RV_VMOV"]
-        expected_count = {"vmov_single": 1, "vmov_chain": 16, "vmov_independent": 32, "vmov_load": 1}[args.probe]
+        expected_count = {"vmov_single": 1, "vmov_chain": 16, "vmov_independent": 32,
+                          "vmov_load": 1, "vmov_axpy_dst": 8, "vmov_axpy_src": 8}[args.probe]
         if len(moves) != expected_count:
             raise AssertionError(f"Expected {expected_count} RV_VMOV, compiled {len(moves)}")
         report["vmov_timing"] = {
@@ -250,6 +265,11 @@ def main():
             if len(loads) != 1:
                 raise AssertionError(f"Expected one RV_VLDI, compiled {len(loads)}")
             report["vmov_timing"]["vlds_to_vmov_start_gap"] = moves[0][0] - loads[0][0]
+        if args.probe in ("vmov_axpy_dst", "vmov_axpy_src"):
+            axpy = [(c, i) for c, i, op in issued if op == "RV_VAXPY"]
+            if len(axpy) != 1:
+                raise AssertionError(f"Expected one RV_VAXPY, compiled {len(axpy)}")
+            report["vmov_timing"]["vmov_to_vaxpy_start_gap"] = axpy[0][0] - moves[-1][0]
     (work / "validation.json").write_text(json.dumps(report, indent=2) + "\n")
     print(json.dumps(report, indent=2), flush=True)
     if mismatches:
