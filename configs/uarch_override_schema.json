@@ -35,7 +35,6 @@
     "exu0_reserve_min_count": {"type": "integer", "targets": ["python", "cpp"]},
     "compute_inflight_cap": {"type": "integer", "targets": ["python", "cpp"]},
     "exq_issue_inflight_cap_per_port": {"type": "integer", "targets": ["python", "cpp"]},
-    "three_ports_mode": {"type": "boolean", "targets": ["python", "cpp"]},
     "enable_isu_queue_model": {"type": "boolean", "targets": ["python", "cpp"]},
     "admit_blocked_to_exq": {"type": "boolean", "targets": ["python", "cpp"]},
     "enable_shq_credit_model": {"type": "boolean", "targets": ["python", "cpp"]},
@@ -51,6 +50,7 @@
     "consumer_release_start_offset_by_op",
     "lsu_post_update_ready_latency",
     "load_done_latency",
-    "lsu_issue_policy"
+    "lsu_issue_policy",
+    "three_ports_mode"
   ]
 }

@@ -104,7 +104,9 @@ def validate_uarch_overrides(uarch: Any) -> ValidationResult:
         Diagnostic(
             "deprecated_uarch_field",
             DiagnosticSeverity.ERROR,
-            ("lsu_post_update_ready_latency was removed; use idu_post_update_ready_latency (IDU dispatch timing)"
+            ("three_ports_mode was removed; three-port support belongs to the future A6 architecture"
+             if name == "three_ports_mode"
+             else "lsu_post_update_ready_latency was removed; use idu_post_update_ready_latency (IDU dispatch timing)"
              if name == "lsu_post_update_ready_latency"
              else "consumer_release_start_offset_by_op was removed; use global consumer_release_start_offset"
              if name == "consumer_release_start_offset_by_op"

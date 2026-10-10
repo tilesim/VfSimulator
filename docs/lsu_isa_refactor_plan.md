@@ -67,7 +67,7 @@ JSON / CCE
 - `data_store_cost`：字段保留为历史/校准参考，主线 store 路径不直接使用
 - `data_load_cost`：字段保留为历史/校准参考，主线 load 路径不直接使用
 - `EXU`：计算功能单元类别，通常是 `ALU` 或 `SFU`
-- `dispatch_exu`：合法 EXU port，例如 `EXU0_ONLY`、`EXU01`、`EXU012`
+- `dispatch_exu`：合法 EXU port，例如 `EXU0_ONLY`、`EXU01`
 - `throughput`：字段保留，但主线 issue spacing 主要由 `InitiationInterval.json` 控制
 
 全局默认值：

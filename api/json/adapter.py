@@ -10,7 +10,7 @@ from typing import Any
 from api.common.diagnostics import Diagnostic, DiagnosticSeverity, VfInfoValidationError
 from api.common.schema import CanonicalVfInfo, SourceLocation
 from api.json.serialization import canonical_vf_info_from_dict
-from api.common.validator import validate_canonical_vf_info
+from api.common.validator import require_valid_canonical_vf_info
 
 
 _SCHEMA_PATH = Path(__file__).with_name("canonical_vf_info.schema.json")
@@ -115,8 +115,7 @@ class CanonicalJsonVfInfoAdapter:
                 source=source,
             ) from error
 
-        validate_canonical_vf_info(vf_info).raise_for_errors()
-        return vf_info
+        return require_valid_canonical_vf_info(vf_info)
 
     @staticmethod
     def _decode_error(message: str, *, source: str | None) -> VfInfoValidationError:

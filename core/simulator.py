@@ -12,8 +12,6 @@ class CoreVfCostModel:
     base_dir: str | Path = Path(__file__).resolve().parents[1]
     out_dir: str | Path | None = 'results/cost_model'
     fallback_dtype: str = 'fp32'
-    include_param_cache_stats: bool = False
-    three_ports: bool = False
     theoretical_limit_vloop_only: bool = False
     theoretical_limit_direct_issue: bool = False
 
@@ -21,13 +19,12 @@ class CoreVfCostModel:
         return self.run_vf_info(vf_info)['vf_end_cycle']
 
     def run_vf_info(self, vf_info: CanonicalVfInfo) -> dict:
+        """Run Canonical input already validated by the API boundary."""
         if not isinstance(vf_info, CanonicalVfInfo):
             raise TypeError('Core accepts only CanonicalVfInfo; use InputAPI to load files or JSON')
         db = ParamDB(base_dir=str(self.base_dir))
         uarch = dict(db.get_uarch())
         uarch.update(vf_info.uarch)
-        if self.three_ports:
-            uarch.update(three_ports_mode=True, issue_ports=3, load_ports=3, store_ports=1)
         if self.theoretical_limit_vloop_only or self.theoretical_limit_direct_issue:
             uarch.update(theoretical_limit_mode=True, theoretical_limit_vloop_only=True)
             if self.theoretical_limit_direct_issue:
@@ -42,6 +39,4 @@ class CoreVfCostModel:
             output = Path(self.base_dir) / output
         result = engine.run(output).to_dict()
         result['linear_inst_count'] = program.linear_inst_count
-        if self.include_param_cache_stats:
-            result['param_cache_stats'] = db.get_profile_cache_stats()
         return result

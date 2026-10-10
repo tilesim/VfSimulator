@@ -1320,8 +1320,8 @@ Python/C++ 公共预测接口均只接收 canonical。
 6. Native 的 form 参数原本已经在 `ParamDB` 加载时合并；Uop 在 rename 时复制小型
    profile 字段，不保存指向 fallback `unordered_map` 元素的指针。Native forwarding
    和 II 缓存属于每个 `OoOCore`，共享只读参数配置时不会由正常查询写入共享 cache。
-7. `param_cache_stats` 仅在 `CoreVfCostModel(include_param_cache_stats=True)` 的 benchmark
-   模式加入结果，普通公共预测结果保持不变。
+7. Python 已删除参数缓存统计开关、统计输出和内部命中计数。参数缓存仍保留，
+   测试直接验证 Profile 复用以及 forwarding/II 缓存命中时不会重新计算。
 8. Native `ParamDB` 可作为只读配置跨预测线程共享：`inst()` 按值返回 `InstConfig`，
    未覆盖指令不再写入共享 fallback map；warning 聚合使用互斥保护。运行期
    forwarding/II cache 仍位于各自 `OoOCore`，不会给共享配置增加热路径锁。

@@ -6,7 +6,6 @@ from core.execution.expansion import DynamicExpander
 from typing import Any, Iterable
 from api.common.instruction_catalog import DEFAULT_INSTRUCTION_CATALOG
 from api.common.schema import AffineExpression, CanonicalInstruction, CanonicalLoop, CanonicalMembar, CanonicalNode, CanonicalOperand, CanonicalVfInfo, InstructionClass, SourceLocation, StorageKind
-from api.common.validator import validate_canonical_vf_info
 
 class CanonicalCoreCompatibilityError(ValueError):
 
@@ -26,10 +25,9 @@ def _affine_expression(expression: AffineExpression) -> dict[str, Any]:
     }
 
 class CoreLoweringPass:
-    """Convert validated canonical input to the current Python Core payload."""
+    """Convert API-validated Canonical input to the current Python Core payload."""
 
     def lower(self, vf_info: CanonicalVfInfo) -> dict[str, Any]:
-        validate_canonical_vf_info(vf_info).raise_for_errors()
         self.ensure_current_core_compatible(vf_info)
         # Internal storage-object IDs must not overwrite declared value identities.
         ub_core_ids = {}

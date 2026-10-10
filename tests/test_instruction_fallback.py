@@ -2,6 +2,7 @@ import json
 import subprocess
 import tempfile
 import unittest
+from unittest.mock import patch
 from pathlib import Path
 from core.simulator import CoreVfCostModel
 from api.json.serialization import canonical_vf_info_to_dict
@@ -34,15 +35,12 @@ class InstructionFallbackTest(unittest.TestCase):
     def test_instruction_profile_is_cached_and_immutable(self):
         db = ParamDB(base_dir=str(ROOT))
         first = db.resolve_inst('vadd', form='fp32', dtype='fp32')
-        second = db.resolve_inst('VADD', form='fp32', dtype='fp32')
+        with patch.object(db, 'get_inst_form', side_effect=AssertionError('Cached profile must not query parameters again')):
+            second = db.resolve_inst('VADD', form='fp32', dtype='fp32')
         self.assertIs(first, second)
         self.assertEqual(first.op_class, 'COMPUTE')
         self.assertEqual(first.fu_type, 'ALU')
         self.assertEqual(first.latency, db.get_inst_form('VADD', 'fp32')['latency'])
-        stats = db.get_profile_cache_stats()
-        self.assertEqual(stats['profiles'], 1)
-        self.assertEqual(stats['profile_misses'], 1)
-        self.assertGreaterEqual(stats['profile_hits'], 1)
         with self.assertRaises((AttributeError, TypeError)):
             first.latency = 99
 
@@ -69,11 +67,12 @@ class InstructionFallbackTest(unittest.TestCase):
         consumer = db.resolve_inst('VADD', 'fp32', 'fp32')
         forwarding = db.get_forwarding_for_profiles(producer, consumer)
         ii = db.get_ii_for_profiles(producer, consumer)
-        self.assertEqual(db.get_forwarding_for_profiles(producer, consumer), forwarding)
-        self.assertEqual(db.get_ii_for_profiles(producer, consumer), ii)
-        stats = db.get_profile_cache_stats()
-        self.assertEqual(stats['forwarding_pairs'], 1)
-        self.assertEqual(stats['ii_pairs'], 1)
+        with (
+            patch.object(db, '_compute_forwarding_cycles', side_effect=AssertionError('Cached forwarding must not be recomputed')),
+            patch.object(db, '_compute_ii', side_effect=AssertionError('Cached II must not be recomputed')),
+        ):
+            self.assertEqual(db.get_forwarding_for_profiles(producer, consumer), forwarding)
+            self.assertEqual(db.get_ii_for_profiles(producer, consumer), ii)
 
     def test_profile_pair_rejects_profiles_from_another_param_db(self):
         first_db = ParamDB(base_dir=str(ROOT))

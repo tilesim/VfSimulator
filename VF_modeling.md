@@ -106,6 +106,10 @@ trace JSON 主要包含：
 
 实现位置：[`core/execution/expansion.py`](core/execution/expansion.py)
 
+通用合法性校验统一由 API 完成：CCE、JSON、Builder 自动走共享校验出口；直接实例化
+的 Canonical 对象先调用 `InputAPI.from_canonical()`。Core 不再重复完整语义校验，只检查
+当前执行能力和转换执行表示。
+
 `CoreLoweringPass` 保留静态 `instruction_id`、definition 和 loop-carried 关系。`IFUUnroll` 展开动态指令时生成：
 
 - `static_instruction_id`
@@ -288,15 +292,13 @@ VSTS.fp16
 - `dispatch_exu`
   - 描述这条指令允许被派发到哪些执行端口
   - 当前模型已经把这个字段真正接进调度逻辑
-  - 目前文档和代码里主要使用三种标记：
+  - 当前模型使用两种标记：
     - `EXU0_ONLY`
       - 只能进入 `EXQ0`
       - 只能在 `EXU0` 中执行
     - `EXU01`
       - 可以进入 `EXQ0` 或 `EXQ1`
       - 也可以在 `EXU0` 或 `EXU1` 中执行
-    - `EXU012`
-      - 实验三端口模式下可进入 `EXQ0/1/2`
   - 如果 `dispatch_exu` 缺失或是未知值，当前模型会回退成“默认允许所有可用端口”
 
 ### 6.2 forwarding 参数含义
@@ -797,7 +799,6 @@ ISA `dispatch_exu` 取值：
 
 - `EXU0_ONLY`：仅 EXU0。
 - `EXU01`：EXU0 或 EXU1。
-- `EXU012`：实验三端口模式下可用 EXU0/1/2。
 
 ---
 
@@ -954,13 +955,10 @@ python main.py --trace VFtest/canonical/GeLU_poly.json   --theoretical-limit-vlo
 python main.py --trace VFtest/canonical/GeLU_poly.json   --theoretical-limit-vloop-only-legacy-forwarding-direct-issue   --out_dir results/theory_direct_issue
 ```
 
-### 15.4 实验三端口模式
+### 15.4 架构范围
 
-```bash
-python main.py --trace VFtest/canonical/GeLU_poly.json --three-ports --out_dir results/three_ports
-```
-
-三端口模式把计算/load 发射容量扩展到 3 个端口。store 发射仍然单发射，`EXU0_ONLY` 指令仍只在 EXU0 执行。
+当前 Python 模型最多使用两个 EXU 端口，不提供三端口可选模式。
+三端口能力将在后续独立的 A6 架构中实现。
 
 ---
 

@@ -12,7 +12,6 @@ def build_arg_parser() -> argparse.ArgumentParser:
     parser.add_argument('--out_dir', type=str, default='results', help='Directory to save simulation logs')
     parser.add_argument('--theoretical-limit-vloop-only', action='store_true', help='Theoretical limit variant: keep top-level VLOOPv2 start timing but remove cross-iteration exposure gates')
     parser.add_argument('--theoretical-limit-vloop-only-legacy-forwarding-direct-issue', action='store_true', help='Theoretical limit variant: vloop-only + legacy-forwarding + single-queue direct issue (bypass SHQ->EXQ staging)')
-    parser.add_argument('--three-ports', dest='three_ports', action='store_true', help='Enable the experimental 3-port VF model: 3 EXU/EXQ issue ports, 3 VLD per cycle, and EXU01 ops may use EXU0/1/2. VST remains 1 per cycle.')
     return parser
 
 def resolve_trace_path(base_dir: str, trace_arg: str | None) -> str:
@@ -51,7 +50,6 @@ def main():
         model = CoreVfCostModel(
             base_dir=base_dir,
             out_dir=args.out_dir,
-            three_ports=args.three_ports,
             theoretical_limit_vloop_only=args.theoretical_limit_vloop_only,
             theoretical_limit_direct_issue=args.theoretical_limit_vloop_only_legacy_forwarding_direct_issue,
         )

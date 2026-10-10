@@ -11,6 +11,10 @@ def normalize_mainline_uarch(uarch: Dict[str, Any]) -> Dict[str, Any]:
     - per-port inflight cap enabled
     """
     cfg = dict(uarch)
+    if "three_ports_mode" in cfg:
+        raise ValueError("three_ports_mode was removed; three-port support belongs to the future A6 architecture")
+    if int(cfg.get("issue_ports", 2)) > 2:
+        raise ValueError("The current model supports at most two EXU ports; A6 requires a separate architecture")
     if "lsu_issue_policy" in cfg:
         raise ValueError("lsu_issue_policy has been removed; configure lsu_store_priority_preg_threshold")
     if "lsu_post_update_ready_latency" in cfg:

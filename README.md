@@ -149,7 +149,7 @@ CanonicalVfInfo
 
 ### 2. 执行准备与动态展开
 
-`core/execution/prepare.py` 执行 Canonical 校验、Core 能力检查、表示转换和静态循环分析；
+`core/execution/prepare.py` 接收 API 已校验的 Canonical，执行 Core 能力检查、表示转换和静态循环分析；
 `core/execution/expansion.py` 展开循环、unroll 和 loop-carried 绑定，标记动态值的最后使用。
 动态值身份是 `(definition_id, iteration_path)`，不通过变量名或 `_laneN` 后缀推断。
 `canonical_dynamic_instruction_limit` 默认 20000，可显式配置；`0` 表示关闭限制。
@@ -157,7 +157,9 @@ CanonicalVfInfo
 ### 3. 执行控制与硬件状态
 
 `core/simulator.py` 是唯一公开 Core 入口，`CoreVfCostModel.run_vf_info()` 只接收
-`CanonicalVfInfo`。`main.py` 先通过 `InputAPI` 读取文件，再调用这一入口。
+API 已校验的 `CanonicalVfInfo`。`main.py` 先通过 `InputAPI` 读取文件，再调用这一入口。
+直接构造的对象通过 `InputAPI.from_canonical()` 接收并校验；CCE/JSON/Builder 的输出已校验，
+可以直接进入 Core。Core 不再重复做通用语义校验。
 
 ```text
 CanonicalVfInfo → execution/prepare + expansion → PreparedProgram
@@ -240,13 +242,8 @@ python3 main.py --trace INPUT.json \
   --out_dir results/theory_direct
 ```
 
-```bash
-python3 main.py --trace INPUT.json \
-  --three-ports \
-  --out_dir results/three_ports
-```
-
-`--three-ports` 是本分支的实验 override，并不等价于一套完整、独立校准的 A6 SoC 参数。
+当前 Python 模型最多使用两个 EXU 端口。三端口能力将由后续独立的 A6 架构实现，
+不提供 CLI 开关、模型构造参数或 uarch 模式开关。
 
 ## Python API
 

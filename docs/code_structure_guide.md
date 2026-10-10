@@ -6,11 +6,13 @@ CCE/JSON 读取和程序化构造留在 API。配置、Native C++ 与优化器�
 ## 调用链
 
 ```text
-CCE / Canonical JSON / Builder
+CCE / Canonical JSON / 直接对象（或 Builder）
           ↓ api/input_api.py
+     API 统一语义校验
+          ↓
      CanonicalVfInfo
           ↓ core/simulator.py::CoreVfCostModel.run_vf_info()
-     validate → compatibility → lower → static layout → dynamic expansion
+     compatibility → lower → static layout → dynamic expansion
           ↓ PreparedProgram（动态指令、值声明、循环边界）
      execution/engine.py::Engine.run()
           ↓
@@ -24,7 +26,7 @@ Core 不读取输入文件，不接受旧 VFInfo、旧 `program/src/dst` JSON �
 
 | 文件 | 主要类/函数 | 职责 |
 | --- | --- | --- |
-| [input_api.py](../api/input_api.py) | `InputAPI.load_cce/load_json/new_builder` | 统一输入入口 |
+| [input_api.py](../api/input_api.py) | `InputAPI.load_cce/load_json/from_canonical/new_builder` | 统一输入入口 |
 | [common/schema.py](../api/common/schema.py) | `CanonicalVfInfo`、value、operand、loop、memory、location 类型 | 共享数据合同 |
 | [common/validator.py](../api/common/validator.py) | `validate_canonical_vf_info` | 通用语义、定义与循环作用域校验 |
 | [common/instruction_catalog.py](../api/common/instruction_catalog.py) | `InstructionCatalog`、`InstructionSpec` | 指令签名和语义声明 |
@@ -32,6 +34,10 @@ Core 不读取输入文件，不接受旧 VFInfo、旧 `program/src/dst` JSON �
 | [cce/value_versioning.py](../api/cce/value_versioning.py) | `ValueVersioningPass` | 从 CCE 私有 IR 建立独立 definition 和 loop-carried 关系 |
 | [json/serialization.py](../api/json/serialization.py) | `canonical_vf_info_from_dict/to_dict` | Canonical JSON 对象编解码 |
 | [programmatic/builder.py](../api/programmatic/builder.py) | `VfInfoBuilder` | 程序化显式构造 Canonical |
+
+直接实例化的对象使用 `InputAPI.from_canonical()`，JSON/CCE/Builder 自动经过同一个
+`require_valid_canonical_vf_info()` 出口。通用语义校验只发生在 API，Core 保留执行能力检查。
+修改已接收对象中的 Mapping 后，需再次经 API 接收。
 
 详细转换 pass 见 [API 说明](../api/README.md)。合法的 schema v1/v2 是 Canonical
 协议版本；它们与已删除的旧 VFInfo 格式无关。
@@ -81,7 +87,7 @@ core/
 | 文件 | 核心函数 | 职责 |
 | --- | --- | --- |
 | [simulator.py](../core/simulator.py) | `CoreVfCostModel.run_vf_info/predict_vf_cycles` | 检查输入类型、组装参数及组件、返回预测结果 |
-| [prepare.py](../core/execution/prepare.py) | `CoreLoweringPass.lower`、`prepare_program` | 校验、当前执行能力检查、转换执行表示、分析静态布局 |
+| [prepare.py](../core/execution/prepare.py) | `CoreLoweringPass.lower`、`prepare_program` | 当前执行能力检查、转换已校验的表示、分析静态布局 |
 | [expansion.py](../core/execution/expansion.py) | `DynamicExpander.prepare_structured_stream` | 展开 loop/unroll、绑定动态 identity、标记最后使用 |
 | [engine.py](../core/execution/engine.py) | `Engine.run/backend_step/admit` | 全局周期、传输、接收、完成事件及排空 |
 | [scheduler.py](../core/execution/scheduler.py) | `enqueue_shq_to_exq/issue_exq_to_exu/issue_direct_from_shq` | 端口选择、FU FIFO、RR 和 EXU0 预留策略 |
@@ -135,6 +141,7 @@ Membar 自身的 retire 是屏障时序的一部分，仍影响最终 `vf_end_cy
 `params/database.py::ParamDB` 加载 ISA、forwarding、II 和 uarch；`resolve_inst`
 建立不可变 `InstructionProfile`，后续查询复用缓存。`timing.py` 提供时序和端口查询；
 `compat.py` 保留现有参数匹配规则。配置文件及其兼容规则尚未进入本轮重构。
+当前 Python 模型最多支持两个 EXU；旧三端口开关已移除，A6 将作为独立架构实现。
 
 `trace/recorder.py` 保存 start/done/blocked 事件，`trace/writer.py` 集中写文件：
 `start_by_cycle.json`、`done_by_cycle.json`、`sim_history.json`、`membar_history.json`、

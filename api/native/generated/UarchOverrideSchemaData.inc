@@ -34,7 +34,6 @@ static constexpr GeneratedUarchField kGeneratedUarchFields[] = {
   {"exu0_reserve_min_count", "integer", true, true},
   {"compute_inflight_cap", "integer", true, true},
   {"exq_issue_inflight_cap_per_port", "integer", true, true},
-  {"three_ports_mode", "boolean", true, true},
   {"enable_isu_queue_model", "boolean", true, true},
   {"admit_blocked_to_exq", "boolean", true, true},
   {"enable_shq_credit_model", "boolean", true, true},
@@ -51,4 +50,5 @@ static constexpr const char *kGeneratedDeprecatedUarchFields[] = {
   "lsu_post_update_ready_latency",
   "load_done_latency",
   "lsu_issue_policy",
+  "three_ports_mode",
 };

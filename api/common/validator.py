@@ -702,4 +702,12 @@ def validate_canonical_vf_info(vf_info: CanonicalVfInfo) -> ValidationResult:
     return ValidationResult(tuple(diagnostics))
 
 
-__all__ = ["validate_canonical_vf_info"]
+def require_valid_canonical_vf_info(vf_info: CanonicalVfInfo) -> CanonicalVfInfo:
+    """Shared API output boundary for every Canonical input route."""
+    if not isinstance(vf_info, CanonicalVfInfo):
+        raise TypeError("Direct Canonical input must be a CanonicalVfInfo object")
+    validate_canonical_vf_info(vf_info).raise_for_errors()
+    return vf_info
+
+
+__all__ = ["validate_canonical_vf_info", "require_valid_canonical_vf_info"]

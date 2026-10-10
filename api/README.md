@@ -8,6 +8,7 @@
 
 - `InputAPI.load_cce(path, kernel_name=None, loop_params=None)`：解析并校验 CCE，返回 Canonical 对象。
 - `InputAPI.load_json(path)`：校验 JSON Schema，反序列化并校验 Canonical 语义。
+- `InputAPI.from_canonical(vf_info)`：校验直接构造的 Canonical 对象，成功后返回原对象。
 - `InputAPI.new_builder(...)`：显式构造值定义、指令和循环；`build()` 返回经过校验的对象。
 - `InputAPI.validate_canonical_vf_info(vf_info)`：返回结构化诊断，不修改输入。
 
@@ -20,7 +21,8 @@ cycles = CoreVfCostModel().predict_vf_cycles(vf_info)
 ```
 
 直接构造 dataclass 时，调用方必须提供完整的 definition、producer、operand
-和 loop-carried 关系。Builder 不替调用方推断依赖。JSON 是这些对象的序列化
+和 loop-carried 关系，并通过 `InputAPI.from_canonical(vf_info)` 校验后再交给 Core。
+Builder 的 `build()` 已完成这一校验，可直接将结果交给 Core。Builder 不替调用方推断依赖。JSON 是这些对象的序列化
 形式，支持 schema v1/v2；v2 表达谓词及循环仅出口定义等语义。
 
 旧 `VFInfo`、旧 `program/src/dst` JSON 和离线迁移接口已删除。请使用 Canonical
@@ -40,15 +42,18 @@ JSON 或重新解析原始 CCE；API 不猜测格式，也不补造缺失的操�
 ## 转换流程和职责
 
 ```text
-CCE -> cce/parser.py -> normalized AdapterProgram -> ValueVersioningPass -> validation
-JSON -> JSON Schema -> deserialization -> validation
-Builder -> explicit Canonical definitions -> validation
-                                      |
-                               CanonicalVfInfo
-                                      |
-                      core.execution.prepare.CoreLoweringPass
-                                      |
-                           Core runtime preparation
+CCE -> cce/parser.py -> normalized AdapterProgram -> ValueVersioningPass
+JSON -> JSON Schema -> deserialization
+直接 Canonical 对象 / Builder.build()
+                         |
+        common/validator.py::require_valid_canonical_vf_info
+            类型检查 -> 一次通用语义校验 -> 返回原对象
+                         |
+                    CanonicalVfInfo
+                         |
+     core.execution.prepare.CoreLoweringPass（仅执行能力检查和表示转换）
+                         |
+                 Core runtime preparation
 ```
 
 | 文件 | 职责 |
@@ -70,12 +75,13 @@ Builder -> explicit Canonical definitions -> validation
 | `programmatic/builder.py` | 显式 Canonical 对象构造 |
 | `common/instruction_catalog.py` | 已知指令的语义事实来源 |
 
-CCE 规范化只在 parser 输出时执行一次；版本化只负责生成 Canonical 定义，
-完整语义校验由 CCE adapter 执行。JSON 和 Builder 在各自公开输入边界校验。
+CCE 规范化只在 parser 输出时执行一次；版本化只负责生成 Canonical 定义。
+CCE、JSON、直接 Canonical 和 Builder 输出共用一个 API 校验出口，每次输入接收只调用
+一次完整语义校验。JSON Schema 检查属于文件格式检查，仍保留在 JSON adapter 中。
 
-预测入口调用 `CoreLoweringPass.lower()`，由它统一执行对象校验、Core 能力检查
-和内部表示转换。由于 Canonical 中的 Mapping 可以被调用方修改，每次预测仍需
-检查输入，不能把曾经通过校验当作永久有效；模型组装不再重复执行相同校验。
+Core 信任 API 已校验的输入，不再重复调用通用 validator，只检查当前执行能力并转换表示。
+直接实例化或修改 Canonical 中的 Mapping 后，应调用 `InputAPI.from_canonical()` 再交给 Core。
+`InputAPI.validate_canonical_vf_info()` 则用于仅查看诊断结果，不承担输入接收与抛错。
 
 ## 输入边界
 

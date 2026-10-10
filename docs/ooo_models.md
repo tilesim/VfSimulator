@@ -1,68 +1,53 @@
-# OOO 主线模型
+# Python 微架构模型
 
-本文说明当前公开的 OoO 模型接口。旧版本 VF Simulator 曾经暴露多个 `--ooo-model` 选项，例如 `consumer-done`、`default`、`last-use`、`npu-hybrid`、`queue_level1/2/3/4`。当前 `main.py` 已不再暴露这个 selector。
+当前公开入口是 `core/simulator.py::CoreVfCostModel`，仅接收 `CanonicalVfInfo`。
+旧 OoO 模型 selector、工厂、VFInfo 入口和 ROB 已删除。
 
-## 当前默认模型
+## 当前模型
 
-当前公开主线只有一个 queue-level 模型：
+默认采用双 EXU 的组件模型，主要参数为：
 
-- `queue_level4`
-- consumer release rule：consumer start cycle + 4
-- `vreg` 活跃范围规范化：开启
-- `shq_depth = 58`
-- `exq_depth = 26`
-- `issue_ports = 2`
-- `load_ports = 2`
-- `store_ports = 1`
-- `exq_issue_inflight_cap_per_port = 7`
-
-因此默认 CLI 直接使用：
+- consumer release：最后消费者 start + 4，并满足生命周期安全条件
+- SHQ depth：58
+- EXQ depth：26
+- EXU issue ports：2
+- LOAD / STORE ports：2 / 1
+- per-EXU inflight cap：7
 
 ```bash
-python main.py --trace VFtest/GeLU_poly.json --out_dir results/gelu_poly
+python3 main.py --trace tests/fixtures/canonical_vf_info/v1_valid_loop.json --out_dir results/default
+python3 main.py --cce cce_code/GeLU_poly.dsl --out_dir results/gelu
 ```
 
-CCE/DSL 输入使用：
+## 实现
+
+- `core/simulator.py`：唯一模型入口及参数组装。
+- `core/execution/engine.py`：逐周期推进、传输和完成事件。
+- `core/execution/scheduler.py`：SHQ→EXQ→EXU 调度策略。
+- `core/execution/loop_control.py`、`membar.py`：循环和屏障时序。
+- `core/uarch/`：队列、寄存器、端口及执行状态。
+- `core/params/uarch.py`：当前模型参数规范化及理论上界覆盖。
+
+详细说明见 [代码结构导览](code_structure_guide.md)。
+
+## 理论上界参考
 
 ```bash
-python main.py --cce cce_code/GeLU_poly.dsl --out_dir results/gelu_poly_cce
-```
-
-## 实现拆分
-
-- `core/ooo_factory.py`：规范化 uarch 配置，并创建唯一支持的 OoO core。
-- `core/uarch_normalize.py`：集中维护主线默认值和理论上界覆盖配置。
-- `core/ooo_mainline.py`：负责重命名、物理寄存器生命周期、SHQ/LSQ/ROB、就绪计算、load/store 路径和源寄存器释放记录。
-- `core/isu.py`：负责计算指令离开 SHQ 之后的路径，包括 SHQ 到 EXQ 入队、EXQ 仲裁、EXQ 到 EXU 启动、端口选择和 II 检查。
-
-## 公开变体
-
-当前活跃的公开变体是上界参考或实验模式，不是另一个真实硬件默认模型：
-
-```bash
-python main.py --trace VFtest/GeLU_poly.json \
+python3 main.py --trace INPUT.json \
   --theoretical-limit-vloop-only \
-  --out_dir results/theory_vloop_only
-```
+  --out_dir results/theory_vloop
 
-```bash
-python main.py --trace VFtest/GeLU_poly.json \
+python3 main.py --trace INPUT.json \
   --theoretical-limit-vloop-only-legacy-forwarding-direct-issue \
-  --out_dir results/theory_direct_issue
+  --out_dir results/theory_direct
 ```
 
-```bash
-python main.py --trace VFtest/GeLU_poly.json \
-  --three-ports \
-  --out_dir results/three_ports
-```
+这些模式用于估计优化上界，保留各自指定的控制和依赖时序。
 
-## 历史说明
+## 架构范围
 
-`consumer-done`、`default`、`last-use`、`npu-hybrid`、`queue_level1/2/3` 等历史名称仍然有助于理解旧报告和归档实验，但不应再被写成当前 `main.py` 的可用选项。
+当前 Python 模型最多使用两个 EXU 端口，不提供三端口 CLI、构造参数或模式开关。
+三端口能力将由后续独立的 A6 架构实现。旧实验开关会明确报错；将 `issue_ports`
+设为大于 2 的值，也不能在当前模型中启用 A6。
 
-部分优化器脚本仍保留旧版 `--ooo-model` 参数。在这些脚本明确迁移到当前队列级主线前，应把它们看作优化器内部的兼容开关。
-
-## 当前建议
-
-正常模拟、回归和 API 使用都应直接使用默认队列级主线，不传模型选择参数。理论上界模式只用于估计优化上界；`--three-ports` 只用于实验三端口模型。
+历史报告中的模型名称和实验开关不代表当前可用接口。

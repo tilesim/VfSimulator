@@ -52,3 +52,40 @@ Core 依赖由组件构造参数显式传入，移除旧 Core 实例的大范围
 
 当前执行能力限制保持不变：不自动推导 UB 地址区间依赖；显式 dependency 和不支持的
 unroll 形式在准备阶段拒绝。Native 跨语言一致性尚未在本轮环境验证，后续 C++ 重构时处理。
+
+## 后续调整：移除三端口实验开关
+
+删除 Python 的 `--three-ports`、`CoreVfCostModel.three_ports` 和三端口端口选择分支。
+`three_ports_mode` 从 override 支持列表移入废弃字段列表，并同步生成的共享配置合同。
+当前 Core 拒绝 `issue_ports > 2`；通用队列/执行组件仍按端口数量组织状态，供后续 A6 复用。
+三端口能力将由独立的 A6 架构实现。其他配置整理和 C++ 执行核心重构仍留待后续。
+
+此调整验证：303 项 Python 测试（293 通过、10 项 Native 测试跳过）；默认程序仍为
+47 cycles，GeLU CCE 仍为 1923 cycles。新增测试覆盖旧 CLI/构造开关拒绝、JSON/Builder
+废弃字段拒绝、直接 Canonical/配置文件不能启用三端口，以及默认双端口调度。
+
+## 后续调整：删除参数缓存统计
+
+移除模型的公开统计开关、结果中的参数缓存统计项，以及 ParamDB 的命中/未命中计数
+和统计查询方法。Profile、forwarding、II 和指令参数缓存仍保留。
+缓存测试改为直接验证 Profile 对象复用，并验证缓存命中时不会重新查询或计算参数。
+
+此调整验证：303 项 Python 测试（293 通过、10 项 Native 测试跳过）；默认程序仍为
+47 cycles，返回结果不再包含缓存统计。此前三端口移除改动一并保留。
+
+## 后续调整：通用校验归入 API
+
+新增 `InputAPI.from_canonical()`，接收直接实例化的 Canonical 对象。CCE、JSON、Builder
+和直接对象统一使用 `api/common/validator.py::require_valid_canonical_vf_info()` 输出：
+检查对象类型、执行一次通用语义校验、返回原 Canonical 对象，不引入包装类型或校验标记。
+Core 删除通用 validator 的导入和调用，保留类型检查、当前执行能力检查和运行期资源约束。
+
+Builder 的 `build()` 原本已有校验；此前缺失的是直接实例化对象的接收入口。修改 API
+输出对象中的 Mapping 后，调用方需重新通过 API 接收。Core 的正式调用前提是输入已经
+经过 API 校验，不再在每次预测时重新完整校验。
+
+此调整验证：306 项 Python 测试（296 通过、10 项 Native 测试跳过）。测试通过记录实际
+validator 函数执行次数，验证 CCE/JSON/直接对象/Builder 从输入接收到 Core 预测都只调用
+一次完整语义校验，并验证合法但当前不可执行的 unroll 仍由 Core 能力检查拒绝。
+
+GeLU CCE 复核仍为 `cycles_executed=1911`、`vf_end_cycle=1923`。

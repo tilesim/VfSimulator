@@ -141,8 +141,6 @@ class ParamDB:
         self._forwarding_profile_cache: Dict[tuple[int, int], int] = {}
         self._ii_profile_cache: Dict[tuple[int, int], int] = {}
         self._next_profile_id = 0
-        self._profile_cache_hits = 0
-        self._profile_cache_misses = 0
 
         # ---------------- forwarding table (optional) ----------------
         self._fwd_default_offset: int = 3
@@ -571,10 +569,8 @@ class ParamDB:
         key = (opu, requested_form, normalized_dtype)
         cached = self._profile_cache.get(key)
         if cached is not None:
-            self._profile_cache_hits += 1
             return cached
 
-        self._profile_cache_misses += 1
         params = self.get_inst_form(opu, form=requested_form, dtype=normalized_dtype)
         op_class = str(params.get("op_class", "")).upper()
         if op_class not in ("LOAD", "STORE", "COMPUTE"):
@@ -604,15 +600,6 @@ class ParamDB:
         self._profile_cache[key] = profile
         self._profiles_by_id[profile.profile_id] = profile
         return profile
-
-    def get_profile_cache_stats(self) -> Dict[str, int]:
-        return {
-            "profiles": len(self._profile_cache),
-            "profile_hits": self._profile_cache_hits,
-            "profile_misses": self._profile_cache_misses,
-            "forwarding_pairs": len(self._forwarding_profile_cache),
-            "ii_pairs": len(self._ii_profile_cache),
-        }
 
     def has_inst(self, op: str, dtype: str = "fp32") -> bool:
         opu = op.upper()

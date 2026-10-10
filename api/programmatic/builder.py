@@ -21,7 +21,7 @@ from api.common.schema import (
     SourceLocation,
     StorageKind,
 )
-from api.common.validator import validate_canonical_vf_info
+from api.common.validator import require_valid_canonical_vf_info
 
 
 @dataclass(frozen=True)
@@ -269,8 +269,7 @@ class VfInfoBuilder:
             source=dict(self._source),
             schema_version=emission_schema_version(self._values, self._context),
         )
-        validate_canonical_vf_info(vf_info).raise_for_errors()
-        return vf_info
+        return require_valid_canonical_vf_info(vf_info)
 
     def _reserve_node_id(self, node_id: str) -> None:
         if not node_id or node_id in self._node_ids:

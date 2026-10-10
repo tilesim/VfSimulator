@@ -4,13 +4,17 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
+from dataclasses import replace
 
-from api.common import (VfInfoValidationError)
+import api.common.validator as validator_module
+
+from api.common import CanonicalVfInfo, CanonicalOperand, InstructionClass, OperandRole, StorageKind, VfInfoValidationError
 from api.json.serialization import (canonical_vf_info_to_dict)
 from api.cce.ir import AdapterInstruction, AdapterProgram
 from api.cce.normalization import normalize_adapter_program
 from api.input_api import InputAPI
 from core.simulator import CoreVfCostModel
+from core.execution.prepare import CanonicalCoreCompatibilityError
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -68,7 +72,7 @@ class InputApiTest(unittest.TestCase):
                     result = CoreVfCostModel(out_dir=root / name).run_vf_info(vf_info)
                     self.assertEqual(result["vf_end_cycle"], 55)
 
-    def test_prediction_revalidates_mutated_canonical_maps(self):
+    def test_api_rejects_mutated_canonical_maps_before_prediction(self):
         vf_info = InputAPI.load_json(
             ROOT / "tests/fixtures/canonical_vf_info/v1_valid_loop.json"
         )
@@ -76,8 +80,72 @@ class InputApiTest(unittest.TestCase):
         del vf_info.values[operand.value_id]
         with tempfile.TemporaryDirectory() as directory:
             with self.assertRaises(VfInfoValidationError):
-                CoreVfCostModel(out_dir=directory).run_vf_info(vf_info)
+                InputAPI.from_canonical(vf_info)
             self.assertEqual(list(Path(directory).iterdir()), [])
+
+    def test_direct_canonical_input_is_checked_and_preserves_identity(self):
+        vf = CanonicalVfInfo(context=(), values={})
+        self.assertIs(InputAPI.from_canonical(vf), vf)
+        with self.assertRaises(VfInfoValidationError):
+            InputAPI.from_canonical(CanonicalVfInfo(context=(object(),), values={}))
+        for value in ({"context": [], "values": {}}, "input.json", None):
+            with self.subTest(value=value), self.assertRaises(TypeError):
+                InputAPI.from_canonical(value)
+
+    def test_each_input_is_validated_once_before_prediction(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            cce = Path(tmp) / "input.cce"
+            cce.write_text(SOURCE)
+            fixture = ROOT / "tests/fixtures/canonical_vf_info/v1_valid_loop.json"
+            template = InputAPI.load_json(fixture)
+            direct = CanonicalVfInfo(
+                context=template.context, values=dict(template.values),
+                storage_objects=dict(template.storage_objects), params=dict(template.params),
+                uarch=dict(template.uarch), source=dict(template.source),
+                schema_version=template.schema_version,
+            )
+            builder = InputAPI.new_builder()
+            for name, producer in (("lhs", None), ("rhs", None), ("out", "inst.add")):
+                builder.register_value(name, logical_id=name, storage=StorageKind.REGISTER,
+                                       dtype="fp32", producer_node_id=producer)
+            builder.add_instruction(
+                "inst.add", opcode="VADD", instruction_class=InstructionClass.COMPUTE, form="fp32",
+                inputs=(CanonicalOperand("lhs", OperandRole.SOURCE, "fp32"),
+                        CanonicalOperand("rhs", OperandRole.SOURCE, "fp32")),
+                outputs=(CanonicalOperand("out", OperandRole.DESTINATION, "fp32"),),
+            )
+            loaders = {
+                "cce": lambda: InputAPI.load_cce(cce),
+                "json": lambda: InputAPI.load_json(fixture),
+                "canonical": lambda: InputAPI.from_canonical(direct),
+                "builder": builder.build,
+            }
+            validation_code = validator_module.validate_canonical_vf_info.__code__
+            for name, load in loaders.items():
+                with self.subTest(input=name):
+                    calls = []
+                    def record_validation(frame, event, arg):
+                        if event == "call" and frame.f_code is validation_code:
+                            calls.append(frame.f_locals["vf_info"])
+                    previous_profiler = sys.getprofile()
+                    sys.setprofile(record_validation)
+                    try:
+                        vf = load()
+                        result = CoreVfCostModel(out_dir=None).run_vf_info(vf)
+                    finally:
+                        sys.setprofile(previous_profiler)
+                    self.assertEqual(len(calls), 1)
+                    self.assertIs(calls[0], vf)
+                    self.assertGreater(result["vf_end_cycle"], 0)
+
+    def test_core_rejects_valid_but_unsupported_execution_semantics(self):
+        template = InputAPI.load_json(ROOT / "tests/fixtures/canonical_vf_info/v1_valid_loop.json")
+        # Partial unroll is valid Canonical input but is not implemented by this Core.
+        vf = InputAPI.from_canonical(replace(
+            template, context=(replace(template.context[0], unroll=3),),
+        ))
+        with self.assertRaisesRegex(CanonicalCoreCompatibilityError, "not divisible"):
+            CoreVfCostModel(out_dir=None).run_vf_info(vf)
 
     def test_undeclared_adapter_values_do_not_infer_storage_from_names(self):
         for name in ("v0", "memA", "scalar"):

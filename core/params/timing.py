@@ -7,7 +7,6 @@ class TimingQuery:
     def __init__(self, uarch, pdb, dtype='fp32'):
         self.db = pdb
         self.fallback_dtype = dtype
-        self.three_ports_mode = bool(uarch.get('three_ports_mode', False))
         self.issue_ports = int(uarch.get('issue_ports', 2))
 
     def _inst_params(self, op: str, form: Optional[str]=None) -> Dict[str, Any]:
@@ -37,8 +36,7 @@ class TimingQuery:
 
         Supported tags:
         - EXU0_ONLY : only port 0
-        - EXU01     : port 0 / port 1 (or port 0 / port 1 / port 2 in three_ports_mode)
-        - EXU012    : port 0 / port 1 / port 2
+        - EXU01     : port 0 / port 1
 
         Fallback:
         - missing / unknown tag => all available ports
@@ -53,11 +51,7 @@ class TimingQuery:
         if dispatch_exu == 'EXU0_ONLY':
             return [0] if self.issue_ports > 0 else []
         if dispatch_exu == 'EXU01':
-            if self.three_ports_mode:
-                return [p for p in range(min(self.issue_ports, 3))]
             return [p for p in range(min(self.issue_ports, 2))]
-        if dispatch_exu == 'EXU012':
-            return [p for p in range(min(self.issue_ports, 3))]
         return list(range(self.issue_ports))
 
     def _get_ii(

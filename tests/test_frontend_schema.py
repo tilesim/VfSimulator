@@ -461,8 +461,8 @@ class CanonicalVfInfoValidatorTest(unittest.TestCase):
         invalid_values = (
             {"issue_ports": "2"},
             {"issue_ports": True},
-            {"three_ports_mode": 1},
-            {"three_ports_mode": "true"},
+            {"enable_isu_queue_model": 1},
+            {"enable_isu_queue_model": "true"},
             {"shq_exq_dispatch_policy": 1},
             {"shq_exq_dispatch_policy": False},
         )

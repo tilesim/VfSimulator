@@ -10,6 +10,7 @@ from api.common import AccessKind, AffineExpression, CanonicalVfInfo, CanonicalO
 from api.programmatic.builder import VfInfoBuilder
 from api.json.serialization import canonical_vf_info_from_dict
 from core.simulator import CoreVfCostModel
+from api.input_api import InputAPI
 from tests.core_support import component_engine
 from core.params.database import ParamDB
 
@@ -20,7 +21,7 @@ class CanonicalCoreLoweringTest(unittest.TestCase):
 
     def _fixture(self, name):
         payload = json.loads((self.fixtures / name).read_text(encoding='utf-8'))
-        return canonical_vf_info_from_dict(payload)
+        return InputAPI.from_canonical(canonical_vf_info_from_dict(payload))
 
     def test_lowering_preserves_static_identity_and_memory_metadata(self):
         vf_info = self._fixture('v1_valid_loop.json')
@@ -113,7 +114,7 @@ class CanonicalCoreLoweringTest(unittest.TestCase):
         payload['context'][0]['count'] = count
         payload['values']['out.0'] = {'definition_id': 'out.0', 'logical_id': 'out', 'storage': 'Register', 'dtype': 'fp32', 'producer_node_id': 'inst.after'}
         payload['context'].append({'kind': 'instruction', 'instruction_id': 'inst.after', 'opcode': 'VEXP', 'instruction_class': 'compute', 'form': 'fp32', 'inputs': [{'value_id': 'acc.exit', 'role': 'source', 'dtype': 'fp32'}], 'outputs': [{'value_id': 'out.0', 'role': 'destination', 'dtype': 'fp32'}]})
-        return canonical_vf_info_from_dict(payload)
+        return InputAPI.from_canonical(canonical_vf_info_from_dict(payload))
 
     def _lower_and_expand(self, vf_info, count):
         payload = CoreLoweringPass().lower(vf_info)
@@ -202,9 +203,9 @@ class CanonicalCoreLoweringTest(unittest.TestCase):
     def _accumulator_loop(loop_id, instruction_id, induction, entry_value_id, back_edge_value_id, exit_value_id, *, count=2):
         return {'kind': 'loop', 'loop_id': loop_id, 'induction': {'variable_id': induction, 'start': 0, 'step': 1}, 'count': count, 'unroll': 1, 'carried_values': [{'logical_id': 'acc', 'entry_value_id': entry_value_id, 'back_edge_value_id': back_edge_value_id, 'exit_value_id': exit_value_id}], 'body': [{'kind': 'instruction', 'instruction_id': instruction_id, 'opcode': 'VADD', 'instruction_class': 'compute', 'form': 'fp32', 'inputs': [{'value_id': entry_value_id, 'role': 'source', 'dtype': 'fp32'}, {'value_id': 'rhs.entry', 'role': 'source', 'dtype': 'fp32'}], 'outputs': [{'value_id': back_edge_value_id, 'role': 'destination', 'dtype': 'fp32'}]}]}
 
-    def test_invalid_canonical_input_is_validated_before_compatibility_check(self):
+    def test_invalid_direct_canonical_input_is_rejected_by_api(self):
         invalid = CanonicalVfInfo(context=(object(),), values={})
         with self.assertRaises(VfInfoValidationError):
-            CoreVfCostModel().run_vf_info(invalid)
+            CoreVfCostModel().run_vf_info(InputAPI.from_canonical(invalid))
 if __name__ == '__main__':
     unittest.main()

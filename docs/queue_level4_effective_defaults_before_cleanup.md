@@ -1,5 +1,7 @@
 # Queue Level4 Effective Defaults Before Cleanup
 
+> 这是旧版模型的参数快照。实验三端口开关已删除，不属于当前 Python 模型；三端口能力留给后续独立的 A6 架构。
+
 本文档记录的是：在 `dev_0429` 这一轮主线清理之前，历史 `queue_level4+vregpass` 口径下，`queue_level4` **实际生效**的默认参数。
 
 目的不是描述“理想设计”，而是固定一份“当时程序真实跑出来的默认值基线”，方便后续继续清理代码、显式化默认值时做对照。
