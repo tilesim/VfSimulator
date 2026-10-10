@@ -42,8 +42,8 @@ JSON / CCE
 相关文件：
 
 - `main.py`：CLI 入口和模型选择。
-- `api/cce_adapter.py`：解析 CCE `__VEC_SCOPE__`。
-- `api/frontend/core_lowering.py`：把公共 canonical VF API lower 成 simulator program payload。
+- `api/cce/adapter.py`：解析 CCE `__VEC_SCOPE__`。
+- `core/lowering.py`：把公共 canonical VF API lower 成 simulator program payload。
 - `core/flatten.py`：静态 program 到线性 IR。
 - `core/ifu.py`：动态 loop 和 unroll 展开。
 - `core/idu.py`：IDU window、VLOOP gate、credit gate。
@@ -149,7 +149,7 @@ op_class = COMPUTE -> SHQ / EXQ / EXU 计算路径
 
 ### CCE Adapter
 
-当前 `api/cce_adapter.py` 会保留大写后的 callee name：
+当前 `api/cce/adapter.py` 会保留大写后的 callee name：
 
 ```text
 vlds -> VLDS
@@ -418,7 +418,7 @@ python3 tools/run_cost_model_regression.py --tier smoke
 
 ### 阶段 4：保留真实 CCE LSU 指令
 
-状态：当前支持子集已完成。`api/cce_adapter.py` 保留：
+状态：当前支持子集已完成。`api/cce/adapter.py` 保留：
 
 - `vlds` -> `VLDS`
 - `vsts` -> `VSTS`

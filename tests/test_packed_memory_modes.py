@@ -6,10 +6,11 @@ import subprocess
 import tempfile
 import unittest
 
-from api.cce_adapter import parse_cce_canonical_vf_info
-from api.frontend import canonical_vf_info_to_dict, validate_canonical_vf_info
-from api.frontend.schema import CanonicalOperand, CanonicalValue, OperandRole, StorageKind
-from api.simulator_costmodel import CoreVfCostModel
+from api.cce.adapter import parse_cce_canonical_vf_info
+from api.json.serialization import (canonical_vf_info_to_dict)
+from api.common import (validate_canonical_vf_info)
+from api.common.schema import CanonicalOperand, CanonicalValue, OperandRole, StorageKind
+from core.simulator import CoreVfCostModel
 
 
 def packed_program():
@@ -90,13 +91,13 @@ class PackedMemoryModeTest(unittest.TestCase):
             self.assertFalse(validate_canonical_vf_info(replace(vf, values=values)).ok)
 
     def test_checked_in_canonical_payload(self):
-        from api.frontend.serialization import canonical_vf_info_from_dict
+        from api.json.serialization import canonical_vf_info_from_dict
         fixture = Path(__file__).parent/"fixtures/canonical_vf_info/v2_plt_packed_fp16.json"
         vf = canonical_vf_info_from_dict(json.loads(fixture.read_text()))
         self.assertTrue(validate_canonical_vf_info(vf).ok)
 
     def test_payload_bytes_do_not_shrink_transaction_budget(self):
-        from api.frontend.instruction_catalog import DEFAULT_INSTRUCTION_CATALOG as catalog
+        from api.common.instruction_catalog import DEFAULT_INSTRUCTION_CATALOG as catalog
         for opcode, mode in (("VLDS", "UNPK_B16"), ("VSTS", "PK_B32")):
             spec = catalog.lookup(opcode).memory_modes[mode]
             self.assertEqual(spec.memory_span * 2, 128)

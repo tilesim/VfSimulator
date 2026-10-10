@@ -4,14 +4,12 @@ import unittest
 from pathlib import Path
 from unittest import mock
 
-from api.frontend import (
-    CanonicalJsonVfInfoAdapter,
-    VfInfoValidationError,
-    canonical_vf_info_to_dict,
-)
-from api.frontend.json_adapter import _canonical_schema_validator
+from api.json.adapter import (CanonicalJsonVfInfoAdapter)
+from api.common import (VfInfoValidationError)
+from api.json.serialization import (canonical_vf_info_to_dict)
+from api.json.adapter import _canonical_schema_validator
 from api.input_api import InputAPI
-from api.simulator_costmodel import CoreVfCostModel
+from core.simulator import CoreVfCostModel
 
 
 class CanonicalJsonVfInfoAdapterTest(unittest.TestCase):
@@ -42,8 +40,8 @@ class CanonicalJsonVfInfoAdapterTest(unittest.TestCase):
         self.assertFalse(hasattr(model, "predict_legacy_vf_cycles"))
 
     def test_cost_model_payload_rejects_legacy_shape(self):
-        with self.assertRaises(VfInfoValidationError):
-            CoreVfCostModel().run_payload(
+        with self.assertRaises(TypeError):
+            CoreVfCostModel().run_vf_info(
                 {"dtype": "fp32", "values": {}, "program": []}
             )
 
@@ -137,7 +135,7 @@ class CanonicalJsonVfInfoAdapterTest(unittest.TestCase):
         _canonical_schema_validator.cache_clear()
         try:
             with mock.patch(
-                "api.frontend.json_adapter.import_module",
+                "api.json.adapter.import_module",
                 side_effect=missing,
             ):
                 builder = InputAPI.new_builder()

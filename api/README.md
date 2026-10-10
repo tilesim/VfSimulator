@@ -1,187 +1,91 @@
-# API 层
+# Python 输入 API
 
-VfSimulator 的 Python、C++ 和 JSON 正式输入合同统一为
-`CanonicalVfInfo`。v2 显式描述谓词依赖；v1 保留原有无谓词语义，供既有
-canonical 输入兼容使用。旧 `VFInfo` 和旧 JSON trace 不再进入正式预测 API。
+`api/` 只处理三种输入：CCE/DSL 文件、Canonical JSON，以及直接构造的
+`CanonicalVfInfo` 对象。所有输入使用同一份 Canonical 数据合同；Python
+预测和执行准备位于 `core/`。
 
 ## 正式入口
 
-- `InputAPI.load_json(path)`：按
-  `api/frontend/canonical_vf_info_v1.schema.json` 加载并校验 canonical JSON。
-- `InputAPI.load_cce(path, kernel_name=None, loop_params=None)`：解析 CCE
-  `__VEC_SCOPE__` 并直接返回 `CanonicalVfInfo`。
-- `InputAPI.new_builder(...)`：程序化构造 canonical 对象。
-- `CoreVfCostModel.predict_vf_cycles(vf_info)`：唯一 Python 预测方法，参数必须为
-  `CanonicalVfInfo`。
-- `CoreVfCostModel.run_vf_info(vf_info)`：返回完整模拟结果。
-- `CoreVfCostModel.run_payload(payload)`：只接受 CanonicalVfInfo 的 JSON 对象，
-  不猜测旧格式。
-- C++ `runCanonicalVfInfo(vf_info, db)`：唯一 Native 预测入口。
-- C++ `loadCanonicalJsonVfInfo(path)`：Native canonical JSON 入口。
-
-`CoreVfCostModel` 的默认精度参数命名为 `fallback_dtype`，不是 VF 全局精度。
-时序查询优先使用每条指令的 `form`；输入输出值保留各自 `dtype`。
-旧 `CoreVfCostModel(dtype=...)` 关键字仍兼容，内部 lowering payload 改用
-`fallback_dtype`，不改变公开 Canonical JSON schema。当前 lowering 的兜底值仍为
-`fp32`，与此次清理前一致；它不覆盖明确给出的指令 form。
-
-已删除“寄存器值数量乘 unroll 超过物理寄存器数”的静态风险 warning。
-架构寄存器溢出预警尚未实现；物理寄存器 credit 和实际阻塞的仿真保持不变。
-
-Python builder 示例：
+- `InputAPI.load_cce(path, kernel_name=None, loop_params=None)`：解析并校验 CCE，返回 Canonical 对象。
+- `InputAPI.load_json(path)`：校验 JSON Schema，反序列化并校验 Canonical 语义。
+- `InputAPI.new_builder(...)`：显式构造值定义、指令和循环；`build()` 返回经过校验的对象。
+- `InputAPI.validate_canonical_vf_info(vf_info)`：返回结构化诊断，不修改输入。
 
 ```python
-builder = InputAPI.new_builder(params={"N": 4})
-builder.register_storage_object("ub.input", storage=StorageKind.UB)
-builder.register_value(
-    "input.0",
-    logical_id="input",
-    storage=StorageKind.UB,
-    dtype="fp32",
-    storage_object_id="ub.input",
-)
-with builder.loop("loop.0", induction=InductionVariable("i"), count="N"):
-    ...
-vf_info = builder.build()
+from api.input_api import InputAPI
+from core.simulator import CoreVfCostModel
+
+vf_info = InputAPI.load_cce("cce_code/GeLU_poly.dsl")
 cycles = CoreVfCostModel().predict_vf_cycles(vf_info)
 ```
 
-## Canonical 契约
+直接构造 dataclass 时，调用方必须提供完整的 definition、producer、operand
+和 loop-carried 关系。Builder 不替调用方推断依赖。JSON 是这些对象的序列化
+形式，支持 schema v1/v2；v2 表达谓词及循环仅出口定义等语义。
 
-- `definition_id` 表示一次值定义，`logical_id` 表示源程序中的逻辑值。
-- instruction 显式携带 `instruction_id`、`opcode`、`form`、
-  `instruction_class` 和带 role 的 operands。
-- input value 的 `producer_node_id` 是寄存器 DATA 依赖的唯一事实来源。
-  `dependencies` 只表达额外 memory/control ordering。
-- UB 使用稳定的 `storage_object_id`。operand 可携带 affine memory access；当前
-  Core 不自动根据 UB 地址建立依赖，UB 顺序由显式 Membar 控制。
-- loop 显式描述 induction、count、unroll 和 entry/back-edge/exit definitions。
-  v2 允许 `entry_value_id=null` 表示循环内首次定义的仅出口值，适用于 vector 和
-  predicate。该形式要求循环次数（含 params 求值）确定大于零；出口引用最后一轮定义。
-- 未知但语义完整的 opcode 可以通过 validator，timing 缺失由 ParamDB 使用默认值
-  并记录 warning。
-- Python/C++ 必须遵循相同的 int64、scalar、枚举和未知字段约束。
+旧 `VFInfo`、旧 `program/src/dst` JSON 和离线迁移接口已删除。请使用 Canonical
+JSON 或重新解析原始 CCE；API 不猜测格式，也不补造缺失的操作数。
 
-canonical JSON 使用可选依赖 `jsonschema`。该依赖只在调用 `InputAPI.load_json()`
-或 `CanonicalJsonVfInfoAdapter` 时延迟加载。
+## 目录边界
 
-### 谓词寄存器（v2）
+- `cce/`：CCE 专属的源码处理、私有 IR、规范化、affine 解析和值版本化。
+- `json/`：Canonical JSON 格式校验、schema 和序列化。
+- `programmatic/`：通过 Builder 显式构造 Canonical 对象。
+- `common/`：三种输入共享的 Canonical 类型、语义校验、Catalog、符号和诊断。
 
-版本常量分为 `CURRENT_SCHEMA_VERSION=2`、`SUPPORTED_SCHEMA_VERSIONS={1,2}`
-和 `LEGACY_EMISSION_SCHEMA_VERSION=1`。普通无谓词、无仅出口定义的程序可保持 v1
-输出；需要 v2 语义时，CCE adapter/builder 自动输出 v2。原版本常量名是当前版本的兼容别名，
-不再用它表示默认输出策略。C++ 使用对应的 `kCurrentSchemaVersion`、
-`kSupportedSchemaVersions`、`kLegacyEmissionSchemaVersion`。
+`CanonicalVfInfo` 定义在 `common/schema.py`。它是共享合同，不需要单独的输入目录。
+`common/` 不依赖 CCE、JSON 或程序化构造代码，JSON Schema 则属于 `json/` 的文件格式合同。
+`input_api.py` 在顶层组合输入方式；没有新增转换管理器或旧路径转发模块。
 
-- `storage=PredicateRegister`、`dtype=bool`；输入 role 为 `predicate`，输出 role 为
-  `destination`。每个谓词 definition 必须有 producer，不支持 predicate live-in。
-- CCE 的 PSET、VCMP/VCMPS、VSEL 和已登记 masked 运算保留真实依赖。
-  CCE adapter 与 builder 在包含谓词时生成 `schema_version=2`；C++ 直接构造时显式设为 2。
-- v1 禁止携带 PredicateRegister；不会替旧输入猜测或补造全有效 mask。需要模拟
-  谓词开销时，应从原始 CCE 重新导入，或显式构造完整的 v2 输入。
-- 首版仅支持 MODE_ZEROING。MODE_MERGING、未登记的谓词指令及 PST/PLD 回放拒绝执行；
-  缺少 timing 可 fallback 并 warning，缺少谓词语义不允许 fallback。
-- `physical_predicate_registers=32`，与 vector 的 68 个物理资源独立；两类消费者
-  统一使用 `consumer_release_start_offset=4`，动态最后使用后不额外等待同名覆写。
-- `sim_history.json` 记录 `src_predicate_phys`、`dst_predicate_phys` 和两类可用资源；
-  `idu_resource_blocked.json` 区分 `vector_credit`、`predicate_credit` 阻塞。
-- PSET 暂按 ALU/EXU01、占用 SHQ/EXQ 建模；缺失参数的预测不用于精度校准。
-  实现与证据见 `docs/physical_predicate_register_modeling_plan.md`。
-
-### 读写操作数
-
-Catalog 的 `direction=read_write` 表示同一个 vector 参数读取旧值并写入新值。
-目前用于 FP32 `VAXPY(dst, src, scalar, predicate[, MODE_ZEROING])`。
-CCE binder 将该参数同时加入 src/dst；版本化先读旧 definition，再生成新 definition。
-输入侧 role 为 `source`，输出侧为 `destination`，不向核心引入特殊的读写 role。
-
-直接构造 canonical 输入时，VAXPY 的输入顺序为旧 dst、src、scalar、predicate，
-输出为新 dst。新旧 dst 必须使用不同的 SSA value_id；不能省略旧 dst 输入，
-也不能让输入引用本条指令自己的输出。旧 Python VFInst 接口同样需要显式列出旧 dst 输入。
-Python/C++ 校验均使用这一签名，调度、重命名和 last-use 仍走统一逻辑。
-
-固定 read_write 不等于已支持 MODE_MERGING。目前该模式仍拒绝；
-后续按指令 mode 扩展 Catalog 的访问属性解析时，需要同步输入签名校验和依赖测试，
-不能仅放开 mode 字符串或在 OoO 中按 opcode 特判。
-
-## CCE 前端
-
-CCE parser 使用 `api/frontend/adapter_ir.py` 中的私有 `AdapterProgram` 表示尚未
-SSA 版本化的源语言事件。该结构不从 `api` 导出，也不是外部合同。
-`ValueVersioningPass` 将它转换为 `CanonicalVfInfo`：
+## 转换流程和职责
 
 ```text
-CCE __VEC_SCOPE__
-  -> private AdapterProgram
-  -> ValueVersioningPass
-  -> CanonicalVfInfo validation
-  -> CoreLoweringPass
-  -> Core
+CCE -> cce/parser.py -> normalized AdapterProgram -> ValueVersioningPass -> validation
+JSON -> JSON Schema -> deserialization -> validation
+Builder -> explicit Canonical definitions -> validation
+                                      |
+                               CanonicalVfInfo
+                                      |
+                      core.execution.prepare.CoreLoweringPass
+                                      |
+                           Core runtime preparation
 ```
 
-Catalog 是已知 opcode 的语义事实来源，声明 opcode alias、instruction class、
-semantic form、CCE operand signature、call variants 和 specialization。timing 参数仍
-只由 `configs/isa.json`、`forwarding.json` 和
-`InitiationInterval.json` 决定。
+| 文件 | 职责 |
+| --- | --- |
+| `input_api.py` | 三种输入的公开入口 |
+| `cce/adapter.py` | 组合 CCE 解析、值版本化和输入校验 |
+| `cce/source.py` | 源码读取、VF scope 提取和 token 工具 |
+| `cce/parser.py` | 语法、作用域、Catalog 参数绑定及访存描述 |
+| `common/symbols.py` | 源语言符号及 dtype/form 拼写规范化；storage 使用 Canonical 枚举 |
+| `common/schema.py` | Canonical 数据类型、schema 版本及输出版本选择 |
+| `cce/ir.py` | CCE parser 的私有逻辑值和语句结构 |
+| `cce/normalization.py` | 合并显式 value 信息、规范指令和 operand 引用；不从名称猜 storage |
+| `cce/value_versioning.py` | 规范化 AdapterProgram 的静态定义版本、alias 和循环 entry/back-edge/exit |
+| `cce/affine.py` | 整数 affine 访存表达式解析 |
+| `common/validator.py` | 定义、作用域、依赖、循环和访存结构校验 |
+| `common/instruction_validation.py` | Catalog 指令 form、mode、签名和 operand 校验 |
+| `common/diagnostics.py` | Diagnostic、ValidationResult 和 VfInfoValidationError |
+| `json/adapter.py`、`json/serialization.py` | Canonical JSON 格式校验和对象序列化 |
+| `programmatic/builder.py` | 显式 Canonical 对象构造 |
+| `common/instruction_catalog.py` | 已知指令的语义事实来源 |
 
-CCE 的 vector、predicate、scalar 和 UB pointer 使用词法作用域。寄存器赋值
-`b = a` 在私有 IR 中表示零周期 alias，并在赋值点绑定 `a` 的当前 definition。
-普通 offset 与 `POST_UPDATE` 分开表达；affine offset 只支持常量、变量、加减和
-常量乘变量。
+CCE 规范化只在 parser 输出时执行一次；版本化只负责生成 Canonical 定义，
+完整语义校验由 CCE adapter 执行。JSON 和 Builder 在各自公开输入边界校验。
 
-## Legacy 迁移
+预测入口调用 `CoreLoweringPass.lower()`，由它统一执行对象校验、Core 能力检查
+和内部表示转换。由于 Canonical 中的 Mapping 可以被调用方修改，每次预测仍需
+检查输入，不能把曾经通过校验当作永久有效；模型组装不再重复执行相同校验。
 
-旧格式只保留为离线转换能力：
+## 输入边界
 
-```bash
-python3 tools/convert_legacy_vfinfo.py old.json canonical.json
-python3 tools/convert_legacy_vfinfo.py old.json canonical.json --target cpp
-```
+- CCE parser 只支持明确的 `__VEC_SCOPE__` 语句，不是完整 C++ 编译器。
+- Catalog 确定指令语义；ISA、forwarding、II 和微架构时序由 Core 参数库处理。
+- Canonical 对象合法，不代表当前 Core 支持其中全部语义；执行能力检查位于 `core/execution/prepare.py`。
+- `storage_object_id` 是稳定的 UB 对象身份，`definition_id` 是一次值定义，两者不能混用。
+- 寄存器 DATA 依赖使用 operand 的 `value_id` 和 producer；普通 UB 顺序由显式 Membar 表达。
+- 公共诊断使用 `api.common.diagnostics.VfInfoValidationError`，不依赖 Builder。
+- Canonical JSON 使用可选依赖 `jsonschema`，仅在 JSON 输入时加载。
 
-Python 的 `api.vf_info`、`api.json_adapter` 和
-`api.frontend.legacy_vf_info_adapter` 只供该转换流程与历史测试使用，不由
-`InputAPI`、`VfCostModel` 或 `CoreVfCostModel` 导出。Native 的旧转换代码位于独立
-`vfsim::native_legacy` 静态库；正式编译器接入只链接 `vfsim::native_core`。
-
-`regression_suite/inputs/canonical` 保存正式回归使用的 canonical fixture，Python
-和 Native runner 直接读取这些文件。`regression_suite/inputs/json` 只保留为迁移
-工具的历史输入。
-
-`VFtest/canonical` 保存可直接传给 `main.py --trace` 的示例；`VFtest` 根目录中的旧
-program JSON 仅用于离线转换和历史 optimizer。
-
-`--target cpp` 会移除 Python-only 的
-`canonical_dynamic_instruction_limit`。Native 对 Python-only 或未知 uarch 字段明确
-报错，不会静默忽略。
-
-## Core 边界
-
-`CoreLoweringPass` 是 canonical 到内部 JSON-like payload 的唯一入口。它保留静态
-instruction ID、definition ID、动态 iteration path、loop-carried binding、值实例
-last-use/keep 标记和稳定 UB object。旧 vreg normalization、字符串 `_laneN` 改写和
-旧 `VFInfoLowerer` 不再位于正式流程，`VFInfoLowerer` 已删除。
-
-当前支持可整除的 innermost `unroll>1`；非 innermost unroll 和不可整除 batch 会
-明确拒绝。含 Membar 的 innermost unroll 保守回退到 1 并记录 warning。
-
-## POST_UPDATE 地址状态
-
-Canonical `MemoryAccess` 可提供 `address_state_id`、`update_mode`（`none` 或
-`post_update`）和 `post_update_delta_bytes`（affine expression）。更新必须同时
-提供状态与增量；零增量仍是一条更新事件。普通访问也应提供所读取的状态 ID，
-以便识别前序更新。缺省字段的旧输入保持原行为。
-
-Python/Native 在 IDU 顺序 dispatch 时检查地址 scoreboard。成功分发的更新
-使该状态在 `dispatch_cycle + idu_post_update_ready_latency` 就绪，默认间隔 1。
-队头未就绪时，后面的独立指令也不能绕过；已经通过 IDU 的同指针指令允许在
-LSU 资源满足时双发，不再等待前一条 LSU start。地址状态不占 vector preg，
-也不表示 UB 数据依赖；数据内存同步仍由 Membar 控制。
-`lsu_post_update_ready_latency` 已废弃并明确报迁移错误，不自动映射到新参数。
-`idu_to_ooo.json` 和 `idu_address_blocked.json` 记录地址 producer 的 dispatch
-时间与 ready_cycle；`sim_history.json` 不再输出旧 start-based 地址事件边。
-CCE 前端依据 Catalog 中的 `post_update_delta` 规则生成字节增量：普通
-`VLDS/VSTS/VSTUS/VSTAS` 将显式元素步长乘以指针元素宽度；`VSSTB` 将复合
-配置的低 16 位解释为 32 字节 block 数，因此 `(129 << 16) | 1` 的更新量为
-32 字节。高 16 位 block stride 不属于指针更新量。
-完整支持范围、限制及复现步骤见
-[POST_UPDATE 开发与验证记录](../docs/post_update_address_dependency_plan.md)。
+C++ 输入和执行核心在后续阶段单独重构。`api/native/generated/` 的两份数据是
+现有 Python Catalog 一致性测试的依赖，本阶段不修改这些生成数据。

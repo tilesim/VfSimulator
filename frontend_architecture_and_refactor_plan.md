@@ -1,5 +1,7 @@
 # VfSim 前端架构与代码规范改造计划
 
+> 此文保留设计演进记录。Python API/Core 当前结构见 [代码导览](docs/code_structure_guide.md)；旧 VFInfo、名称推断、旧 Core 入口和 ROB 实现已删除。
+
 > 状态：阶段一契约与校验完成，阶段二 Catalog 主体完成、adapter 迁移继续
 > 适用代码：Python VfSim 前端、Python Core 入口、C++ VfInfo 入口  
 > 不包含：timing 参数标定、OoO 调度策略调优和具体算子精度对齐
@@ -365,7 +367,7 @@ Membar 不进入 IDU、SHQ、EXQ 或 EXU。其对 SHQ 乱序发射的限制由 C
 
 ### 7.1 目的
 
-当前 opcode、dtype、form specialization 和操作数规则分散在 `api/input_symbols.py`、`api/cce_adapter.py`、`api/vf_info.py`、C++ `VfInfo.cpp` 和 config 文件中。应新增独立的 `InstructionCatalog`，作为指令语义的唯一事实来源。
+当前 opcode、dtype、form specialization 和操作数规则分散在 `api/common/symbols.py`、`api/cce/adapter.py`、`api/vf_info.py`、C++ `VfInfo.cpp` 和 config 文件中。应新增独立的 `InstructionCatalog`，作为指令语义的唯一事实来源。
 
 InstructionCatalog 与 timing config 必须分开：
 
@@ -659,8 +661,8 @@ Cycle 回归用于验证性能模型没有意外变化，但不能替代语义�
 
 | 当前模块 | 当前主要问题 | 目标归属 |
 | --- | --- | --- |
-| `api/cce_adapter.py` | parser、符号表、opcode 特判、form 推断混合；不支持语句可静默忽略；地址表达式可能取错 identifier | CCE tokenizer、symbol table、expression parser、Catalog binder、diagnostics |
-| `api/input_symbols.py` | opcode enum 和 alias 表不完整；承担过多输入兼容规则；Python/C++ 重复维护 | `InstructionCatalog` 与 adapter-local alias |
+| `api/cce/adapter.py` | parser、符号表、opcode 特判、form 推断混合；不支持语句可静默忽略；地址表达式可能取错 identifier | CCE tokenizer、symbol table、expression parser、Catalog binder、diagnostics |
+| `api/common/symbols.py` | opcode enum 和 alias 表不完整；承担过多输入兼容规则；Python/C++ 重复维护 | `InstructionCatalog` 与 adapter-local alias |
 | `api/vf_info.py` | canonicalization 中按名称推断 storage；全局 dtype 合并；同时 normalize 和 specialize | schema 数据类、Semantic Resolver、Validator |
 | `api/json_adapter.py` | 旧格式兼容与 canonical 输入边界不明确 | `LegacyJsonAdapter` 与 canonical serializer |
 | `api/vf_lowering.py` | 可能重复 canonicalize；阶段输入输出类型不清晰 | 单一 `CoreLoweringPass` |
@@ -906,7 +908,7 @@ Canonical validator 使用节点级诊断位置作用域：校验 instruction、
 2. 新增 Python 无副作用 validator 和结构化 diagnostic；validator 不读取 timing config，不拒绝语义明确但 timing 未覆盖的 opcode。`frozen dataclass` 只限制字段重新赋值，其中的 mapping 不承诺深度不可变。
 3. 新增 C++ `api/native/CanonicalVfInfo.h` 和等价 validator；C++ canonical 节点使用 variant 表示 payload，非法输入返回 diagnostic，不因整数解析失败抛异常。
 4. `InputAPI.validate_canonical_vf_info()` 提供显式校验入口。
-5. 定义语言无关的 `api/frontend/canonical_vf_info_v1.schema.json`，并建立 Python/C++ 共用的 conformance fixture。测试侧 C++ decoder 会完整转换 fixture，再与 Python validator 对齐合法结果和非法 diagnostic code。
+5. 定义语言无关的 `api/json/canonical_vf_info.schema.json`，并建立 Python/C++ 共用的 conformance fixture。测试侧 C++ decoder 会完整转换 fixture，再与 Python validator 对齐合法结果和非法 diagnostic code。
 6. Canonical value 明确表示一次 definition，同时保留 logical ID 和 producer node；DATA dependency 只从 input definition 推导，显式 dependency 仅允许 memory/control。
 7. UB storage object 与 memory value definition 已拆分；alias 身份使用稳定 `storage_object_id`，definition ID 只描述一次 memory state。
 8. loop 显式描述 induction variable 和 entry/back-edge/exit，并校验 definition scope 与类型；Python 直接输入同时检查 int64 边界和有限 scalar。

@@ -7,10 +7,10 @@ import tempfile
 import unittest
 from unittest.mock import patch
 
-from api.cce_adapter import parse_cce_canonical_vf_info
-from api.frontend.builder import VfInfoBuilder
-from api.frontend.serialization import canonical_vf_info_to_dict
-from api.simulator_costmodel import CoreVfCostModel
+from api.cce.adapter import parse_cce_canonical_vf_info
+from api.programmatic.builder import VfInfoBuilder
+from api.json.serialization import canonical_vf_info_to_dict
+from core.simulator import CoreVfCostModel
 
 
 ROOT = Path(__file__).resolve().parents[1]

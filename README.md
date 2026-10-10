@@ -4,7 +4,7 @@ VF Simulator 是面向 Ascend 风格 VF（Vector Function）的周期级性能�
 
 模型不执行算子数值计算。`vf_end_cycle` 用于性能预测；数值正确性仍需通过 CAmodel、设备运行和 golden 数据验证。
 
-当前正式输入合同是 `CanonicalVfInfo v1`。CCE/DSL、Canonical JSON 和程序化 Builder 只是不同前端，最终进入同一套 Core 语义。
+当前正式输入合同是 `CanonicalVfInfo`，支持 schema v1/v2。CCE/DSL、Canonical JSON 和程序化 Builder 只是不同前端，最终进入同一套 Core 语义。
 
 ## 快速开始
 
@@ -51,24 +51,24 @@ CCE / DSL               Canonical JSON             VfInfoBuilder
    ├─ CCE scope parser       ├─ JSON Schema 校验        ├─ 程序化构造
    └─ ValueVersioning        └─ 对象解码                └─ build()
                  \             │             /
-                       CanonicalVfInfo v1
+                       CanonicalVfInfo v1/v2
                    通用校验 + Catalog 语义校验
                                │
                        CoreLoweringPass
              program / values / params / uarch payload
                                │
-               ProgramAnalyzer + Flattener + ParamDB
+               execution/prepare + expansion + ParamDB
                                │
-                    IFU → IDU → OoO Core
+                    execution/engine → uarch components
                                │
               ┌────────────────┼─────────────────┐
               │                │                 │
-       SHQ → EXQ → EXU        LSQ        Membar ControlUnit
+       SHQ → EXQ → EXU        LSQ        execution/membar
           compute path     load/store path       control path
               │                │                 │
               └────────────────┼─────────────────┘
                                │
-                       run_simulation()
+                       Engine.run()
                          逐周期推进模型
                                │
        vf_end_cycle / JSON 日志 / Perfetto trace / warnings
@@ -82,7 +82,7 @@ CCE / DSL               Canonical JSON             VfInfoBuilder
 - `InputAPI.load_json()`：严格读取 Canonical JSON。
 - `InputAPI.new_builder()`：由 Python 代码直接构造 Canonical 输入。
 
-`CanonicalVfInfo` 定义在 `api/frontend/schema.py`，主要描述：
+`CanonicalVfInfo` 定义在 `api/common/schema.py`，主要描述：
 
 - instruction、loop 和独立的 membar 控制节点；
 - 每一次 register/scalar/UB value definition；
@@ -94,9 +94,9 @@ CCE 解析器不是完整 C++ 编译器，只解析模型明确支持的 `__VEC_
 
 #### CanonicalVfInfo 核心定义
 
-Python 定义位于 `api/frontend/schema.py`，C++ 等价定义位于
+Python 定义位于 `api/common/schema.py`，C++ 等价定义位于
 `api/native/CanonicalVfInfo.h`，跨语言 JSON 合同位于
-`api/frontend/canonical_vf_info_v1.schema.json`。
+`api/json/canonical_vf_info.schema.json`。
 
 ```python
 @dataclass(frozen=True)
@@ -147,91 +147,63 @@ CanonicalVfInfo
 `storage_objects` 描述稳定存储对象。普通寄存器数据依赖由 operand 的 `value_id`
 连接到对应 `CanonicalValue`，不依赖逻辑寄存器名称或静态 PC 猜测。
 
-### 2. Lowering 与程序分析
+### 2. 执行准备与动态展开
 
-`api/frontend/core_lowering.py` 将经过验证的 Canonical 输入转换为 Core payload。`core/program_analysis.py` 分析顶层 block 和 loop 边界，`core/flatten.py` 将结构化程序转换成包含循环边界的线性静态表示。
+`core/execution/prepare.py` 执行 Canonical 校验、Core 能力检查、表示转换和静态循环分析；
+`core/execution/expansion.py` 展开循环、unroll 和 loop-carried 绑定，标记动态值的最后使用。
+动态值身份是 `(definition_id, iteration_path)`，不通过变量名或 `_laneN` 后缀推断。
+`canonical_dynamic_instruction_limit` 默认 20000，可显式配置；`0` 表示关闭限制。
 
-Lowering 只转换表示，不负责调度。寄存器依赖仍由 definition/value identity 表达，不能用逻辑寄存器名称或静态 PC 代替动态定义。
+### 3. 执行控制与硬件状态
 
-### 3. IFU：生成动态指令流
-
-`core/ifu.py` 负责：
-
-- 展开循环和受支持的 unroll；
-- 维护 loop-carried value 的进入、回边和退出绑定；
-- 生成 `static_instruction_id`、`iteration_path`、`stream_seq` 和动态 `inst_id`；
-- 标记动态 value instance 的最后使用；
-- 跳过零次循环产生的空 top block。
-
-Canonical 动态展开默认受 `canonical_dynamic_instruction_limit=20000` 保护，避免异常输入在仿真开始前无限占用宿主机内存。可在合法 Canonical `uarch` override 中调整，设为 `0` 表示关闭保护。
-
-### 4. IDU：窗口和后端资源入口
-
-`core/idu.py` 保存 IFU 产生的动态指令，并检查：
-
-- IDU 窗口和每周期 dispatch width；
-- SHQ、LSQ 和物理寄存器 credit；
-- 顶层 loop/block 的开放时刻；
-- IDU 到 OoO 的传输延迟；
-- POST_UPDATE pointer state 的 dispatch 就绪时刻。
-
-IDU 判断指令是否可以进入 OoO 后端，但不负责最终选择 compute 指令在哪个 EXU 开始执行。
-
-### 5. OoO、ISU 与寄存器
-
-`core/ooo_mainline.py` 是 Python 主执行核心，`core/ooo.py` 提供 Uop 和公共辅助状态，`core/isu.py` 负责 compute 调度。
+`core/simulator.py` 是唯一公开 Core 入口，`CoreVfCostModel.run_vf_info()` 只接收
+`CanonicalVfInfo`。`main.py` 先通过 `InputAPI` 读取文件，再调用这一入口。
 
 ```text
-compute: IDU → rename/RAT → SHQ → EXQ0/EXQ1 → EXU0/EXU1
-memory:  IDU → LSQ → load/store pipe
-control: IFU → ControlUnit，不进入 IDU/SHQ/EXQ/EXU
+CanonicalVfInfo → execution/prepare + expansion → PreparedProgram
+                                                   │
+                         execution/engine 逐周期推进
+                                                   │
+       IFU → IDU → registers → SHQ → EXQ → EXU      │ compute
+                            └──→ LSU (LSQ)          │ load/store
+       membar → execution/membar                   │ control
 ```
 
-主线 compute 分发策略为 `fu_round_robin_exu0_reserve`：ALU/SFU 分别 round-robin，并根据 SHQ 前看范围内的 EXU0-only 压力为 EXU0 保留空间。EXQ 内同 FU 保持 FIFO，ALU 与 SFU 可相互乱序。
+- `execution/engine.py`：维护全局周期、传输管线、组件完成事件和排空条件。
+- `execution/scheduler.py`：选择 SHQ→EXQ 端口和 EXQ→EXU 发射顺序。
+- `execution/loop_control.py`：维护 VLOOP、循环迭代及顶层 block 的开放时刻。
+- `execution/membar.py`：维护 barrier admission、同步、release、retire 和消费者门控。
+- `uarch/`：分别拥有 IFU、IDU、register banks、SHQ、EXQ、EXU 和 LSU 的状态。
+- `common/`：动态指令、Uop、结果类型及按显式声明查询存储类别的代码。
+- `params/`：读取 ISA、forwarding、II 和微架构配置，解析不可变 InstructionProfile。
+- `trace/`：记录并写出执行日志及 Perfetto 文件。
 
-Rename/RAT 使用 Canonical value definition 建立 producer-consumer 关系。物理寄存器在最后一个 consumer 开始后经过配置延迟，并满足 RAT、pending consumer 等安全条件时归还；不是看到 last-use 就立即释放。
+寄存器在最后一个 consumer 开始后经过配置延迟，并满足映射、pending producer、
+consumer 数量和 generation 条件时归还。LOAD/STORE 使用 LSU 内部 LSQ 和共享 UB
+issue/bandwidth 预算；compute 使用 SHQ→EXQ→EXU。默认保留原有 ALU/SFU 分别
+round-robin 和 EXU0-only 预留策略。
 
-### 6. LSU 与 membar
+Core 已删除 ROB 容量及按序退休逻辑。EXU、LSU 分别产生完成事件；Engine 的
+`active_uops` 只是未完成指令的登记表，用于完成回收和排空，不限制容量或退休顺序。
+Membar 自身的 retire 时序仍计入 VF 结束周期。UB 一般 RAW/WAR/WAW 不由地址自动推导。
 
-LOAD/STORE 进入 LSQ，不经过 compute EXQ。当前默认共享两个 UB issue slot：最多可开始两条 LOAD，或一条 LOAD 加一条 STORE；不能在同周期开始两条 LOAD 再加一条 STORE。
+### 4. 逐周期顺序
 
-`mem_bar(VST_VLD)` 等方向性 barrier 由 `core/control_unit.py` 和 `core/membar_timing.py` 建模：
+`execution/engine.py::Engine.run()` 保持以下阶段顺序：
 
-- membar 是控制节点，不占计算或 LSU 执行单元；
-- 只阻塞指定方向的后续 LSU，不直接阻塞无关 compute；
-- 有 `membar_timing` 配置时建模 admission、前序 LSU 同步、release、retire 和后续消费者延迟；
-- 当前正式主线使用方向性全局 membar，不自动从 UB 地址推导一般 RAW/WAR/WAW 依赖。
+1. 更新 IDU 可见 credit，并交付 IDU→后端传输管线。
+2. IFU 填充 IDU；membar 交给控制逻辑。
+3. 更新 membar 状态，再执行 IDU dispatch 和后端接收。
+4. 处理寄存器/SHQ 释放及 EXU/LSU 完成事件。
+5. 更新 ready，先进行一次 LSU 仲裁，再进行 compute 调度，最后使用剩余 LSU 预算。
+6. 检查前端、管线、未完成指令和 membar 是否排空。
 
-UB 地址局部依赖属于专项实验能力，不应与正式全局 membar 基线混用。
-
-### 7. ParamDB 与指令参数
-
-`core/param_db.py` 加载并合并 ISA、forwarding、II 和微架构参数。Uop 在进入 OoO 时绑定不可变 `InstructionProfile`，后续调度复用 profile，而不是每周期重新解析 JSON。
-
-- latency：指令自身执行时序；
-- forwarding：producer 结果何时可被特定 consumer 使用；
-- initiation interval：同一执行资源上前后两条指令允许开始的间隔；
-- dispatch EXU：指令可以进入哪些执行端口；
-- op class：决定走 compute、LOAD、STORE 还是控制路径。
-
-缺失的 opcode/form/forwarding/II 可以按兼容规则回退，但会写入 `model_warnings.json`。带 warning 的结果不能直接当成已校准参数。
-
-### 8. 逐周期主循环
-
-`core/simulator_runner.py::run_simulation()` 每个周期大致执行：
-
-1. 更新 IDU 可见的资源 credit，并交付 IDU→OoO 延迟管线。
-2. IFU 向 IDU 填充动态指令；membar 直接交给控制单元。
-3. 更新 membar 发射、同步、release 和 retire 状态。
-4. IDU 向 OoO 分发允许进入后端的指令。
-5. OoO 处理完成、退休、资源释放和本周期新发射。
-6. 记录日志并检查 IFU、IDU、OoO、LSQ 和控制单元是否全部排空。
-
-该周期顺序是模型语义的一部分，随意交换 control update 与 instruction completion 可能产生一周期偏差。
+这些阶段顺序决定 credit 可见性及一周期转发差异，重构保留其时序。
+详细文件和函数导览见 [代码结构说明](docs/code_structure_guide.md)。
 
 ## 当前默认模型
 
-当前分支是一套 A5 风格双 EXU 参数模型，正式后端只有 `OoOCoreMainline`；`queue_level4` 是保留的模型名称，不表示仓库里还有四套可切换的正式 OoO 实现。
+当前分支是一套 A5 风格双 EXU 参数模型，Python 只使用 `core/simulator.py` 组装的组件后端。
 
 关键默认值来自 `configs/uarch.json`：
 
@@ -280,7 +252,7 @@ python3 main.py --trace INPUT.json \
 
 ```python
 from api.input_api import InputAPI
-from api.simulator_costmodel import CoreVfCostModel
+from core.simulator import CoreVfCostModel
 
 vf_info = InputAPI.load_cce("cce_code/GeLU_poly.dsl")
 model = CoreVfCostModel(out_dir="results/api_gelu")
@@ -289,9 +261,9 @@ result = model.run_vf_info(vf_info)
 print(result["vf_end_cycle"])
 ```
 
-只需要周期时使用 `predict_vf_cycles()`。外部 JSON 使用 `run_payload()` 或 `InputAPI.load_json()`，不要把 Core lowering 后的内部 payload 当成公共输入合同。
+只需要周期时使用 `predict_vf_cycles()`。外部 JSON 先使用 `InputAPI.load_json()`；Core 只接收 Canonical 对象，内部执行准备表示不属于公共输入合同。
 
-旧 VFInfo 和旧 JSON 不再进入正式预测路径。确需迁移时使用独立 legacy converter；不要继续扩展旧输入结构来承载新语义。
+旧 Python VFInfo、旧 JSON 和离线转换接口已删除。使用 Canonical JSON、Builder 或原始 CCE 输入。
 
 ## Native C++
 
@@ -343,10 +315,13 @@ Catalog 描述“指令语义是否支持”，timing 配置描述“硬件参�
 
 ```text
 main.py              Python CLI 入口
-api/                 Canonical 输入、CCE adapter、validator 和公共 cost model API
-api/frontend/        Canonical schema、builder、Catalog、版本化和 Core lowering
+api/                 Canonical 输入、CCE parser、adapter 和 validator
+api/cce/             CCE 解析、规范化、私有 IR 和值版本化
+api/json/            Canonical JSON 格式校验和序列化
+api/programmatic/    Builder 程序化构造
+api/common/          共享 Canonical 类型、Catalog 和语义校验
 api/native/          C++ Canonical 合同、JSON adapter 和共享配置接口
-core/                Python IFU、IDU、OoO、ISU、寄存器、LSU 和控制单元
+core/                Python simulator 入口及 execution/uarch/common/params/trace
 native/              C++ 执行核心、构建目标和 Native 测试
 configs/             指令及微架构参数
 tests/               Python 单元测试和共享 fixtures
@@ -359,7 +334,7 @@ docs/                架构、建模规则和开发计划
 results/             生成结果，通常不作为源码依赖
 ```
 
-函数级代码导览见 `docs/code_structure_guide.md`，详细建模规则见 `VF_modeling.md`。文件存在不代表它属于正式预测路径；历史 optimizer、legacy adapter 和 normalization 代码仍可能为迁移或专项测试保留。
+函数级代码导览见 `docs/code_structure_guide.md`，详细建模规则见 `VF_modeling.md`。文件存在不代表它属于正式预测路径；Native 尚保留独立的 legacy 实现；Python API/Core 的旧输入和 normalization 已删除，优化器本轮不处理。
 
 ## 测试与回归
 

@@ -5,30 +5,9 @@ import unittest
 from dataclasses import replace
 from pathlib import Path
 
-from api.frontend import (
-    AccessKind,
-    AffineExpression,
-    AffineTerm,
-    CanonicalInstruction,
-    CanonicalLoop,
-    CanonicalMembar,
-    CanonicalOperand,
-    CanonicalStorageObject,
-    CanonicalValue,
-    CanonicalVfInfo,
-    DependencyKind,
-    DependencyRef,
-    InductionVariable,
-    InstructionClass,
-    LoopCarriedValue,
-    MemoryAccess,
-    OperandRole,
-    SourceLocation,
-    StorageKind,
-    canonical_vf_info_from_dict,
-    validate_canonical_vf_info,
-)
-from api.frontend.uarch_validation import (
+from api.common import (AccessKind, AffineExpression, AffineTerm, CanonicalInstruction, CanonicalLoop, CanonicalMembar, CanonicalOperand, CanonicalStorageObject, CanonicalValue, CanonicalVfInfo, DependencyKind, DependencyRef, InductionVariable, InstructionClass, LoopCarriedValue, MemoryAccess, OperandRole, SourceLocation, StorageKind, validate_canonical_vf_info)
+from api.json.serialization import (canonical_vf_info_from_dict)
+from api.common.uarch_validation import (
     UARCH_FIELD_SPECS,
     validate_uarch_overrides,
 )

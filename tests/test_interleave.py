@@ -1,6 +1,6 @@
 import unittest
 
-from core.param_db import ParamDB
+from core.params.database import ParamDB
 from tests import test_predicate_logic as helpers
 from tests.test_predicate_registers import parse
 

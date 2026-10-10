@@ -25,7 +25,7 @@
 
 兼容策略：含谓词输入使用 schema_version=2；v1 仅保留原有无谓词合同，禁止使用
 PredicateRegister。两者共用 Canonical lowering/Core，不增加另一套执行路径。
-共享 JSON Schema 文件暂保留历史文件名 `canonical_vf_info_v1.schema.json`，
+共享 JSON Schema 位于 `api/json/canonical_vf_info.schema.json`，
 版本字段接受 1/2，validator 执行对应版本语义。旧输入不能无损恢复丢失的 mask；
 不得自动升级成 v2 或伪造全有效谓词。
 

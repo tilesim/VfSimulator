@@ -1,0 +1,135 @@
+{
+  "schema_version": 1,
+  "context": [
+    {
+      "kind": "loop",
+      "loop_id": "loop.0",
+      "induction": {
+        "variable_id": "iter_loop.0",
+        "start": 0,
+        "step": 1
+      },
+      "count": 1,
+      "unroll": 1,
+      "carried_values": [
+        {
+          "logical_id": "v0",
+          "entry_value_id": "v0.def0",
+          "back_edge_value_id": "v0.def2",
+          "exit_value_id": "v0.def3"
+        }
+      ],
+      "body": [
+        {
+          "kind": "membar",
+          "instruction_id": "membar.0",
+          "barrier": "VV_ALL",
+          "dependencies": [],
+          "source_location": null
+        },
+        {
+          "kind": "instruction",
+          "instruction_id": "instruction.0",
+          "opcode": "VLDS",
+          "instruction_class": "load",
+          "form": "fp32",
+          "inputs": [
+            {
+              "value_id": "memA.def1",
+              "role": "memory",
+              "dtype": "fp32",
+              "memory_access": {
+                "base_object_id": "ub.memA",
+                "offset": {
+                  "constant": 0,
+                  "terms": []
+                },
+                "access_kind": "read",
+                "span": null,
+                "alias_group": null,
+                "address_state_id": null,
+                "update_mode": "none",
+                "post_update_delta_bytes": null
+              }
+            }
+          ],
+          "outputs": [
+            {
+              "value_id": "v0.def2",
+              "role": "destination",
+              "dtype": "fp32",
+              "memory_access": null
+            }
+          ],
+          "dependencies": [],
+          "attributes": {},
+          "source_location": null
+        }
+      ],
+      "source_location": null
+    }
+  ],
+  "values": {
+    "v0.def0": {
+      "definition_id": "v0.def0",
+      "logical_id": "v0",
+      "storage": "Register",
+      "dtype": "fp32",
+      "shape": [
+        64
+      ],
+      "producer_node_id": null,
+      "storage_object_id": null,
+      "source_location": null
+    },
+    "memA.def1": {
+      "definition_id": "memA.def1",
+      "logical_id": "memA",
+      "storage": "UB",
+      "dtype": "fp32",
+      "shape": [
+        64
+      ],
+      "producer_node_id": null,
+      "storage_object_id": "ub.memA",
+      "source_location": null
+    },
+    "v0.def2": {
+      "definition_id": "v0.def2",
+      "logical_id": "v0",
+      "storage": "Register",
+      "dtype": "fp32",
+      "shape": [
+        64
+      ],
+      "producer_node_id": "instruction.0",
+      "storage_object_id": null,
+      "source_location": null
+    },
+    "v0.def3": {
+      "definition_id": "v0.def3",
+      "logical_id": "v0",
+      "storage": "Register",
+      "dtype": "fp32",
+      "shape": [
+        64
+      ],
+      "producer_node_id": "loop.0",
+      "storage_object_id": null,
+      "source_location": null
+    }
+  },
+  "storage_objects": {
+    "ub.memA": {
+      "object_id": "ub.memA",
+      "storage": "UB",
+      "shape": [
+        64
+      ],
+      "source_location": null
+    }
+  },
+  "params": {},
+  "uarch": {},
+  "source": {}
+}

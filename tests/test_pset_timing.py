@@ -1,6 +1,6 @@
 from pathlib import Path
 import unittest
-from core.param_db import ParamDB
+from core.params.database import ParamDB
 
 
 class PsetTimingTest(unittest.TestCase):

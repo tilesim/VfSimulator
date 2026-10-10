@@ -1,5 +1,7 @@
 # 未支持指令默认参数与 VFInfo 后端改造计划
 
+> 此文保留设计演进记录。Python API/Core 当前结构见 [代码导览](docs/code_structure_guide.md)；旧 VFInfo、名称推断、旧 Core 入口和 ROB 实现已删除。
+
 ## 背景
 
 当前 VFSim 的指令时序主要来自三张表：
@@ -1173,7 +1175,7 @@ VFInfo
 
 ### 输入符号规范化层
 
-新增 `api/input_symbols.py`，职责限定在外部输入规范化：
+新增 `api/common/symbols.py`，职责限定在外部输入规范化：
 
 - `DType`：维护常见 dtype alias，例如 `float32 -> fp32`、`f32 -> fp32`、
   `s32 -> int32`。未知 dtype 保留原字符串，交给后端 fallback/warning。
@@ -1206,7 +1208,7 @@ Python API 路径也必须写出同样的 `model_warnings.json`，不能只在 C
 
 #### 阶段一：引入 API 输入符号规范化
 
-- 新增 `api/input_symbols.py`。
+- 新增 `api/common/symbols.py`。
 - `ValueInfo` 构造阶段规范化 `storage` / `dtype`。
 - `canonicalize_vf_info()` 规范化 `VFInst.name`、`form`、`Membar.type` 和
   `default_dtype`。

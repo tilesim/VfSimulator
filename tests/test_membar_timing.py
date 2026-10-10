@@ -5,9 +5,10 @@ import tempfile
 import unittest
 from unittest.mock import patch
 
-from api.frontend.builder import VfInfoBuilder
-from api.simulator_costmodel import CoreVfCostModel
-from core.membar_timing import TimedControlUnit
+from api.programmatic.builder import VfInfoBuilder
+from core.simulator import CoreVfCostModel
+from core.common.instruction import DynamicInstruction
+from core.execution.membar import TimedMembarController
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -19,14 +20,14 @@ class MembarTimingTests(unittest.TestCase):
     config = CONFIG
 
     def setUp(self):
-        self.unit = TimedControlUnit(None, 'fp32', copy.deepcopy(self.config))
+        self.unit = TimedMembarController(None, 'fp32', copy.deepcopy(self.config))
 
     def barrier(self, seq, kind='VLD_VST'):
-        self.unit.accept_membar({'stream_seq': seq, 'barrier': kind, 'pc': 7})
+        self.unit.accept_membar(DynamicInstruction(type='membar',stream_seq=seq,barrier=kind,pc=7))
         return self.unit.last_barrier
 
     def inst(self, seq, op):
-        return {'stream_seq': seq, 'op': op, 'form': 'fp32'}
+        return DynamicInstruction(type='inst', stream_seq=seq,op=op,form='fp32',instruction_class={'VLDS':'load','VSTS':'store'}.get(op,'compute'))
 
     def tick(self, cy, pending=False):
         self.unit.update(lambda seq, cls: pending, cycle=cy)
@@ -108,7 +109,7 @@ class MembarTimingTests(unittest.TestCase):
     def test_invalid_timing_config_is_rejected(self):
         config = copy.deepcopy(self.config)
         config['directions']['VLD_VST']['retire_latency'] = -1
-        with self.assertRaises(ValueError): TimedControlUnit(None,'fp32',config)
+        with self.assertRaises(ValueError): TimedMembarController(None,'fp32',config)
 
     def test_trailing_barrier_counts_toward_vf_end(self):
         builder = VfInfoBuilder()

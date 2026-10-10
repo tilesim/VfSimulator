@@ -3,15 +3,12 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Dict, Mapping
 
-from api.cce_adapter import parse_cce_canonical_vf_info
-from api.frontend import (
-    CanonicalVfInfo,
-    CanonicalJsonVfInfoAdapter,
-    ScalarValue,
-    ValidationResult,
-    VfInfoBuilder,
-    validate_canonical_vf_info,
-)
+from api.cce.adapter import parse_cce_canonical_vf_info
+from api.programmatic.builder import VfInfoBuilder
+from api.common.diagnostics import ValidationResult
+from api.common.schema import CanonicalVfInfo, ScalarValue
+from api.common.validator import validate_canonical_vf_info
+from api.json.adapter import CanonicalJsonVfInfoAdapter
 
 
 class InputAPI:

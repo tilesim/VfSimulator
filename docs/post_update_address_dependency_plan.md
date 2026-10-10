@@ -148,12 +148,12 @@ Python/C++ 配置文件、共享 override schema、生成文件和校验必须�
 
 | 文件或函数 | 当前职责 | 本次修改 |
 | --- | --- | --- |
-| `api/cce_adapter.py::_memory_accesses_for_call()` | 从 CCE 调用构造内存访问 | 识别更新模式，分离访问偏移与步长，传递指针身份 |
-| `api/frontend/adapter_ir.py::AdapterMemoryAccess` | adapter 中间访问描述 | 承载地址状态信息 |
-| `api/frontend/schema.py::MemoryAccess` | canonical 内存语义 | 保留首版正式字段，不另建私有属性路径 |
-| `api/frontend/value_versioning.py::ValueVersioningPass` | 将 adapter 转成版本化 canonical | 保留地址信息，不把指针塞入 vector 版本化路径 |
-| `api/frontend/serialization.py` 及 canonical 校验入口 | JSON 读写与语义检查 | 字段往返、缺省兼容与非法组合校验 |
-| `api/frontend/core_lowering.py::CoreLoweringPass._memory_accesses()` | 输出核心内存描述 | 传递地址字段，防止 lowering 丢失信息 |
+| `api/cce/adapter.py::_memory_accesses_for_call()` | 从 CCE 调用构造内存访问 | 识别更新模式，分离访问偏移与步长，传递指针身份 |
+| `api/cce/ir.py::AdapterMemoryAccess` | adapter 中间访问描述 | 承载地址状态信息 |
+| `api/common/schema.py::MemoryAccess` | canonical 内存语义 | 保留首版正式字段，不另建私有属性路径 |
+| `api/cce/value_versioning.py::ValueVersioningPass` | 将 adapter 转成版本化 canonical | 保留地址信息，不把指针塞入 vector 版本化路径 |
+| `api/json/serialization.py` 及 canonical 校验入口 | JSON 读写与语义检查 | 字段往返、缺省兼容与非法组合校验 |
+| `core/lowering.py::CoreLoweringPass._memory_accesses()` | 输出核心内存描述 | 传递地址字段，防止 lowering 丢失信息 |
 
 ### 6.2 Python 动态指令与调度
 

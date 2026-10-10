@@ -5,9 +5,12 @@ from pathlib import Path
 import subprocess
 import tempfile
 import unittest
+from core.common.instruction import DynamicInstruction
+from tests.test_post_update_address_state import budget
 
-from api.frontend import canonical_vf_info_to_dict, validate_canonical_vf_info
-from api.simulator_costmodel import CoreVfCostModel
+from api.json.serialization import (canonical_vf_info_to_dict)
+from api.common import (validate_canonical_vf_info)
+from core.simulator import CoreVfCostModel
 from tests.test_post_update_address_state import parse
 from tests import test_post_update_address_state as address_tests
 
@@ -84,14 +87,13 @@ class DeinterleaveLoadTest(unittest.TestCase):
 
     def test_atomic_two_register_credit(self):
         idu, core = address_tests.PostUpdateTests().idu()
-        inst = {"inst_id": 0, "stream_seq": 0, "op": "VLDS", "form": "fp32",
-                "src": [], "dst": ["V0", "V1"]}
+        inst = DynamicInstruction(type="inst",inst_id=0,stream_seq=0,op="VLDS",form="fp32",instruction_class="load",dst=["V0","V1"])
         idu.accept(inst)
-        original = core.get_free_preg
-        core.get_free_preg = lambda: 1
-        self.assertEqual(idu.dispatch(100, core), [])
-        core.get_free_preg = original
-        self.assertEqual(idu.dispatch(101, core), [inst])
+        original = core.registers.get_free_preg
+        core.registers.get_free_preg = lambda: 1
+        self.assertEqual(idu.dispatch(100, budget(core)), [])
+        core.registers.get_free_preg = original
+        self.assertEqual(idu.dispatch(101, budget(core)), [inst])
 
     def test_loop_destinations_recycle_independently(self):
         for unroll in (1, 2):

@@ -3,8 +3,9 @@ import json
 from pathlib import Path
 import unittest
 
-from api.frontend import CanonicalJsonVfInfoAdapter, VfInfoValidationError
-from core.param_db import ParamDB
+from api.json.adapter import (CanonicalJsonVfInfoAdapter)
+from api.common import (VfInfoValidationError)
+from core.params.database import ParamDB
 from tests import test_pstu as shared
 
 

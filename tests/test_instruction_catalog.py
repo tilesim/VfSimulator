@@ -3,7 +3,7 @@ import copy
 import unittest
 from pathlib import Path
 
-from api.frontend import (
+from api.common import (
     DEFAULT_INSTRUCTION_CATALOG,
     FormRule,
     InstructionClass,

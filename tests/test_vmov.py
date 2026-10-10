@@ -6,9 +6,10 @@ import tempfile
 import unittest
 from dataclasses import replace
 
-from api.frontend import canonical_vf_info_to_dict, validate_canonical_vf_info
-from api.simulator_costmodel import CoreVfCostModel
-from core.param_db import ParamDB
+from api.json.serialization import (canonical_vf_info_to_dict)
+from api.common import (validate_canonical_vf_info)
+from core.simulator import CoreVfCostModel
+from core.params.database import ParamDB
 from tests.test_predicate_registers import parse, records, ROOT
 
 

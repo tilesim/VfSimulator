@@ -5,10 +5,10 @@ import subprocess
 import tempfile
 import unittest
 
-from api.frontend import canonical_vf_info_to_dict
-from api.frontend.instruction_catalog import DEFAULT_INSTRUCTION_CATALOG
-from api.simulator_costmodel import CoreVfCostModel
-from core.param_db import ParamDB
+from api.json.serialization import (canonical_vf_info_to_dict)
+from api.common.instruction_catalog import DEFAULT_INSTRUCTION_CATALOG
+from core.simulator import CoreVfCostModel
+from core.params.database import ParamDB
 from tests.test_predicate_registers import parse
 
 

@@ -13,7 +13,7 @@
 
 - 读取 VF trace JSON
 - 将嵌套循环程序展开成线性 IR
-- 在 IFU 中生成动态指令流
+- 在 execution/expansion 中生成动态指令流，IFU 仅消费准备好的指令
 - 在 IDU 中按前端规则、VLOOP 可见性和资源信用发射指令
 - 在 OoO 核心中进行重命名、依赖跟踪、就绪判定、队列调度、执行、寄存器释放
 - 输出模型日志和最终 VF 结束周期
@@ -28,64 +28,25 @@
 
 ```text
 VfSimulator/
-├─ main.py                             # 建模主入口
-├─ README.md                           # 项目入口说明
-├─ api.md                              # 公共 API 总览
-├─ VF_modeling.md                      # 当前文档
-├─ api/                                # Canonical JSON/CCE 输入与预测 API
-│  ├─ frontend/schema.py               # Python CanonicalVfInfo v1
-│  ├─ frontend/adapter_ir.py           # CCE 私有 parser IR，不对外导出
-│  ├─ frontend/core_lowering.py        # CanonicalVfInfo -> Core payload
-│  ├─ input_api.py                     # canonical JSON/CCE/builder 入口
-│  ├─ cce_adapter.py                   # CCE/DSL -> CanonicalVfInfo
-│  ├─ simulator_costmodel.py           # 程序化 cost model wrapper
-│  ├─ vf_costmodel.py                  # canonical cost model 抽象接口
-│  └─ native/                          # API 侧 native 相关辅助目录
-├─ configs/
-│  ├─ isa.json                         # 指令级参数：延迟/启动/排空/EXU 类型等
-│  ├─ uarch.json                       # 微架构参数：IDU/SHQ/EXQ/端口/寄存器数等
-│  ├─ forwarding.json                  # 生产者到消费者的转发周期
-│  └─ InitiationInterval.json          # 指令对之间的 II 约束
+├─ main.py                  # CLI，调用 InputAPI 和 Core 入口
+├─ api/
+│  ├─ input_api.py          # CCE / JSON / Builder
+│  ├─ cce/                  # CCE parsing / normalization / value versioning
+│  ├─ json/                 # Canonical JSON schema / serialization
+│  ├─ programmatic/         # Canonical Builder
+│  └─ common/               # 共享 schema / validation / Catalog
 ├─ core/
-│  ├─ param_db.py                      # 配置数据库，统一读取 isa/uarch/forwarding/II
-│  ├─ value_storage.py                 # Register/UB/Scalar 存储分类
-│  ├─ isa_traits.py                    # LOAD/STORE/COMPUTE 资源分类 helper
-│  ├─ program_analysis.py              # loop bound 和 top block 分析
-│  ├─ program_canonicalization.py      # 历史循环规范化，仅兼容/专项测试
-│  ├─ flatten.py                       # 静态程序 -> 线性 IR
-│  ├─ ifu.py                           # 线性 IR -> 动态指令流（支持 loop/unroll）
-│  ├─ idu.py                           # IDU 窗口、发射、VLOOP 可见性、信用门控
-│  ├─ simulator_runner.py              # IFU -> IDU -> OoO 主循环和日志写出
-│  ├─ dynamic_trace.py                 # 动态指令辅助标注（last-use 等）
-│  ├─ vreg_live_range_normalization.py # 历史 vreg pass，仅兼容/专项测试
-│  ├─ ooo.py                           # 基础 OoO 核心（单队列/基础就绪执行）
-│  ├─ ooo_mainline.py                  # 当前主力 OoO 实现，包含 queue level4 主路径
-│  ├─ ooo_factory.py                   # OoO 模型选择与配置拼装
-│  ├─ uarch_normalize.py               # 主线默认 uarch 和 theoretical-limit override
-│  └─ isu.py                           # SHQ -> EXQ -> EXU 发射路径
-├─ VFtest/                             # JSON trace 样例和部分回归输入
-├─ cce_code/                           # CCE/DSL 样例和实验输入
-├─ ascend_runner/                      # CCE/camodel 构建、运行、采集、校准辅助工具
-│  ├─ current/                         # 当前使用的 runner 脚本
-│  ├─ debug/                           # 调试脚本
-│  ├─ legacy/                          # 历史脚本
-│  ├─ forwarding_param_suite/          # forwarding 校准材料
-│  ├─ ii_param_suite/                  # II 校准材料
-│  └─ single_op_param_suite/           # 单指令参数校准材料
-├─ regression_suite/                   # 回归测试集合与基线
-│  ├─ cases/                           # 回归 case 和 baseline
-│  ├─ inputs/                          # JSON/CCE 回归输入
-│  ├─ reports/                         # 稳定报告
-│  └─ docs/                            # 回归相关说明
-├─ docs/                               # 架构、模型、优化和维护说明
-├─ notes/                              # 建模/优化过程笔记
-├─ optimizer/                          # 优化模块（本文不展开）
-├─ skills/                             # VF 优化工作流 skill
-├─ codex_optimization_skill/           # 旧版/独立 Codex 优化 skill 材料
-├─ native/                             # native simulator 相关材料
-├─ tests/                              # 单元测试
-├─ tools/                              # 批量运行、统计、回归脚本
-└─ pyrightconfig.json                  # Python 静态检查配置
+│  ├─ simulator.py          # 唯一公开 Core 入口，仅接收 CanonicalVfInfo
+│  ├─ execution/            # prepare / expansion / engine / scheduler / loop / membar
+│  ├─ uarch/                # IFU / IDU / registers / SHQ / EXQ / EXU / LSU
+│  ├─ common/               # 动态指令 / Uop / 结果 / 显式 storage 查询
+│  ├─ params/               # 参数数据库和时序查询
+│  └─ trace/                # 日志与 Perfetto
+├─ configs/                 # 现有配置，本轮尚未重构
+├─ native/                  # C++ 实现，留待后续独立重构
+├─ tests/                   # 单元测试及 Canonical fixtures
+├─ regression_suite/        # 周期基线和算子输入
+└─ optimizer/               # 优化器，本轮不处理
 ```
 
 注意：`results/` 是运行命令时常见的输出目录，但当前仓库顶层并不固定保留该目录；它通常由 `--out_dir` 指定路径后按需生成。
@@ -126,9 +87,9 @@ trace JSON 主要包含：
 
 ### 3.2 Canonical definition 与寄存器依赖
 
-实现位置：[`api/frontend/value_versioning.py`](api/frontend/value_versioning.py)、[`api/frontend/core_lowering.py`](api/frontend/core_lowering.py)
+实现位置：[`api/cce/value_versioning.py`](api/cce/value_versioning.py)、[`core/execution/prepare.py`](core/execution/prepare.py)
 
-当前公开预测入口不再执行 `normalize_program_vreg_live_ranges()`。CCE 直接生成 `CanonicalVfInfo`；旧 JSON 和旧 `VFInfo` 先经过 `LegacyVfInfoAdapter`，然后进入相同 canonical 主线。
+当前公开预测入口只接收 `CanonicalVfInfo`。CCE 和 Canonical JSON 在 API 中转换；旧 VFInfo、旧 JSON 转换、名称猜测和旧寄存器规范化已删除。
 
 每次寄存器写入在 canonical 输入中具有独立 `definition_id`，输入 operand 通过该 definition 的 `producer_node_id` 表达数据依赖。循环状态使用 `entry_value_id`、`back_edge_value_id` 和 `exit_value_id` 显式描述，不再依赖逻辑寄存器名称改写。
 
@@ -139,11 +100,11 @@ trace JSON 主要包含：
 - IDU 与 OoO 根据 value storage metadata 识别寄存器，不依赖 `V` 前缀。
 - OoO 仍在运行时完成物理寄存器分配和 RAT 更新；canonical definition 不是物理寄存器。
 
-[`core/vreg_live_range_normalization.py`](core/vreg_live_range_normalization.py) 仅保留给历史兼容分析和专项测试，不属于 `main.py` 或 `CoreVfCostModel` 的公共执行路径。
+寄存器 storage 由 Canonical 声明决定，标识符的 `v*`、`mem*` 前缀没有语义。
 
 ### 3.3 结构化 loop/unroll 动态身份
 
-实现位置：[`core/ifu.py`](core/ifu.py)
+实现位置：[`core/execution/expansion.py`](core/execution/expansion.py)
 
 `CoreLoweringPass` 保留静态 `instruction_id`、definition 和 loop-carried 关系。`IFUUnroll` 展开动态指令时生成：
 
@@ -152,13 +113,13 @@ trace JSON 主要包含：
 - `iteration_path`
 - 结构化 value-instance keep/release 标记
 
-canonical 主线不调用 `canonicalize_single_super_iteration_loops()`，也不生成 `_laneN` 名称。innermost `unroll>1` 使用 `(definition_id, iteration_path)` 区分动态值实例；非 innermost 或不能整除的 unroll 会明确拒绝，含 Membar 的 innermost unroll 当前保守回退为 1 并记录 warning。[`core/program_canonicalization.py`](core/program_canonicalization.py) 仅用于历史兼容和专项测试。
+canonical 主线不调用 `canonicalize_single_super_iteration_loops()`，也不生成 `_laneN` 名称。innermost `unroll>1` 使用 `(definition_id, iteration_path)` 区分动态值实例；非 innermost 或不能整除的 unroll 会明确拒绝，含 Membar 的 innermost unroll 当前保守回退为 1 并记录 warning。旧循环 canonicalization 实现已删除。
 
 ---
 
 ## 4. 静态程序展开：Flattener
 
-实现位置：[`core/flatten.py`](core/flatten.py)
+实现位置：[`core/execution/prepare.py`](core/execution/prepare.py)
 
 Flattener 的任务是把 `CoreLoweringPass` 生成的嵌套 program 转换成线性 IR，但这里的“线性”仍然保留 loop 边界信息，不直接复制所有动态迭代。动态展开和结构化 value instance 绑定由 IFU 完成。
 
@@ -197,7 +158,7 @@ Flattener 的任务是把 `CoreLoweringPass` 生成的嵌套 program 转换成�
 
 ## 5. 动态指令生成：IFU
 
-实现位置：[`core/ifu.py`](core/ifu.py)
+实现位置：[`core/execution/expansion.py`](core/execution/expansion.py)
 
 IFU 的职责是把线性 IR 变成**动态指令流**。它不是简单顺序吐指令，而是负责：
 
@@ -254,7 +215,7 @@ Canonical 动态流构建时还会生成 `empty_top_blocks` 元数据。`count=0
 
 ## 6. 参数数据库：ParamDB
 
-实现位置：[`core/param_db.py`](core/param_db.py)
+实现位置：[`core/params/database.py`](core/params/database.py)
 
 ParamDB 是模型配置的统一入口。它会加载：
 
@@ -456,7 +417,7 @@ VSTS.fp16
 
 ## 7. IDU：前端发射与 VLOOP 调度
 
-实现位置：[`core/idu.py`](core/idu.py)
+实现位置：[`core/uarch/idu.py`](core/uarch/idu.py)
 
 IDU 负责做的事情不是重命名，而是：
 
@@ -537,7 +498,7 @@ IDU 初始化时把：
 
 ### 7.4 延迟信用可见性
 
-在 queue level3/4 中，IDU 看到的并不是 OoO 内部的即时资源状态，而是**延迟可见后的信用**。
+在当前组件模型中，IDU 看到的并不是后端组件的即时资源状态，而是**延迟可见后的信用**。
 
 主循环里通过：
 
@@ -551,28 +512,19 @@ IDU 初始化时把：
 也就是说：
 
 - OoO 内部某拍已经释放，不等于 IDU 同拍就看见
-- queue level3/4 会显式建模这个可见性差异
+- SHQ 和 Registers 分别维护实际资源与 IDU 可见 credit
 
 ---
 
 ## 8. OoO / ISU 主线模型
 
-OoO 核心的创建由 [`core/ooo_factory.py`](core/ooo_factory.py) 负责。当前公开主线只有一个默认模型：
+`core/simulator.py` 组装单一组件后端。`execution/engine.py` 推进周期，
+`execution/scheduler.py` 选择计算发射，`uarch/registers.py` 管理重命名和生命周期；
+`uarch/shq.py`、`exq.py`、`exu.py`、`lsu.py` 分别拥有队列、执行和完成状态。
 
-- `queue_level4`
-- 消费者释放规则：`start + 4`
-- canonical definition 与结构化 value lifetime：开启
-- `shq_depth = 58`
-- `exq_depth = 26`
-
-`classical-cpu-type`、`consumer-done`、`queue_level1/2/3`、`npu-hybrid` 等历史名称不再作为公开 CLI 模型选择器暴露。它们仍可用于理解模型演进，但当前 `main.py` 不接受 `--ooo-model`。
-
-当前实现拆分：
-
-- [`core/ooo.py`](core/ooo.py)：共享 OoO 状态、配置、就绪/forwarding/II 查询和日志辅助函数。
-- [`core/ooo_mainline.py`](core/ooo_mainline.py)：当前主线 OoO 核心，包括重命名、preg 生命周期、SHQ/LSQ、LSU/计算发射路径和单拍推进循环。
-- [`core/isu.py`](core/isu.py)：计算指令的 ISU/EXQ/EXU 发射路径。
-- [`core/uarch_normalize.py`](core/uarch_normalize.py)：规范化 `configs/uarch.json` 和理论上界覆盖配置。
+Python 已移除 ROB 容量与按序退休。未完成登记表只用于排空；计算和内存执行完成
+分别由 EXU、LSU 产生。Membar 的独立 retire 时序保留。配置读取在 `params/`，
+本轮不调整 `configs/` 或 Native 实现。
 
 ### 8.1 当前队列路径
 
@@ -597,7 +549,7 @@ IDU -> OoO rename -> SHQ -> EXQ0/EXQ1 -> EXU0/EXU1
 最后一个消费者在第 S 拍启动 -> preg 最早可在 S + 4 释放
 ```
 
-主线同时保留 consumer-done 封口条件：一个 vreg 被覆盖后，新的生产者必须进入重命名阶段，模型才知道旧 preg 不会再被后续指令消费。
+动态展开标注最后使用，寄存器释放还需满足 RAT 中无映射、producer 非 pending、consumer 全部释放及 generation 一致等条件，不依赖后续覆盖或 ROB 退休。
 
 ### 8.3 Canonical value 生命周期
 
@@ -618,7 +570,7 @@ canonical 动态流会统一计算每个 value instance 的最后使用，并向
 
 ### 9.1 重命名
 
-OoO 在 `accept(inst)` 时做寄存器重命名。
+Engine 在 `admit(inst)` 时调用 Registers 做寄存器重命名。
 
 对于每个 vreg dst：
 
@@ -654,7 +606,7 @@ OoO 在 `accept(inst)` 时做寄存器重命名。
 
 ### 9.3 preg_consumer_count
 
-在当前 queue_level4 主线模型中，模型会在 uop `accept` 时对每个 `preg_src` 做：
+在当前 Registers 组件中，模型会在 uop `accept` 时对每个 `preg_src` 做：
 
 - `preg_consumer_count[preg] += 1`
 
@@ -795,9 +747,9 @@ OoO 在 `accept(inst)` 时做寄存器重命名。
 
 ---
 
-## 11. queue_level4 执行规则
+## 11. 组件执行规则
 
-早期文档把 queue level1~4 描述成多个独立模式。当前代码已经收敛到以 queue_level4 作为默认主线，因此本节只描述实际生效规则。
+本节描述组件后端保留的执行规则。旧 queue level1~4 实现和模型工厂已删除。
 
 ### 11.1 SHQ 信用
 
@@ -911,10 +863,10 @@ Python 和 Native 使用相同的 generation 封存与 ready 语义。Canonical 
 当前公开理论上界候选模式由以下文件实现：
 
 - [`main.py`](main.py)
-- [`core/ooo_factory.py`](core/ooo_factory.py)
-- [`core/uarch_normalize.py`](core/uarch_normalize.py)
+- [`core/simulator.py`](core/simulator.py)
+- [`core/params/uarch.py`](core/params/uarch.py)
 
-这些模式是上界参考，不是真实硬件模型。它们会在 `resolve_model_uarch()` 规范化主线配置之后，再通过 `apply_theoretical_limit_overrides()` 覆盖部分微架构参数。
+这些模式是上界参考，不是真实硬件模型。它们会在 `normalize_mainline_uarch()` 规范化配置之后，再通过 `apply_theoretical_limit_overrides()` 覆盖部分微架构参数。
 
 ### 13.1 `--theoretical-limit-vloop-only`
 
@@ -945,7 +897,7 @@ python main.py --trace VFtest/canonical/GeLU_poly.json   --theoretical-limit-vlo
 
 当前 `main.py` 默认值已经是推荐真实模型配置：
 
-- 固定主线模型：`queue_level4`
+- 固定主线模型：组件后端
 - 寄存器释放规则：消费者开始 + 4
 - canonical definition 与结构化 value lifetime：开启
 - `shq_depth = 58`
@@ -974,7 +926,7 @@ python main.py --trace VFtest/canonical/GeLU_poly.json --out_dir results/gelu_po
 
 默认行为：
 
-- `queue_level4`
+- Python 组件后端
 - `start+4` release
 - canonical definition 与结构化 value lifetime 开启
 - `shq_depth=58`
@@ -1040,15 +992,15 @@ VF end cycle (with drain) = N
 后续做模型工作时，建议按以下顺序阅读：
 
 1. [`main.py`](main.py)
-2. [`api/input_api.py`](api/input_api.py) 和 [`api/cce_adapter.py`](api/cce_adapter.py)
-3. [`api/frontend/value_versioning.py`](api/frontend/value_versioning.py) 和 [`api/frontend/core_lowering.py`](api/frontend/core_lowering.py)
-4. [`core/param_db.py`](core/param_db.py)
-5. [`core/flatten.py`](core/flatten.py)
-6. [`core/ifu.py`](core/ifu.py)
-7. [`core/idu.py`](core/idu.py)
-8. [`core/ooo_factory.py`](core/ooo_factory.py)
-9. [`core/ooo_mainline.py`](core/ooo_mainline.py)
-10. [`core/isu.py`](core/isu.py)
+2. [`api/input_api.py`](api/input_api.py) 和 [`api/cce/adapter.py`](api/cce/adapter.py)
+3. [`api/cce/value_versioning.py`](api/cce/value_versioning.py) 和 [`core/execution/prepare.py`](core/execution/prepare.py)
+4. [`core/params/database.py`](core/params/database.py)
+5. [`core/execution/prepare.py`](core/execution/prepare.py)
+6. [`core/execution/expansion.py`](core/execution/expansion.py)
+7. [`core/uarch/idu.py`](core/uarch/idu.py)
+8. [`core/simulator.py`](core/simulator.py)
+9. [`core/execution/engine.py`](core/execution/engine.py)
+10. [`core/execution/scheduler.py`](core/execution/scheduler.py)
 
 这个顺序把输入解析、静态展开、动态发射、队列调度和寄存器生命周期分开。
 
@@ -1058,7 +1010,7 @@ VF end cycle (with drain) = N
 
 当前 VF 建模实现可以总结为：
 
-1. 公开主线不再是一组可选 `--ooo-model` 变体，而是 `CanonicalVfInfo -> CoreLoweringPass -> queue_level4` 的单一路径，并使用 `start+4` 释放规则和结构化 value lifetime。
+1. 公开主线不再是一组可选 `--ooo-model` 变体，而是 `CanonicalVfInfo -> execution preparation -> Engine + uarch` 的单一路径，并使用 `start+4` 释放规则和结构化 value lifetime。
 
 2. 主要计算路径显式分阶段：
    - IDU
@@ -1080,6 +1032,6 @@ VF end cycle (with drain) = N
 
 5. 理论上界模式是上界参考，不是真实硬件模型。它们应用于估计优化空间，不应作为默认精度模型。
 
-6. CCE/DSL 输入已经通过 `api/cce_adapter.py` 成为常规接口的一部分；JSON trace 输入仍然可用，并且仍是最显式的回归格式。
+6. CCE/DSL 输入已经通过 `api/cce/adapter.py` 成为常规接口的一部分；JSON trace 输入仍然可用，并且仍是最显式的回归格式。
 
 后续 VF 优化文档应与本建模文档分开，例如放在单独的 `VF_optimization.md` 或现有优化笔记中。
