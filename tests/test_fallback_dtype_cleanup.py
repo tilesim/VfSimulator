@@ -23,14 +23,14 @@ class FallbackDtypeCleanupTest(unittest.TestCase):
     def test_explicit_forms_override_core_fallback(self):
         db = ParamDB(base_dir=str(ROOT))
         core = component_engine(db.get_uarch(), db, dtype="fp16")
-        self.assertEqual(core.timing.fallback_dtype, "fp16")
+        self.assertEqual(core.fallback_dtype, "fp16")
         for opcode, form in (("VADD", "fp32"), ("VADD", "fp16"),
                              ("VCVT_F32_TO_F16", "f32_to_f16")):
             with self.subTest(opcode=opcode, form=form):
-                profile = core.timing._profile(opcode, form)
+                profile = core.db.resolve_inst(opcode, form, dtype=core.fallback_dtype)
                 self.assertEqual(profile.requested_form, form)
                 self.assertEqual(profile.latency, db.get_inst_form(opcode, form=form)["latency"])
-        self.assertEqual(core.timing._profile("VADD").requested_form, "fp16")
+        self.assertEqual(core.db.resolve_inst("VADD", dtype=core.fallback_dtype).requested_form, "fp16")
 
 
 

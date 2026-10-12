@@ -1,36 +1,24 @@
 from __future__ import annotations
 from typing import List, Optional
-from core.params.profile import InstructionProfile
+from core.params.types import InstructionProfile, UarchParameters
 
 class EXU:
 
-    def __init__(self, uarch, timing):
-        self.timing = timing
-        self.enable_cross_fu_ii = bool(uarch.get('enable_cross_fu_ii', True))
-        self.enable_exq_greedy_balance = bool(uarch.get('enable_exq_greedy_balance', False))
+    def __init__(self, uarch: UarchParameters, db):
+        self.db = db
+        self.enable_cross_fu_ii = uarch.enable_cross_fu_ii
+        self.enable_exq_greedy_balance = uarch.enable_exq_greedy_balance
         self.running = {}
-        self.issue_ports = int(uarch.get('issue_ports', 2))
+        self.issue_ports = uarch.issue_ports
         self.last_issue_cycle = {'ALU': [-10 ** 9] * self.issue_ports, 'SFU': [-10 ** 9] * self.issue_ports}
-        self.last_op = {'ALU': [None] * self.issue_ports, 'SFU': [None] * self.issue_ports}
-        self.last_form = {'ALU': [None] * self.issue_ports, 'SFU': [None] * self.issue_ports}
         self.last_issue_cycle_exu = [-10 ** 9] * self.issue_ports
-        self.last_op_exu = [None] * self.issue_ports
-        self.last_form_exu = [None] * self.issue_ports
         self.last_profile = {'ALU': [None] * self.issue_ports, 'SFU': [None] * self.issue_ports}
         self.last_profile_exu = [None] * self.issue_ports
         self.exq_rr_ptr = 0
         self.exq_inflight = [0] * self.issue_ports
 
-    def _pick_exu_port(
-        self,
-        fu_type: str,
-        cur_op: str,
-        c: int,
-        exu_used_this_cycle: List[bool],
-        cur_form: Optional[str]=None,
-        cur_profile: Optional[InstructionProfile]=None
-    ) -> Optional[int]:
-        legal_ports = set(self.timing._eligible_exu_ports(cur_op, cur_form, cur_profile))
+    def _pick_exu_port(self, profile: InstructionProfile, c: int, exu_used_this_cycle: List[bool]) -> Optional[int]:
+        legal_ports = set(profile.allowed_exu_ports)
         if not self.enable_exq_greedy_balance:
             for port in range(self.issue_ports):
                 if port not in legal_ports:
@@ -38,20 +26,12 @@ class EXU:
                 if exu_used_this_cycle[port]:
                     continue
                 if self.enable_cross_fu_ii:
-                    prev_op = self.last_op_exu[port]
-                    prev_form = self.last_form_exu[port]
                     prev_issue = self.last_issue_cycle_exu[port]
                 else:
-                    prev_op = self.last_op[fu_type][port]
-                    prev_form = self.last_form[fu_type][port]
-                    prev_issue = self.last_issue_cycle[fu_type][port]
-                ii = self.timing._get_ii(
-                    prev_op,
-                    cur_op,
-                    prev_form=prev_form,
-                    cur_form=cur_form,
-                    prev_profile=self.last_profile_exu[port] if self.enable_cross_fu_ii else self.last_profile[fu_type][port],
-                    cur_profile=cur_profile
+                    prev_issue = self.last_issue_cycle[profile.fu_type][port]
+                ii = self.db.get_ii_for_profiles(
+                    self.last_profile_exu[port] if self.enable_cross_fu_ii else self.last_profile[profile.fu_type][port],
+                    profile
                 )
                 if c >= prev_issue + ii:
                     return port
@@ -63,20 +43,12 @@ class EXU:
             if exu_used_this_cycle[port]:
                 continue
             if self.enable_cross_fu_ii:
-                prev_op = self.last_op_exu[port]
-                prev_form = self.last_form_exu[port]
                 prev_issue = self.last_issue_cycle_exu[port]
             else:
-                prev_op = self.last_op[fu_type][port]
-                prev_form = self.last_form[fu_type][port]
-                prev_issue = self.last_issue_cycle[fu_type][port]
-            ii = self.timing._get_ii(
-                prev_op,
-                cur_op,
-                prev_form=prev_form,
-                cur_form=cur_form,
-                prev_profile=self.last_profile_exu[port] if self.enable_cross_fu_ii else self.last_profile[fu_type][port],
-                cur_profile=cur_profile
+                prev_issue = self.last_issue_cycle[profile.fu_type][port]
+            ii = self.db.get_ii_for_profiles(
+                self.last_profile_exu[port] if self.enable_cross_fu_ii else self.last_profile[profile.fu_type][port],
+                profile
             )
             avail = max(c, prev_issue + ii)
             candidates.append((port, avail))
@@ -112,18 +84,14 @@ class EXU:
 
     def start(self, uop, port, fu_type, cycle, queued=False):
         uop.start_cycle = cycle
-        uop.done_cycle = cycle + self.timing._latency(uop.op, uop.form, uop.profile)
+        uop.done_cycle = cycle + uop.profile.latency
         uop.exu_port = port
         uop.state = 'running'
         self.running[uop.inst_id] = uop
         self.exq_inflight[port] += 1
         if queued or self.enable_cross_fu_ii:
             self.last_issue_cycle_exu[port] = cycle
-            self.last_op_exu[port] = uop.op
-            self.last_form_exu[port] = uop.form
             self.last_profile_exu[port] = uop.profile
         if queued or not self.enable_cross_fu_ii:
             self.last_issue_cycle[fu_type][port] = cycle
-            self.last_op[fu_type][port] = uop.op
-            self.last_form[fu_type][port] = uop.form
             self.last_profile[fu_type][port] = uop.profile

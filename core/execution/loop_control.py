@@ -1,16 +1,17 @@
 from __future__ import annotations
+from core.params.types import UarchParameters
 
 class LoopControl:
 
-    def __init__(self, uarch, top_block_loop_bounds, empty_top_blocks):
-        self.theoretical_limit_mode = bool(uarch.get('theoretical_limit_mode', False))
-        self.theoretical_limit_vloop_only = bool(uarch.get('theoretical_limit_vloop_only', False))
+    def __init__(self, uarch: UarchParameters, top_block_loop_bounds, empty_top_blocks):
+        self.theoretical_limit_mode = uarch.theoretical_limit_mode
+        self.theoretical_limit_vloop_only = uarch.theoretical_limit_vloop_only
         self.block_base_cycle = {}
-        self.innermost_iter_dispatch_stride = uarch.get('innermost_iter_dispatch_stride', 1)
-        self.vloop_to_dispatch_delay = int(uarch.get('vloop_to_dispatch_delay', 4))
-        self.initial_top_block_vloop_start_cycle = int(uarch.get('initial_top_block_vloop_start_cycle', 19))
-        self.nested_vloop_initial_start_gap = int(uarch.get('nested_vloop_initial_start_gap', 1))
-        self.loop1_min_feedback_gap = int(uarch.get('loop1_min_feedback_gap', 7))
+        self.innermost_iter_dispatch_stride = uarch.innermost_iter_dispatch_stride
+        self.vloop_to_dispatch_delay = uarch.vloop_to_dispatch_delay
+        self.initial_top_block_vloop_start_cycle = uarch.initial_top_block_vloop_start_cycle
+        self.nested_vloop_initial_start_gap = uarch.nested_vloop_initial_start_gap
+        self.loop1_min_feedback_gap = uarch.loop1_min_feedback_gap
         self.total_top_blocks = len(top_block_loop_bounds)
         self.empty_top_blocks = {int(item) for item in empty_top_blocks or ()}
         self.top_block_loop_bounds = {int(k): list(v or []) for k, v in top_block_loop_bounds.items()}

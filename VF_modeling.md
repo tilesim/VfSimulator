@@ -221,7 +221,11 @@ Canonical 动态流构建时还会生成 `empty_top_blocks` 元数据。`count=0
 
 实现位置：[`core/params/database.py`](core/params/database.py)
 
-ParamDB 是模型配置的统一入口。它会加载：
+ParamDB 是参数查询的统一入口；构造时由 `core/params/loader.py` 读取配置。
+`types.py` 定义 Profile、微架构参数和 VF 启动/排空参数，`uarch.py` 合并当前模型的
+配置及 override，`fallback.py` 集中管理缺失参数和 form 复用规则。
+
+加载的配置包括：
 
 - [`configs/isa.json`](configs/isa.json)
 - [`configs/uarch.json`](configs/uarch.json)
@@ -718,7 +722,7 @@ Engine 在 `admit(inst)` 时调用 Registers 做寄存器重命名。
 
 对于计算指令，`_compute_ready_cycle(u)` 会遍历所有 `preg_src`。
 
-对每个源操作数，如果能找到生产者，当前主线通过 `ParamDB.get_forwarding_cycles(...)` 查询生产者/消费者 form 组合：
+对每个源操作数，如果能找到生产者，当前主线通过 `ParamDB.get_forwarding_for_profiles(...)` 查询生产者/消费者 Profile 组合：
 
 - 非 queue-legacy-forwarding 路径下：
   - 就绪时间按 `producer_start + (forwarding - 1)` 计算
@@ -867,7 +871,7 @@ Python 和 Native 使用相同的 generation 封存与 ready 语义。Canonical 
 - [`core/simulator.py`](core/simulator.py)
 - [`core/params/uarch.py`](core/params/uarch.py)
 
-这些模式是上界参考，不是真实硬件模型。它们会在 `normalize_mainline_uarch()` 规范化配置之后，再通过 `apply_theoretical_limit_overrides()` 覆盖部分微架构参数。
+这些模式是上界参考，不是真实硬件模型。它们会在 `resolve_uarch()` 合并并解析结构化配置之后，再通过 `apply_theoretical_limit_overrides()` 覆盖部分微架构参数。
 
 ### 13.1 `--theoretical-limit-vloop-only`
 

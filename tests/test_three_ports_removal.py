@@ -12,7 +12,6 @@ from api.input_api import InputAPI
 from api.common.diagnostics import VfInfoValidationError
 from api.common.uarch_validation import UARCH_FIELD_SPECS, validate_uarch_overrides
 from core.params.database import ParamDB
-from core.params.timing import TimingQuery
 from core.simulator import CoreVfCostModel
 from main import build_arg_parser
 
@@ -74,11 +73,10 @@ class ThreePortsRemovalTest(unittest.TestCase):
         result = CoreVfCostModel(out_dir=None).run_vf_info(vf)
         self.assertEqual((result["cycles_executed"], result["vf_end_cycle"]), (35, 47))
         db = ParamDB()
-        timing = TimingQuery(db.get_uarch(), db)
         for op, form, expected in (("VADD", "fp32", [0, 1]), ("VPACK", "b32", [0])):
             with self.subTest(op=op):
                 profile = db.resolve_inst(op, form, form)
-                self.assertEqual(timing._eligible_exu_ports(op, form, profile), expected)
+                self.assertEqual(list(profile.allowed_exu_ports), expected)
 
 
 if __name__ == "__main__":

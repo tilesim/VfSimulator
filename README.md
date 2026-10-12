@@ -177,7 +177,7 @@ CanonicalVfInfo → execution/prepare + expansion → PreparedProgram
 - `execution/membar.py`：维护 barrier admission、同步、release、retire 和消费者门控。
 - `uarch/`：分别拥有 IFU、IDU、register banks、SHQ、EXQ、EXU 和 LSU 的状态。
 - `common/`：动态指令、Uop、结果类型及按显式声明查询存储类别的代码。
-- `params/`：读取 ISA、forwarding、II 和微架构配置，解析不可变 InstructionProfile。
+- `params/`：loader 读取配置，types 定义结构化参数，ParamDB 查询与缓存，uarch 合并架构配置，fallback 处理缺失参数。
 - `trace/`：记录并写出执行日志及 Perfetto 文件。
 
 寄存器在最后一个 consumer 开始后经过配置延迟，并满足映射、pending producer、
@@ -202,6 +202,7 @@ Membar 自身的 retire 时序仍计入 VF 结束周期。UB 一般 RAW/WAR/WAW 
 
 这些阶段顺序决定 credit 可见性及一周期转发差异，重构保留其时序。
 详细文件和函数导览见 [代码结构说明](docs/code_structure_guide.md)。
+参数查询直接使用 Profile 和 ParamDB；运行时配置使用 `UarchParameters`，不再通过 TimingQuery 转发。
 
 ## 当前默认模型
 

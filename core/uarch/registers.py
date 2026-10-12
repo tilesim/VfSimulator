@@ -2,7 +2,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any, Dict, List, Optional, Set, Tuple
 from core.common.instruction import Uop
-from core.params.profile import InstructionProfile
+from core.params.types import InstructionProfile, UarchParameters
 from core.uarch.register_bank import PhysicalRegisterBank
 
 @dataclass
@@ -13,26 +13,21 @@ class SrcReleaseEvent:
 
 class Registers:
 
-    def __init__(self, uarch, pdb, value_storage=None, dtype='fp32'):
-        defaults = pdb.get_defaults()
-        self.preg_num = int(uarch.get('vreg_num', 68))
+    def __init__(self, uarch: UarchParameters, pdb, value_storage=None, dtype='fp32'):
+        self.preg_num = uarch.vreg_num
         self.fallback_dtype = dtype
         self.db = pdb
-        self.theoretical_limit_mode = bool(uarch.get('theoretical_limit_mode', False))
-        self.vf_startup_cost = int(defaults.get('vf_startup_cost', 0))
+        self.theoretical_limit_mode = uarch.theoretical_limit_mode
+        self.vf_startup_cost = pdb.vf_timing.startup_cost
         self.cycle: int = 0
-        self.theoretical_limit_legacy_forwarding = bool(uarch.get('theoretical_limit_legacy_forwarding', False))
-        self.consumer_release_start_offset: int = int(uarch.get('consumer_release_start_offset', 0))
-        self.assert_start_release_integrity: bool = bool(uarch.get('assert_start_release_integrity', True))
-        self.enable_credit_visibility_delay: bool = bool(uarch.get('enable_credit_visibility_delay', False))
-        self.idu_visible_preg_delay: int = int(uarch.get('idu_visible_preg_delay', 0))
-        self.enable_isu_queue_model = uarch.get('enable_isu_queue_model', True)
+        self.theoretical_limit_legacy_forwarding = uarch.theoretical_limit_legacy_forwarding
+        self.consumer_release_start_offset: int = uarch.consumer_release_start_offset
+        self.assert_start_release_integrity: bool = uarch.assert_start_release_integrity
+        self.enable_credit_visibility_delay: bool = uarch.enable_credit_visibility_delay
+        self.idu_visible_preg_delay: int = uarch.idu_visible_preg_delay
+        self.enable_isu_queue_model = uarch.enable_isu_queue_model
         self.vector_bank = PhysicalRegisterBank(self.preg_num, name='vector', prefix='p')
-        self.predicate_bank = PhysicalRegisterBank(
-            uarch.get('physical_predicate_registers', 32),
-            name='predicate',
-            prefix='pred'
-        )
+        self.predicate_bank = PhysicalRegisterBank(uarch.physical_predicate_registers, name='predicate', prefix='pred')
         self.physical_banks = {physical_id: bank for bank in (self.vector_bank, self.predicate_bank) for physical_id in bank.physical_ids}
         self.freelist = self.vector_bank.freelist
         self.RAT = self.vector_bank.rat

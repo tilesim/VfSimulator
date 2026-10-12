@@ -1,27 +1,26 @@
 from __future__ import annotations
+from core.params.types import UarchParameters
 from typing import Any, Dict, List, Optional, Set, Tuple
 from core.common.instruction import Uop, AlignGeneration, AlignProducerRecord
 
 class LSU:
 
-    def __init__(self, uarch, pdb, registers, shq, timing, trace, control):
+    def __init__(self, uarch: UarchParameters, pdb, registers, shq, trace, control):
         self.registers = registers
         self.shq = shq
-        self.timing = timing
         self.trace = trace
         self.control = control
-        defaults = pdb.get_defaults()
         self.db = pdb
-        self.load_ports = int(uarch.get('load_ports', 2))
-        self.store_ports = int(uarch.get('store_ports', 1))
-        self.ub_slots = int(uarch.get('ub_slots', 2))
-        self.ub_bandwidth_bytes_per_cycle = int(uarch.get('ub_bandwidth_bytes_per_cycle', 512))
-        self.lsu_store_priority_preg_threshold = int(uarch.get('lsu_store_priority_preg_threshold', 1))
+        self.load_ports = uarch.load_ports
+        self.store_ports = uarch.store_ports
+        self.ub_slots = uarch.ub_slots
+        self.ub_bandwidth_bytes_per_cycle = uarch.ub_bandwidth_bytes_per_cycle
+        self.lsu_store_priority_preg_threshold = uarch.lsu_store_priority_preg_threshold
         self.running = {}
-        self.vf_startup_cost = int(defaults.get('vf_startup_cost', 0))
-        self.lsq_depth = int(uarch.get('LDQ_width', 24))
-        self.enable_shq_credit_model = bool(uarch.get('enable_shq_credit_model', True))
-        self.theoretical_limit_mode = uarch.get('theoretical_limit_mode', False)
+        self.vf_startup_cost = pdb.vf_timing.startup_cost
+        self.lsq_depth = uarch.LDQ_width
+        self.enable_shq_credit_model = uarch.enable_shq_credit_model
+        self.theoretical_limit_mode = uarch.theoretical_limit_mode
         self.ub_budget_cycle = -1
         self.ub_bytes_issued = 0
         self.LSQ: List[Uop] = []
@@ -188,7 +187,7 @@ class LSU:
             if control is not None and hasattr(control, 'notify_lsu_start'):
                 control.notify_lsu_start(u.stream_seq, cycle)
             u.blocked_reason = None
-            u.done_cycle = cycle + self.timing._latency(u.op, u.form, u.profile)
+            u.done_cycle = cycle + u.profile.latency
             u.state = 'running'
             self.running[u.inst_id] = u
             if u.align_producer_record is not None:

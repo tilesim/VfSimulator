@@ -1,28 +1,29 @@
 from __future__ import annotations
+from core.params.types import UarchParameters
 from typing import Any, Dict, List, Optional, Set, Tuple
 
 class Scheduler:
 
-    def __init__(self, uarch, registers, shq, exq, exu, timing, trace):
+    def __init__(self, uarch: UarchParameters, registers, shq, exq, exu, db, trace):
         self.registers = registers
         self.shq = shq
         self.exq = exq
         self.exu = exu
-        self.timing = timing
+        self.db = db
         self.trace = trace
-        self.theoretical_limit_mode = bool(uarch.get('theoretical_limit_mode', False))
-        self.enforce_same_cycle_src_hazard = bool(uarch.get('enforce_same_cycle_src_hazard', True))
-        self.exq_issue_inflight_cap_per_port: int = int(uarch.get('exq_issue_inflight_cap_per_port', 0))
-        self.predict_exq_issue_with_cross_fu: bool = bool(uarch.get('predict_exq_issue_with_cross_fu', False))
-        self.shq_exq_static_rr: bool = bool(uarch.get('shq_exq_static_rr', False))
-        self.issue_ports = int(uarch.get('issue_ports', 2))
-        self.exq_depth = int(uarch.get('exq_depth', 26))
-        self.exq_recv_delay = int(uarch.get('exq_recv_delay', 1))
-        self.shq_to_exq_port_per_cycle = int(uarch.get('shq_to_exq_port_per_cycle', 1))
-        self.exq_capacity_counts_inflight = bool(uarch.get('exq_capacity_counts_inflight', False))
-        self.shq_exq_dispatch_policy = uarch.get('shq_exq_dispatch_policy', 'fu_round_robin_exu0_reserve')
-        self.exu0_reserve_lookahead = uarch.get('exu0_reserve_lookahead', 8)
-        self.exu0_reserve_min_count = uarch.get('exu0_reserve_min_count', 1)
+        self.theoretical_limit_mode = uarch.theoretical_limit_mode
+        self.enforce_same_cycle_src_hazard = uarch.enforce_same_cycle_src_hazard
+        self.exq_issue_inflight_cap_per_port: int = uarch.exq_issue_inflight_cap_per_port
+        self.predict_exq_issue_with_cross_fu: bool = uarch.predict_exq_issue_with_cross_fu
+        self.shq_exq_static_rr: bool = uarch.shq_exq_static_rr
+        self.issue_ports = uarch.issue_ports
+        self.exq_depth = uarch.exq_depth
+        self.exq_recv_delay = uarch.exq_recv_delay
+        self.shq_to_exq_port_per_cycle = uarch.shq_to_exq_port_per_cycle
+        self.exq_capacity_counts_inflight = uarch.exq_capacity_counts_inflight
+        self.shq_exq_dispatch_policy = uarch.shq_exq_dispatch_policy
+        self.exu0_reserve_lookahead = uarch.exu0_reserve_lookahead
+        self.exu0_reserve_min_count = uarch.exu0_reserve_min_count
         self.shq_exq_rr_ptr: int = 0
         self.shq_exq_rr_ptr_by_fu: Dict[str, int] = {'ALU': 0, 'SFU': 0}
 
@@ -34,15 +35,6 @@ class Scheduler:
         policy = str(getattr(self, 'shq_exq_dispatch_policy', 'fu_round_robin_fifo')).lower()
         return policy == 'fu_round_robin_exu0_reserve'
 
-    def _dispatch_exu_tag(self, u: Any) -> str:
-        profile = getattr(u, 'profile', None)
-        if profile is not None:
-            return profile.dispatch_exu
-        try:
-            return str(self.timing._inst_params(u.op, form=u.form).get('dispatch_exu', '')).upper()
-        except Exception:
-            return ''
-
     def _exu0_only_pressure_count(self, start_index: int) -> int:
         lookahead = int(getattr(self, 'exu0_reserve_lookahead', 0))
         if lookahead <= 0:
@@ -52,7 +44,7 @@ class Scheduler:
         seen_exu0_only = 0
         for cand in self.shq.SHQ[start_index + 1:]:
             seen_compute += 1
-            if self._dispatch_exu_tag(cand) == 'EXU0_ONLY':
+            if cand.profile.dispatch_exu == 'EXU0_ONLY':
                 seen_exu0_only += 1
             if seen_compute >= lookahead:
                 break
@@ -63,7 +55,7 @@ class Scheduler:
             return candidates
         if 0 not in candidates:
             return candidates
-        if self._dispatch_exu_tag(u) == 'EXU0_ONLY':
+        if u.profile.dispatch_exu == 'EXU0_ONLY':
             return candidates
         if 0 not in legal_ports or len(legal_ports) <= 1:
             return candidates
@@ -128,40 +120,15 @@ class Scheduler:
         if q_fu:
             prev = q_fu[-1]
             prev_pred = int(getattr(prev, 'exq_pred_issue', recv_cycle))
-            ii = self.timing._get_ii(
-                prev.op,
-                op,
-                prev_form=prev.form,
-                cur_form=form,
-                prev_profile=prev.profile,
-                cur_profile=profile
-            )
+            ii = self.db.get_ii_for_profiles(prev.profile, profile)
             pred = max(pred, prev_pred + ii)
         else:
-            prev_op = self.exu.last_op[fu_type][port]
-            prev_form = self.exu.last_form[fu_type][port]
             prev_issue = self.exu.last_issue_cycle[fu_type][port]
-            ii = self.timing._get_ii(
-                prev_op,
-                op,
-                prev_form=prev_form,
-                cur_form=form,
-                prev_profile=self.exu.last_profile[fu_type][port],
-                cur_profile=profile
-            )
+            ii = self.db.get_ii_for_profiles(self.exu.last_profile[fu_type][port], profile)
             pred = max(pred, prev_issue + ii)
         if self.predict_exq_issue_with_cross_fu:
-            prev_op_exu = self.exu.last_op_exu[port]
-            prev_form_exu = self.exu.last_form_exu[port]
             prev_issue_exu = self.exu.last_issue_cycle_exu[port]
-            ii_exu = self.timing._get_ii(
-                prev_op_exu,
-                op,
-                prev_form=prev_form_exu,
-                cur_form=form,
-                prev_profile=self.exu.last_profile_exu[port],
-                cur_profile=profile
-            )
+            ii_exu = self.db.get_ii_for_profiles(self.exu.last_profile_exu[port], profile)
             pred = max(pred, prev_issue_exu + ii_exu)
         return pred
 
@@ -181,8 +148,8 @@ class Scheduler:
             cur_srcs = {ps for ps in u.preg_src if ps is not None}
             if self.enforce_same_cycle_src_hazard and (not self.theoretical_limit_mode) and issued_srcs_this_cycle & cur_srcs:
                 continue
-            fu_type = self.timing._get_fu_type(u.op, u.form, u.profile)
-            chosen_port = self.exu._pick_exu_port(fu_type, u.op, cycle, exu_used_this_cycle, u.form, u.profile)
+            fu_type = u.profile.fu_type
+            chosen_port = self.exu._pick_exu_port(u.profile, cycle, exu_used_this_cycle)
             if chosen_port is None:
                 continue
             self.exu.start(u, chosen_port, fu_type, cycle, queued=False)
@@ -203,7 +170,7 @@ class Scheduler:
         use_fu_rr_fifo = self._use_fu_round_robin_fifo()
         blocked_fu_types: Set[str] = set()
         for index, u in enumerate(self.shq.SHQ):
-            fu_type = self.timing._get_fu_type(u.op, u.form, u.profile)
+            fu_type = u.profile.fu_type
             if use_fu_rr_fifo and fu_type in blocked_fu_types:
                 continue
             if u.state != 'ready':
@@ -215,7 +182,7 @@ class Scheduler:
                 if use_fu_rr_fifo:
                     blocked_fu_types.add(fu_type)
                 continue
-            legal_ports = set(self.timing._eligible_exu_ports(u.op, u.form, u.profile))
+            legal_ports = set(u.profile.allowed_exu_ports)
             candidates: List[int] = []
             for port in range(self.issue_ports):
                 if port not in legal_ports:
@@ -269,8 +236,6 @@ class Scheduler:
             q_port = self.exq.exq_wait[port]
             if not q_port['ALU'] and (not q_port['SFU']):
                 continue
-            prev_op_exu = self.exu.last_op_exu[port]
-            prev_form_exu = self.exu.last_form_exu[port]
             prev_issue_exu = self.exu.last_issue_cycle_exu[port]
             best: Optional[Tuple[Tuple[int, int, int], str, Any]] = None
             for fu_type in ('ALU', 'SFU'):
@@ -285,14 +250,7 @@ class Scheduler:
                 ready_cy = int(self.registers._compute_ready_cycle(cand))
                 if ready_cy > cycle:
                     continue
-                ii_exu = self.timing._get_ii(
-                    prev_op_exu,
-                    cand.op,
-                    prev_form=prev_form_exu,
-                    cur_form=cand.form,
-                    prev_profile=self.exu.last_profile_exu[port],
-                    cur_profile=cand.profile
-                )
+                ii_exu = self.db.get_ii_for_profiles(self.exu.last_profile_exu[port], cand.profile)
                 if cycle < prev_issue_exu + ii_exu:
                     continue
                 key = (ready_cy, recv_cy, cand.inst_id)

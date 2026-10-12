@@ -1,15 +1,16 @@
 from __future__ import annotations
+from core.params.types import UarchParameters
 from typing import Dict
 
 class SHQ:
 
-    def __init__(self, uarch):
-        self.theoretical_limit_mode = bool(uarch.get('theoretical_limit_mode', False))
-        self.enable_shq_credit_model: bool = bool(uarch.get('enable_shq_credit_model', False))
-        self.shq_release_delay: int = int(uarch.get('shq_release_delay', 1))
-        self.idu_visible_shq_delay: int = int(uarch.get('idu_visible_shq_delay', 0))
-        self.shq_depth = int(uarch.get('shq_depth', 58))
-        self.enable_credit_visibility_delay = bool(uarch.get('enable_credit_visibility_delay', True))
+    def __init__(self, uarch: UarchParameters):
+        self.theoretical_limit_mode = uarch.theoretical_limit_mode
+        self.enable_shq_credit_model: bool = uarch.enable_shq_credit_model
+        self.shq_release_delay: int = uarch.shq_release_delay
+        self.idu_visible_shq_delay: int = uarch.idu_visible_shq_delay
+        self.shq_depth = uarch.shq_depth
+        self.enable_credit_visibility_delay = uarch.enable_credit_visibility_delay
         self.shq_used: int = 0
         self.shq_release_events: Dict[int, int] = {}
         self.visible_shq_used: int = 0

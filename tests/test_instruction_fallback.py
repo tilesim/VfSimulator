@@ -14,8 +14,8 @@ ROOT = Path(__file__).resolve().parents[1]
 
 class InstructionFallbackTest(unittest.TestCase):
 
-    def _make_compute_uop(self, inst_id, op, form='fp32', state='ready'):
-        return Uop(inst_id=inst_id, op=op, form=form, src=[], dst=[f'v{inst_id}'], preg_src=[], preg_dst=[f'p{inst_id}'], state=state)
+    def _make_compute_uop(self, inst_id, op, form='fp32', state='ready', *, db):
+        return Uop(inst_id=inst_id, op=op, form=form, src=[], dst=[f'v{inst_id}'], preg_src=[], preg_dst=[f'p{inst_id}'], state=state, profile=db.resolve_inst(op, form, 'fp32'))
 
     def _make_mainline_core_for_isu(self):
         db = ParamDB(base_dir=str(ROOT))
@@ -67,10 +67,7 @@ class InstructionFallbackTest(unittest.TestCase):
         consumer = db.resolve_inst('VADD', 'fp32', 'fp32')
         forwarding = db.get_forwarding_for_profiles(producer, consumer)
         ii = db.get_ii_for_profiles(producer, consumer)
-        with (
-            patch.object(db, '_compute_forwarding_cycles', side_effect=AssertionError('Cached forwarding must not be recomputed')),
-            patch.object(db, '_compute_ii', side_effect=AssertionError('Cached II must not be recomputed')),
-        ):
+        with patch.object(db, '_compute_forwarding_cycles', side_effect=AssertionError('Cached forwarding must not be recomputed')), patch.object(db, '_compute_ii', side_effect=AssertionError('Cached II must not be recomputed')):
             self.assertEqual(db.get_forwarding_for_profiles(producer, consumer), forwarding)
             self.assertEqual(db.get_ii_for_profiles(producer, consumer), ii)
 
@@ -104,7 +101,7 @@ class InstructionFallbackTest(unittest.TestCase):
 
     def test_fu_round_robin_keeps_exu0_only_on_exq0(self):
         core = self._make_mainline_core_for_isu()
-        core.shq.SHQ.append(self._make_compute_uop(0, 'VPACK', form='b32'))
+        core.shq.SHQ.append(self._make_compute_uop(0, 'VPACK', form='b32', db=core.db))
         issued = core.scheduler.enqueue_shq_to_exq(0, set())
         self.assertEqual(issued, 1)
         self.assertEqual(len(core.exq.exq_wait[0]['ALU']), 1)
@@ -114,9 +111,9 @@ class InstructionFallbackTest(unittest.TestCase):
 
     def test_fu_round_robin_fifo_allows_alu_to_pass_blocked_exu0_only_alu(self):
         core = self._make_mainline_core_for_isu()
-        core.exq.exq_wait[0]['ALU'].append(self._make_compute_uop(100, 'VADDS'))
-        core.exq.exq_wait[0]['SFU'].append(self._make_compute_uop(101, 'VEXP'))
-        core.shq.SHQ.extend([self._make_compute_uop(0, 'VPACK', form='b32'), self._make_compute_uop(1, 'VADDS')])
+        core.exq.exq_wait[0]['ALU'].append(self._make_compute_uop(100, 'VADDS', db=core.db))
+        core.exq.exq_wait[0]['SFU'].append(self._make_compute_uop(101, 'VEXP', db=core.db))
+        core.shq.SHQ.extend([self._make_compute_uop(0, 'VPACK', form='b32', db=core.db), self._make_compute_uop(1, 'VADDS', db=core.db)])
         issued = core.scheduler.enqueue_shq_to_exq(0, set())
         self.assertEqual(issued, 1)
         self.assertEqual([u.op for u in core.shq.SHQ], ['VPACK'])
@@ -127,10 +124,10 @@ class InstructionFallbackTest(unittest.TestCase):
     def test_fu_round_robin_fifo_allows_sfu_to_pass_blocked_alu_group(self):
         core = self._make_mainline_core_for_isu()
         core.scheduler.enforce_same_cycle_src_hazard = True
-        blocked_alu = self._make_compute_uop(0, 'VADDS')
+        blocked_alu = self._make_compute_uop(0, 'VADDS', db=core.db)
         blocked_alu.preg_src = ['p_shared']
-        second_alu = self._make_compute_uop(1, 'VADDS')
-        sfu = self._make_compute_uop(2, 'VEXP')
+        second_alu = self._make_compute_uop(1, 'VADDS', db=core.db)
+        sfu = self._make_compute_uop(2, 'VEXP', db=core.db)
         core.shq.SHQ.extend([blocked_alu, second_alu, sfu])
         issued = core.scheduler.enqueue_shq_to_exq(0, {'p_shared'})
         self.assertEqual(issued, 1)
@@ -140,7 +137,7 @@ class InstructionFallbackTest(unittest.TestCase):
 
     def test_exu0_reserve_lookahead_min_count_sends_flexible_alu_to_exq1(self):
         core = self._make_mainline_core_for_isu()
-        core.shq.SHQ.extend([self._make_compute_uop(0, 'VADDS'), self._make_compute_uop(1, 'VPACK', form='b32'), self._make_compute_uop(2, 'VPACK', form='b32')])
+        core.shq.SHQ.extend([self._make_compute_uop(0, 'VADDS', db=core.db), self._make_compute_uop(1, 'VPACK', form='b32', db=core.db), self._make_compute_uop(2, 'VPACK', form='b32', db=core.db)])
         issued = core.scheduler.enqueue_shq_to_exq(0, set())
         self.assertEqual(issued, 2)
         self.assertEqual(len(core.exq.exq_wait[0]['ALU']), 1)
@@ -152,7 +149,7 @@ class InstructionFallbackTest(unittest.TestCase):
 
     def test_exu0_reserve_ignores_single_exu0_only_in_window(self):
         core = self._make_mainline_core_for_isu()
-        core.shq.SHQ.extend([self._make_compute_uop(0, 'VADDS'), self._make_compute_uop(1, 'VPACK', form='b32')])
+        core.shq.SHQ.extend([self._make_compute_uop(0, 'VADDS', db=core.db), self._make_compute_uop(1, 'VPACK', form='b32', db=core.db)])
         issued = core.scheduler.enqueue_shq_to_exq(0, set())
         self.assertEqual(issued, 1)
         self.assertEqual([u.op for u in core.shq.SHQ], ['VPACK'])
@@ -166,7 +163,7 @@ class InstructionFallbackTest(unittest.TestCase):
         uarch = dict(db.get_uarch())
         self.assertEqual(uarch['exu0_reserve_min_count'], 1)
         core = component_engine(uarch, db, dtype='fp32')
-        core.shq.SHQ.extend([self._make_compute_uop(0, 'VADDS'), self._make_compute_uop(1, 'VPACK', form='b32')])
+        core.shq.SHQ.extend([self._make_compute_uop(0, 'VADDS', db=core.db), self._make_compute_uop(1, 'VPACK', form='b32', db=core.db)])
         issued = core.scheduler.enqueue_shq_to_exq(0, set())
         self.assertEqual(issued, 2)
         self.assertEqual([u.op for u in core.exq.exq_wait[0]['ALU']], ['VPACK'])
@@ -176,8 +173,8 @@ class InstructionFallbackTest(unittest.TestCase):
         db = ParamDB(base_dir=str(ROOT))
         uarch = dict(db.get_uarch())
         core = component_engine(uarch, db, dtype='fp32')
-        core.exq.exq_wait[1]['ALU'].append(self._make_compute_uop(100, 'VADDS'))
-        core.shq.SHQ.extend([self._make_compute_uop(0, 'VADDS'), self._make_compute_uop(1, 'VPACK', form='b32')])
+        core.exq.exq_wait[1]['ALU'].append(self._make_compute_uop(100, 'VADDS', db=core.db))
+        core.shq.SHQ.extend([self._make_compute_uop(0, 'VADDS', db=core.db), self._make_compute_uop(1, 'VPACK', form='b32', db=core.db)])
         issued = core.scheduler.enqueue_shq_to_exq(0, set())
         self.assertEqual(issued, 1)
         self.assertEqual([u.op for u in core.exq.exq_wait[0]['ALU']], ['VADDS'])

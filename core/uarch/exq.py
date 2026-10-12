@@ -1,10 +1,11 @@
 from __future__ import annotations
+from core.params.types import UarchParameters
 from collections import deque
 
 class EXQ:
 
-    def __init__(self, uarch):
-        self.issue_ports = int(uarch.get('issue_ports', 2))
+    def __init__(self, uarch: UarchParameters):
+        self.issue_ports = uarch.issue_ports
         self.exq_wait = [{'ALU': deque(), 'SFU': deque()} for _ in range(self.issue_ports)]
 
     def enqueue(self, uop, port, fu_type, recv_cycle, predicted_issue):

@@ -1,19 +1,20 @@
 from __future__ import annotations
+from core.params.types import UarchParameters
 from collections import deque
 from core.common.instruction import DynamicInstruction
 from core.uarch.address_state import AddressStateTracker
 
 class IDU:
 
-    def __init__(self, uarch, pdb, loops, value_storage):
-        self.window_width = uarch['IDU_window_width']
-        self.issue_width = uarch['IDU_issue_width']
-        self.theoretical_limit_mode = uarch.get('theoretical_limit_mode', False)
-        self.global_shq_preg_gate = uarch.get('global_shq_preg_gate', False)
-        self.vf_startup_cost = pdb.get_defaults().get('vf_startup_cost', 0)
-        self.idu_dispatch_start_advance = uarch.get('idu_dispatch_start_advance', 0)
+    def __init__(self, uarch: UarchParameters, pdb, loops, value_storage):
+        self.window_width = uarch.IDU_window_width
+        self.issue_width = uarch.IDU_issue_width
+        self.theoretical_limit_mode = uarch.theoretical_limit_mode
+        self.global_shq_preg_gate = uarch.global_shq_preg_gate
+        self.vf_startup_cost = pdb.vf_timing.startup_cost
+        self.idu_dispatch_start_advance = uarch.idu_dispatch_start_advance
         self.loops = loops
-        self.address_states = AddressStateTracker(uarch.get('idu_post_update_ready_latency', 1))
+        self.address_states = AddressStateTracker(uarch.idu_post_update_ready_latency)
         self.window = deque()
         self.dispatch_log = []
         self.address_block_log = []

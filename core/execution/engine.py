@@ -1,10 +1,10 @@
 from __future__ import annotations
-from dataclasses import dataclass, replace
+from core.params.types import UarchParameters
+from dataclasses import dataclass
 from collections import deque
 from core.common.instruction import DynamicInstruction
 from core.common.result import SimulationResult
 from core.common.values import ValueStorageLookup
-from core.params.timing import TimingQuery
 from core.uarch.registers import Registers
 from core.uarch.shq import SHQ
 from core.uarch.exq import EXQ
@@ -29,31 +29,30 @@ class DispatchBudget:
 
 class Engine:
 
-    def __init__(self, program, uarch, db):
+    def __init__(self, program, uarch: UarchParameters, db, fallback_dtype="fp32"):
         self.program = program
         self.uarch = uarch
         self.db = db
+        self.fallback_dtype = fallback_dtype
         self.cycle = 0
         self.last_done_cycle = 0
         self.next_admission = 0
-        # Unbounded completion bookkeeping; no ROB capacity or ordered retirement.
         self.active_uops = {}
         self.pipe = deque()
         values = ValueStorageLookup(program.values)
-        self.timing = TimingQuery(uarch, db)
-        self.registers = Registers(uarch, db, values)
+        self.registers = Registers(uarch, db, values, dtype=fallback_dtype)
         self.shq = SHQ(uarch)
         self.exq = EXQ(uarch)
-        self.exu = EXU(uarch, self.timing)
+        self.exu = EXU(uarch, db)
         self.trace = TraceRecorder(self.registers)
-        startup = db.get_defaults().get('vf_startup_cost', 0)
-        self.control = TimedMembarController(db, 'fp32', uarch['membar_timing'], issue_floor=startup) if 'membar_timing' in uarch else MembarController(db, 'fp32')
-        self.lsu = LSU(uarch, db, self.registers, self.shq, self.timing, self.trace, self.control)
-        self.scheduler = Scheduler(uarch, self.registers, self.shq, self.exq, self.exu, self.timing, self.trace)
+        startup = db.vf_timing.startup_cost
+        self.control = TimedMembarController(db, 'fp32', uarch.membar_timing, issue_floor=startup) if uarch.membar_timing is not None else MembarController(db, 'fp32')
+        self.lsu = LSU(uarch, db, self.registers, self.shq, self.trace, self.control)
+        self.scheduler = Scheduler(uarch, self.registers, self.shq, self.exq, self.exu, db, self.trace)
         self.loops = LoopControl(uarch, program.top_block_loop_bounds, program.empty_top_blocks)
         self.idu = IDU(uarch, db, self.loops, values)
         self.ifu = IFU(program.instructions)
-        self.explicit = bool(uarch.get('use_explicit_idu_credit_bank', False))
+        self.explicit = uarch.use_explicit_idu_credit_bank
         self.vector_credit = self.registers.get_free_preg()
         self.predicate_credit = self.registers.get_free_predicate()
         self.shq_credit = self.shq.get_free_shq()
@@ -63,9 +62,8 @@ class Engine:
     def admit(self, inst):
         if not isinstance(inst, DynamicInstruction) or inst.type != 'inst':
             raise TypeError('Engine admits only prepared Canonical instructions')
-        profile = self.timing._profile(inst.op, inst.form)
-        if profile.op_class != inst.op_class:
-            profile = replace(profile, op_class=inst.op_class)
+        profile = self.db.resolve_inst(inst.op, inst.form, dtype=self.fallback_dtype,
+                                       instruction_class=inst.op_class)
         u = self.registers.rename(inst, profile, self.cycle)
         u.admission_seq = self.next_admission
         self.next_admission += 1
@@ -78,9 +76,9 @@ class Engine:
             if spec is None or spec.ub_transfer_bytes <= 0:
                 raise ValueError('Missing Catalog UB transfer semantics')
             u.ub_transfer_bytes = spec.ub_transfer_bytes
-            self.lsu.enqueue(u, self.cycle, self.uarch.get('ooo_to_lsq_delay', 1))
+            self.lsu.enqueue(u, self.cycle, self.uarch.ooo_to_lsq_delay)
         else:
-            self.shq.enqueue(u, self.cycle, self.uarch.get('ooo_to_shq_delay', 1))
+            self.shq.enqueue(u, self.cycle, self.uarch.ooo_to_shq_delay)
         self.shq.reserve(u)
         self.active_uops[u.inst_id] = u
         return u
@@ -104,7 +102,6 @@ class Engine:
             component.cycle = c
         self.shq.run_shq_release_events(c)
         self.registers.run_src_release_events(c)
-        # Keep trace order stable for simultaneous completion events.
         completed = sorted([*self.exu.finish(c), *self.lsu.finish(c)], key=lambda u: u.admission_seq)
         for u in completed:
             self.trace._log('done', u)
@@ -126,7 +123,7 @@ class Engine:
         ready_compute()
         self.lsu.update_ready(c, stores_only=True)
         used = [False] * self.exu.issue_ports
-        if self.uarch.get('enable_isu_queue_model', True):
+        if self.uarch.enable_isu_queue_model:
             self.scheduler.enqueue_shq_to_exq(c, set())
             self.scheduler.issue_exq_to_exu(c, used)
         else:
@@ -135,7 +132,7 @@ class Engine:
         self.lsu._issue_ready_lsu(c, *counts, blocked)
 
     def run(self, out_dir):
-        delay = int(self.uarch.get('idu_to_ooo_delay', 0))
+        delay = self.uarch.idu_to_ooo_delay
         max_cycles = self.program.params.get('max_cycles', 1000000)
         completed = False
         while self.cycle < max_cycles:
@@ -206,7 +203,7 @@ class Engine:
         trace_path = dump_logs(self, out_dir) if out_dir is not None else None
         return SimulationResult(
             self.cycle,
-            self.last_done_cycle + self.db.get_defaults().get('vf_drain_cost', 0),
+            self.last_done_cycle + self.db.vf_timing.drain_cost,
             str(out_dir) if out_dir is not None else None,
             trace_path
         )

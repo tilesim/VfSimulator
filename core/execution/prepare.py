@@ -3,6 +3,7 @@ from dataclasses import dataclass, fields
 from typing import Any, Dict, List
 from core.common.instruction import DynamicInstruction
 from core.execution.expansion import DynamicExpander
+from core.params.types import UarchParameters
 from typing import Any, Iterable
 from api.common.instruction_catalog import DEFAULT_INSTRUCTION_CATALOG
 from api.common.schema import AffineExpression, CanonicalInstruction, CanonicalLoop, CanonicalMembar, CanonicalNode, CanonicalOperand, CanonicalVfInfo, InstructionClass, SourceLocation, StorageKind
@@ -29,7 +30,6 @@ class CoreLoweringPass:
 
     def lower(self, vf_info: CanonicalVfInfo) -> dict[str, Any]:
         self.ensure_current_core_compatible(vf_info)
-        # Internal storage-object IDs must not overwrite declared value identities.
         ub_core_ids = {}
         occupied_ids = set(vf_info.values)
         for object_id in vf_info.storage_objects:
@@ -47,7 +47,8 @@ class CoreLoweringPass:
                 'shape': list(value.shape),
                 'producer_node_id': value.producer_node_id,
                 'storage_object_id': value.storage_object_id
-            } for definition_id, value in vf_info.values.items() if value.storage != StorageKind.UB
+            } for definition_id,
+            value in vf_info.values.items() if value.storage != StorageKind.UB
         }
         for object_id, storage_object in vf_info.storage_objects.items():
             dtype = next(
@@ -392,7 +393,7 @@ class PreparedProgram:
     fallback_dtype: str
     linear_inst_count: int
 
-def prepare_program(vf_info, db, uarch):
+def prepare_program(vf_info, db, uarch: UarchParameters):
     payload = CoreLoweringPass().lower(vf_info)
     params = payload['params']
     linear = _StaticLayout(params).flatten(payload['program'])
@@ -400,7 +401,7 @@ def prepare_program(vf_info, db, uarch):
         linear,
         params,
         pdb=db,
-        structured_dynamic_instruction_limit=uarch.get('canonical_dynamic_instruction_limit', 20000)
+        structured_dynamic_instruction_limit=uarch.canonical_dynamic_instruction_limit
     )
     expander.prepare_structured_stream()
     keys = {f.name for f in fields(DynamicInstruction)}

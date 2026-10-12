@@ -1,7 +1,7 @@
 from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional
-from core.params.profile import InstructionProfile
+from core.params.types import InstructionProfile
 
 @dataclass(frozen=True)
 class DynamicInstruction:

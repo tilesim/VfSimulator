@@ -1,91 +1,91 @@
+"""Microarchitecture configuration resolution; no file I/O or timing queries."""
 from __future__ import annotations
-from typing import Any, Dict
+from collections.abc import Mapping
+from dataclasses import fields, replace
+from .types import UarchParameters
 
-def normalize_mainline_uarch(uarch: Dict[str, Any]) -> Dict[str, Any]:
-    """
-    Normalize the current mainline uarch configuration:
-    - SHQ -> EXQ -> EXU staging enabled
-    - SHQ finite-credit model enabled
-    - IDU-visible credit-delay model enabled
-    - finite EXQ depth enabled
-    - per-port inflight cap enabled
-    """
-    cfg = dict(uarch)
-    if "three_ports_mode" in cfg:
-        raise ValueError("three_ports_mode was removed; three-port support belongs to the future A6 architecture")
-    if int(cfg.get("issue_ports", 2)) > 2:
-        raise ValueError("The current model supports at most two EXU ports; A6 requires a separate architecture")
-    if "lsu_issue_policy" in cfg:
-        raise ValueError("lsu_issue_policy has been removed; configure lsu_store_priority_preg_threshold")
-    if "lsu_post_update_ready_latency" in cfg:
-        raise ValueError("lsu_post_update_ready_latency was removed; use idu_post_update_ready_latency")
+MAX_EXU_PORTS = 2
+REMOVED_FIELDS = {
+    "three_ports_mode": "three_ports_mode was removed; three-port support belongs to the future A6 architecture",
+    "consumer_release_start_offset_by_op": "consumer_release_start_offset_by_op was removed; use global consumer_release_start_offset",
+    "lsu_post_update_ready_latency": "lsu_post_update_ready_latency was removed; use idu_post_update_ready_latency (IDU dispatch timing)",
+    "lsu_issue_policy": "lsu_issue_policy has been removed; configure lsu_store_priority_preg_threshold",
+}
 
-    cfg['enable_isu_queue_model'] = bool(cfg.get('enable_isu_queue_model', True))
-    cfg['shq_depth'] = int(cfg.get('shq_depth', 58))
-    cfg['exq_depth'] = int(cfg.get('exq_depth', 26))
-    cfg['enforce_same_cycle_src_hazard'] = bool(cfg.get('enforce_same_cycle_src_hazard', False))
-    cfg['admit_blocked_to_exq'] = bool(cfg.get('admit_blocked_to_exq', False))
-    cfg['enable_shq_credit_model'] = bool(cfg.get('enable_shq_credit_model', True))
-    cfg['shq_release_delay'] = int(cfg.get('shq_release_delay', 1))
-    cfg['enable_credit_visibility_delay'] = bool(cfg.get('enable_credit_visibility_delay', True))
-    cfg['idu_visible_preg_delay'] = int(cfg.get('idu_visible_preg_delay', 0))
-    cfg['idu_visible_shq_delay'] = int(cfg.get('idu_visible_shq_delay', 0))
-    cfg['idu_to_ooo_delay'] = int(cfg.get('idu_to_ooo_delay', 1))
-    cfg['vloop_to_dispatch_delay'] = int(cfg.get('vloop_to_dispatch_delay', 2))
-    cfg['idu_dispatch_start_advance'] = int(cfg.get('idu_dispatch_start_advance', 2))
-    cfg['initial_top_block_vloop_start_cycle'] = int(cfg.get('initial_top_block_vloop_start_cycle', 19))
-    cfg['nested_vloop_initial_start_gap'] = int(cfg.get('nested_vloop_initial_start_gap', 1))
-    cfg['loop1_min_feedback_gap'] = int(cfg.get('loop1_min_feedback_gap', 7))
-    cfg['innermost_iter_dispatch_stride'] = int(cfg.get('innermost_iter_dispatch_stride', 1))
-    cfg['consumer_release_start_offset'] = int(cfg.get('consumer_release_start_offset', 4))
-    cfg['ooo_to_shq_delay'] = int(cfg.get('ooo_to_shq_delay', 1))
-    cfg['ooo_to_lsq_delay'] = int(cfg.get('ooo_to_lsq_delay', 1))
-    cfg['global_shq_preg_gate'] = bool(cfg.get('global_shq_preg_gate', False))
-    cfg['use_explicit_idu_credit_bank'] = bool(cfg.get('use_explicit_idu_credit_bank', False))
-    cfg['compute_inflight_cap'] = int(cfg.get('compute_inflight_cap', 0))
-    cfg['exq_issue_inflight_cap_per_port'] = int(cfg.get('exq_issue_inflight_cap_per_port', 7))
-    cfg['exq_capacity_counts_inflight'] = bool(cfg.get('exq_capacity_counts_inflight', False))
-
+def parse_uarch(values: Mapping, base: UarchParameters | None = None) -> UarchParameters:
+    if not isinstance(values, Mapping):
+        raise ValueError("uarch must be an object")
+    for name, message in REMOVED_FIELDS.items():
+        if name in values:
+            raise ValueError(message)
+    defaults = base if base is not None else UarchParameters()
+    parsed = {}
+    for field in fields(UarchParameters):
+        name = field.name
+        if name not in values:
+            continue
+        value = values[name]
+        default = getattr(defaults, name)
+        if name == "membar_timing":
+            if not isinstance(value, Mapping):
+                raise ValueError("membar_timing must be an object")
+            value = dict(value)
+        elif type(default) is bool:
+            if type(value) is not bool:
+                raise ValueError(f"{name} must be a boolean")
+        elif type(default) is int or default is None:
+            if type(value) is not int:
+                raise ValueError(f"{name} must be an integer")
+        elif not isinstance(value, str):
+            raise ValueError(f"{name} must be a string")
+        parsed[name] = value
+    cfg = replace(defaults, **parsed)
+    if not 0 < cfg.physical_predicate_registers <= 2**31 - 1:
+        raise ValueError("physical_predicate_registers must be a positive int32")
+    if not 0 < cfg.idu_post_update_ready_latency < 2**63:
+        raise ValueError("idu_post_update_ready_latency must be a positive int64")
     return cfg
 
-def apply_theoretical_limit_overrides(uarch: Dict[str, Any]) -> Dict[str, Any]:
-    """
-    Semi-ideal theoretical limit:
-    - preserve VLOOP / nested-loop / cross-iteration exposure rules
-    - preserve dependency, forwarding, II, latency, FU/port constraints
-    - remove front-end width/capacity bottlenecks and queue transport delays
-    - remove preg / SHQ / EXQ / inflight capacity bottlenecks
-    """
-    cfg = dict(uarch)
-    huge = 10 ** 18
-    cfg['vloop_to_dispatch_delay'] = int(cfg.get('theoretical_limit_vloop_to_dispatch_delay', 4))
-    cfg['idu_dispatch_start_advance'] = int(cfg.get('theoretical_limit_idu_dispatch_start_advance', 0))
-    cfg['IDU_window_width'] = int(cfg.get('theoretical_limit_idu_window_width', huge))
-    cfg['IDU_issue_width'] = int(cfg.get('theoretical_limit_idu_issue_width', huge))
+def resolve_uarch(base: Mapping | UarchParameters, overrides: Mapping | None = None, *,
+                  theoretical_vloop_only: bool = False, direct_issue: bool = False) -> UarchParameters:
+    cfg = base if isinstance(base, UarchParameters) else parse_uarch(base)
+    if overrides:
+        cfg = parse_uarch(overrides, cfg)
+    if not 0 < cfg.issue_ports <= MAX_EXU_PORTS:
+        raise ValueError("The current model supports one or two EXU ports; A6 requires a separate architecture")
+    if theoretical_vloop_only or direct_issue:
+        cfg = replace(cfg, theoretical_limit_mode=True, theoretical_limit_vloop_only=True)
+    if direct_issue:
+        cfg = replace(cfg, theoretical_limit_legacy_forwarding=True, theoretical_limit_direct_issue=True)
+    return apply_theoretical_limit_overrides(cfg) if cfg.theoretical_limit_mode else cfg
 
-    cfg['LDQ_width'] = int(cfg.get('theoretical_limit_ldq_width', huge))
-    cfg['shq_depth'] = int(cfg.get('theoretical_limit_shq_depth', huge))
-    cfg['exq_depth'] = int(cfg.get('theoretical_limit_exq_depth', huge))
-    cfg['idu_to_ooo_delay'] = int(cfg.get('theoretical_limit_idu_to_ooo_delay', 0))
-    cfg['ooo_to_shq_delay'] = int(cfg.get('theoretical_limit_ooo_to_shq_delay', 0))
-    cfg['ooo_to_lsq_delay'] = int(cfg.get('theoretical_limit_ooo_to_lsq_delay', 0))
-    cfg['exq_recv_delay'] = int(cfg.get('theoretical_limit_exq_recv_delay', 0))
-    cfg['shq_release_delay'] = int(cfg.get('theoretical_limit_shq_release_delay', 0))
-    cfg['idu_visible_preg_delay'] = int(cfg.get('theoretical_limit_idu_visible_preg_delay', 0))
-    cfg['idu_visible_shq_delay'] = int(cfg.get('theoretical_limit_idu_visible_shq_delay', 0))
-    cfg['shq_to_exq_port_per_cycle'] = int(cfg.get('theoretical_limit_shq_to_exq_port_per_cycle', huge))
-    cfg['compute_inflight_cap'] = int(cfg.get('theoretical_limit_compute_inflight_cap', 0))
-    cfg['exq_issue_inflight_cap_per_port'] = int(cfg.get('theoretical_limit_exq_issue_inflight_cap_per_port', 0))
-    cfg['global_shq_preg_gate'] = bool(cfg.get('theoretical_limit_global_shq_preg_gate', False))
-    cfg['use_explicit_idu_credit_bank'] = bool(cfg.get('theoretical_limit_use_explicit_idu_credit_bank', False))
-    if bool(cfg.get('theoretical_limit_direct_issue', False)):
-        cfg['enable_isu_queue_model'] = False
-        cfg['enable_shq_credit_model'] = False
-        cfg['enable_credit_visibility_delay'] = False
-        cfg['admit_blocked_to_exq'] = False
-        cfg['exq_recv_delay'] = 0
-        cfg['shq_to_exq_port_per_cycle'] = int(huge)
-        cfg['compute_inflight_cap'] = 0
-        cfg['exq_issue_inflight_cap_per_port'] = 0
+def allowed_exu_ports(tag: str) -> tuple[int, ...]:
+    """Decode current architecture port tags once when creating a profile."""
+    return (0,) if tag == "EXU0_ONLY" else tuple(range(MAX_EXU_PORTS))
 
-    return cfg
+def apply_theoretical_limit_overrides(cfg: UarchParameters) -> UarchParameters:
+    huge = 10**18
+    changes = {}
+    changes['vloop_to_dispatch_delay'] = cfg.theoretical_limit_vloop_to_dispatch_delay if cfg.theoretical_limit_vloop_to_dispatch_delay is not None else 4
+    changes['idu_dispatch_start_advance'] = cfg.theoretical_limit_idu_dispatch_start_advance if cfg.theoretical_limit_idu_dispatch_start_advance is not None else 0
+    changes['IDU_window_width'] = cfg.theoretical_limit_idu_window_width if cfg.theoretical_limit_idu_window_width is not None else huge
+    changes['IDU_issue_width'] = cfg.theoretical_limit_idu_issue_width if cfg.theoretical_limit_idu_issue_width is not None else huge
+    changes['LDQ_width'] = cfg.theoretical_limit_ldq_width if cfg.theoretical_limit_ldq_width is not None else huge
+    changes['shq_depth'] = cfg.theoretical_limit_shq_depth if cfg.theoretical_limit_shq_depth is not None else huge
+    changes['exq_depth'] = cfg.theoretical_limit_exq_depth if cfg.theoretical_limit_exq_depth is not None else huge
+    changes['idu_to_ooo_delay'] = cfg.theoretical_limit_idu_to_ooo_delay if cfg.theoretical_limit_idu_to_ooo_delay is not None else 0
+    changes['ooo_to_shq_delay'] = cfg.theoretical_limit_ooo_to_shq_delay if cfg.theoretical_limit_ooo_to_shq_delay is not None else 0
+    changes['ooo_to_lsq_delay'] = cfg.theoretical_limit_ooo_to_lsq_delay if cfg.theoretical_limit_ooo_to_lsq_delay is not None else 0
+    changes['exq_recv_delay'] = cfg.theoretical_limit_exq_recv_delay if cfg.theoretical_limit_exq_recv_delay is not None else 0
+    changes['shq_release_delay'] = cfg.theoretical_limit_shq_release_delay if cfg.theoretical_limit_shq_release_delay is not None else 0
+    changes['idu_visible_preg_delay'] = cfg.theoretical_limit_idu_visible_preg_delay if cfg.theoretical_limit_idu_visible_preg_delay is not None else 0
+    changes['idu_visible_shq_delay'] = cfg.theoretical_limit_idu_visible_shq_delay if cfg.theoretical_limit_idu_visible_shq_delay is not None else 0
+    changes['shq_to_exq_port_per_cycle'] = cfg.theoretical_limit_shq_to_exq_port_per_cycle if cfg.theoretical_limit_shq_to_exq_port_per_cycle is not None else huge
+    changes['compute_inflight_cap'] = cfg.theoretical_limit_compute_inflight_cap if cfg.theoretical_limit_compute_inflight_cap is not None else 0
+    changes['exq_issue_inflight_cap_per_port'] = cfg.theoretical_limit_exq_issue_inflight_cap_per_port if cfg.theoretical_limit_exq_issue_inflight_cap_per_port is not None else 0
+    if cfg.theoretical_limit_direct_issue:
+        changes.update(enable_isu_queue_model=False, enable_shq_credit_model=False,
+                       enable_credit_visibility_delay=False, admit_blocked_to_exq=False,
+                       exq_recv_delay=0, shq_to_exq_port_per_cycle=huge,
+                       compute_inflight_cap=0, exq_issue_inflight_cap_per_port=0)
+    return replace(cfg, **changes)

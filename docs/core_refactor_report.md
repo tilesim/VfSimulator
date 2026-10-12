@@ -89,3 +89,27 @@ validator 函数执行次数，验证 CCE/JSON/直接对象/Builder 从输入接
 一次完整语义校验，并验证合法但当前不可执行的 unroll 仍由 Core 能力检查拒绝。
 
 GeLU CCE 复核仍为 `cycles_executed=1911`、`vf_end_cycle=1923`。
+
+## 后续调整：参数模块按职责重构
+
+`params/` 收敛为 `loader.py`、`types.py`、`database.py`、`uarch.py`、`fallback.py`。
+loader 统一路径选择和 JSON 读取；types 定义 Profile、UarchParameters、VfTiming 和加载数据；
+ParamDB 保留参数查询及缓存；uarch 复用已解析基础配置、合并 override 并处理架构约束和
+理论场景；fallback 保留现有 form 备选和缺失参数规则以及 warning 输出。
+
+删除 TimingQuery、profile.py 和 compat.py，不保留旧模块转发。执行组件直接读取结构化
+微架构字段与 Profile 的 latency、FU、allowed_exu_ports，指令对参数直接查询 ParamDB。
+端口标记在创建缓存 Profile 时解析。Profile 由同一 ParamDB 创建并拥有，规范指令类别
+也进入缓存键，避免运行时复制 Profile 后破坏归属检查。EXU 历史中的重复 opcode/form
+字段随之删除，使用缓存 Profile 保存的字段。
+
+默认值集中在 UarchParameters，文件中的已声明配置值不变。可选参数文件缺失仍按现有
+规则回退；格式错误、无效参数单元格和错误类型会明确报错，不再吞异常当作缺失参数。
+旧配置格式和已有回退规则暂保留，具体参数值及格式迁移留到后续 config 重构。
+
+验证：311 项 Python 测试（301 通过、10 项 Native 测试跳过）；22 个 smoke case 周期
+逐项完全一致，198 个日志文件逐字节一致。默认 fixture 仍为 47 cycles，GeLU CCE 仍为
+1923 cycles；同一 fixture 的理论模式和直接发射理论模式均与改动前一致（45 cycles）。
+新测试覆盖统一路径优先级、可选文件格式错误、无效 forwarding/II 单元格、结构化配置
+合并与不可重绑定，以及合法端口解析和 Profile 缓存归属。configs、API、Native 和优化器
+内容保持不变。

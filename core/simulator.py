@@ -5,7 +5,7 @@ from api.common.schema import CanonicalVfInfo
 from core.execution.prepare import prepare_program
 from core.execution.engine import Engine
 from core.params.database import ParamDB
-from core.params.uarch import normalize_mainline_uarch, apply_theoretical_limit_overrides
+from core.params.uarch import resolve_uarch
 
 @dataclass
 class CoreVfCostModel:
@@ -23,17 +23,11 @@ class CoreVfCostModel:
         if not isinstance(vf_info, CanonicalVfInfo):
             raise TypeError('Core accepts only CanonicalVfInfo; use InputAPI to load files or JSON')
         db = ParamDB(base_dir=str(self.base_dir))
-        uarch = dict(db.get_uarch())
-        uarch.update(vf_info.uarch)
-        if self.theoretical_limit_vloop_only or self.theoretical_limit_direct_issue:
-            uarch.update(theoretical_limit_mode=True, theoretical_limit_vloop_only=True)
-            if self.theoretical_limit_direct_issue:
-                uarch.update(theoretical_limit_legacy_forwarding=True, theoretical_limit_direct_issue=True)
-        uarch = normalize_mainline_uarch(uarch)
-        if uarch.get('theoretical_limit_mode'):
-            uarch = apply_theoretical_limit_overrides(uarch)
+        uarch = resolve_uarch(db.base_uarch, vf_info.uarch,
+                              theoretical_vloop_only=self.theoretical_limit_vloop_only,
+                              direct_issue=self.theoretical_limit_direct_issue)
         program = prepare_program(vf_info, db, uarch)
-        engine = Engine(program, uarch, db)
+        engine = Engine(program, uarch, db, fallback_dtype=self.fallback_dtype)
         output = Path(self.out_dir) if self.out_dir is not None else None
         if output is not None and (not output.is_absolute()):
             output = Path(self.base_dir) / output

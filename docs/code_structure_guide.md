@@ -69,11 +69,11 @@ core/
 │   ├── result.py
 │   └── values.py
 ├── params/
+│   ├── loader.py
+│   ├── types.py
 │   ├── database.py
-│   ├── profile.py
-│   ├── timing.py
-│   ├── compat.py
-│   └── uarch.py
+│   ├── uarch.py
+│   └── fallback.py
 └── trace/
     ├── recorder.py
     ├── writer.py
@@ -138,10 +138,26 @@ Membar 自身的 retire 是屏障时序的一部分，仍影响最终 `vf_end_cy
 
 ## 参数与日志
 
-`params/database.py::ParamDB` 加载 ISA、forwarding、II 和 uarch；`resolve_inst`
-建立不可变 `InstructionProfile`，后续查询复用缓存。`timing.py` 提供时序和端口查询；
-`compat.py` 保留现有参数匹配规则。配置文件及其兼容规则尚未进入本轮重构。
-当前 Python 模型最多支持两个 EXU；旧三端口开关已移除，A6 将作为独立架构实现。
+参数模块按职责划分：
+
+| 文件 | 职责 |
+| --- | --- |
+| [loader.py](../core/params/loader.py) | 统一显式路径→环境变量→默认目录的查找顺序，读取 JSON、检查文件格式及参数类型；可选文件缺失允许回退，格式错误明确报错 |
+| [types.py](../core/params/types.py) | `InstructionProfile`、`UarchParameters`、`VfTiming`、`LoadedParameters` 等结构化参数；微架构默认值集中在此 |
+| [database.py](../core/params/database.py) | 唯一参数查询入口，解析并缓存 Profile，查询和缓存 forwarding/II；保留校准工具使用的参数字典查询 |
+| [uarch.py](../core/params/uarch.py) | 复用已解析的基础配置，合并 VF override，检查当前架构限制，应用理论场景覆盖；解析 EXU 端口标记 |
+| [fallback.py](../core/params/fallback.py) | form 备选匹配、缺失参数策略、warning 去重与输出 |
+
+`ParamDB` 构造时调用 loader 一次。模型组装使用 `resolve_uarch(db.base_uarch, vf_info.uarch)`
+生成 `UarchParameters`，执行组件通过字段直接读取配置，不再各自 `.get()` 默认值和转换类型。
+
+Engine 通过 `db.resolve_inst()` 将 Profile 绑定到 Uop。latency、FU 和合法端口直接读取
+`profile.latency`、`profile.fu_type`、`profile.allowed_exu_ports`；指令对查询使用
+`db.get_forwarding_for_profiles()`、`db.get_ii_for_profiles()`。`TimingQuery` 及旧
+`profile.py`/`compat.py` 模块已删除，不保留转发入口。
+
+配置文件格式和值本轮保持不变，旧配置格式兼容及已有缺失参数规则仍保留，后续 config
+重构时再判断去留。当前架构最多两个 EXU，A6 将作为独立架构实现。
 
 `trace/recorder.py` 保存 start/done/blocked 事件，`trace/writer.py` 集中写文件：
 `start_by_cycle.json`、`done_by_cycle.json`、`sim_history.json`、`membar_history.json`、
