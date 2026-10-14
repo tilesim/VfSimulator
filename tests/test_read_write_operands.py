@@ -11,7 +11,7 @@ from api.common import (validate_canonical_vf_info)
 from api.common.instruction_catalog import DEFAULT_INSTRUCTION_CATALOG, OperandDirection
 from api.common.schema import OperandRole
 from core.simulator import CoreVfCostModel
-from tests.test_predicate_registers import parse, records
+from tests.core_support import parse_vector_body as parse, records
 
 
 RUNNER = os.environ.get("VFSIM_NATIVE_RUNNER")

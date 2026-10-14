@@ -6,12 +6,12 @@ import subprocess
 import tempfile
 import unittest
 from core.execution.instruction import DynamicInstruction
-from tests.test_post_update_address_state import budget
+from tests.core_support import dispatch_budget as budget
 
 from api.json.serialization import (canonical_vf_info_to_dict)
 from api.common import (validate_canonical_vf_info)
 from core.simulator import CoreVfCostModel
-from tests.test_post_update_address_state import parse
+from tests.core_support import parse_memory_body as parse
 from tests import test_post_update_address_state as address_tests
 
 

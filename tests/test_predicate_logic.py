@@ -9,7 +9,7 @@ from api.json.serialization import (canonical_vf_info_to_dict)
 from api.common.instruction_catalog import DEFAULT_INSTRUCTION_CATALOG
 from core.simulator import CoreVfCostModel
 from core.params.database import ParamDB
-from tests.test_predicate_registers import parse
+from tests.core_support import parse_vector_body as parse
 
 
 ROOT = Path(__file__).resolve().parents[1]

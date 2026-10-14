@@ -55,7 +55,7 @@ class MembarNativeParityTests(unittest.TestCase):
                 self.assertNotEqual(proc.returncode, 0)
                 self.assertIn('membar_timing', proc.stderr)
 
-    def compare(self, vf, soc, root):
+    def compare(self, vf, root):
         path = root / "input.json"
         path.write_text(json.dumps(canonical_vf_info_to_dict(vf)))
         py_dir, cpp_dir = root / "python", root / "native"
@@ -86,20 +86,19 @@ class MembarNativeParityTests(unittest.TestCase):
             "interleaved": load + compute + ("mem_bar(VLD_VST);" + store) * 8 + ("mem_bar(VST_VLD);" + load) * 8,
             "loop": "for (int i = 0; i < 3; ++i) {" + load + compute + "mem_bar(VLD_VST);" + store + "mem_bar(VST_VLD);}",
         }
-        for soc in ("A5",):
-            for name, body in cases.items():
-                with self.subTest(case=name), tempfile.TemporaryDirectory() as tmp:
-                    root = Path(tmp)
-                    cce = root / "input.cce"
-                    cce.write_text("void vf(__ubuf__ float *input, __ubuf__ float *output) {"
-                                   "__VEC_SCOPE__ {vector_f32 a, b;"
-                                   "vector_bool mask = pset_b32(PAT_ALL);" + body + "}}")
-                    self.compare(parse_cce_canonical_vf_info(cce), soc, root)
-            for kind in ("VLD_VST", "VST_VLD"):
-                with self.subTest(tail=kind), tempfile.TemporaryDirectory() as tmp:
-                    builder = VfInfoBuilder()
-                    builder.add_membar("tail", barrier=kind)
-                    self.compare(builder.build(), soc, Path(tmp))
+        for name, body in cases.items():
+            with self.subTest(case=name), tempfile.TemporaryDirectory() as tmp:
+                root = Path(tmp)
+                cce = root / "input.cce"
+                cce.write_text("void vf(__ubuf__ float *input, __ubuf__ float *output) {"
+                               "__VEC_SCOPE__ {vector_f32 a, b;"
+                               "vector_bool mask = pset_b32(PAT_ALL);" + body + "}}")
+                self.compare(parse_cce_canonical_vf_info(cce), root)
+        for kind in ("VLD_VST", "VST_VLD"):
+            with self.subTest(tail=kind), tempfile.TemporaryDirectory() as tmp:
+                builder = VfInfoBuilder()
+                builder.add_membar("tail", barrier=kind)
+                self.compare(builder.build(), Path(tmp))
 
 
 if __name__ == "__main__":

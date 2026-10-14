@@ -7,21 +7,11 @@ from pathlib import Path
 from core.simulator import CoreVfCostModel
 from api.json.serialization import canonical_vf_info_to_dict
 from api.input_api import InputAPI
-from core.execution.instruction import Uop
-from tests.core_support import component_engine
 from core.params.database import ParamDB
 ROOT = Path(__file__).resolve().parents[1]
 
 class InstructionFallbackTest(unittest.TestCase):
 
-    def _make_compute_uop(self, inst_id, op, form='fp32', state='ready', *, db):
-        return Uop(inst_id=inst_id, op=op, form=form, src=[], dst=[f'v{inst_id}'], preg_src=[], preg_dst=[f'p{inst_id}'], state=state, profile=db.resolve_inst(op, form, 'fp32'))
-
-    def _make_mainline_core_for_isu(self):
-        db = ParamDB(base_dir=str(ROOT))
-        uarch = dict(db.get_uarch())
-        uarch.update({'enable_isu_queue_model': True, 'shq_exq_dispatch_policy': 'fu_round_robin_exu0_reserve', 'exu0_reserve_lookahead': 8, 'exu0_reserve_min_count': 2, 'enforce_same_cycle_src_hazard': False, 'exq_depth': 2})
-        return component_engine(uarch, db, dtype='fp32')
 
     def test_unknown_vector_op_uses_default_compute_params(self):
         db = ParamDB(base_dir=str(ROOT))
@@ -84,102 +74,15 @@ class InstructionFallbackTest(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'different ParamDB'):
             first_db.get_ii_for_profiles(foreign_producer, foreign_consumer)
 
-    def test_legacy_lsu_metadata_is_preserved_by_instruction_profile(self):
+    def test_profile_preserves_explicit_memory_class(self):
         db = ParamDB(base_dir=str(ROOT))
-        db._isa_schema_version = 1
-        db._insts['CUSTOM_MEMORY_OP'] = {'fp32': {'unit': 'LSU', 'lsu_op': 'LOAD', 'latency': 7}}
+        db._insts['CUSTOM_MEMORY_OP'] = {
+            'op_class': 'LOAD', 'forms': {'fp32': {'latency': 7}},
+        }
         profile = db.resolve_inst('CUSTOM_MEMORY_OP', 'fp32', 'fp32')
         self.assertEqual(profile.op_class, 'LOAD')
         self.assertEqual(profile.latency, 7)
 
-    def test_freeing_preg_removes_producer_profile(self):
-        core = self._make_mainline_core_for_isu()
-        preg = core.registers.vector_bank.allocate()
-        core.registers.preg_producer_profile[preg] = core.db.resolve_inst('VADD', 'fp32', 'fp32')
-        self.assertTrue(core.registers.try_free_preg(preg))
-        self.assertNotIn(preg, core.registers.preg_producer_profile)
-
-    def test_fu_round_robin_keeps_exu0_only_on_exq0(self):
-        core = self._make_mainline_core_for_isu()
-        core.shq.SHQ.append(self._make_compute_uop(0, 'VPACK', form='b32', db=core.db))
-        issued = core.scheduler.enqueue_shq_to_exq(0, set())
-        self.assertEqual(issued, 1)
-        self.assertEqual(len(core.exq.exq_wait[0]['ALU']), 1)
-        self.assertEqual(core.exq.exq_wait[0]['ALU'][0].op, 'VPACK')
-        self.assertEqual(core.exq.exq_wait[0]['ALU'][0].exu_port, 0)
-        self.assertEqual(len(core.exq.exq_wait[1]['ALU']), 0)
-
-    def test_fu_round_robin_fifo_allows_alu_to_pass_blocked_exu0_only_alu(self):
-        core = self._make_mainline_core_for_isu()
-        core.exq.exq_wait[0]['ALU'].append(self._make_compute_uop(100, 'VADDS', db=core.db))
-        core.exq.exq_wait[0]['SFU'].append(self._make_compute_uop(101, 'VEXP', db=core.db))
-        core.shq.SHQ.extend([self._make_compute_uop(0, 'VPACK', form='b32', db=core.db), self._make_compute_uop(1, 'VADDS', db=core.db)])
-        issued = core.scheduler.enqueue_shq_to_exq(0, set())
-        self.assertEqual(issued, 1)
-        self.assertEqual([u.op for u in core.shq.SHQ], ['VPACK'])
-        self.assertEqual(len(core.exq.exq_wait[1]['ALU']), 1)
-        self.assertEqual(core.exq.exq_wait[1]['ALU'][0].op, 'VADDS')
-        self.assertEqual(core.exq.exq_wait[1]['ALU'][0].exu_port, 1)
-
-    def test_fu_round_robin_fifo_allows_sfu_to_pass_blocked_alu_group(self):
-        core = self._make_mainline_core_for_isu()
-        core.scheduler.enforce_same_cycle_src_hazard = True
-        blocked_alu = self._make_compute_uop(0, 'VADDS', db=core.db)
-        blocked_alu.preg_src = ['p_shared']
-        second_alu = self._make_compute_uop(1, 'VADDS', db=core.db)
-        sfu = self._make_compute_uop(2, 'VEXP', db=core.db)
-        core.shq.SHQ.extend([blocked_alu, second_alu, sfu])
-        issued = core.scheduler.enqueue_shq_to_exq(0, {'p_shared'})
-        self.assertEqual(issued, 1)
-        self.assertEqual([u.op for u in core.shq.SHQ], ['VADDS', 'VADDS'])
-        self.assertEqual(len(core.exq.exq_wait[0]['SFU']), 1)
-        self.assertEqual(core.exq.exq_wait[0]['SFU'][0].op, 'VEXP')
-
-    def test_exu0_reserve_lookahead_min_count_sends_flexible_alu_to_exq1(self):
-        core = self._make_mainline_core_for_isu()
-        core.shq.SHQ.extend([self._make_compute_uop(0, 'VADDS', db=core.db), self._make_compute_uop(1, 'VPACK', form='b32', db=core.db), self._make_compute_uop(2, 'VPACK', form='b32', db=core.db)])
-        issued = core.scheduler.enqueue_shq_to_exq(0, set())
-        self.assertEqual(issued, 2)
-        self.assertEqual(len(core.exq.exq_wait[0]['ALU']), 1)
-        self.assertEqual(core.exq.exq_wait[0]['ALU'][0].op, 'VPACK')
-        self.assertEqual(core.exq.exq_wait[0]['ALU'][0].exu_port, 0)
-        self.assertEqual(len(core.exq.exq_wait[1]['ALU']), 1)
-        self.assertEqual(core.exq.exq_wait[1]['ALU'][0].op, 'VADDS')
-        self.assertEqual(core.exq.exq_wait[1]['ALU'][0].exu_port, 1)
-
-    def test_exu0_reserve_ignores_single_exu0_only_in_window(self):
-        core = self._make_mainline_core_for_isu()
-        core.shq.SHQ.extend([self._make_compute_uop(0, 'VADDS', db=core.db), self._make_compute_uop(1, 'VPACK', form='b32', db=core.db)])
-        issued = core.scheduler.enqueue_shq_to_exq(0, set())
-        self.assertEqual(issued, 1)
-        self.assertEqual([u.op for u in core.shq.SHQ], ['VPACK'])
-        self.assertEqual(len(core.exq.exq_wait[0]['ALU']), 1)
-        self.assertEqual(core.exq.exq_wait[0]['ALU'][0].op, 'VADDS')
-        self.assertEqual(core.exq.exq_wait[0]['ALU'][0].exu_port, 0)
-        self.assertEqual(len(core.exq.exq_wait[1]['ALU']), 0)
-
-    def test_default_exu0_reserve_min_count_reserves_for_single_exu0_only(self):
-        db = ParamDB(base_dir=str(ROOT))
-        uarch = dict(db.get_uarch())
-        self.assertEqual(uarch['exu0_reserve_min_count'], 1)
-        core = component_engine(uarch, db, dtype='fp32')
-        core.shq.SHQ.extend([self._make_compute_uop(0, 'VADDS', db=core.db), self._make_compute_uop(1, 'VPACK', form='b32', db=core.db)])
-        issued = core.scheduler.enqueue_shq_to_exq(0, set())
-        self.assertEqual(issued, 2)
-        self.assertEqual([u.op for u in core.exq.exq_wait[0]['ALU']], ['VPACK'])
-        self.assertEqual([u.op for u in core.exq.exq_wait[1]['ALU']], ['VADDS'])
-
-    def test_exu0_reserve_balances_queue_gap_instead_of_forcing_exq1(self):
-        db = ParamDB(base_dir=str(ROOT))
-        uarch = dict(db.get_uarch())
-        core = component_engine(uarch, db, dtype='fp32')
-        core.exq.exq_wait[1]['ALU'].append(self._make_compute_uop(100, 'VADDS', db=core.db))
-        core.shq.SHQ.extend([self._make_compute_uop(0, 'VADDS', db=core.db), self._make_compute_uop(1, 'VPACK', form='b32', db=core.db)])
-        issued = core.scheduler.enqueue_shq_to_exq(0, set())
-        self.assertEqual(issued, 1)
-        self.assertEqual([u.op for u in core.exq.exq_wait[0]['ALU']], ['VADDS'])
-        self.assertEqual([u.op for u in core.exq.exq_wait[1]['ALU']], ['VADDS'])
-        self.assertEqual([u.op for u in core.shq.SHQ], ['VPACK'])
 
     def test_unknown_load_store_prefixes_use_lsu_defaults(self):
         db = ParamDB(base_dir=str(ROOT))
@@ -225,7 +128,6 @@ class InstructionFallbackTest(unittest.TestCase):
         self.assertEqual(vpack['dispatch_exu'], 'EXU0_ONLY')
         self.assertEqual(vsstb['op_class'], 'STORE')
         self.assertEqual(vsstb['latency'], 9)
-        self.assertEqual(vsstb['data_store_cost'], 9)
         self.assertEqual(db.get_forwarding_cycles('VCVT_F32_TO_F16', 'VPACK', dtype='bf16', producer_form='f32_to_f16', consumer_form='b32'), 4)
         self.assertEqual(db.get_forwarding_cycles('VPACK', 'VADD', dtype='bf16', producer_form='b32', consumer_form='fp16'), 8)
         self.assertEqual(db.get_forwarding_cycles('VPACK', 'VSSTB', dtype='bf16', producer_form='b32', consumer_form='b16'), 9)
@@ -235,18 +137,10 @@ class InstructionFallbackTest(unittest.TestCase):
         vexpdif = db.get_inst_form('VEXPDIF', form='fp32', dtype='fp32')
         vmulscvt = db.get_inst_form('VMULSCVT', form='f32_to_f16', dtype='fp32')
         self.assertEqual(vexpdif['op_class'], 'COMPUTE')
-        self.assertEqual(vexpdif['pipeline_startup_cost'], 7)
         self.assertEqual(vexpdif['latency'], 18)
-        self.assertEqual(vexpdif['pipeline_drain_cost'], 16)
-        self.assertEqual(vexpdif['data_load_cost'], 9)
-        self.assertEqual(vexpdif['data_store_cost'], 9)
         self.assertEqual(vexpdif['dispatch_exu'], 'EXU01')
         self.assertEqual(vmulscvt['op_class'], 'COMPUTE')
-        self.assertEqual(vmulscvt['pipeline_startup_cost'], 6)
         self.assertEqual(vmulscvt['latency'], 8)
-        self.assertEqual(vmulscvt['pipeline_drain_cost'], 6)
-        self.assertEqual(vmulscvt['data_load_cost'], 9)
-        self.assertEqual(vmulscvt['data_store_cost'], 9)
         self.assertEqual(vmulscvt['dispatch_exu'], 'EXU01')
         self.assertEqual(db.get_forwarding_cycles('VMULS', 'VEXPDIF', dtype='fp32', producer_form='fp32', consumer_form='fp32'), 5)
         self.assertEqual(db.get_forwarding_cycles('VEXPDIF', 'VMULSCVT', dtype='fp32', producer_form='fp32', consumer_form='f32_to_f16'), 15)
@@ -258,14 +152,10 @@ class InstructionFallbackTest(unittest.TestCase):
         vcvt = db.get_inst_form('VCVT_F32_TO_BF16', form='f32_to_bf16', dtype='bf16')
         vsts = db.get_inst_form('VSTS', form='bf16', dtype='bf16')
         self.assertEqual(vcvt['op_class'], 'COMPUTE')
-        self.assertEqual(vcvt['pipeline_startup_cost'], 6)
         self.assertEqual(vcvt['latency'], 7)
-        self.assertEqual(vcvt['pipeline_drain_cost'], 5)
         self.assertEqual(vcvt['dispatch_exu'], 'EXU01')
         self.assertEqual(vsts['op_class'], 'STORE')
-        self.assertEqual(vsts['pipeline_startup_cost'], 8)
         self.assertEqual(vsts['latency'], 9)
-        self.assertEqual(vsts['pipeline_drain_cost'], 0)
         self.assertEqual(db.get_forwarding_cycles('VEXP', 'VCVT_F32_TO_BF16', dtype='bf16', producer_form='fp32', consumer_form='f32_to_bf16'), 13)
         self.assertEqual(db.get_forwarding_cycles('VCVT_F32_TO_BF16', 'VSTS', dtype='bf16', producer_form='f32_to_bf16', consumer_form='bf16'), 5)
         self.assertEqual(db.get_forwarding_cycles('VCVT_F32_TO_BF16', 'VPACK', dtype='bf16', producer_form='f32_to_bf16', consumer_form='b32'), 4)
@@ -329,8 +219,6 @@ class InstructionFallbackTest(unittest.TestCase):
         self.assertEqual(params['resolved_form'], 'b16')
         self.assertEqual(params['latency'], 123)
         self.assertEqual(params['throughput'], 2)
-        self.assertEqual(params['data_load_cost'], 9)
-        self.assertEqual(params['data_store_cost'], 9)
         self.assertEqual(params['dispatch_exu'], 'EXU01')
 
     def test_cli_writes_instruction_fallback_warnings_without_vreg_warning(self):

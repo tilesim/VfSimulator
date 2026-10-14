@@ -1,6 +1,4 @@
 import unittest
-import json
-import tempfile
 from pathlib import Path
 from core.execution.instruction import Uop
 from tests.core_support import component_engine
@@ -92,6 +90,16 @@ class PhysicalRegisterBankTest(unittest.TestCase):
                 with self.assertRaises(ValueError):
                     PhysicalRegisterBank(capacity, name='predicate', prefix='p')
 
+class ProducerProfileLifetimeTest(unittest.TestCase):
+    def test_freeing_vector_slot_removes_producer_profile(self):
+        db = ParamDB(base_dir=ROOT)
+        engine = component_engine(db.base_uarch, db)
+        preg = engine.registers.vector_bank.allocate()
+        engine.registers.preg_producer_profile[preg] = db.resolve_inst('VADD', 'fp32')
+        self.assertTrue(engine.registers.try_free_preg(preg))
+        self.assertNotIn(preg, engine.registers.preg_producer_profile)
+
+
 class VectorReleaseContractTest(unittest.TestCase):
 
     def setUp(self):
@@ -156,18 +164,5 @@ class VectorReleaseContractTest(unittest.TestCase):
         self.assertNotIn(self.slot, self.core.registers.freelist)
         self.assertEqual(self.core.registers.preg_consumer_count[self.slot], 1)
 
-class ReleaseConfigurationTest(unittest.TestCase):
-
-    def test_param_db_rejects_removed_field_even_when_empty_or_null(self):
-        with tempfile.TemporaryDirectory() as tmp:
-            path = Path(tmp) / 'uarch.json'
-            for value in ({}, {'VADD': 1}, None, 0):
-                with self.subTest(value=value):
-                    path.write_text(json.dumps({'consumer_release_start_offset': 4, 'consumer_release_start_offset_by_op': value}))
-                    with self.assertRaisesRegex(ValueError, 'consumer_release_start_offset_by_op was removed; use global consumer_release_start_offset'):
-                        ParamDB(base_dir=str(ROOT), uarch_path=str(path))
-            path.write_text(json.dumps({'consumer_release_start_offset': 4}))
-            db = ParamDB(base_dir=str(ROOT), uarch_path=str(path))
-            self.assertEqual(db.get_uarch()['consumer_release_start_offset'], 4)
 if __name__ == '__main__':
     unittest.main()

@@ -123,7 +123,7 @@ class CanonicalCoreLoweringTest(unittest.TestCase):
 
     def _rename_dynamic(self, payload, dynamic):
         db = ParamDB(base_dir=str(Path(__file__).parents[1]))
-        core = component_engine(dict(db.get_uarch()), db, dtype='fp32', values=payload['values'])
+        core = component_engine(dict(db.get_uarch()), db, fallback_dtype='fp32', values=payload['values'])
         for inst in dynamic:
             core.admit(inst)
         return list(list(core.active_uops.values()))
@@ -163,7 +163,7 @@ class CanonicalCoreLoweringTest(unittest.TestCase):
     def test_non_default_induction_is_preserved_in_dynamic_identity(self):
         payload = json.loads((self.fixtures / 'v1_valid_loop_carried.json').read_text(encoding='utf-8'))
         payload['context'][0]['induction'] = {'variable_id': 'row', 'start': 10, 'step': -2}
-        vf_info = canonical_vf_info_from_dict(payload)
+        vf_info = InputAPI.from_canonical(canonical_vf_info_from_dict(payload))
         lowered, dynamic = self._lower_and_expand(vf_info, 4)
         self.assertEqual([item.iteration_path for item in dynamic], [[{'loop_id': 'loop.acc', 'iteration': index, 'induction_variable': 'row', 'induction_value': 10 - 2 * index}] for index in range(4)])
         uops = self._rename_dynamic(lowered, dynamic)
@@ -182,7 +182,7 @@ class CanonicalCoreLoweringTest(unittest.TestCase):
         self.assertEqual(dynamic[0].src, ['acc.entry'])
 
     def test_serial_loop_exit_becomes_next_loop_dynamic_entry(self):
-        vf_info = canonical_vf_info_from_dict({'schema_version': 1, 'values': {'acc.entry': {'definition_id': 'acc.entry', 'logical_id': 'acc', 'storage': 'Register', 'dtype': 'fp32'}, 'rhs.entry': {'definition_id': 'rhs.entry', 'logical_id': 'rhs', 'storage': 'Register', 'dtype': 'fp32'}, 'l1.back': {'definition_id': 'l1.back', 'logical_id': 'acc', 'storage': 'Register', 'dtype': 'fp32', 'producer_node_id': 'inst.l1'}, 'l1.exit': {'definition_id': 'l1.exit', 'logical_id': 'acc', 'storage': 'Register', 'dtype': 'fp32', 'producer_node_id': 'loop.l1'}, 'l2.back': {'definition_id': 'l2.back', 'logical_id': 'acc', 'storage': 'Register', 'dtype': 'fp32', 'producer_node_id': 'inst.l2'}, 'l2.exit': {'definition_id': 'l2.exit', 'logical_id': 'acc', 'storage': 'Register', 'dtype': 'fp32', 'producer_node_id': 'loop.l2'}}, 'context': [self._accumulator_loop('loop.l1', 'inst.l1', 'i', 'acc.entry', 'l1.back', 'l1.exit'), self._accumulator_loop('loop.l2', 'inst.l2', 'j', 'l1.exit', 'l2.back', 'l2.exit')]})
+        vf_info = InputAPI.from_canonical(canonical_vf_info_from_dict({'schema_version': 1, 'values': {'acc.entry': {'definition_id': 'acc.entry', 'logical_id': 'acc', 'storage': 'Register', 'dtype': 'fp32'}, 'rhs.entry': {'definition_id': 'rhs.entry', 'logical_id': 'rhs', 'storage': 'Register', 'dtype': 'fp32'}, 'l1.back': {'definition_id': 'l1.back', 'logical_id': 'acc', 'storage': 'Register', 'dtype': 'fp32', 'producer_node_id': 'inst.l1'}, 'l1.exit': {'definition_id': 'l1.exit', 'logical_id': 'acc', 'storage': 'Register', 'dtype': 'fp32', 'producer_node_id': 'loop.l1'}, 'l2.back': {'definition_id': 'l2.back', 'logical_id': 'acc', 'storage': 'Register', 'dtype': 'fp32', 'producer_node_id': 'inst.l2'}, 'l2.exit': {'definition_id': 'l2.exit', 'logical_id': 'acc', 'storage': 'Register', 'dtype': 'fp32', 'producer_node_id': 'loop.l2'}}, 'context': [self._accumulator_loop('loop.l1', 'inst.l1', 'i', 'acc.entry', 'l1.back', 'l1.exit'), self._accumulator_loop('loop.l2', 'inst.l2', 'j', 'l1.exit', 'l2.back', 'l2.exit')]}))
         payload, dynamic = self._lower_and_expand(vf_info, 4)
         self.assertEqual([inst.src[0] for inst in dynamic], ['acc.entry', 'l1.back', 'l1.back', 'l2.back'])
         uops = self._rename_dynamic(payload, dynamic)
@@ -192,7 +192,7 @@ class CanonicalCoreLoweringTest(unittest.TestCase):
 
     def test_nested_loop_exit_becomes_outer_loop_back_edge(self):
         inner_loop = self._accumulator_loop('loop.inner', 'inst.inner', 'j', 'outer.entry', 'inner.back', 'inner.exit', count=1)
-        vf_info = canonical_vf_info_from_dict({'schema_version': 1, 'values': {'outer.entry': {'definition_id': 'outer.entry', 'logical_id': 'acc', 'storage': 'Register', 'dtype': 'fp32'}, 'rhs.entry': {'definition_id': 'rhs.entry', 'logical_id': 'rhs', 'storage': 'Register', 'dtype': 'fp32'}, 'inner.back': {'definition_id': 'inner.back', 'logical_id': 'acc', 'storage': 'Register', 'dtype': 'fp32', 'producer_node_id': 'inst.inner'}, 'inner.exit': {'definition_id': 'inner.exit', 'logical_id': 'acc', 'storage': 'Register', 'dtype': 'fp32', 'producer_node_id': 'loop.inner'}, 'outer.exit': {'definition_id': 'outer.exit', 'logical_id': 'acc', 'storage': 'Register', 'dtype': 'fp32', 'producer_node_id': 'loop.outer'}}, 'context': [{'kind': 'loop', 'loop_id': 'loop.outer', 'induction': {'variable_id': 'i', 'start': 0, 'step': 1}, 'count': 2, 'unroll': 1, 'carried_values': [{'logical_id': 'acc', 'entry_value_id': 'outer.entry', 'back_edge_value_id': 'inner.exit', 'exit_value_id': 'outer.exit'}], 'body': [inner_loop]}]})
+        vf_info = InputAPI.from_canonical(canonical_vf_info_from_dict({'schema_version': 1, 'values': {'outer.entry': {'definition_id': 'outer.entry', 'logical_id': 'acc', 'storage': 'Register', 'dtype': 'fp32'}, 'rhs.entry': {'definition_id': 'rhs.entry', 'logical_id': 'rhs', 'storage': 'Register', 'dtype': 'fp32'}, 'inner.back': {'definition_id': 'inner.back', 'logical_id': 'acc', 'storage': 'Register', 'dtype': 'fp32', 'producer_node_id': 'inst.inner'}, 'inner.exit': {'definition_id': 'inner.exit', 'logical_id': 'acc', 'storage': 'Register', 'dtype': 'fp32', 'producer_node_id': 'loop.inner'}, 'outer.exit': {'definition_id': 'outer.exit', 'logical_id': 'acc', 'storage': 'Register', 'dtype': 'fp32', 'producer_node_id': 'loop.outer'}}, 'context': [{'kind': 'loop', 'loop_id': 'loop.outer', 'induction': {'variable_id': 'i', 'start': 0, 'step': 1}, 'count': 2, 'unroll': 1, 'carried_values': [{'logical_id': 'acc', 'entry_value_id': 'outer.entry', 'back_edge_value_id': 'inner.exit', 'exit_value_id': 'outer.exit'}], 'body': [inner_loop]}]}))
         payload, dynamic = self._lower_and_expand(vf_info, 2)
         self.assertEqual([inst.src[0] for inst in dynamic], ['outer.entry', 'inner.back'])
         self.assertEqual([inst.iteration_path for inst in dynamic], [[{'loop_id': 'loop.outer', 'iteration': 0, 'induction_variable': 'i', 'induction_value': 0}, {'loop_id': 'loop.inner', 'iteration': 0, 'induction_variable': 'j', 'induction_value': 0}], [{'loop_id': 'loop.outer', 'iteration': 1, 'induction_variable': 'i', 'induction_value': 1}, {'loop_id': 'loop.inner', 'iteration': 0, 'induction_variable': 'j', 'induction_value': 0}]])

@@ -37,7 +37,6 @@ class UarchParameters:
     physical_predicate_registers: int = 32
     shq_depth: int = 58
     exq_depth: int = 26
-    compute_inflight_cap: int = 0
     exq_issue_inflight_cap_per_port: int = 7
     canonical_dynamic_instruction_limit: int = 20000
 
@@ -67,7 +66,6 @@ class UarchParameters:
     exu0_reserve_lookahead: int = 8
     exu0_reserve_min_count: int = 1
     enable_isu_queue_model: bool = True
-    admit_blocked_to_exq: bool = False
     enable_shq_credit_model: bool = True
     enable_credit_visibility_delay: bool = True
     global_shq_preg_gate: bool = False
@@ -103,7 +101,6 @@ class UarchParameters:
     theoretical_limit_idu_visible_preg_delay: int | None = None
     theoretical_limit_idu_visible_shq_delay: int | None = None
     theoretical_limit_shq_to_exq_port_per_cycle: int | None = None
-    theoretical_limit_compute_inflight_cap: int | None = None
     theoretical_limit_exq_issue_inflight_cap_per_port: int | None = None
 
 

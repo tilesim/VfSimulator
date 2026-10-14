@@ -6,26 +6,17 @@ from pathlib import Path
 import subprocess
 import tempfile
 import unittest
-from api.cce.adapter import parse_cce_canonical_vf_info
 from api.common import AffineExpression, validate_canonical_vf_info
 from api.json.serialization import canonical_vf_info_from_dict, canonical_vf_info_to_dict
 from core.simulator import CoreVfCostModel
 from core.uarch.idu import AddressStateTracker
-from tests.core_support import component_engine
+from tests.core_support import component_engine, parse_memory_body as parse, dispatch_budget as budget
 from core.execution.instruction import DynamicInstruction
-from core.uarch.idu import DispatchBudget
 
-def budget(core):
-    return DispatchBudget(core.registers.get_free_preg(),core.registers.get_free_predicate(),core.shq.get_free_shq_queue(),core.lsu.get_free_lsq(),core.shq.get_free_shq())
 from core.params.database import ParamDB
 ROOT = Path(__file__).resolve().parents[1]
 RUNNER = os.environ.get('VFSIM_NATIVE_RUNNER')
 
-def parse(body, params='__ubuf__ float *p, __ubuf__ float *q'):
-    with tempfile.TemporaryDirectory() as tmp:
-        source = Path(tmp) / 'input.cce'
-        source.write_text(f'void vf({params}) {{ __VEC_SCOPE__ {{vector_f32 a, b, c; vector_bool mask = pset_b32(PAT_ALL);' + body + '}}')
-        return parse_cce_canonical_vf_info(source)
 
 def access(state='p', update=True):
     return {'address_state_id': state, 'update_mode': 'post_update' if update else 'none'}
@@ -132,16 +123,6 @@ class PostUpdateTests(unittest.TestCase):
         self.assertEqual(len(tracker.updates), 1)
         self.assertEqual(AddressStateTracker(1).updates, {})
 
-    def test_old_config_rejected_at_public_and_file_boundaries(self):
-        vf = replace(parse('vlds(a,p,1,NORM,POST_UPDATE);'), uarch={'lsu_post_update_ready_latency': 1})
-        self.assertIn('deprecated_uarch_field', [d.code for d in validate_canonical_vf_info(vf).errors])
-        with self.assertRaisesRegex(ValueError, 'was removed'):
-            self.idu(lsu_post_update_ready_latency=1)
-        with tempfile.TemporaryDirectory() as tmp:
-            path = Path(tmp) / 'uarch.json'
-            path.write_text(json.dumps({'lsu_post_update_ready_latency': 1}))
-            with self.assertRaisesRegex(ValueError, 'was removed'):
-                ParamDB(base_dir=str(ROOT), uarch_path=str(path))
 
     def test_frontend_delta_identity_roundtrip_and_cast(self):
         vf = parse('__ubuf__ float *p0 = p + 4; __ubuf__ float *p1 = p0;vlds(a,p0,64,NORM,POST_UPDATE);vlds(b,p1,0,NORM);vlds(c,((__ubuf__ half *&)p0),1,BRC_B16,POST_UPDATE);')
@@ -203,9 +184,9 @@ class PostUpdateTests(unittest.TestCase):
                 self.idu(value)
 
     @unittest.skipUnless(RUNNER, 'set VFSIM_NATIVE_RUNNER for parity tests')
-    def test_native_config_migration_and_invalid_latency(self):
+    def test_native_rejects_invalid_address_latency(self):
         vf = parse('vlds(a,p,1,NORM,POST_UPDATE);')
-        for key, value in (('lsu_post_update_ready_latency', 1), ('idu_post_update_ready_latency', 0), ('idu_post_update_ready_latency', True), ('idu_post_update_ready_latency', '1')):
+        for key, value in (('idu_post_update_ready_latency', 0), ('idu_post_update_ready_latency', True), ('idu_post_update_ready_latency', '1')):
             with self.subTest(key=key, value=value), tempfile.TemporaryDirectory() as tmp:
                 path = Path(tmp) / 'input.json'
                 path.write_text(json.dumps(canonical_vf_info_to_dict(replace(vf, uarch={key: value}))))

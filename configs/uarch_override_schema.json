@@ -1,5 +1,5 @@
 {
-  "version": 2,
+  "version": 3,
   "fields": {
     "physical_predicate_registers": {"type": "integer", "targets": ["python", "cpp"]},
     "issue_ports": {"type": "integer", "targets": ["python", "cpp"]},
@@ -33,10 +33,8 @@
     "shq_to_exq_port_per_cycle": {"type": "integer", "targets": ["python", "cpp"]},
     "exu0_reserve_lookahead": {"type": "integer", "targets": ["python", "cpp"]},
     "exu0_reserve_min_count": {"type": "integer", "targets": ["python", "cpp"]},
-    "compute_inflight_cap": {"type": "integer", "targets": ["python", "cpp"]},
     "exq_issue_inflight_cap_per_port": {"type": "integer", "targets": ["python", "cpp"]},
     "enable_isu_queue_model": {"type": "boolean", "targets": ["python", "cpp"]},
-    "admit_blocked_to_exq": {"type": "boolean", "targets": ["python", "cpp"]},
     "enable_shq_credit_model": {"type": "boolean", "targets": ["python", "cpp"]},
     "enable_credit_visibility_delay": {"type": "boolean", "targets": ["python", "cpp"]},
     "global_shq_preg_gate": {"type": "boolean", "targets": ["python", "cpp"]},
@@ -44,13 +42,31 @@
     "exq_capacity_counts_inflight": {"type": "boolean", "targets": ["python", "cpp"]},
     "enforce_same_cycle_src_hazard": {"type": "boolean", "targets": ["python", "cpp"]},
     "enable_cross_fu_ii": {"type": "boolean", "targets": ["python", "cpp"]},
-    "shq_exq_dispatch_policy": {"type": "string", "targets": ["python", "cpp"]}
-  },
-  "deprecated_fields": [
-    "consumer_release_start_offset_by_op",
-    "lsu_post_update_ready_latency",
-    "load_done_latency",
-    "lsu_issue_policy",
-    "three_ports_mode"
-  ]
+    "shq_exq_dispatch_policy": {"type": "string", "targets": ["python", "cpp"]},
+    "name": {"type": "string", "targets": ["python"]},
+    "enable_exq_greedy_balance": {"type": "boolean", "targets": ["python"]},
+    "assert_start_release_integrity": {"type": "boolean", "targets": ["python"]},
+    "predict_exq_issue_with_cross_fu": {"type": "boolean", "targets": ["python"]},
+    "shq_exq_static_rr": {"type": "boolean", "targets": ["python"]},
+    "theoretical_limit_mode": {"type": "boolean", "targets": ["python"]},
+    "theoretical_limit_vloop_only": {"type": "boolean", "targets": ["python"]},
+    "theoretical_limit_legacy_forwarding": {"type": "boolean", "targets": ["python"]},
+    "theoretical_limit_direct_issue": {"type": "boolean", "targets": ["python"]},
+    "theoretical_limit_vloop_to_dispatch_delay": {"type": "integer", "targets": ["python"]},
+    "theoretical_limit_idu_dispatch_start_advance": {"type": "integer", "targets": ["python"]},
+    "theoretical_limit_idu_window_width": {"type": "integer", "targets": ["python"]},
+    "theoretical_limit_idu_issue_width": {"type": "integer", "targets": ["python"]},
+    "theoretical_limit_ldq_width": {"type": "integer", "targets": ["python"]},
+    "theoretical_limit_shq_depth": {"type": "integer", "targets": ["python"]},
+    "theoretical_limit_exq_depth": {"type": "integer", "targets": ["python"]},
+    "theoretical_limit_idu_to_ooo_delay": {"type": "integer", "targets": ["python"]},
+    "theoretical_limit_ooo_to_shq_delay": {"type": "integer", "targets": ["python"]},
+    "theoretical_limit_ooo_to_lsq_delay": {"type": "integer", "targets": ["python"]},
+    "theoretical_limit_exq_recv_delay": {"type": "integer", "targets": ["python"]},
+    "theoretical_limit_shq_release_delay": {"type": "integer", "targets": ["python"]},
+    "theoretical_limit_idu_visible_preg_delay": {"type": "integer", "targets": ["python"]},
+    "theoretical_limit_idu_visible_shq_delay": {"type": "integer", "targets": ["python"]},
+    "theoretical_limit_shq_to_exq_port_per_cycle": {"type": "integer", "targets": ["python"]},
+    "theoretical_limit_exq_issue_inflight_cap_per_port": {"type": "integer", "targets": ["python"]}
+  }
 }

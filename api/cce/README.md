@@ -1,82 +1,54 @@
-# CCE VF 预测 API
+# CCE 前端
 
-CCE 前端与 Python/C++ Core 使用同一个正式合同：`CanonicalVfInfo`（schema v1/v2）。
+CCE 前端读取包含 `__VEC_SCOPE__` 的 CCE/DSL，生成通过校验的 `CanonicalVfInfo`。
 
-## 调用方式
-
-命令行：
+## 调用
 
 ```bash
-python3 main.py --cce kernel.cce --out_dir results/kernel
-python3 main.py --cce kernels.cce --cce-kernel selected --out_dir results/selected
+python3 main.py --cce cce_code/GeLU_poly.dsl --out_dir results/gelu
 ```
-
-Python：
 
 ```python
 from api.input_api import InputAPI
-from core.cost_model import CoreVfCostModel
+from core.simulator import CoreVfCostModel
 
-vf_info = InputAPI.load_cce("kernel.cce", kernel_name="vector_kernel")
-cycles = CoreVfCostModel().predict_vf_cycles(vf_info)
+vf_info = InputAPI.load_cce("cce_code/GeLU_poly.dsl")
+cycles = CoreVfCostModel(out_dir=None).predict_vf_cycles(vf_info)
+print(cycles)
 ```
 
-列举一个文件中的 VF kernel：
+一个文件有多个 VF 函数时，CLI 使用 `--cce-kernel NAME`，Python 使用
+`kernel_name=NAME`。`api.cce.adapter.list_cce_vf_kernels(path)` 提供函数列表。
+`loop_params` 提供循环次数等整数参数。
 
-```python
-from api.cce.adapter import list_cce_vf_kernels
+## 转换流程
 
-print(list_cce_vf_kernels("kernels.cce"))
-```
+`adapter.py` 组合源码解析、值版本化和 Canonical 校验。
+`parser.py` 选择 scope、解析语句并按 Catalog 绑定 operand、form 和指令类别，
+生成经过 normalization 的 `AdapterProgram`。
+`value_versioning.py::ValueVersioningPass` 建立 definition、producer、alias 和循环
+entry/back-edge/exit，随后由公共 validator 检查程序语义。
 
-## 数据流
+Core 的 `core/execution/prepare.py::CoreLoweringPass` 接收校验成功的程序，执行能力
+检查和表示转换；同文件的 `prepare_program()` 组合静态布局及动态展开。
+完整调用关系见 [输入 API](../../docs/input_api.md)。
 
-```text
-CCE __VEC_SCOPE__
-  -> Catalog binder
-  -> normalized private AdapterProgram
-  -> ValueVersioningPass
-  -> CanonicalVfInfo validation
-  -> core.lowering.CoreLoweringPass
-  -> IFU / IDU / SHQ / LSQ / EXQ / EXU
-```
+## 语法和地址描述
 
-`AdapterProgram` 只是 CCE parser 内部结构，不是第二个外部输入合同。它保存源语言
-中的逻辑寄存器、alias、loop、Membar 和 memory access，随后一次性生成 canonical
-definition、producer、loop-carried 和 source location。
-
-## 解析范围
-
-- 只解析 `__VEC_SCOPE__` 内的 vector 指令、loop、Membar 和明确登记的无时序语句。
-- 已知 opcode 由 `configs/instruction_catalog.json` 绑定 operands、form、class 和
-  call variants。
-- 未知 vector opcode 可携带明确 compute 语义进入 ParamDB fallback。
+- 解析 vector 指令、loop、Membar 和已登记的无时序语句。
+- 已知指令按 `configs/instruction_catalog.json` 声明绑定签名、form、mode 和 call variant。
+- 未知向量 opcode 可携带明确的 COMPUTE 语义进入时序回退。
 - vector、predicate、scalar 和 UB pointer 使用词法作用域。
-- `b = a` 是零周期 value binding，不生成模拟指令。
-- UB pointer alias 保留稳定 base object；普通 offset 与 `POST_UPDATE` 分开处理。
-- POST_UPDATE 增量由 Catalog 参数规则解码；`VSSTB` 的复合配置按低 16 位
-  乘以 32 字节生成指针更新量，不把高位 block stride 当作更新量。
-- affine offset 支持常量、loop variable、`+`、`-` 和常量乘变量。
-- 无法识别的 VF scope 语句明确报错，不静默丢弃。
+- `dst=src` 表达 value binding；显式 VMOV 表达向量复制指令。
+- UB alias 保留对象身份，普通 offset 使用内存元素单位。
+- POST_UPDATE 根据指针 dtype 和 Catalog 编码产生字节增量，并声明地址状态。
+- VSSTB 的复合配置以低 16 位乘 32 B 计算指针更新量。
+- affine offset 支持常量、合法循环变量、加减和常量乘法。
+- 不在支持范围内的 scope 语句触发解析错误。
 
-## Membar
+## 屏障
 
-CCE 显式 `mem_bar(VST_VLD)` 和 `mem_bar(VLD_VST)` 转换为 canonical Membar：
-
-- Membar 不进入 IDU、SHQ、LSQ、EXQ 或 EXU。
-- `VST_VLD` 阻塞 barrier 后的 load，直到 barrier 前 store 完成。
-- `VLD_VST` 阻塞 barrier 后的 store，直到 barrier 前 load 完成。
-- compute 不被 Membar 直接阻塞，只受普通寄存器依赖和资源约束。
-- 未支持的 Membar 类型记录 `unsupported_membar_type` warning。
-
-Core 不自动根据 UB 地址建立 load/store 依赖。当前 UB 顺序必须由显式 Membar
-表达；更细粒度 memory dependency 以后应通过 canonical `DependencyRef` lowering
-实现。
-
-## Canonical JSON
-
-`main.py --trace` 接受 Canonical JSON；旧 `VFInfo`、旧 JSON 及离线转换接口已删除。
-
-```bash
-python3 main.py --trace canonical.json --out_dir results/canonical
-```
+`mem_bar(VLD_VST)` 和 `mem_bar(VST_VLD)` 生成 CanonicalMembar 节点。
+控制器根据前序指定类别访存的完成进度和配置时序放行后续访问。
+Membar 的 issue、release、retire 和 consumer gate 规则见
+[Membar 时序](../../docs/membar_timing_model.md)。

@@ -12,7 +12,7 @@ from core.uarch.idu import DispatchBudget, IDU
 from core.uarch.ifu import IFU
 from core.execution.loop_control import LoopControl
 from core.execution.membar import MembarController, TimedMembarController
-from core.execution.scheduler import Scheduler
+from core.uarch.ooo import OoO
 from core.trace.recorder import TraceRecorder
 from core.trace.writer import SimulationResult, dump_logs
 from api.common.instruction_catalog import DEFAULT_INSTRUCTION_CATALOG
@@ -40,7 +40,7 @@ class Engine:
         self.lsu = LSU(uarch, db, self.registers, self.shq, self.trace, self.control)
         self.loops = LoopControl(uarch, program.top_block_loop_bounds, program.empty_top_blocks)
         self.idu = IDU(uarch, db, self.loops, values)
-        self.scheduler = Scheduler(uarch, self.registers, self.shq, self.exq, self.exu, self.trace)
+        self.ooo = OoO(uarch, self.registers, self.shq, self.exq, self.exu, self.trace)
         self.ifu = IFU(program.instructions)
         self.explicit = uarch.use_explicit_idu_credit_bank
         self.vector_credit = self.registers.get_free_preg()
@@ -110,10 +110,21 @@ class Engine:
         self.lsu.update_ready(c, stores_only=True)
         used = [False] * self.exu.issue_ports
         if self.uarch.enable_isu_queue_model:
-            self.scheduler.enqueue_shq_to_exq(c, set())
-            self.scheduler.issue_exq_to_exu(c, used)
+            self.ooo.dispatch(c, set())
+            for port in range(self.exu.issue_ports):
+                if used[port]:
+                    continue
+                selected = self.exq.pop_ready(port, c)
+                if selected is None:
+                    continue
+                fu_type, u = selected
+                self.exu.start(u, port, fu_type, c, queued=True)
+                self.registers.on_uop_start(u)
+                self.trace._log('start', u)
+                self.trace._log_start_simple(u)
+                used[port] = True
         else:
-            self.scheduler.issue_direct_from_shq(c, set(), used)
+            self.ooo.issue_direct_from_shq(c, set(), used)
         self.lsu.update_ready(c, stores_only=True)
         self.lsu._issue_ready_lsu(c, *counts, blocked)
 

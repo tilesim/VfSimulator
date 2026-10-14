@@ -1,184 +1,109 @@
-# VfSimulator 代码结构与关键函数
+# VfSimulator 代码结构
 
-本页描述 `dev_wch/refactor` 的 Python 实现。Core 只接受 `CanonicalVfInfo`，
-CCE/JSON 读取和程序化构造留在 API。配置、Native C++ 与优化器留待后续重构。
+Python 仿真器由输入、执行控制、微架构组件、参数查询和日志输出组成。
+`main.py` 组合 `InputAPI` 与 `CoreVfCostModel`，命令行和库调用共享预测流程。
 
 ## 调用链
 
 ```text
-CCE / Canonical JSON / 直接对象（或 Builder）
-          ↓ api/input_api.py
-     API 统一语义校验
-          ↓
-     CanonicalVfInfo
-          ↓ core/simulator.py::CoreVfCostModel.run_vf_info()
-     compatibility → lower → static layout → dynamic expansion
-          ↓ PreparedProgram（动态指令、值声明、循环边界）
-     execution/engine.py::Engine.run()
-          ↓
-     周期结果 / 日志 / Perfetto
+CCE / Canonical JSON / CanonicalVfInfo
+                  │
+          api/input_api.py
+       解析、构造与统一语义校验
+                  │
+          CanonicalVfInfo
+                  │
+     core/simulator.py::run_vf_info
+      参数组装 → prepare_program
+                  │
+           PreparedProgram
+                  │
+      execution/engine.py::run
+      逐周期协调微架构组件
+                  │
+          周期结果与日志
 ```
 
-`main.py` 直接调用 `CoreVfCostModel`，命令行与库调用使用相同模型组装和运行过程。
-Core 不读取输入文件，不接受旧 VFInfo、旧 `program/src/dst` JSON 或内部 lowering payload。
+## 目录
+
+```text
+api/
+  input_api.py
+  cce/             源码解析、私有 IR、规范化和值版本化
+  json/            Canonical JSON Schema 与编解码
+  programmatic/    显式构造 Canonical 的 Builder
+  common/          Canonical 类型、Catalog、校验、符号和诊断
+core/
+  simulator.py
+  execution/       指令准备、动态展开、周期控制、loop 和 membar
+  uarch/           IFU、IDU、Registers、SHQ、OoO、EXQ、EXU、LSU
+  params/          参数加载、结构化记录、查询及缺失参数策略
+  trace/           事件记录、结果定义、文件与 Perfetto 输出
+configs/           指令语义与微架构时序参数
+```
 
 ## 输入层
 
-| 文件 | 主要类/函数 | 职责 |
+| 文件 | 关键接口 | 职责 |
 | --- | --- | --- |
-| [input_api.py](../api/input_api.py) | `InputAPI.load_cce/load_json/from_canonical/new_builder` | 统一输入入口 |
-| [common/schema.py](../api/common/schema.py) | `CanonicalVfInfo`、value、operand、loop、memory、location 类型 | 共享数据合同 |
-| [common/validator.py](../api/common/validator.py) | `validate_canonical_vf_info` | 通用语义、定义与循环作用域校验 |
-| [common/instruction_catalog.py](../api/common/instruction_catalog.py) | `InstructionCatalog`、`InstructionSpec` | 指令签名和语义声明 |
-| [cce/adapter.py](../api/cce/adapter.py) | `parse_cce_canonical_vf_info` | 组合 CCE 解析及版本化 |
-| [cce/value_versioning.py](../api/cce/value_versioning.py) | `ValueVersioningPass` | 从 CCE 私有 IR 建立独立 definition 和 loop-carried 关系 |
-| [json/serialization.py](../api/json/serialization.py) | `canonical_vf_info_from_dict/to_dict` | Canonical JSON 对象编解码 |
-| [programmatic/builder.py](../api/programmatic/builder.py) | `VfInfoBuilder` | 程序化显式构造 Canonical |
+| [input_api.py](../api/input_api.py) | `InputAPI.load_cce/load_json/from_canonical/new_builder` | 接收输入并返回 Canonical |
+| [schema.py](../api/common/schema.py) | `CanonicalVfInfo` 及相关 dataclass | 定义共享数据合同 |
+| [validator.py](../api/common/validator.py) | `require_valid_canonical_vf_info` | 定义、作用域、循环、访存和依赖校验 |
+| [instruction_catalog.py](../api/common/instruction_catalog.py) | `InstructionCatalog`、`InstructionSpec` | 查询指令签名、form 和语义属性 |
+| [adapter.py](../api/cce/adapter.py) | `parse_cce_canonical_vf_info` | 组合 CCE 解析、版本化和校验 |
+| [serialization.py](../api/json/serialization.py) | `canonical_vf_info_from_dict/to_dict` | Canonical 对象编解码 |
+| [builder.py](../api/programmatic/builder.py) | `VfInfoBuilder.build` | 显式构造并校验 Canonical |
 
-直接实例化的对象使用 `InputAPI.from_canonical()`，JSON/CCE/Builder 自动经过同一个
-`require_valid_canonical_vf_info()` 出口。通用语义校验只发生在 API，Core 保留执行能力检查。
-修改已接收对象中的 Mapping 后，需再次经 API 接收。
-
-详细转换 pass 见 [API 说明](../api/README.md)。合法的 schema v1/v2 是 Canonical
-协议版本；它们与已删除的旧 VFInfo 格式无关。
-
-## Core 目录
-
-```text
-core/
-├── simulator.py
-├── execution/
-│   ├── instruction.py
-│   ├── prepare.py
-│   ├── expansion.py
-│   ├── engine.py
-│   ├── scheduler.py
-│   ├── loop_control.py
-│   └── membar.py
-├── uarch/
-│   ├── ifu.py
-│   ├── idu.py
-│   ├── registers.py
-│   ├── register_bank.py
-│   ├── shq.py
-│   ├── exq.py
-│   ├── exu.py
-│   └── lsu.py
-├── params/
-│   ├── loader.py
-│   ├── types.py
-│   ├── database.py
-│   ├── uarch.py
-│   └── fallback.py
-└── trace/
-    ├── recorder.py
-    ├── writer.py
-    └── perfetto.py
-```
-
-各子目录的 `__init__.py` 仅标识 Python package，不提供兼容入口。
+输入层的转换和数据字段见[输入 API](input_api.md)。
 
 ## 执行控制
 
-| 文件 | 核心函数 | 职责 |
+| 文件 | 关键接口 | 职责 |
 | --- | --- | --- |
-| [simulator.py](../core/simulator.py) | `CoreVfCostModel.run_vf_info/predict_vf_cycles` | 检查输入类型、组装参数及组件、返回预测结果 |
-| [instruction.py](../core/execution/instruction.py) | `DynamicInstruction`、`Uop` | 动态指令和重命名后的运行时指令数据模型 |
-| [prepare.py](../core/execution/prepare.py) | `CoreLoweringPass.lower`、`prepare_program`、`ValueStorageLookup` | 当前执行能力检查、转换已校验的表示、分析静态布局及存储类别查询 |
-| [expansion.py](../core/execution/expansion.py) | `DynamicExpander.prepare_structured_stream` | 展开 loop/unroll、绑定动态 identity、标记最后使用 |
-| [engine.py](../core/execution/engine.py) | `Engine.run/backend_step/admit` | 全局周期、传输、接收、完成事件及排空 |
-| [scheduler.py](../core/execution/scheduler.py) | `enqueue_shq_to_exq/issue_exq_to_exu/issue_direct_from_shq` | 跨组件端口分配与传输协调、RR 和 EXU0 预留策略 |
-| [loop_control.py](../core/execution/loop_control.py) | `LoopControl.can_dispatch/notify_dispatch` | VLOOP、block 和迭代开放时刻 |
-| [membar.py](../core/execution/membar.py) | `accept_membar/update/blocks/notify_lsu_start` | 屏障接收、同步、释放、退休及后续 LSU 门控 |
+| [simulator.py](../core/simulator.py) | `run_vf_info/predict_vf_cycles` | 检查输入类型、合并参数、组装模型并返回结果 |
+| [instruction.py](../core/execution/instruction.py) | `DynamicInstruction`、`Uop` | 保存动态指令身份与运行期指令状态 |
+| [prepare.py](../core/execution/prepare.py) | `CoreLoweringPass.lower`、`prepare_program`、`ValueStorageLookup` | 检查执行能力、转换表示、分析静态布局和查询声明的存储类型 |
+| [expansion.py](../core/execution/expansion.py) | `DynamicExpander.prepare_structured_stream` | 展开循环和 unroll、绑定动态值身份及最后使用 |
+| [engine.py](../core/execution/engine.py) | `Engine.run/backend_step/admit/reservation` | 协调周期阶段、传输、资源预留、重命名入队和排空 |
+| [loop_control.py](../core/execution/loop_control.py) | `LoopControl.can_dispatch/notify_dispatch` | 控制 block、VLOOP 和迭代开放时间 |
+| [membar.py](../core/execution/membar.py) | `accept_membar/update/blocks` | 管理屏障阶段和后续访存门控 |
 
-动态展开在进入逐周期仿真前完成；IFU 不负责解析或展开。
-各微架构组件同时维护状态与局部控制逻辑，不拆成纯状态容器。IDU 负责顺序 dispatch、
-地址状态和调度日志，DispatchBudget 与 AddressStateTracker 定义在 idu.py。SHQ 更新
-等待指令的就绪状态和信用生命周期；EXQ 维护容量、接收时序与队首选择；EXU 维护
-端口可用、II 及执行生命周期。Scheduler 协调跨组件的端口分配与流转，Engine 负责
-全局周期顺序、预算、传输管线、资源预留和 admit 重命名/入队。
-默认动态指令上限为 20000，使用 `canonical_dynamic_instruction_limit` 调整。
-未支持的显式 dependency、非 innermost unroll 等语义在执行准备阶段明确拒绝。
+## 微架构组件
 
-## 微架构组件及状态归属
+每个组件维护自身状态、局部约束和状态转换。Engine 安排周期阶段并协调组件调用。
 
-| 组件 | 核心接口 | 独立维护的状态 |
+| 文件 | 关键接口 | 状态和行为 |
 | --- | --- | --- |
-| [IFU](../core/uarch/ifu.py) | `next_inst/done` | 准备好的取指流 |
-| [IDU](../core/uarch/idu.py) | `accept/can_accept/dispatch` | 窗口、循环/资源/地址约束、顺序 dispatch 与日志 |
-| [Registers](../core/uarch/registers.py) | `rename/bind_align_state/align_ready_cycle/on_uop_start/on_uop_done/update_visibility` | 动态值映射、producer、consumer、generation、对齐状态初始化及分组、释放事件和可见 credit |
-| [PhysicalRegisterBank](../core/uarch/register_bank.py) | `allocate/can_free/try_free` | vector/predicate 的容量、freelist 和释放安全条件 |
-| [SHQ](../core/uarch/shq.py) | `enqueue/update_ready/reserve/release_credit/remove` | 计算等待状态、compute/store 共用信用及延迟释放 |
-| [EXQ](../core/uarch/exq.py) | `enqueue/can_accept/predict_issue_cycle/pop_ready` | 每端口 FU FIFO、容量、接收延迟及队首选择 |
-| [EXU](../core/uarch/exu.py) | `can_accept/can_issue/next_issue_cycle/pick_port/start/finish` | II 与容量约束、端口选择、执行及完成更新 |
-| [LSU](../core/uarch/lsu.py) | `enqueue/update_ready/_issue_ready_lsu/finish` | LSQ、执行中的 memory、共享 UB slot/byte 预算 |
-| [AddressStateTracker](../core/uarch/idu.py) | `can_dispatch/notify_dispatch` | IDU 内部的 POST_UPDATE 就绪状态 |
+| [ifu.py](../core/uarch/ifu.py) | `next_inst/done` | 保存准备好的动态指令流，按顺序交给 IDU |
+| [idu.py](../core/uarch/idu.py) | `accept/can_accept/dispatch` | 维护窗口，按循环、信用和地址状态约束顺序分发 |
+| [registers.py](../core/uarch/registers.py) | `rename/ready_cycle/on_uop_start/on_uop_done` | 动态值映射、依赖、释放事件、对齐状态和信用反馈 |
+| [register_bank.py](../core/uarch/register_bank.py) | `allocate/can_free/try_free` | 管理 vector/predicate 物理资源池及安全回收 |
+| [shq.py](../core/uarch/shq.py) | `enqueue/update_ready/reserve/release_credit` | 维护计算等待指令及 compute/store 共用信用 |
+| [ooo.py](../core/uarch/ooo.py) | `dispatch/issue_direct_from_shq` | 选择就绪计算指令、安排端口、执行轮转和 EXU0 预留策略 |
+| [exq.py](../core/uarch/exq.py) | `enqueue/can_accept/predict_issue_cycle/pop_ready` | 每端口 FU 队列、容量、接收延迟和队首选择 |
+| [exu.py](../core/uarch/exu.py) | `can_accept/can_issue/next_issue_cycle/start/finish` | 管理端口、II、在执行容量、开始和完成 |
+| [lsu.py](../core/uarch/lsu.py) | `enqueue/update_ready/_issue_ready_lsu/finish` | 维护 LSQ、访存依赖及共享 UB 发射预算 |
 
-组件通过明确的构造参数获得所需依赖。组件自己的队列、端口与局部控制共同实现
-状态转换；调度器保留跨组件分配及流转，Engine 明确安排周期内各阶段。循环与 membar 是执行控制逻辑；LSU 维护内存执行状态并
-向 membar 报告开始和完成进度。
+`idu.py` 中的 `DispatchBudget` 保存本周期可用额度；`AddressStateTracker` 记录指针更新
+的就绪时刻。`registers.py` 中的 `AlignProducerRecord`、`AlignGeneration` 记录特殊
+对齐状态的生产者和消费分组。
 
-`AlignProducerRecord` 和 `AlignGeneration` 定义在 `registers.py` 中，对齐状态由 Registers
-维护；Uop 保存对应记录的引用。LSU 查询对齐依赖的就绪周期，再结合普通寄存器依赖、
-队列和 UB 资源进行仲裁。生产者开始和完成时，通过现有寄存器生命周期通知更新记录。
-
-输入 value 名称没有分类语义：即使叫 `mem_result`，声明为 Register 就走寄存器路径；
-即使叫 `v_buffer`，声明为 UB 就走存储对象路径。未声明的值直接报错。
-动态值身份使用 `(definition_id, iteration_path)`，不生成名称 lane 后缀。
-
-## 完成、释放和时序
-
-Python 已删除 ROB 容量与按序退休。EXU、LSU 在指令完成时产生事件；Engine 的
-`active_uops` 仅登记未完成指令，既不限制容量，也不按序 commit。
-
-寄存器不等待 ROB 退休。释放需满足动态映射已结束、producer 非 pending、全部
-consumer 已经过 start+offset 释放以及 generation 一致。SHQ 与 Registers 分别
-维护实际资源和 IDU 可见信用，以保留跨周期反馈延迟。
-
-Membar 自身的 retire 是屏障时序的一部分，仍影响最终 `vf_end_cycle`。
-最终结果包括执行、屏障尾部和 drain；达到 max_cycles 而未排空会明确报错。
-
-单周期顺序：可见 credit → 传输到达 → 取指 → membar 更新 → dispatch →
-寄存器/SHQ 释放 → EXU/LSU 完成 → LSU 第一轮仲裁 → compute → LSU 剩余预算。
-这套顺序保留原模型的 forwarding、II、资源反馈和 barrier 一周期边界。
-
-## 参数与日志
-
-参数模块按职责划分：
+## 参数模块
 
 | 文件 | 职责 |
 | --- | --- |
-| [loader.py](../core/params/loader.py) | 统一显式路径→环境变量→默认目录的查找顺序，读取 JSON、检查文件格式及参数类型；可选文件缺失允许回退，格式错误明确报错 |
-| [types.py](../core/params/types.py) | `InstructionProfile`、`UarchParameters`、`VfTiming`、`LoadedParameters` 等结构化参数；微架构默认值集中在此 |
-| [database.py](../core/params/database.py) | 唯一参数查询入口，解析并缓存 Profile，查询和缓存 forwarding/II；保留校准工具使用的参数字典查询 |
-| [uarch.py](../core/params/uarch.py) | 复用已解析的基础配置，合并 VF override，检查当前架构限制，应用理论场景覆盖；解析 EXU 端口标记 |
-| [fallback.py](../core/params/fallback.py) | form 备选匹配、缺失参数策略、warning 去重与输出 |
+| [loader.py](../core/params/loader.py) | 选择配置路径、读取 JSON、检查参数格式和类型 |
+| [types.py](../core/params/types.py) | 定义 `UarchParameters`、`InstructionProfile`、`VfTiming` 和 `LoadedParameters` |
+| [database.py](../core/params/database.py) | 解析并缓存指令 Profile，查询 forwarding 与 II，收集缺失参数诊断 |
+| [uarch.py](../core/params/uarch.py) | 合并基础配置和 VF override，检查模型端口范围，应用理论场景 |
+| [fallback.py](../core/params/fallback.py) | 选择 form 候选和缺失时序的默认值 |
 
-`ParamDB` 构造时调用 loader 一次。模型组装使用 `resolve_uarch(db.base_uarch, vf_info.uarch)`
-生成 `UarchParameters`，执行组件通过字段直接读取配置，不再各自 `.get()` 默认值和转换类型。
+参数的字段和加载优先级见[配置参数](configuration.md)。
 
-Engine 通过 `db.resolve_inst()` 将 Profile 绑定到 Uop。latency、FU 和合法端口直接读取
-`profile.latency`、`profile.fu_type`、`profile.allowed_exu_ports`；指令对查询使用
-`db.get_forwarding_for_profiles()`、`db.get_ii_for_profiles()`。`TimingQuery` 及旧
-`profile.py`/`compat.py` 模块已删除，不保留转发入口。
+## 输出模块
 
-配置文件格式和值本轮保持不变，旧配置格式兼容及已有缺失参数规则仍保留，后续 config
-重构时再判断去留。当前架构最多两个 EXU，A6 将作为独立架构实现。
+[recorder.py](../core/trace/recorder.py)保存指令开始、完成及阻塞事件。
+[writer.py](../core/trace/writer.py)定义 `SimulationResult` 并写入结果文件。
+[perfetto.py](../core/trace/perfetto.py)将执行事件转换为 Perfetto 时间线。
 
-`trace/recorder.py` 保存 start/done/blocked 事件，`trace/writer.py` 定义仿真结果
-`SimulationResult` 并集中写文件：
-`start_by_cycle.json`、`done_by_cycle.json`、`sim_history.json`、`membar_history.json`、
-IDU dispatch/blocked、VLOOP trace 和 Perfetto `trace.json`。
-移除 ROB 后不再输出指令 retire 事件或 `preg_old`；屏障 retire 记录仍保留。
-`model_warnings.json` 记录参数 fallback，旧空 `vreg_capacity_warnings` 字段已删除。
-
-## 验证
-
-```bash
-python3 -m unittest discover -s tests -q
-python3 tools/run_cost_model_regression.py --tier smoke
-```
-
-Core 重构针对 Canonical loop/unroll、谓词/向量寄存器、align state、POST_UPDATE、
-共享 UB 预算和 membar 保留时序测试，同时检查改名后的相同 Canonical 程序产生
-一致的周期及物理寄存器调度。Native 环境未配置时，跨语言测试会跳过。
+结果字段、日志格式和检查方法见[验证与精度](validation.md)。

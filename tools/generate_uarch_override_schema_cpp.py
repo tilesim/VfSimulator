@@ -22,7 +22,7 @@ def render_uarch_override_schema_cpp(payload: Mapping[str, Any]) -> str:
     lines.extend(
         [
             "};",
-            "static constexpr const char *kGeneratedDeprecatedUarchFields[] = {",
+            "static constexpr std::initializer_list<const char *> kGeneratedDeprecatedUarchFields = {",
         ]
     )
     for name in payload.get("deprecated_fields", []):

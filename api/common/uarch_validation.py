@@ -18,7 +18,6 @@ UARCH_FIELD_SPECS = dict(_SCHEMA["fields"])
 UARCH_FIELD_TYPES = {
     name: spec["type"] for name, spec in UARCH_FIELD_SPECS.items()
 }
-DEPRECATED_UARCH_FIELDS = frozenset(_SCHEMA.get("deprecated_fields", ()))
 _INT64_MIN = -(2**63)
 _INT64_MAX = 2**63 - 1
 
@@ -73,6 +72,13 @@ def validate_uarch_overrides(uarch: Any) -> ValidationResult:
             continue
 
         expected_type = UARCH_FIELD_TYPES.get(key)
+        if expected_type is None:
+            diagnostics.append(Diagnostic(
+                "unknown_uarch_field", DiagnosticSeverity.ERROR,
+                f"Unknown uarch field: {key}",
+                context={"path": path, "field": key},
+            ))
+            continue
         if key == "physical_predicate_registers" and type(value) is int and not 0 < value <= 2**31 - 1:
             diagnostics.append(Diagnostic(
                 "invalid_predicate_capacity", DiagnosticSeverity.ERROR,
@@ -80,8 +86,7 @@ def validate_uarch_overrides(uarch: Any) -> ValidationResult:
                 context={"path": path},
             ))
         type_matches = (
-            expected_type is None
-            or (expected_type == "integer" and type(value) is int)
+            (expected_type == "integer" and type(value) is int)
             or (expected_type == "boolean" and type(value) is bool)
             or (expected_type == "string" and type(value) is str)
         )
@@ -100,26 +105,10 @@ def validate_uarch_overrides(uarch: Any) -> ValidationResult:
                 )
             )
 
-    diagnostics.extend(
-        Diagnostic(
-            "deprecated_uarch_field",
-            DiagnosticSeverity.ERROR,
-            ("three_ports_mode was removed; three-port support belongs to the future A6 architecture"
-             if name == "three_ports_mode"
-             else "lsu_post_update_ready_latency was removed; use idu_post_update_ready_latency (IDU dispatch timing)"
-             if name == "lsu_post_update_ready_latency"
-             else "consumer_release_start_offset_by_op was removed; use global consumer_release_start_offset"
-             if name == "consumer_release_start_offset_by_op"
-             else "Deprecated uarch field is no longer accepted"),
-            context={"path": f"uarch.{name}", "field": name},
-        )
-        for name in sorted(DEPRECATED_UARCH_FIELDS & uarch.keys())
-    )
     return ValidationResult(tuple(diagnostics))
 
 
 __all__ = [
-    "DEPRECATED_UARCH_FIELDS",
     "UARCH_FIELD_SPECS",
     "UARCH_FIELD_TYPES",
     "validate_uarch_overrides",

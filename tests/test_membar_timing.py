@@ -5,6 +5,7 @@ import tempfile
 import unittest
 from unittest.mock import patch
 
+from api.input_api import InputAPI
 from api.programmatic.builder import VfInfoBuilder
 from core.simulator import CoreVfCostModel
 from core.execution.instruction import DynamicInstruction
@@ -16,7 +17,6 @@ CONFIG = json.loads((ROOT/'configs/uarch.json').read_text())['membar_timing']
 
 
 class MembarTimingTests(unittest.TestCase):
-    soc = 'dav-3510'
     config = CONFIG
 
     def setUp(self):
@@ -120,6 +120,16 @@ class MembarTimingTests(unittest.TestCase):
         retire = next(e['cy'] for e in history if e['event']=='retire')
         self.assertGreaterEqual(result['cycles_executed'],retire)
         self.assertGreater(result['vf_end_cycle'],retire)
+
+
+class MembarFixtureTest(unittest.TestCase):
+    def test_fixture_cycles_match_repository_reference(self):
+        reference = json.loads((ROOT / 'docs/validation/membar_timing_summary.json').read_text())
+        for case in reference['cases']:
+            with self.subTest(case=case['name']):
+                vf = InputAPI.load_cce(ROOT / 'tests/fixtures/membar_timing' / case['fixture'])
+                result = CoreVfCostModel(base_dir=ROOT, out_dir=None).run_vf_info(vf)
+                self.assertEqual(result['vf_end_cycle'], case['global_cycles'])
 
 
 class MembarConfigurationTests(unittest.TestCase):

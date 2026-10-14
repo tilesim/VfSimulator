@@ -5,24 +5,15 @@ from pathlib import Path
 import subprocess
 import tempfile
 import unittest
-from api.cce.adapter import parse_cce_canonical_vf_info
 from api.json.serialization import canonical_vf_info_to_dict
 from api.common import validate_canonical_vf_info
 from core.simulator import CoreVfCostModel
-from tests.core_support import component_engine
+from tests.core_support import component_engine, parse_vector_body as parse, records
 from core.params.database import ParamDB
 from tests import test_physical_register_bank as bank_tests
 ROOT = Path(__file__).resolve().parents[1]
 RUNNER = os.environ.get('VFSIM_NATIVE_RUNNER')
 
-def parse(body):
-    with tempfile.TemporaryDirectory() as tmp:
-        path = Path(tmp) / 'predicate.cce'
-        path.write_text('void vf(__ubuf__ float *a, __ubuf__ float *out) {__VEC_SCOPE__ {vector_f32 x, y; vector_bool mask, p;' + body + '}}')
-        return parse_cce_canonical_vf_info(path)
-
-def records(path):
-    return [json.loads(line) for line in path.read_text().splitlines() if line.strip()]
 
 class PredicateReleaseContractTest(bank_tests.VectorReleaseContractTest):
 

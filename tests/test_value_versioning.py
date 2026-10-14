@@ -1,9 +1,7 @@
-from core.execution.prepare import _StaticLayout
 from core.uarch.ifu import IFU
 from tests.core_support import expanded,engine_for
 import tempfile
 import unittest
-import json
 from pathlib import Path
 from core.execution.prepare import CoreLoweringPass
 from api.common.diagnostics import VfInfoValidationError
@@ -14,7 +12,6 @@ from api.input_api import InputAPI
 from core.simulator import CoreVfCostModel
 from api.cce.ir import AdapterAlias, AdapterInstruction, AdapterLoop, AdapterMemoryAccess, AdapterMembar, AdapterProgram, AdapterValue
 from api.cce.normalization import normalize_adapter_program
-from tests.core_support import component_engine
 from core.params.database import ParamDB
 
 class ValueVersioningPassTest(unittest.TestCase):

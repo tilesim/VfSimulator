@@ -69,7 +69,6 @@ class ComponentLifecycleTest(unittest.TestCase):
         engine.exu.start(producer, 0, 'SFU', 100, queued=True)
         self.assertTrue(engine.exu.can_issue(consumer.profile, 0, 100))
         self.assertFalse(engine.exu.can_issue(consumer.profile, 0, 100, queued=True))
-        self.assertFalse(engine.exu.can_issue(consumer.profile, 0, 100, queued=True))
         self.assertEqual(len(engine.exu.running), 1)
         next_cycle = engine.exu.next_issue_cycle(consumer.profile, 0)
         self.assertTrue(engine.exu.can_issue(consumer.profile, 0, next_cycle, queued=True))

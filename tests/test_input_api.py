@@ -78,10 +78,8 @@ class InputApiTest(unittest.TestCase):
         )
         operand = vf_info.context[0].body[0].outputs[0]
         del vf_info.values[operand.value_id]
-        with tempfile.TemporaryDirectory() as directory:
-            with self.assertRaises(VfInfoValidationError):
-                InputAPI.from_canonical(vf_info)
-            self.assertEqual(list(Path(directory).iterdir()), [])
+        with self.assertRaises(VfInfoValidationError):
+            InputAPI.from_canonical(vf_info)
 
     def test_direct_canonical_input_is_checked_and_preserves_identity(self):
         vf = CanonicalVfInfo(context=(), values={})
@@ -138,6 +136,25 @@ class InputApiTest(unittest.TestCase):
                     self.assertIs(calls[0], vf)
                     self.assertGreater(result["vf_end_cycle"], 0)
 
+    def test_unknown_uarch_is_rejected_by_every_input_path(self):
+        fixture = ROOT / 'tests/fixtures/canonical_vf_info/v1_valid_loop.json'
+        template = InputAPI.load_json(fixture)
+        overrides = {'unrecognized_setting': True}
+        with self.assertRaises(VfInfoValidationError) as direct_error:
+            InputAPI.from_canonical(replace(template, uarch=overrides))
+        self.assertIn('unknown_uarch_field', {d.code for d in direct_error.exception.diagnostics})
+        with self.assertRaises(VfInfoValidationError) as builder_error:
+            InputAPI.new_builder(uarch=overrides).build()
+        self.assertIn('unknown_uarch_field', {d.code for d in builder_error.exception.diagnostics})
+        payload = canonical_vf_info_to_dict(template)
+        payload['uarch'] = overrides
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / 'input.json'
+            path.write_text(json.dumps(payload))
+            with self.assertRaises(VfInfoValidationError) as json_error:
+                InputAPI.load_json(path)
+        self.assertIn('unknown_uarch_field', {d.code for d in json_error.exception.diagnostics})
+
     def test_core_rejects_valid_but_unsupported_execution_semantics(self):
         template = InputAPI.load_json(ROOT / "tests/fixtures/canonical_vf_info/v1_valid_loop.json")
         # Partial unroll is valid Canonical input but is not implemented by this Core.
@@ -154,18 +171,18 @@ class InputApiTest(unittest.TestCase):
                     context=[AdapterInstruction("VUNKNOWN", [name], [])],
                 ))
 
-    def test_json_file_rejects_retired_program_shape(self):
+    def test_json_file_rejects_missing_required_fields(self):
         with tempfile.TemporaryDirectory() as directory:
-            path = Path(directory) / "old.json"
-            path.write_text(json.dumps({"dtype": "fp32", "program": []}))
+            path = Path(directory) / "invalid.json"
+            path.write_text(json.dumps({"schema_version": 2, "values": {}}))
             with self.assertRaises(VfInfoValidationError):
                 InputAPI.load_json(path)
 
     def test_cli_reports_rejected_input_with_failure_exit_code(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
-            path = root / "old.json"
-            path.write_text(json.dumps({"dtype": "fp32", "program": []}))
+            path = root / "invalid.json"
+            path.write_text(json.dumps({"schema_version": 2, "values": {}}))
             result = subprocess.run([
                 sys.executable, str(ROOT / "main.py"), "--trace", str(path),
                 "--out_dir", str(root / "out"),

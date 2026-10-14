@@ -2,8 +2,8 @@ from __future__ import annotations
 from core.params.types import UarchParameters
 from typing import Any, Dict, List, Set
 
-class Scheduler:
-    """Coordinate transfers and port assignment across compute components."""
+class OoO:
+    """Select ready SHQ instructions and assign EXQ ports; no additional instruction queue."""
 
     def __init__(self, uarch: UarchParameters, registers, shq, exq, exu, trace):
         self.registers = registers
@@ -121,7 +121,7 @@ class Scheduler:
         self.shq.remove(issued_ex)
         return ex_count
 
-    def enqueue_shq_to_exq(self, cycle: int, issued_srcs_this_cycle: Set[str]) -> int:
+    def dispatch(self, cycle: int, issued_srcs_this_cycle: Set[str]) -> int:
         issued_shq: List[Any] = []
         shq_to_exq_cnt = [0] * self.issue_ports
         ex_count = 0
@@ -183,17 +183,3 @@ class Scheduler:
             issued_srcs_this_cycle |= cur_srcs
         self.shq.remove(issued_shq)
         return ex_count
-
-    def issue_exq_to_exu(self, cycle: int, exu_used_this_cycle: List[bool]) -> None:
-        for port in range(self.issue_ports):
-            if exu_used_this_cycle[port]:
-                continue
-            selected = self.exq.pop_ready(port, cycle)
-            if selected is None:
-                continue
-            fu_type, u = selected
-            self.exu.start(u, port, fu_type, cycle, queued=True)
-            self.registers.on_uop_start(u)
-            self.trace._log('start', u)
-            self.trace._log_start_simple(u)
-            exu_used_this_cycle[port] = True

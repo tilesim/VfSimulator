@@ -9,7 +9,7 @@ from api.common import (VfInfoValidationError)
 from api.json.serialization import (canonical_vf_info_to_dict)
 from api.json.adapter import _canonical_schema_validator
 from api.input_api import InputAPI
-from core.simulator import CoreVfCostModel
+from api.common.schema import SUPPORTED_SCHEMA_VERSIONS
 
 
 class CanonicalJsonVfInfoAdapterTest(unittest.TestCase):
@@ -32,18 +32,6 @@ class CanonicalJsonVfInfoAdapterTest(unittest.TestCase):
         )
         self.assertEqual(restored, vf_info)
 
-    def test_formal_apis_do_not_expose_legacy_prediction_entries(self):
-        self.assertFalse(hasattr(InputAPI, "load_legacy_json_canonical"))
-        self.assertFalse(hasattr(InputAPI, "load_cce_vf_info"))
-        model = CoreVfCostModel()
-        self.assertFalse(hasattr(model, "run_legacy_vf_info"))
-        self.assertFalse(hasattr(model, "predict_legacy_vf_cycles"))
-
-    def test_cost_model_payload_rejects_legacy_shape(self):
-        with self.assertRaises(TypeError):
-            CoreVfCostModel().run_vf_info(
-                {"dtype": "fp32", "values": {}, "program": []}
-            )
 
     def test_semantically_invalid_payload_exposes_validator_diagnostics(self):
         with self.assertRaises(VfInfoValidationError) as raised:
@@ -78,7 +66,7 @@ class CanonicalJsonVfInfoAdapterTest(unittest.TestCase):
         self.assertEqual(diagnostic.location.line, 1)
         self.assertEqual(diagnostic.location.source, str(path))
 
-    def test_root_array_is_rejected_without_legacy_inference(self):
+    def test_root_array_is_rejected(self):
         with self.assertRaises(VfInfoValidationError) as raised:
             CanonicalJsonVfInfoAdapter.from_payload([])  # type: ignore[arg-type]
 
@@ -163,9 +151,8 @@ class CanonicalJsonVfInfoAdapterTest(unittest.TestCase):
         self.assertTrue(trace_paths)
         for trace in trace_paths:
             self.assertIn("regression_suite/inputs/canonical/", trace)
-            payload = json.loads((self.root / trace).read_text(encoding="utf-8"))
-            self.assertEqual(payload.get("schema_version"), 1)
-            self.assertIn("context", payload)
+            vf_info = InputAPI.load_json(self.root / trace)
+            self.assertIn(vf_info.schema_version, SUPPORTED_SCHEMA_VERSIONS)
 
 
 if __name__ == "__main__":

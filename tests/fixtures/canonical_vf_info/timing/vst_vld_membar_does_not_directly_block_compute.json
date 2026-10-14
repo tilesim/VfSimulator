@@ -161,7 +161,7 @@
               "memory_access": null
             },
             {
-              "value_id": "legacy_omitted_scalar_0.def7",
+              "value_id": "scalar.increment.def7",
               "role": "scalar",
               "dtype": "fp32",
               "memory_access": null
@@ -268,8 +268,8 @@
       "storage_object_id": null,
       "source_location": null
     },
-    "legacy_omitted_scalar_0.def7": {
-      "definition_id": "legacy_omitted_scalar_0.def7",
+    "scalar.increment.def7": {
+      "definition_id": "scalar.increment.def7",
       "logical_id": "immediate",
       "storage": "Scalar",
       "dtype": "fp32",

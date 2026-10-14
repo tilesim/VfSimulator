@@ -18,7 +18,7 @@ OPS = {'VSQRT': (17, 14, 15), 'VLN': (18, 15, 16)}
 
 
 class OrdinaryFp32OnboardingTest(unittest.TestCase):
-    def test_only_measured_dv100_forms_and_fields(self):
+    def test_measured_forms_and_fields(self):
         db = ParamDB(base_dir=str(ROOT))
         isa = json.loads((ROOT/'configs/isa.json').read_text())
         for op, (latency, _, _) in OPS.items():
@@ -55,7 +55,7 @@ class OrdinaryFp32OnboardingTest(unittest.TestCase):
         self.assertEqual(sum(w['kind']=='missing_ii_pair' for w in warnings), 2)
         self.assertEqual(sum(w['kind']=='missing_forwarding_pair' for w in warnings), 2)
 
-    def test_catalog_is_minimal_and_does_not_hide_dv100_drift(self):
+    def test_catalog_matches_configured_semantics(self):
         for op in OPS:
             spec = DEFAULT_INSTRUCTION_CATALOG.lookup(op)
             self.assertEqual(spec.signature, 'unary')
@@ -63,11 +63,8 @@ class OrdinaryFp32OnboardingTest(unittest.TestCase):
             self.assertTrue(spec.timing_optional)
             with self.assertRaises(ValueError):
                 DEFAULT_INSTRUCTION_CATALOG.resolve_and_validate_form(op, 'fp16')
-        for soc in ('DV100',):
-            isa = json.loads((ROOT/'configs/isa.json').read_text())
-            self.assertFalse(DEFAULT_INSTRUCTION_CATALOG.compare_timing_config(isa).has_semantic_conflicts)
-        # timing_optional is global; test_only_measured_dv100_forms_and_fields
-        # separately requires the approved DV100 entries.
+        isa = json.loads((ROOT/'configs/isa.json').read_text())
+        self.assertFalse(DEFAULT_INSTRUCTION_CATALOG.compare_timing_config(isa).has_semantic_conflicts)
 
     @staticmethod
     def source(op):
@@ -97,7 +94,7 @@ class OrdinaryFp32OnboardingTest(unittest.TestCase):
                 history = json.loads((root/'python/sim_history.json').read_text())
                 self.assertEqual(sum(e.get('event')=='start' and e.get('op')==op for e in history), 2)
 
-    @unittest.skipUnless(os.environ.get('VFSIM_STAGE1_NATIVE_RUNNER'), 'set freshly built native runner')
+    @unittest.skipUnless(os.environ.get('VFSIM_NATIVE_RUNNER'), 'set VFSIM_NATIVE_RUNNER for parity tests')
     def test_python_native_cycle_parity(self):
         for op in OPS:
             with self.subTest(op=op), tempfile.TemporaryDirectory() as name:
@@ -108,7 +105,7 @@ class OrdinaryFp32OnboardingTest(unittest.TestCase):
                 trace = root/'trace.json'
                 trace.write_text(json.dumps(canonical_vf_info_to_dict(vf)))
                 result = CoreVfCostModel(base_dir=ROOT, out_dir=root/'python').run_vf_info(vf)
-                native = subprocess.run([os.environ['VFSIM_STAGE1_NATIVE_RUNNER'],
+                native = subprocess.run([os.environ['VFSIM_NATIVE_RUNNER'],
                                          '--trace', str(trace), '--out-dir', str(root/'native')], cwd=ROOT, check=True,
                                         capture_output=True, text=True)
                 match = re.search(r'vfEndCycle\s*=\s*(\d+)', native.stdout)

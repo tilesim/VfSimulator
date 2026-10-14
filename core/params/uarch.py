@@ -5,19 +5,14 @@ from dataclasses import fields, replace
 from .types import UarchParameters
 
 MAX_EXU_PORTS = 2
-REMOVED_FIELDS = {
-    "three_ports_mode": "three_ports_mode was removed; three-port support belongs to the future A6 architecture",
-    "consumer_release_start_offset_by_op": "consumer_release_start_offset_by_op was removed; use global consumer_release_start_offset",
-    "lsu_post_update_ready_latency": "lsu_post_update_ready_latency was removed; use idu_post_update_ready_latency (IDU dispatch timing)",
-    "lsu_issue_policy": "lsu_issue_policy has been removed; configure lsu_store_priority_preg_threshold",
-}
 
 def parse_uarch(values: Mapping, base: UarchParameters | None = None) -> UarchParameters:
     if not isinstance(values, Mapping):
         raise ValueError("uarch must be an object")
-    for name, message in REMOVED_FIELDS.items():
-        if name in values:
-            raise ValueError(message)
+    known_fields = {field.name for field in fields(UarchParameters)}
+    for name in values:
+        if name not in known_fields:
+            raise ValueError(f"Unknown uarch field: {name}")
     defaults = base if base is not None else UarchParameters()
     parsed = {}
     for field in fields(UarchParameters):
@@ -81,11 +76,10 @@ def apply_theoretical_limit_overrides(cfg: UarchParameters) -> UarchParameters:
     changes['idu_visible_preg_delay'] = cfg.theoretical_limit_idu_visible_preg_delay if cfg.theoretical_limit_idu_visible_preg_delay is not None else 0
     changes['idu_visible_shq_delay'] = cfg.theoretical_limit_idu_visible_shq_delay if cfg.theoretical_limit_idu_visible_shq_delay is not None else 0
     changes['shq_to_exq_port_per_cycle'] = cfg.theoretical_limit_shq_to_exq_port_per_cycle if cfg.theoretical_limit_shq_to_exq_port_per_cycle is not None else huge
-    changes['compute_inflight_cap'] = cfg.theoretical_limit_compute_inflight_cap if cfg.theoretical_limit_compute_inflight_cap is not None else 0
     changes['exq_issue_inflight_cap_per_port'] = cfg.theoretical_limit_exq_issue_inflight_cap_per_port if cfg.theoretical_limit_exq_issue_inflight_cap_per_port is not None else 0
     if cfg.theoretical_limit_direct_issue:
         changes.update(enable_isu_queue_model=False, enable_shq_credit_model=False,
-                       enable_credit_visibility_delay=False, admit_blocked_to_exq=False,
+                       enable_credit_visibility_delay=False,
                        exq_recv_delay=0, shq_to_exq_port_per_cycle=huge,
-                       compute_inflight_cap=0, exq_issue_inflight_cap_per_port=0)
+                       exq_issue_inflight_cap_per_port=0)
     return replace(cfg, **changes)

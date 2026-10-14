@@ -1,65 +1,69 @@
-# A5 全局 Membar 时序模型
+# Membar 时序模型
 
-## 本分支范围
+`core/execution/membar.py` 管理屏障接收、发射、同步放行和退休，并对后续访存提供
+门控。LSU 报告开始和完成进度，Engine 安排控制器每周期更新。
+普通 UB 访存的额外同步通过 CanonicalMembar 节点表达。
 
-vfinfo-core-api-unification 的 Python/C++ 全局模式增加控制单元的发射、同步放行和退休阶段。
-移植自 MultiSoC 全局模型与 MultiSoC-membar 实验实现，适配本分支根目录 configs/uarch.json。
-本分支没有 MultiSoC 选择器，不引入 A6 或 --soc 接口。
+## 方向与配置
 
-本次只移植全局 membar 时序，不引入局部 UB 地址依赖分析，也不恢复 legacy 执行入口。
-普通 UB 访存的额外同步仍由显式 membar 控制。
+`VLD_VST` 等待前序 LOAD 完成并控制后续 STORE；`VST_VLD` 等待前序 STORE 完成并
+控制后续 LOAD。COMPUTE 根据自身数据依赖推进。
+默认 `uarch.json` 提供 `membar_timing` 对象，Engine 据此创建 `TimedMembarController`。
+该字段缺省时创建 `MembarController`，按指定方向的前序访存排空控制后续访问。
 
-## 参数合同
+| 字段 | VLD_VST | VST_VLD | 含义 |
+| --- | ---: | ---: | --- |
+| `release_latency` | 18 | 7 | issue 到允许检查同步放行的最小延迟 |
+| `retire_latency` | 20 | 9 | 相对最小放行时间的退休参数 |
+| `consumer_delay` | 4 | 1 | 实际放行到后续受控访存可发射的延迟 |
+| `next_issue_delay` | 1 | 2 | 前一个 barrier 退休到本方向 barrier 可发射的延迟 |
 
-membar_timing 字段不存在时使用历史兼容模型；字段存在但为 null、空对象、非法类型或缺少参数时明确报错。
-必填数值为非负 int64，不接受 bool；退休不得早于放行，next_issue_delay 至少为1。
-本次不改变 ISA latency、forwarding、II，也不改变架构资源或寄存器数量。
+`admission_delay=1` 控制接收到可发射的延迟。
+`lsu_start_to_next_issue` 中 STORE=4、LOAD=3，控制前段 LSU 开始到 barrier 发射的反馈。
+数值字段要求非负 int64；`next_issue_delay` 至少为 1，退休参数需满足
+`retire_latency >= release_latency`。显式提供空对象或无效配置会报错。
 
-| 参数 | VLD_VST | VST_VLD |
-| --- | ---: | ---: |
-| release_latency | 18 | 7 |
-| retire_latency | 20 | 9 |
-| consumer_delay（相对放行） | 4 | 1 |
-| next_issue_delay（相对上一 barrier 退休） | 1 | 2 |
+## 推进过程
 
-admission_delay=1；段内 LSU start 到下一 barrier issue 的反馈：STORE=4，LOAD=3。
-这些是 A5 已有最小 CAmodel 用例的近似校准，不是通用硬件定律。
+1. 按 `stream_seq` 接收屏障并封存前一段 LSU 的开始依赖。
+2. 结合接收延迟、VF startup、前一个屏障退休和方向延迟，确定最早发射时间。
+3. 等待段内需要观察的 LSU 开始；以最晚 start 加 LOAD/STORE 反馈更新发射门槛。
+   首个屏障采用前序 STORE 的开始反馈。
+4. 等待前序普通指令通过 IDU 和传输，再发布 `issue`。
+5. 达到 `issue + release_latency` 且指定类别的前序 LSU 完成后，发布 `sync_release`。
+6. 根据实际 release 确定 retire 和 consumer gate，按 cycle 发布退休及后续放行。
 
-## 推进规则
-
-1. IFU 按动态 stream_seq 接收 barrier，封存前一段 LSU；后续组不污染已封存状态。
-2. 等前一个 barrier 退休及方向对应的 next_issue_delay。
-3. 根据前一个 barrier 所阻塞的类别，等段内 LSU 全部 start，按最晚 start 加反馈延迟。
-   首个 barrier 默认检查前序 STORE start，而不是等 STORE done。
-4. 不早于 VF startup 和取到 barrier 后下一周期，且先前普通指令必须通过 IDU 及传输。
-5. issue 后满足 release_latency，且指定方向的所有前序 LSU 完成，才 sync_release。
-6. 在实际 release 后增加 retire_latency-release_latency 得到退休；后续 LSU 等 release+consumer_delay。
-
-因此正常 VLD_VST 后的 store 可在退休后2周期开始；VST_VLD 后的 load 可在退休前1周期开始。
-barrier 不进 EXU、不占 IDU/SHQ/LSQ 槽，不直接阻塞 compute。
-尾部 barrier 退休计入 VF 结束；membar_history.json 记录 issue、sync_release、retire。
-LSU start 通知后释放索引，段内状态按类别聚合，不保留无限增长的完整历史。
-
-## 验证和复现
-
-- tests/test_membar_timing.py：控制阶段边界、连续 barrier、段内乱序 LSU start、延迟完成、尾部 barrier、空/非法配置及兼容行为。
-- native/MembarTimingTest.cpp：对应 C++ 控制阶段边界。
-- tests/test_membar_native_parity.py：相同 Canonical 输入逐项比较 Python/C++ 总周期、start/done、barrier 事件。
-- tests/fixtures/membar_timing/：可检出的单 barrier、连续8个、交错8个和编译器 spill 回放。
-- tools/validate_global_membar.py：不依赖忽略的 results 目录，校验全局结果。
-- 直接使用正式 Canonical 序列化函数和 vfsim_native_json_runner 验证，不新增输入入口。
-
-```bash
-cmake -S native -B /tmp/vfsim_ub_membar_port -DCMAKE_BUILD_TYPE=Release
-cmake --build /tmp/vfsim_ub_membar_port -j 4
-ctest --test-dir /tmp/vfsim_ub_membar_port --output-on-failure
-VFSIM_NATIVE_RUNNER=/tmp/vfsim_ub_membar_port/vfsim_native_json_runner \
-  python3 -m unittest discover -s tests
-python3 tools/validate_global_membar.py --out-dir /tmp/ub-global-validation \
-  --native-runner /tmp/vfsim_ub_membar_port/vfsim_native_json_runner
+```text
+retire_cycle = release_cycle + retire_latency - release_latency
+consumer_gate = release_cycle + consumer_delay
 ```
 
-历史 CAmodel 参考：单 barrier 110、连续8个336、交错8个339、spill391 cycles。
-对应全局模型参考114/338/348/396 cycles，保存在 docs/validation/membar_timing_summary.json；
-CAmodel 结果来源于之前的实验，本次不重新编译或运行硬件模拟器。
-未自动更新任何算子回归 baseline。
+屏障由执行控制器保存，其节点通过取指流进入控制器。
+后续组与封存的前序组分别维护；LSU 开始后更新段内聚合记录。
+尾部屏障的 retire 参与最终 VF 结束周期。
+`membar_history.json` 记录 `issue`、`sync_release`、`retire`。
+
+## 固定验证用例
+
+[validation/membar_timing_summary.json](validation/membar_timing_summary.json)保存本仓库
+的 fixture、Python 参考周期和 CAModel 观测值。
+
+| fixture | Python VF cycles | CAModel 参考 cycles |
+| --- | ---: | ---: |
+| single.cce | 114 | 110 |
+| clustered8.cce | 338 | 336 |
+| interleaved8.cce | 348 | 339 |
+| spill.cce | 396 | 391 |
+
+Python 值可通过当前代码和 [fixtures/membar_timing](../tests/fixtures/membar_timing)
+重现。CAModel 值来自保留的测量记录，描述这些用例下的观测。
+
+```bash
+python3 -m unittest tests.test_membar_timing
+python3 main.py --cce tests/fixtures/membar_timing/single.cce --out_dir results/membar_single
+```
+
+[test_membar_timing.py](../tests/test_membar_timing.py)覆盖连续屏障、乱序 LSU start、
+延迟完成、尾部屏障和配置边界。
+[test_membar_native_parity.py](../tests/test_membar_native_parity.py)在配置 Native runner 后
+比较同一输入的周期、开始/完成和屏障事件。

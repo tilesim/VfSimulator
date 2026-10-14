@@ -11,15 +11,10 @@ class UbSharedIssueSlotsTest(unittest.TestCase):
         self.db = ParamDB(base_dir=str(ROOT))
         uarch = dict(self.db.get_uarch())
         uarch.update({'load_ports': 2, 'store_ports': 1, 'ub_slots': 2, 'lsu_store_priority_preg_threshold': 1})
-        self.core = component_engine(uarch, self.db, dtype='fp32')
+        self.core = component_engine(uarch, self.db, fallback_dtype='fp32')
         self.load_profile = self.db.resolve_inst('VLDS', 'fp32', 'fp32')
         self.store_profile = self.db.resolve_inst('VSTS', 'fp32', 'fp32')
 
-    def test_removed_policy_selector_is_rejected(self):
-        uarch = dict(self.db.get_uarch())
-        uarch['lsu_issue_policy'] = 'oldest_ready'
-        with self.assertRaisesRegex(ValueError, 'has been removed'):
-            component_engine(uarch, self.db, dtype='fp32')
 
     def _uop(self, inst_id, op_class, *, state='ready'):
         is_load = op_class == 'LOAD'
