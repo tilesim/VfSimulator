@@ -19,7 +19,8 @@ CanonicalVfInfo 对象统一接收，微架构组件按周期推进指令、依�
 | [优化工具](optimization_tools.md) | 仓库内 DAG 分区、候选搜索和工具的使用前提 |
 
 代码结构和执行模型描述 Python 实现。输入及参数的共享声明位于 `api/` 和 `configs/`；
-C++ 源码位于 `api/native/` 与 `native/`，对应测试通过 Native runner 执行。
+C++ 源码位于 `api/native/` 与 `native/`，[C++ 仿真器说明](../native/README.md)描述组件和接口；组件测试通过 CTest 执行，
+双实现对照使用 Native runner。
 Python 稀疏检出包含输入层、仿真核心和回归所需文件。完整检出还提供优化器、校准工具
 和硬件探针的配套源码。
 

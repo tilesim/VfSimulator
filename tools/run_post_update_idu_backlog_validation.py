@@ -10,9 +10,9 @@ import sys
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
-from api.cce_adapter import parse_cce_canonical_vf_info
-from api.frontend import canonical_vf_info_to_dict
-from api.simulator_costmodel import CoreVfCostModel
+from api.input_api import InputAPI
+from api.json.serialization import canonical_vf_info_to_dict
+from core.simulator import CoreVfCostModel
 from run_post_update_backlog_probe import source
 
 
@@ -45,7 +45,7 @@ def main():
         case.mkdir(parents=True, exist_ok=True)
         path = case / f"post_update_backlog_{mode}.cce"
         path.write_text(source(mode, f"post_update_backlog_{mode}"))
-        vf = parse_cce_canonical_vf_info(path)
+        vf = InputAPI.load_cce(path)
         result = CoreVfCostModel(base_dir=ROOT, out_dir=case / "python").run_vf_info(vf)
         payload = case / "canonical.json"
         payload.write_text(json.dumps(canonical_vf_info_to_dict(vf), indent=2))

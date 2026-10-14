@@ -31,6 +31,7 @@ def _dump_json(path: Path, obj: Dict[str, Any]) -> None:
 
 def _apply_case_transform(trace_obj: Dict[str, Any], case: Dict[str, Any]) -> Dict[str, Any]:
     out = copy.deepcopy(trace_obj)
+    out.setdefault("uarch", {})["canonical_dynamic_instruction_limit"] = 0
 
     param_overrides = case.get("params", {}) or {}
     if param_overrides:

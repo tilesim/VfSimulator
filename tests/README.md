@@ -27,3 +27,6 @@ Native 对比统一读取 `VFSIM_NATIVE_RUNNER`。缺少 runner 的独立 Native
 部分指令测试仍执行 Python 部分。
 Membar fixture 测试使用 `docs/validation/membar_timing_summary.json` 的固定周期参考。
 周期基线及误差回归见 [验证说明](../docs/validation.md)。
+
+`test_native_modes_parity.py` 对照传输延迟、信用、理论模式、EXQ 策略及 EXU 端口行为。
+C++ 组件与输入测试位于 [native/tests/](../native/tests/)，通过 CTest 执行。

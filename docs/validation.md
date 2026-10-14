@@ -98,3 +98,7 @@ VFSIM_NATIVE_RUNNER=/path/to/vfsim_native_json_runner python3 -m unittest tests.
 
 双实现对比使用同一 Canonical fixture、参数和日志口径。
 缺少 Native 环境的可选测试会跳过；结果报告应记录实际执行的覆盖范围。
+
+C++ 组件测试通过 `ctest --test-dir build-native --output-on-failure` 执行，
+覆盖 Canonical 输入、循环展开、地址更新、谓词寄存器、membar、队列与执行容量及参数读取。
+`test_native_modes_parity` 对照 21 种前后端配置的周期和开始/完成事件。

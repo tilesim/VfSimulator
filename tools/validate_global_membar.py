@@ -7,9 +7,9 @@ import sys
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
-from api.cce_adapter import parse_cce_canonical_vf_info
-from api.frontend.serialization import canonical_vf_info_to_dict
-from api.simulator_costmodel import CoreVfCostModel
+from api.input_api import InputAPI
+from api.json.serialization import canonical_vf_info_to_dict
+from core.simulator import CoreVfCostModel
 
 
 def events(folder, filename):
@@ -31,7 +31,7 @@ def main():
         folder = args.out_dir / case['name']
         folder.mkdir(parents=True, exist_ok=True)
         source = ROOT/'tests/fixtures/membar_timing'/case['fixture']
-        vf = parse_cce_canonical_vf_info(source)
+        vf = InputAPI.load_cce(source)
         py_dir = folder/'python'
         result = CoreVfCostModel(base_dir=ROOT, out_dir=py_dir).run_vf_info(vf)
         row = {'name': case['name'], 'python_cycles': result['vf_end_cycle']}

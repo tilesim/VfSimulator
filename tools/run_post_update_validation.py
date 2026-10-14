@@ -10,9 +10,10 @@ import sys
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
-from api.cce_adapter import parse_cce_canonical_vf_info
-from api.frontend import CanonicalLoop, canonical_vf_info_to_dict
-from api.simulator_costmodel import CoreVfCostModel
+from api.input_api import InputAPI
+from api.common.schema import CanonicalLoop
+from api.json.serialization import canonical_vf_info_to_dict
+from core.simulator import CoreVfCostModel
 
 
 def source(unroll, post):
@@ -59,9 +60,9 @@ def main():
             case.mkdir(parents=True, exist_ok=True)
             path = case / "input.cce"
             path.write_text(source(unroll, post))
-            vf = parse_cce_canonical_vf_info(path)
+            vf = InputAPI.load_cce(path)
             before = CoreVfCostModel(base_dir=ROOT, out_dir=case/"without_address_state").run_vf_info(
-                without_address_state(vf))
+                InputAPI.from_canonical(without_address_state(vf)))
             after = CoreVfCostModel(base_dir=ROOT, out_dir=case/"python").run_vf_info(vf)
             row = {"unroll": unroll, "post_update": post,
                    "without_address_state": before["vf_end_cycle"],

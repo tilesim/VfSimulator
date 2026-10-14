@@ -1,0 +1,5 @@
+foreach(test IN ITEMS input_api address_state predicate_register membar_timing components parameters)
+  add_executable(vfsim_${test}_test ${test}_test.cpp)
+  target_link_libraries(vfsim_${test}_test PRIVATE vfsim::native_core)
+  add_test(NAME vfsim_${test}_test COMMAND vfsim_${test}_test)
+endforeach()

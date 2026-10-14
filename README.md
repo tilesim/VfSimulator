@@ -132,7 +132,9 @@ python3 tools/run_cost_model_regression.py --tier full
 ## C++ 实现
 
 完整检出的 `native/` 提供 C++17 执行核心，库目标为 `vfsim::native_core`，
-Canonical 运行接口为 `runCanonicalVfInfo()`。CMake 工程提供 Native 测试和 JSON runner。
+输入接口为 `InputAPI::loadJson()` / `fromCanonical()`，仿真接口为
+`CoreVfCostModel::runVfInfo()`。核心按 execution/、uarch/、params/、trace/ 组织，
+组件分别维护硬件状态与本地时序。目录与调用说明见 [C++ 仿真器](native/README.md)。
 
 ```bash
 cmake -S native -B build-native -DVFSIM_BUILD_TESTS=ON

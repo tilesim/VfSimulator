@@ -469,10 +469,10 @@ class CanonicalVfInfoValidatorTest(unittest.TestCase):
                     {"uarch_field_type_mismatch"},
                 )
 
-    def test_dynamic_instruction_limit_is_explicitly_python_only(self):
+    def test_dynamic_instruction_limit_is_supported_by_both_cores(self):
         self.assertEqual(
             UARCH_FIELD_SPECS["canonical_dynamic_instruction_limit"]["targets"],
-            ["python"],
+            ["python", "cpp"],
         )
         self.assertTrue(
             validate_uarch_overrides(
