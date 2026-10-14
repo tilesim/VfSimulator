@@ -1,14 +1,18 @@
-# Canonical 输入合同 fixture
+# Canonical 测试输入
 
-`v2_external_predicate_forms.json` 是根据950PR报告中的外部form命名手工构造的
-Canonical v2兼容性fixture，**不是TileSim/HiVM Adapter的真实导出文件**。
-它直接表达MOVVP.b16 -> PSTU.b32 -> VSTAS.b32，绕过CCE parser。
-普通vector live-in作为位模式输入，predicate必须由MOVVP生产；align state通过
-append/consume属性表达，PSTU显式携带指针推进和打包span。
+这些 JSON 文件保存固定的 Canonical 程序，供输入校验、动态展开和周期测试使用。
 
-`tests/test_external_predicate_forms.py` 还覆盖B16/B32组合、uint形式等价性、
-Python/Native发射与结束周期、PSTU地址合同拒绝和混合VSTAS form forwarding。
-form表示指令模式，value.dtype仍描述数据值类型；不做全局b32到uint32的dtype替换。
+| 文件或目录 | 内容 |
+| --- | --- |
+| `v1_valid_loop.json` | 单循环加载及默认周期 |
+| `v1_valid_loop_carried.json` | 循环 entry、back-edge 和 exit 定义 |
+| `v1_valid_top_blocks.json` | 顶层循环、尾部指令和屏障 |
+| `v1_valid_empty_top_block.json` | 零次循环和后续 block |
+| `v1_invalid_loop_scope.json` | 循环回边作用域错误 |
+| `v2_external_predicate_forms.json` | MOVVP、PSTU、VSTAS 的 b16/b32 与 uint16/uint32 form 合同 |
+| `v2_plt_packed_fp16.json` | PLT 两个结果和 FP16 打包访存 |
+| `timing/` | 寄存器、访存、屏障、unroll 和缺失参数诊断的执行用例 |
 
-后续拿到真实Adapter导出时应新增匿名化fixture并复测。这组测试不代表原报告中的
-所有HiVM失败case已经端到端通过，也不替代Adapter对状态、地址和多结果的映射。
+form 描述指令形式，value.dtype 描述数据类型。谓词 fixture 显式提供 producer，
+对齐状态通过 append/consume 属性表达，PSTU 提供指针更新和打包 span。
+fixture 经 API 读取和校验后传给 Core。非法 fixture 用于检查诊断及拒绝边界。

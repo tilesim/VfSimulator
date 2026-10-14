@@ -31,6 +31,7 @@ def _dump_json(path: Path, obj: Dict[str, Any]) -> None:
 
 def _apply_case_transform(trace_obj: Dict[str, Any], case: Dict[str, Any]) -> Dict[str, Any]:
     out = copy.deepcopy(trace_obj)
+    out.setdefault("uarch", {})["canonical_dynamic_instruction_limit"] = 0
 
     param_overrides = case.get("params", {}) or {}
     if param_overrides:
@@ -237,10 +238,7 @@ def _print_summary(summary: Dict[str, Any]) -> None:
 def main() -> None:
     parser = argparse.ArgumentParser(description="Run native C++ VF cost model regression suite")
     parser.add_argument("--suite", default="regression_suite/cases/cost_model_regression_cases.json")
-    parser.add_argument(
-        "--baseline",
-        default="regression_suite/cases/baseline_queue_level4_rr_reserve_min1_cap7.json",
-    )
+    parser.add_argument("--baseline", default="regression_suite/cases/baseline_canonical_membar.json")
     parser.add_argument("--out-dir", default="results/native_regression_suite/latest")
     parser.add_argument("--tier", choices=["smoke", "full"], default="smoke")
     parser.add_argument("--runner", default="build-native/vfsim_native_json_runner")

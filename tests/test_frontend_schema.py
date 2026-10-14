@@ -5,30 +5,9 @@ import unittest
 from dataclasses import replace
 from pathlib import Path
 
-from api.frontend import (
-    AccessKind,
-    AffineExpression,
-    AffineTerm,
-    CanonicalInstruction,
-    CanonicalLoop,
-    CanonicalMembar,
-    CanonicalOperand,
-    CanonicalStorageObject,
-    CanonicalValue,
-    CanonicalVfInfo,
-    DependencyKind,
-    DependencyRef,
-    InductionVariable,
-    InstructionClass,
-    LoopCarriedValue,
-    MemoryAccess,
-    OperandRole,
-    SourceLocation,
-    StorageKind,
-    canonical_vf_info_from_dict,
-    validate_canonical_vf_info,
-)
-from api.frontend.uarch_validation import (
+from api.common import (AccessKind, AffineExpression, AffineTerm, CanonicalInstruction, CanonicalLoop, CanonicalMembar, CanonicalOperand, CanonicalStorageObject, CanonicalValue, CanonicalVfInfo, DependencyKind, DependencyRef, InductionVariable, InstructionClass, LoopCarriedValue, MemoryAccess, OperandRole, SourceLocation, StorageKind, validate_canonical_vf_info)
+from api.json.serialization import (canonical_vf_info_from_dict)
+from api.common.uarch_validation import (
     UARCH_FIELD_SPECS,
     validate_uarch_overrides,
 )
@@ -159,7 +138,7 @@ class CanonicalVfInfoValidatorTest(unittest.TestCase):
         )
         invalid_membar = CanonicalMembar(
             "membar.invalid",
-            "UNKNOWN",
+            "",
             source_location=membar_location,
         )
 
@@ -177,7 +156,7 @@ class CanonicalVfInfoValidatorTest(unittest.TestCase):
         )
         self.assertEqual(by_code["invalid_loop_count"].location, loop_location)
         self.assertEqual(
-            by_code["unsupported_membar_type"].location,
+            by_code["missing_membar_type"].location,
             membar_location,
         )
 
@@ -317,6 +296,23 @@ class CanonicalVfInfoValidatorTest(unittest.TestCase):
         self.assertIn("catalog_instruction_class_mismatch", form_codes)
         self.assertIn("catalog_instruction_form_mismatch", form_codes)
 
+    def test_catalog_align_state_instruction_requires_state_attributes(self):
+        vf_info = self._valid_vf_info()
+        loop = vf_info.context[0]
+        invalid = replace(
+            loop.body[1],
+            opcode="VSTAS",
+            inputs=(),
+            attributes={},
+        )
+        result = validate_canonical_vf_info(
+            replace(vf_info, context=(replace(loop, body=(loop.body[0], invalid)),))
+        )
+        self.assertIn(
+            "catalog_align_state_mismatch",
+            {item.code for item in result.errors},
+        )
+
     def test_unknown_opcode_is_allowed_with_explicit_instruction_class(self):
         unknown = CanonicalInstruction(
             "inst.unknown", "VUNKNOWN", InstructionClass.COMPUTE, "fp32",
@@ -429,16 +425,14 @@ class CanonicalVfInfoValidatorTest(unittest.TestCase):
         self.assertIn("invalid_memory_span", codes)
         self.assertIn("invalid_dependency_operand_index", codes)
 
-    def test_deprecated_uarch_field_is_rejected(self):
-        vf_info = replace(
-            self._valid_vf_info(),
-            uarch={"load_done_latency": 99},
-        )
-
-        codes = {
-            item.code for item in validate_canonical_vf_info(vf_info).errors
-        }
-        self.assertIn("deprecated_uarch_field", codes)
+    def test_unknown_uarch_field_is_rejected(self):
+        for name in ("shq_dept", "unrecognized_setting"):
+            with self.subTest(field=name):
+                vf_info = replace(self._valid_vf_info(), uarch={name: 99})
+                codes = {
+                    item.code for item in validate_canonical_vf_info(vf_info).errors
+                }
+                self.assertIn("unknown_uarch_field", codes)
 
     def test_uarch_override_requires_cross_language_json_scalars(self):
         vf_info = replace(
@@ -461,8 +455,8 @@ class CanonicalVfInfoValidatorTest(unittest.TestCase):
         invalid_values = (
             {"issue_ports": "2"},
             {"issue_ports": True},
-            {"three_ports_mode": 1},
-            {"three_ports_mode": "true"},
+            {"enable_isu_queue_model": 1},
+            {"enable_isu_queue_model": "true"},
             {"shq_exq_dispatch_policy": 1},
             {"shq_exq_dispatch_policy": False},
         )
@@ -475,10 +469,10 @@ class CanonicalVfInfoValidatorTest(unittest.TestCase):
                     {"uarch_field_type_mismatch"},
                 )
 
-    def test_dynamic_instruction_limit_is_explicitly_python_only(self):
+    def test_dynamic_instruction_limit_is_supported_by_both_cores(self):
         self.assertEqual(
             UARCH_FIELD_SPECS["canonical_dynamic_instruction_limit"]["targets"],
-            ["python"],
+            ["python", "cpp"],
         )
         self.assertTrue(
             validate_uarch_overrides(
@@ -489,12 +483,19 @@ class CanonicalVfInfoValidatorTest(unittest.TestCase):
     def test_membar_and_loop_parameter_validation(self):
         invalid = self._contract((
             CanonicalLoop("loop.bad", InductionVariable("i"), "UNKNOWN", 0),
-            CanonicalMembar("membar.bad", "ALL"),
+            CanonicalMembar("membar.bad", ""),
         ))
         codes = {item.code for item in validate_canonical_vf_info(invalid).errors}
         self.assertIn("unresolved_parameter", codes)
         self.assertIn("invalid_loop_unroll", codes)
-        self.assertIn("unsupported_membar_type", codes)
+        self.assertIn("missing_membar_type", codes)
+
+    def test_nonempty_unmodeled_membar_is_left_to_control_unit_warning(self):
+        vf_info = CanonicalVfInfo(
+            context=(CanonicalMembar("membar.unknown", "VV_ALL"),),
+            values={},
+        )
+        self.assertTrue(validate_canonical_vf_info(vf_info).ok)
 
 
 if __name__ == "__main__":

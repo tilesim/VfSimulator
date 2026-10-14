@@ -1,7 +1,7 @@
 """Typed VfSimulator input API and frontend adapters."""
 
 from api.input_api import InputAPI
-from api.input_symbols import (
+from api.common.symbols import (
     DType,
     MembarType,
     OpCode,
@@ -12,35 +12,17 @@ from api.input_symbols import (
     normalize_opcode,
     normalize_storage,
 )
-from api.json_adapter import JsonVfInfoAdapter
-from api.vf_info import (
-    Membar,
-    MemInfo,
-    ValueInfo,
-    ValueStorageKind,
-    VFInfo,
-    VFAlias,
-    VFInst,
-    VFLoop,
-    canonicalize_vf_info,
-)
+from api.common import (CanonicalVfInfo)
+from api.programmatic.builder import VfInfoBuilder
 
 __all__ = [
     "InputAPI",
-    "JsonVfInfoAdapter",
+    "CanonicalVfInfo",
+    "VfInfoBuilder",
     "DType",
     "MembarType",
     "OpCode",
     "StorageKind",
-    "Membar",
-    "MemInfo",
-    "ValueInfo",
-    "ValueStorageKind",
-    "VFInfo",
-    "VFAlias",
-    "VFInst",
-    "VFLoop",
-    "canonicalize_vf_info",
     "normalize_dtype",
     "normalize_form",
     "normalize_membar_type",

@@ -1,63 +1,91 @@
-# Native VF 模拟器核心
+# C++ 微架构仿真器
 
-本目录包含 VF 模拟器的 C++ 核心实现。
+C++17 实现使用 CanonicalVfInfo 描述程序，并逐 cycle 推进微架构组件。
+`api/native/input_api.h` 提供输入接收接口，`native/simulator.h` 提供周期预测接口。
+Python 与 C++ 共享 Canonical JSON、指令 Catalog、参数配置和回归用例。
 
-当前约定：
+## 输入与调用
 
-- `configs/*.json` 是模型参数的唯一事实来源。
-- C++ 启动时读取并缓存与 Python 相同的 JSON 配置。
-- 内部使用轻量 JSON 解析器，避免为基础配置读取引入额外第三方依赖。
-- 不在手写 C++ 常量中重复配置值。
-- C++ 路径完全对齐前，以 Python 主线行为作为一致性基准。
-- 一个加载完成的 `ParamDB` 可以跨预测线程共享：参数 bundle 只读，fallback
-  `InstConfig` 按值返回，warning 聚合受互斥保护。forwarding/II 热路径 cache 属于
-  每个 `OoOCore`，不写共享 `ParamDB`。
+`InputAPI::loadJson(path)` 解码并校验 Canonical JSON v1/v2。
+`InputAPI::fromCanonical(vf)` 校验直接构造的 CanonicalVfInfo，返回接收成功的对象。
+两种输入在 API 出口完成通用语义校验。
+`CoreVfCostModel::runVfInfo()` 接收校验成功的对象，完成配置解析、执行准备和仿真。
+CCE 文件通过 Python InputAPI 前端转换为 Canonical JSON，供 C++ 输入层接收。
 
-核心模块：
+```cpp
+#include "api/native/input_api.h"
+#include "native/simulator.h"
 
-- `ParamDB`：读取 `isa.json`、`uarch.json`、`forwarding.json` 和
-  `InitiationInterval.json`。
-- `ISATraits`：根据 ISA 元数据判断 load、store 和 compute 行为。
-- `CanonicalProgramLowering`：验证并展开 canonical loop，生成动态身份、值生命周期和
-  top-block 元数据。
-- `IFU`：只消费 `CanonicalProgramLowering` 生成的动态指令流。
-- `IDU`：执行 dispatch gate、VLOOP 可见性和信用计数。
-- `OOO`：执行 rename、ready、execute 和 retire 主流程。
-- `SimulatorRunner`：驱动主循环并输出日志。
-- `ControlUnit`：处理全局 membar 的发射、同步放行和退休，参数和验证方式见
-  [Membar 时序模型](../docs/membar_timing_model.md)。
-- `CanonicalProgramLowering`：处理已验证的 canonical definition、loop-carried
-  binding、动态身份和值生命周期标记。
-- `CanonicalJsonVfInfoAdapter`：读取并校验语言无关的 canonical JSON v1/v2；谓词寄存器使用 v2。
-- 共享配置结构：显式、可移植地描述跨语言配置 schema。
+const auto vf = vfsim::InputAPI::loadJson("program.json");
+vfsim::CoreVfCostModel simulator("/path/to/VfSimulator", "/tmp/vfsim-result");
+const auto result = simulator.runVfInfo(vf);
+const auto cycles = result.vfEndCycle;
+```
 
-公开运行入口：
+Core 的执行准备检查显式依赖、控制指令和循环展开等执行能力。
+存储类别由 CanonicalValue 的 storage 字段确定。
+`canonical_dynamic_instruction_limit` 默认限制展开后的指令数量为 20,000；
+值为 0 时关闭限制，适用于显式控制规模的回归程序。
 
-本轮 C++ 同步基于主线 `566c398`，包含独立的物理谓词寄存器池、统一 last-use
-释放、双输出指令，以及按 Catalog 声明的 `ub_transfer_bytes` 进行共享 UB 带宽仲裁。
-`vector_align` 仅维护状态依赖，不分配 vector/predicate 物理寄存器。
-新增覆盖包括 PSET、谓词比较/逻辑、MOVVP、PSTU、VLDAS/VLDUS、
-VLDS DINTLV_B32 和 VINTLV/VDINTLV。实测值与近似参数的区别见
-[谓词参数记录](../docs/predicate_timing_coverage.md)及各指令建模文档。
+## 目录职责
 
-后续同步来自 `vfinfo-core-api-unification` 的 `bdea3dc` 和 `e641c82`：
-增加 read-write operand/VAXPY、PLT，以及 VLDS UNPK_B16 / VSTS PK_B32。
-PLT 的 scalar 输入目前不建模 scalar producer 时序；packed 模式的有效载荷为
-128B，UB 仲裁预算仍保守取 256B。参数证据和限制见
-[PLT 与 packed memory 支持](../docs/plt_packed_memory_support.md)。
+| 目录或文件 | 功能 |
+| --- | --- |
+| `simulator.h/.cpp` | 公共仿真接口、配置组合和结果返回 |
+| `execution/instruction.h` | 动态指令、重命名后的 Uop 和内部 value 信息 |
+| `execution/prepare.*` | 执行能力检查、内部 value 表准备 |
+| `execution/expansion.*` | 循环展开、动态定义身份、末次使用和循环边界标注 |
+| `execution/engine.*` | 全局 cycle、传输延迟、分派预算、组件协作和排空 |
+| `execution/loop_control.*` | VLOOP 启动、循环反馈与分派开放时间 |
+| `execution/membar.*` | 屏障接收、同步释放、消费者门控和控制完成 |
+| `uarch/ifu.h` | 已准备的指令流 |
+| `uarch/idu.*` | 有序分派、资源预算和地址更新依赖 |
+| `uarch/register_bank.h`、`registers.*` | 物理寄存器、重命名、源释放、可见信用和对齐状态 |
+| `uarch/shq.h` | 计算等待队列及共享 SHQ 信用 |
+| `uarch/ooo.*` | 就绪指令选择、SHQ 到 EXQ 的端口分配和直接发射 |
+| `uarch/exq.*` | 各端口的 FU 队列、接收时间和队首选择 |
+| `uarch/exu.*` | EXU 端口约束、II、运行中指令和完成 |
+| `uarch/lsu.*` | LSQ、访存依赖、load/store 优先级及共享 UB 预算 |
+| `params/` | 参数类型、文件读取、配置解析、指令查询和缺失项回退 |
+| `trace/` | 事件快照、结果类型、日志及 Perfetto Trace 写出 |
+| `cli/` | Canonical JSON 命令行工具 |
+| `tests/` | 输入契约、组件时序、资源、地址、谓词和 membar 测试 |
 
-- `runCanonicalVfInfo()`：唯一正式预测入口，跳过 legacy value lowering、vreg
-  live-range normalization 和 single-super-iteration rewriting。
-- `loadCanonicalJsonVfInfo()`：Native JSON runner 的唯一输入解析入口。
+组件持有各自的队列和运行状态；Engine 管理组件之间的时序。
+SHQ、EXQ、EXU、LSU 和完成跟踪共用同一 Uop 对象。
+Engine 的活跃指令集合用于完成检查与排空。
 
-旧 `VfInfo.cpp`、`ProgramAnalysis`、`ProgramFlatten`、
-`ProgramCanonicalization`、`LegacyVfInfoAdapter` 和 `JsonVfInfoAdapter` 编译到独立的
-`vfsim::native_legacy` 静态库，只供离线迁移工具和历史测试使用。编译器正式接入只
-链接 `vfsim::native_core`；`SimulatorRunner.h` 不再声明 `runLegacyVfInfo()` 或
-`runVfInfo()`。
+`api/native/common/` 定义语义类型、Catalog、诊断和校验；
+`api/native/json/` 负责 JSON 解析及 Canonical 解码；
+`api/native/generated/` 存放共享配置生成的数据表。
 
-顶层调度 block 由完整 context 顺序决定：每个顶层 loop 开始一个新 block；该 loop
-之后、下一个顶层 loop 之前的普通指令和 `Membar` 属于当前 block。因此 loop epilogue
-中的 `VSTAS` 会在开启下一个 VLOOP 前完成 IDU dispatch。`count=0` 的顶层 loop 会
-记录为空 block，IDU 初始化和块切换时显式跳过它，直接开启下一个包含普通动态指令的
-block。
+## 周期推进
+
+每个 cycle 依次更新可见信用、接收传输中的指令、补充 IDU、更新屏障并执行有序分派。
+后端随后处理源与 SHQ 信用释放、执行完成、就绪状态、LSU 发射和 OoO 发射。
+LSU 的两次发射阶段共享当周期的端口、事务槽和字节预算。
+执行完成与屏障完成共同决定 VF 排空时间，ISA 的 drain cost 加入 vfEndCycle。
+
+## 构建与验证
+
+```bash
+cmake -S native -B build-native -DCMAKE_BUILD_TYPE=Release -DVFSIM_BUILD_TESTS=ON
+cmake --build build-native -j4
+ctest --test-dir build-native --output-on-failure
+build-native/vfsim_native_json_runner \
+  --trace tests/fixtures/canonical_vf_info/v1_valid_loop.json \
+  --out-dir /tmp/vfsim-native
+VFSIM_NATIVE_RUNNER="$PWD/build-native/vfsim_native_json_runner" \
+  python3 -m unittest discover -s tests
+```
+
+库目标为 `vfsim::native_core`，可通过 `add_subdirectory(native)` 引入。
+JSON runner 独立于测试开关构建。`--max-cycles` 可覆盖程序的周期上限。
+参数文件从 baseDir 下的 configs/ 读取；环境变量路径选择与 Python params/ 一致。
+
+结果包括 cyclesExecuted、vfEndCycle、linearInstCount、resultsDir 和 tracePath。
+linearInstCount 统计静态线性布局条目，包含循环首尾控制条目。
+输出目录包含 sim_history.json、start_by_cycle.json、done_by_cycle.json、
+idu_to_ooo.json、地址与资源阻塞日志、vloop_trace.json 和 trace.json。
+启用 membar timing 时输出 membar_history.json；发生参数回退时输出 model_warnings.json。
+开始和完成事件使用静态指令 ID、迭代路径和 stream_seq 关联到 Canonical 程序。

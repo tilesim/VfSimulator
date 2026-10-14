@@ -1,212 +1,41 @@
-# Copyright (c) 2026 Huawei Technologies Co., Ltd.
-# This program is free software, you can redistribute it and/or modify it under the terms and conditions of
-# CANN Open Software License Agreement Version 2.0 (the "License").
-# Please refer to the License for details. You may not use this file except in compliance with the License.
-# THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, EITHER EXPRESS OR IMPLIED,
-# INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, or FITNESS FOR A PARTICULAR PURPOSE.
-# See LICENSE in the root of the software repository for the full text of the License.
-
 cmake_minimum_required(VERSION 3.20)
-project(VfSimulatorNative LANGUAGES C CXX)
-
-if(PROJECT_IS_TOP_LEVEL)
-  include(CTest)
-  set(VFSIM_BUILD_TESTS_DEFAULT ON)
-else()
-  set(VFSIM_BUILD_TESTS_DEFAULT OFF)
-endif()
-
-option(VFSIM_BUILD_TESTS "Build native VfSimulator tests" ${VFSIM_BUILD_TESTS_DEFAULT})
-option(VFSIM_ENABLE_MLIR_PLANNER "Build MLIR IR planner entry point" OFF)
-option(VFSIM_BUILD_LEGACY_MIGRATION
-  "Build the standalone legacy VfInfo/JSON migration library"
-  ${VFSIM_BUILD_TESTS_DEFAULT}
-)
-
-set(VFSIM_NATIVE_CORE_SOURCES
-  ../api/native/CanonicalVfInfo.cpp
-  ../api/native/CanonicalJsonVfInfoAdapter.cpp
-  ../api/native/InstructionCatalog.cpp
-  ../api/native/UarchOverrideSchema.cpp
-  ../api/native/RuntimeValue.cpp
-  Json.cpp
-  ControlUnit.cpp
-  ParamCompat.cpp
-  ParamDB.cpp
-  ISATraits.cpp
-  CanonicalProgramLowering.cpp
-  IFU.cpp
-  IDU.cpp
-  OOO.cpp
-  SimulatorRunner.cpp
-  CanonicalVfInfoFixtureDecoder.cpp
-)
-
+project(VfSimulatorNative LANGUAGES CXX)
+include(CTest)
+option(VFSIM_BUILD_TESTS "Build native simulator tests" ${PROJECT_IS_TOP_LEVEL})
 add_library(vfsim_native_core STATIC
-  ${VFSIM_NATIVE_CORE_SOURCES}
+  ../api/native/common/diagnostics.cpp
+  ../api/native/common/instruction_catalog.cpp
+  ../api/native/common/schema.cpp
+  ../api/native/common/uarch_validation.cpp
+  ../api/native/common/validator.cpp
+  ../api/native/input_api.cpp
+  ../api/native/json/serialization.cpp
+  ../api/native/json/value.cpp
+  execution/engine.cpp
+  execution/expansion.cpp
+  execution/loop_control.cpp
+  execution/membar.cpp
+  execution/prepare.cpp
+  params/database.cpp
+  params/fallback.cpp
+  params/loader.cpp
+  params/uarch.cpp
+  simulator.cpp
+  trace/recorder.cpp
+  trace/writer.cpp
+  uarch/exq.cpp
+  uarch/exu.cpp
+  uarch/idu.cpp
+  uarch/lsu.cpp
+  uarch/ooo.cpp
+  uarch/registers.cpp
 )
-
 add_library(vfsim::native_core ALIAS vfsim_native_core)
-
-if(VFSIM_BUILD_LEGACY_MIGRATION)
-  add_library(vfsim_native_legacy STATIC
-    ../api/native/VfInfo.cpp
-    ../api/native/LegacyVfInfoAdapter.cpp
-    ../api/native/JsonVfInfoAdapter.cpp
-    ProgramAnalysis.cpp
-    ProgramFlatten.cpp
-    ProgramCanonicalization.cpp
-    ProgramVregLiveRangeNormalization.cpp
-  )
-
-  add_library(vfsim::native_legacy ALIAS vfsim_native_legacy)
-
-  target_link_libraries(vfsim_native_legacy PUBLIC vfsim::native_core)
-  target_include_directories(vfsim_native_legacy PUBLIC
-    ${CMAKE_CURRENT_SOURCE_DIR}
-    ${CMAKE_CURRENT_SOURCE_DIR}/..
-  )
-  target_compile_features(vfsim_native_legacy PUBLIC cxx_std_17)
-endif()
-
-target_include_directories(vfsim_native_core PUBLIC
-  ${CMAKE_CURRENT_SOURCE_DIR}
-  ${CMAKE_CURRENT_SOURCE_DIR}/..
-)
-
+target_include_directories(vfsim_native_core PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/..)
 target_compile_features(vfsim_native_core PUBLIC cxx_std_17)
-
-target_compile_definitions(vfsim_native_core PUBLIC
-  VFSIM_SOURCE_ROOT="${CMAKE_CURRENT_SOURCE_DIR}/.."
-)
-
-if(VFSIM_ENABLE_MLIR_PLANNER)
-  if(NOT TARGET MLIRIR)
-    find_package(MLIR REQUIRED CONFIG)
-  endif()
-
-  add_library(vfsim_ir_planner STATIC
-    IRPlanner.cpp
-  )
-
-  add_library(vfsim::ir_planner ALIAS vfsim_ir_planner)
-
-  target_link_libraries(vfsim_ir_planner PUBLIC
-    vfsim::native_core
-    MLIRIR
-    MLIRSupport
-  )
-  target_include_directories(vfsim_ir_planner PUBLIC
-    ${MLIR_INCLUDE_DIRS}
-    ${LLVM_INCLUDE_DIRS}
-  )
+target_compile_definitions(vfsim_native_core PUBLIC VFSIM_SOURCE_ROOT="${CMAKE_CURRENT_SOURCE_DIR}/..")
+add_executable(vfsim_native_json_runner cli/json_runner.cpp)
+target_link_libraries(vfsim_native_json_runner PRIVATE vfsim::native_core)
+if(VFSIM_BUILD_TESTS AND BUILD_TESTING)
+  add_subdirectory(tests)
 endif()
-
-if(NOT VFSIM_BUILD_TESTS)
-  return()
-endif()
-
-if(PROJECT_IS_TOP_LEVEL AND NOT BUILD_TESTING)
-  return()
-endif()
-
-if(NOT VFSIM_BUILD_LEGACY_MIGRATION)
-  message(FATAL_ERROR "VFSIM_BUILD_TESTS requires VFSIM_BUILD_LEGACY_MIGRATION")
-endif()
-
-add_executable(vfsim_native_smoke_test
-  VfsimNativeSmokeTest.cpp
-)
-
-target_link_libraries(vfsim_native_smoke_test PRIVATE
-  vfsim::native_core
-  vfsim::native_legacy
-)
-
-set_target_properties(vfsim_native_smoke_test PROPERTIES
-  FOLDER "Tests"
-)
-
-add_test(NAME vfsim_native_smoke_test
-  COMMAND vfsim_native_smoke_test
-)
-
-add_executable(vfsim_tadd_tmul_trace
-  VfsimTaddTmulTrace.cpp
-)
-
-target_link_libraries(vfsim_tadd_tmul_trace PRIVATE
-  vfsim::native_core
-  vfsim::native_legacy
-)
-
-set_target_properties(vfsim_tadd_tmul_trace PROPERTIES
-  FOLDER "Tests"
-)
-
-add_test(NAME vfsim_tadd_tmul_trace
-  COMMAND vfsim_tadd_tmul_trace
-)
-
-add_executable(vfsim_program_canonicalization_test
-  ProgramCanonicalizationTest.cpp
-)
-
-target_link_libraries(vfsim_program_canonicalization_test PRIVATE
-  vfsim::native_core
-  vfsim::native_legacy
-)
-
-add_test(NAME vfsim_program_canonicalization_test
-  COMMAND vfsim_program_canonicalization_test
-)
-
-add_executable(vfsim_program_vreg_live_range_normalization_test
-  ProgramVregLiveRangeNormalizationTest.cpp
-)
-
-target_link_libraries(vfsim_program_vreg_live_range_normalization_test PRIVATE
-  vfsim::native_core
-  vfsim::native_legacy
-)
-
-add_test(NAME vfsim_program_vreg_live_range_normalization_test
-  COMMAND vfsim_program_vreg_live_range_normalization_test
-)
-
-add_executable(vfsim_vf_info_api_test
-  VfsimVfInfoApiTest.cpp
-)
-
-target_link_libraries(vfsim_vf_info_api_test PRIVATE
-  vfsim::native_core
-  vfsim::native_legacy
-)
-
-add_test(NAME vfsim_vf_info_api_test
-  COMMAND vfsim_vf_info_api_test
-)
-
-add_executable(vfsim_native_json_runner
-  VfsimNativeJsonRunner.cpp
-)
-
-add_executable(vfsim_membar_timing_test MembarTimingTest.cpp)
-target_link_libraries(vfsim_membar_timing_test PRIVATE vfsim::native_core)
-add_test(NAME vfsim_membar_timing_test COMMAND vfsim_membar_timing_test)
-
-add_executable(vfsim_address_state_test AddressStateTest.cpp)
-target_link_libraries(vfsim_address_state_test PRIVATE vfsim::native_core)
-add_test(NAME vfsim_address_state_test COMMAND vfsim_address_state_test)
-
-add_executable(vfsim_predicate_register_test PredicateRegisterTest.cpp)
-target_link_libraries(vfsim_predicate_register_test PRIVATE vfsim::native_core)
-add_test(NAME vfsim_predicate_register_test COMMAND vfsim_predicate_register_test)
-
-target_link_libraries(vfsim_native_json_runner PRIVATE
-  vfsim::native_core
-)
-
-set_target_properties(vfsim_native_json_runner PROPERTIES
-  FOLDER "Tests"
-)

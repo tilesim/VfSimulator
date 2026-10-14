@@ -4,22 +4,34 @@ import unittest
 from pathlib import Path
 from unittest import mock
 
-from api.frontend import CanonicalJsonVfInfoAdapter, VfInfoValidationError
-from api.frontend.json_adapter import _canonical_schema_validator
+from api.json.adapter import (CanonicalJsonVfInfoAdapter)
+from api.common import (VfInfoValidationError)
+from api.json.serialization import (canonical_vf_info_to_dict)
+from api.json.adapter import _canonical_schema_validator
 from api.input_api import InputAPI
+from api.common.schema import SUPPORTED_SCHEMA_VERSIONS
 
 
 class CanonicalJsonVfInfoAdapterTest(unittest.TestCase):
     def setUp(self):
         self.fixtures = Path(__file__).parent / "fixtures/canonical_vf_info"
+        self.root = Path(__file__).parents[1]
 
     def test_input_api_loads_and_validates_canonical_json(self):
-        vf_info = InputAPI.load_canonical_json(
+        vf_info = InputAPI.load_json(
             self.fixtures / "v1_valid_loop.json"
         )
 
         self.assertEqual(vf_info.schema_version, 1)
         self.assertEqual(vf_info.context[0].loop_id, "loop.row")
+
+    def test_canonical_serialization_round_trip(self):
+        vf_info = InputAPI.load_json(self.fixtures / "v1_valid_loop.json")
+        restored = CanonicalJsonVfInfoAdapter.from_payload(
+            canonical_vf_info_to_dict(vf_info)
+        )
+        self.assertEqual(restored, vf_info)
+
 
     def test_semantically_invalid_payload_exposes_validator_diagnostics(self):
         with self.assertRaises(VfInfoValidationError) as raised:
@@ -54,7 +66,7 @@ class CanonicalJsonVfInfoAdapterTest(unittest.TestCase):
         self.assertEqual(diagnostic.location.line, 1)
         self.assertEqual(diagnostic.location.source, str(path))
 
-    def test_root_array_is_rejected_without_legacy_inference(self):
+    def test_root_array_is_rejected(self):
         with self.assertRaises(VfInfoValidationError) as raised:
             CanonicalJsonVfInfoAdapter.from_payload([])  # type: ignore[arg-type]
 
@@ -111,10 +123,10 @@ class CanonicalJsonVfInfoAdapterTest(unittest.TestCase):
         _canonical_schema_validator.cache_clear()
         try:
             with mock.patch(
-                "api.frontend.json_adapter.import_module",
+                "api.json.adapter.import_module",
                 side_effect=missing,
             ):
-                builder = InputAPI.new_vf_info_builder()
+                builder = InputAPI.new_builder()
                 self.assertIsNotNone(builder)
                 with self.assertRaisesRegex(
                     RuntimeError,
@@ -123,6 +135,24 @@ class CanonicalJsonVfInfoAdapterTest(unittest.TestCase):
                     CanonicalJsonVfInfoAdapter.from_payload(self._valid_payload())
         finally:
             _canonical_schema_validator.cache_clear()
+
+    def test_regression_manifest_references_only_canonical_fixtures(self):
+        manifest = json.loads(
+            (
+                self.root
+                / "regression_suite/cases/cost_model_regression_cases.json"
+            ).read_text(encoding="utf-8")
+        )
+        trace_paths = {
+            str(case["trace"])
+            for case in manifest["cases"]
+            if case.get("kind", "simulate") == "simulate"
+        }
+        self.assertTrue(trace_paths)
+        for trace in trace_paths:
+            self.assertIn("regression_suite/inputs/canonical/", trace)
+            vf_info = InputAPI.load_json(self.root / trace)
+            self.assertIn(vf_info.schema_version, SUPPORTED_SCHEMA_VERSIONS)
 
 
 if __name__ == "__main__":

@@ -19,14 +19,6 @@ def render_uarch_override_schema_cpp(payload: Mapping[str, Any]) -> str:
             f"{'true' if 'python' in targets else 'false'}, "
             f"{'true' if 'cpp' in targets else 'false'}}},"
         )
-    lines.extend(
-        [
-            "};",
-            "static constexpr const char *kGeneratedDeprecatedUarchFields[] = {",
-        ]
-    )
-    for name in payload.get("deprecated_fields", []):
-        lines.append(f"  {json.dumps(name)},")
     lines.extend(["};", ""])
     return "\n".join(lines)
 

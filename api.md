@@ -1,151 +1,89 @@
-# VF Simulator API
+# Python 接口
 
-本文说明 VF Simulator 当前公开输入接口。
+`api/input_api.py::InputAPI` 接收输入并输出 `CanonicalVfInfo`。
+`core/simulator.py::CoreVfCostModel` 使用该对象进行预测。
 
-模拟器支持两条输入路径：
-
-1. 通过 `main.py --trace` 读取 JSON trace。
-2. 通过 `main.py --cce` 读取 CCE/DSL，并从 `__VEC_SCOPE__` 中解析 VF 代码。
-
-两条路径都会降到同一种内部 trace 格式，并运行当前主线模型：
-
-```text
-queue_level4 + vreg 活跃范围规范化 + start+4 释放
-```
-
-## 命令行
-
-运行 JSON trace：
-
-```bash
-python main.py --trace VFtest/GeLU_poly.json --out_dir results/demo_json
-```
-
-运行 CCE/DSL 文件：
-
-```bash
-python main.py --cce cce_code/GeLU_poly.dsl --out_dir results/demo_cce
-```
-
-如果一个 CCE 文件里有多个 `__VEC_SCOPE__` block，需要选择指定 VF kernel：
-
-```bash
-python main.py --cce path/to/file.dsl --cce-kernel kernel_name --out_dir results/demo_kernel
-```
-
-旧的 `--ooo-model` 选择器已不再是公开主线命令行接口。默认模型在 `main.py` 内部选择。
-
-## JSON Trace 格式
-
-最小示例：
-
-```json
-{
-  "dtype": "fp32",
-  "params": {
-    "I": 96,
-    "U": 1
-  },
-  "program": [
-    {
-      "type": "loop",
-      "iters": "I",
-      "unroll": "U",
-      "body": [
-        { "type": "inst", "op": "VLDS", "dst": ["V0"], "src": ["memA"] },
-        { "type": "inst", "op": "VADDS", "dst": ["V1"], "src": ["V0"] },
-        { "type": "inst", "op": "VSTS", "dst": ["memB"], "src": ["V1"] }
-      ]
-    }
-  ]
-}
-```
-
-字段：
-
-- `dtype`：指令数据类型，常见值是 `fp32` 或 `fp16`。
-- `params`：`iters` 和 `unroll` 引用的符号参数。
-- `program`：顶层 VF 程序列表。
-- `type=loop`：loop block，包含 `iters`、`unroll`、`body`。
-- `type=inst`：指令，包含 `op`、`dst`、`src`。
-
-支持嵌套循环。分析器会从程序树推导顶层循环边界和发射结构。
-
-## CCE/DSL 输入
-
-CCE 适配器会解析 `__VEC_SCOPE__` 内的向量代码，把支持的指令转换成 `VFInfo`，再降到模拟器 trace 格式。
-
-示例：
-
-```bash
-python main.py --cce cce_code/GeLU_poly.dsl --out_dir results/gelu_poly_cce
-```
-
-程序化用法：
+## 文件输入
 
 ```python
-from api.cce_adapter import parse_cce_vf_info
-from api.simulator_costmodel import CoreVfCostModel
+from api.input_api import InputAPI
+from core.simulator import CoreVfCostModel
 
-vf_info = parse_cce_vf_info("cce_code/GeLU_poly.dsl")
-cycles = CoreVfCostModel().predict_vf_cycles(vf_info)
+vf_info = InputAPI.load_json("tests/fixtures/canonical_vf_info/v1_valid_loop.json")
+result = CoreVfCostModel(out_dir=None).run_vf_info(vf_info)
+print(result["cycles_executed"], result["vf_end_cycle"])
+```
+
+CCE 输入使用 `InputAPI.load_cce(path, kernel_name=None, loop_params=None)`。
+`kernel_name` 选择 VF 函数，`loop_params` 提供循环次数等整数参数。
+JSON 输入支持 Canonical schema v1/v2。所有正式输入出口执行一次通用语义校验。
+
+## 程序化构造
+
+`InputAPI.new_builder()` 返回 `VfInfoBuilder`。构造时提供值定义、producer 和
+operand，`build()` 返回校验成功的程序。
+
+```python
+from api.input_api import InputAPI
+from api.common.schema import CanonicalOperand, InstructionClass, OperandRole, StorageKind
+from core.simulator import CoreVfCostModel
+
+builder = InputAPI.new_builder(source={"name": "vector_add"})
+for name, producer in (("lhs", None), ("rhs", None), ("sum", "inst.add")):
+    builder.register_value(
+        name, logical_id=name, storage=StorageKind.REGISTER,
+        dtype="fp32", producer_node_id=producer,
+    )
+builder.add_instruction(
+    "inst.add", opcode="VADD", instruction_class=InstructionClass.COMPUTE, form="fp32",
+    inputs=(CanonicalOperand("lhs", OperandRole.SOURCE, "fp32"),
+            CanonicalOperand("rhs", OperandRole.SOURCE, "fp32")),
+    outputs=(CanonicalOperand("sum", OperandRole.DESTINATION, "fp32"),),
+)
+vf_info = builder.build()
+cycles = CoreVfCostModel(out_dir=None).predict_vf_cycles(vf_info)
 print(cycles)
 ```
 
-相关 API 文件：
+Builder 的 `params` 保存整数参数，`uarch` 保存单次微架构标量覆盖，`source` 保存来源
+元数据。UB 输入通过 `register_storage_object()` 声明存储对象，访存 operand 引用对象
+并提供 `MemoryAccess`。循环通过 `loop()` 或 `add_loop()` 构造。
 
-- `api/vf_info.py`：`VFInfo`、`VFLoop`、`VFInst`、`ValueInfo`、`MemInfo`、`Membar` 数据类。
-- `api/vf_costmodel.py`：兼容 re-export，并定义抽象接口 `VfCostModel`。
-- `api/cce_adapter.py`：CCE/DSL 解析器。
-- `api/vf_lowering.py`：把 `VFInfo` 降到模拟器 trace。
-- `api/input_api.py`：命令行输入的共享加载器。
-- `api/simulator_costmodel.py`：程序化模拟器封装。
+直接实例化 Canonical dataclass 的调用方使用 `InputAPI.from_canonical(raw_vf_info)`
+接收对象。value、producer、operand 和循环携带关系由调用方显式提供。
+修改对象内部 Mapping 后应重新通过该入口校验。
 
-## 内存和寄存器操作数
+## 模型参数与结果
 
-类型化 API 通过 `ValueInfo.storage` 表示操作数存储位置。`MemInfo` 是 `ValueInfo` 的兼容别名，构造函数仍接受 `name=` 和 `location=` 这两个历史别名。当前 storage 值包括：
+| 参数 | 用途 |
+| --- | --- |
+| `base_dir` | 配置与相对输出路径的根目录，默认仓库根目录 |
+| `out_dir` | 文件输出目录，None 表示关闭输出 |
+| `fallback_dtype` | 参数查询缺少形式信息时使用的默认 dtype，默认 fp32 |
+| `theoretical_limit_vloop_only` | 启用 VLOOP 理论场景 |
+| `theoretical_limit_direct_issue` | 启用直接发射理论场景 |
 
-- `Register`
-- `UB`
-- `Scalar`
+`predict_vf_cycles()` 返回 `vf_end_cycle` 整数；`run_vf_info()` 返回包含执行 cycle、
+VF 结束 cycle、静态布局指令数和输出路径的字典。字段详见
+[验证与精度](docs/validation.md)。
+指令的 form 和数据 dtype 由 Canonical 描述；微架构覆盖由 `vf_info.uarch` 提供，
+支持字段见 [配置参数](docs/configuration.md)。
 
-当前 lowering 路径仍兼容历史 JSON trace 使用的名字，例如 `V0`、`V1`、`memA`、`mem_inter_*`。
+## 校验与诊断
 
-JSON trace 推荐命名：
+```python
+from api.input_api import InputAPI
+from api.common.schema import CanonicalVfInfo
 
-- 向量寄存器：`V0`、`V1`、`V2` 等。
-- 输入/输出 UB 内存：`memA`、`memB`、`memOut` 等。
-- 中间 UB 内存：`mem_inter_*`。该名字只作为普通 UB operand 兼容，不再触发特殊屏障语义。
-
-## 显式内存屏障
-
-CCE 解析可以在源代码可见时表示显式内存屏障语义。当前后端只通过显式 `Membar`
-节点建模 memory ordering；`mem_inter_*` 等名字不再触发隐式跨 block strong barrier。
-旧 JSON trace 若需要表达 store/load 或 load/store ordering，应显式插入 `Membar`。
-
-## 理论上界选项
-
-当前公开理论上界参数：
-
-```bash
---theoretical-limit-vloop-only
---theoretical-limit-vloop-only-legacy-forwarding-direct-issue
+raw_vf_info = CanonicalVfInfo(context=(), values={})
+validation = InputAPI.validate_canonical_vf_info(raw_vf_info)
+print(validation.ok, validation.errors)
+vf_info = InputAPI.from_canonical(raw_vf_info)
 ```
 
-旧的通用 `--theoretical-limit` 参数不是当前活跃接口。
+检查接口返回 `ValidationResult`，包含结构化错误、警告及定位信息。
+正式接收接口在语义错误时抛出 `VfInfoValidationError`，错误输入类型会触发 TypeError。
+Core 检查当前执行能力和运行期约束，能力错误通过 `CanonicalCoreCompatibilityError`
+等异常报告。
 
-## 输出
-
-规范模型时序会打印为：
-
-```text
-VF end cycle (with drain) = N
-```
-
-常见输出文件：
-
-- `start_by_cycle.json`
-- `done_by_cycle.json`
-- `idu_to_ooo.json`
-- `vloop_trace.json`
-- `sim_history.json`
+Canonical 字段和转换阶段见 [输入 API](docs/input_api.md)。

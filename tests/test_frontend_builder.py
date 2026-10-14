@@ -1,19 +1,7 @@
 import unittest
 
-from api.frontend import (
-    AccessKind,
-    AffineExpression,
-    CanonicalMembar,
-    CanonicalOperand,
-    InductionVariable,
-    InstructionClass,
-    MemoryAccess,
-    OperandRole,
-    SourceLocation,
-    StorageKind,
-    VfInfoBuilder,
-    VfInfoValidationError,
-)
+from api.common import (AccessKind, AffineExpression, CanonicalMembar, CanonicalOperand, InductionVariable, InstructionClass, MemoryAccess, OperandRole, SourceLocation, StorageKind, VfInfoValidationError)
+from api.programmatic.builder import VfInfoBuilder
 from api.input_api import InputAPI
 
 
@@ -73,7 +61,7 @@ class VfInfoBuilderTest(unittest.TestCase):
         self.assertEqual(builder.build(), vf_info)
 
     def test_context_manager_builds_nested_loop(self):
-        builder = InputAPI.new_vf_info_builder(params={"N": 2})
+        builder = InputAPI.new_builder(params={"N": 2})
         with builder.loop(
             "loop.outer",
             induction=InductionVariable("i"),
