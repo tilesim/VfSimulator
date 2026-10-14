@@ -7,7 +7,7 @@ from unittest.mock import patch
 
 from api.programmatic.builder import VfInfoBuilder
 from core.simulator import CoreVfCostModel
-from core.common.instruction import DynamicInstruction
+from core.execution.instruction import DynamicInstruction
 from core.execution.membar import TimedMembarController
 
 

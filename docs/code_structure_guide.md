@@ -48,6 +48,7 @@ Core 不读取输入文件，不接受旧 VFInfo、旧 `program/src/dst` JSON �
 core/
 ├── simulator.py
 ├── execution/
+│   ├── instruction.py
 │   ├── prepare.py
 │   ├── expansion.py
 │   ├── engine.py
@@ -62,12 +63,7 @@ core/
 │   ├── shq.py
 │   ├── exq.py
 │   ├── exu.py
-│   ├── lsu.py
-│   └── address_state.py
-├── common/
-│   ├── instruction.py
-│   ├── result.py
-│   └── values.py
+│   └── lsu.py
 ├── params/
 │   ├── loader.py
 │   ├── types.py
@@ -87,14 +83,20 @@ core/
 | 文件 | 核心函数 | 职责 |
 | --- | --- | --- |
 | [simulator.py](../core/simulator.py) | `CoreVfCostModel.run_vf_info/predict_vf_cycles` | 检查输入类型、组装参数及组件、返回预测结果 |
-| [prepare.py](../core/execution/prepare.py) | `CoreLoweringPass.lower`、`prepare_program` | 当前执行能力检查、转换已校验的表示、分析静态布局 |
+| [instruction.py](../core/execution/instruction.py) | `DynamicInstruction`、`Uop` | 动态指令和重命名后的运行时指令数据模型 |
+| [prepare.py](../core/execution/prepare.py) | `CoreLoweringPass.lower`、`prepare_program`、`ValueStorageLookup` | 当前执行能力检查、转换已校验的表示、分析静态布局及存储类别查询 |
 | [expansion.py](../core/execution/expansion.py) | `DynamicExpander.prepare_structured_stream` | 展开 loop/unroll、绑定动态 identity、标记最后使用 |
 | [engine.py](../core/execution/engine.py) | `Engine.run/backend_step/admit` | 全局周期、传输、接收、完成事件及排空 |
-| [scheduler.py](../core/execution/scheduler.py) | `enqueue_shq_to_exq/issue_exq_to_exu/issue_direct_from_shq` | 端口选择、FU FIFO、RR 和 EXU0 预留策略 |
+| [scheduler.py](../core/execution/scheduler.py) | `enqueue_shq_to_exq/issue_exq_to_exu/issue_direct_from_shq` | 跨组件端口分配与传输协调、RR 和 EXU0 预留策略 |
 | [loop_control.py](../core/execution/loop_control.py) | `LoopControl.can_dispatch/notify_dispatch` | VLOOP、block 和迭代开放时刻 |
 | [membar.py](../core/execution/membar.py) | `accept_membar/update/blocks/notify_lsu_start` | 屏障接收、同步、释放、退休及后续 LSU 门控 |
 
 动态展开在进入逐周期仿真前完成；IFU 不负责解析或展开。
+各微架构组件同时维护状态与局部控制逻辑，不拆成纯状态容器。IDU 负责顺序 dispatch、
+地址状态和调度日志，DispatchBudget 与 AddressStateTracker 定义在 idu.py。SHQ 更新
+等待指令的就绪状态和信用生命周期；EXQ 维护容量、接收时序与队首选择；EXU 维护
+端口可用、II 及执行生命周期。Scheduler 协调跨组件的端口分配与流转，Engine 负责
+全局周期顺序、预算、传输管线、资源预留和 admit 重命名/入队。
 默认动态指令上限为 20000，使用 `canonical_dynamic_instruction_limit` 调整。
 未支持的显式 dependency、非 innermost unroll 等语义在执行准备阶段明确拒绝。
 
@@ -103,18 +105,22 @@ core/
 | 组件 | 核心接口 | 独立维护的状态 |
 | --- | --- | --- |
 | [IFU](../core/uarch/ifu.py) | `next_inst/done` | 准备好的取指流 |
-| [IDU](../core/uarch/idu.py) | `accept/dispatch` | 窗口、宽度门控、dispatch 和资源阻塞记录 |
-| [Registers](../core/uarch/registers.py) | `rename/on_uop_start/on_uop_done/update_visibility` | 动态值映射、producer、consumer、generation、释放事件和可见 credit |
+| [IDU](../core/uarch/idu.py) | `accept/can_accept/dispatch` | 窗口、循环/资源/地址约束、顺序 dispatch 与日志 |
+| [Registers](../core/uarch/registers.py) | `rename/bind_align_state/align_ready_cycle/on_uop_start/on_uop_done/update_visibility` | 动态值映射、producer、consumer、generation、对齐状态初始化及分组、释放事件和可见 credit |
 | [PhysicalRegisterBank](../core/uarch/register_bank.py) | `allocate/can_free/try_free` | vector/predicate 的容量、freelist 和释放安全条件 |
-| [SHQ](../core/uarch/shq.py) | `enqueue/reserve/remove/schedule_shq_release` | 计算等待队列、compute/store 共用信用及延迟释放 |
-| [EXQ](../core/uarch/exq.py) | `enqueue/pop/occupancy` | 每端口 ALU/SFU FIFO |
-| [EXU](../core/uarch/exu.py) | `start/finish` | 执行中的 compute、II 历史和端口在途数量 |
-| [LSU](../core/uarch/lsu.py) | `enqueue/update_ready/_issue_ready_lsu/finish` | LSQ、执行中的 memory、align generation、共享 UB slot/byte 预算 |
-| [AddressStateTracker](../core/uarch/address_state.py) | `can_dispatch/notify_dispatch` | POST_UPDATE 地址状态的 IDU dispatch 就绪时间 |
+| [SHQ](../core/uarch/shq.py) | `enqueue/update_ready/reserve/release_credit/remove` | 计算等待状态、compute/store 共用信用及延迟释放 |
+| [EXQ](../core/uarch/exq.py) | `enqueue/can_accept/predict_issue_cycle/pop_ready` | 每端口 FU FIFO、容量、接收延迟及队首选择 |
+| [EXU](../core/uarch/exu.py) | `can_accept/can_issue/next_issue_cycle/pick_port/start/finish` | II 与容量约束、端口选择、执行及完成更新 |
+| [LSU](../core/uarch/lsu.py) | `enqueue/update_ready/_issue_ready_lsu/finish` | LSQ、执行中的 memory、共享 UB slot/byte 预算 |
+| [AddressStateTracker](../core/uarch/idu.py) | `can_dispatch/notify_dispatch` | IDU 内部的 POST_UPDATE 就绪状态 |
 
-组件通过明确的构造参数获得所需依赖。调度器选择流转和发射，组件修改自己拥有的
-队列、端口和执行状态。循环与 membar 是执行控制逻辑；LSU 维护内存执行状态并
+组件通过明确的构造参数获得所需依赖。组件自己的队列、端口与局部控制共同实现
+状态转换；调度器保留跨组件分配及流转，Engine 明确安排周期内各阶段。循环与 membar 是执行控制逻辑；LSU 维护内存执行状态并
 向 membar 报告开始和完成进度。
+
+`AlignProducerRecord` 和 `AlignGeneration` 定义在 `registers.py` 中，对齐状态由 Registers
+维护；Uop 保存对应记录的引用。LSU 查询对齐依赖的就绪周期，再结合普通寄存器依赖、
+队列和 UB 资源进行仲裁。生产者开始和完成时，通过现有寄存器生命周期通知更新记录。
 
 输入 value 名称没有分类语义：即使叫 `mem_result`，声明为 Register 就走寄存器路径；
 即使叫 `v_buffer`，声明为 UB 就走存储对象路径。未声明的值直接报错。
@@ -159,7 +165,8 @@ Engine 通过 `db.resolve_inst()` 将 Profile 绑定到 Uop。latency、FU 和�
 配置文件格式和值本轮保持不变，旧配置格式兼容及已有缺失参数规则仍保留，后续 config
 重构时再判断去留。当前架构最多两个 EXU，A6 将作为独立架构实现。
 
-`trace/recorder.py` 保存 start/done/blocked 事件，`trace/writer.py` 集中写文件：
+`trace/recorder.py` 保存 start/done/blocked 事件，`trace/writer.py` 定义仿真结果
+`SimulationResult` 并集中写文件：
 `start_by_cycle.json`、`done_by_cycle.json`、`sim_history.json`、`membar_history.json`、
 IDU dispatch/blocked、VLOOP trace 和 Perfetto `trace.json`。
 移除 ROB 后不再输出指令 retire 事件或 `preg_old`；屏障 retire 记录仍保留。

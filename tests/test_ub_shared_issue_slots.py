@@ -1,6 +1,6 @@
 import unittest
 from pathlib import Path
-from core.common.instruction import Uop
+from core.execution.instruction import Uop
 from tests.core_support import component_engine
 from core.params.database import ParamDB
 ROOT = Path(__file__).resolve().parents[1]

@@ -5,7 +5,7 @@ from pathlib import Path
 import subprocess
 import tempfile
 import unittest
-from core.common.instruction import DynamicInstruction
+from core.execution.instruction import DynamicInstruction
 from tests.test_post_update_address_state import budget
 
 from api.json.serialization import (canonical_vf_info_to_dict)

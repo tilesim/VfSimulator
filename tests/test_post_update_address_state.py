@@ -10,11 +10,10 @@ from api.cce.adapter import parse_cce_canonical_vf_info
 from api.common import AffineExpression, validate_canonical_vf_info
 from api.json.serialization import canonical_vf_info_from_dict, canonical_vf_info_to_dict
 from core.simulator import CoreVfCostModel
-from core.uarch.address_state import AddressStateTracker
-from core.uarch.idu import IDU
+from core.uarch.idu import AddressStateTracker
 from tests.core_support import component_engine
-from core.common.instruction import DynamicInstruction
-from core.execution.engine import DispatchBudget
+from core.execution.instruction import DynamicInstruction
+from core.uarch.idu import DispatchBudget
 
 def budget(core):
     return DispatchBudget(core.registers.get_free_preg(),core.registers.get_free_predicate(),core.shq.get_free_shq_queue(),core.lsu.get_free_lsq(),core.shq.get_free_shq())

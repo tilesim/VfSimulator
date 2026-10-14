@@ -3,6 +3,7 @@ from core.params.types import UarchParameters
 from typing import Dict
 
 class SHQ:
+    """Compute waiting state and shared credits with delayed release visibility."""
 
     def __init__(self, uarch: UarchParameters):
         self.theoretical_limit_mode = uarch.theoretical_limit_mode
@@ -57,6 +58,16 @@ class SHQ:
         released = self.visible_shq_release_events.pop(cycle, 0)
         self.visible_shq_used = max(0, self.visible_shq_used - released)
         return delta + released
+
+    def update_ready(self, cycle: int, registers) -> None:
+        for uop in self.SHQ:
+            uop.ready_cycle = registers.ready_cycle(uop)
+            uop.state = 'ready' if cycle >= uop.ready_cycle else 'blocked'
+
+    def release_credit(self, uop, cycle: int) -> None:
+        if uop.shq_tracked:
+            self.schedule_shq_release(cycle, 1)
+            uop.shq_tracked = False
 
     def remove(self, issued):
         ids = {u.inst_id for u in issued}

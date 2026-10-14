@@ -3,6 +3,7 @@ from typing import List, Optional
 from core.params.types import InstructionProfile, UarchParameters
 
 class EXU:
+    """Execution ports, issue timing and running-instruction lifecycle."""
 
     def __init__(self, uarch: UarchParameters, db):
         self.db = db
@@ -16,8 +17,29 @@ class EXU:
         self.last_profile_exu = [None] * self.issue_ports
         self.exq_rr_ptr = 0
         self.exq_inflight = [0] * self.issue_ports
+        self.exq_issue_inflight_cap_per_port = uarch.exq_issue_inflight_cap_per_port
 
-    def _pick_exu_port(self, profile: InstructionProfile, c: int, exu_used_this_cycle: List[bool]) -> Optional[int]:
+    def can_accept(self, port: int, *, queued: bool = False) -> bool:
+        if not queued or self.exq_issue_inflight_cap_per_port <= 0:
+            return True
+        return self.exq_inflight[port] < self.exq_issue_inflight_cap_per_port
+
+    def next_issue_cycle(self, profile: InstructionProfile, port: int, *, fu_type: str | None = None) -> int:
+        if fu_type is None:
+            previous_cycle = self.last_issue_cycle_exu[port]
+            previous_profile = self.last_profile_exu[port]
+        else:
+            previous_cycle = self.last_issue_cycle[fu_type][port]
+            previous_profile = self.last_profile[fu_type][port]
+        return previous_cycle + self.db.get_ii_for_profiles(previous_profile, profile)
+
+    def can_issue(self, profile: InstructionProfile, port: int, cycle: int, *, queued: bool = False) -> bool:
+        if port not in profile.allowed_exu_ports or not self.can_accept(port, queued=queued):
+            return False
+        fu_type = None if queued or self.enable_cross_fu_ii else profile.fu_type
+        return cycle >= self.next_issue_cycle(profile, port, fu_type=fu_type)
+
+    def pick_port(self, profile: InstructionProfile, c: int, exu_used_this_cycle: List[bool]) -> Optional[int]:
         legal_ports = set(profile.allowed_exu_ports)
         if not self.enable_exq_greedy_balance:
             for port in range(self.issue_ports):
@@ -25,15 +47,7 @@ class EXU:
                     continue
                 if exu_used_this_cycle[port]:
                     continue
-                if self.enable_cross_fu_ii:
-                    prev_issue = self.last_issue_cycle_exu[port]
-                else:
-                    prev_issue = self.last_issue_cycle[profile.fu_type][port]
-                ii = self.db.get_ii_for_profiles(
-                    self.last_profile_exu[port] if self.enable_cross_fu_ii else self.last_profile[profile.fu_type][port],
-                    profile
-                )
-                if c >= prev_issue + ii:
+                if self.can_issue(profile, port, c):
                     return port
             return None
         candidates = []
@@ -42,15 +56,8 @@ class EXU:
                 continue
             if exu_used_this_cycle[port]:
                 continue
-            if self.enable_cross_fu_ii:
-                prev_issue = self.last_issue_cycle_exu[port]
-            else:
-                prev_issue = self.last_issue_cycle[profile.fu_type][port]
-            ii = self.db.get_ii_for_profiles(
-                self.last_profile_exu[port] if self.enable_cross_fu_ii else self.last_profile[profile.fu_type][port],
-                profile
-            )
-            avail = max(c, prev_issue + ii)
+            fu_type = None if self.enable_cross_fu_ii else profile.fu_type
+            avail = max(c, self.next_issue_cycle(profile, port, fu_type=fu_type))
             candidates.append((port, avail))
         if not candidates:
             return None

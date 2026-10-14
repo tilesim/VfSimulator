@@ -1,7 +1,10 @@
 from __future__ import annotations
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, TYPE_CHECKING
 from core.params.types import InstructionProfile
+
+if TYPE_CHECKING:
+    from core.uarch.registers import AlignGeneration, AlignProducerRecord
 
 @dataclass(frozen=True)
 class DynamicInstruction:
@@ -42,21 +45,6 @@ class DynamicInstruction:
     @property
     def op_class(self):
         return self.instruction_class.upper()
-
-@dataclass
-class AlignProducerRecord:
-    inst_id: int
-    stream_seq: int
-    profile: InstructionProfile
-    start_cycle: Optional[int] = None
-    done_cycle: Optional[int] = None
-
-@dataclass
-class AlignGeneration:
-    state_id: str
-    generation_id: int
-    producers: List[AlignProducerRecord] = field(default_factory=list)
-    consumer_inst_id: Optional[int] = None
 
 @dataclass
 class Uop:

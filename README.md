@@ -154,7 +154,7 @@ CanonicalVfInfo
 动态值身份是 `(definition_id, iteration_path)`，不通过变量名或 `_laneN` 后缀推断。
 `canonical_dynamic_instruction_limit` 默认 20000，可显式配置；`0` 表示关闭限制。
 
-### 3. 执行控制与硬件状态
+### 3. 执行协调与组件模型
 
 `core/simulator.py` 是唯一公开 Core 入口，`CoreVfCostModel.run_vf_info()` 只接收
 API 已校验的 `CanonicalVfInfo`。`main.py` 先通过 `InputAPI` 读取文件，再调用这一入口。
@@ -172,13 +172,13 @@ CanonicalVfInfo → execution/prepare + expansion → PreparedProgram
 ```
 
 - `execution/engine.py`：维护全局周期、传输管线、组件完成事件和排空条件。
-- `execution/scheduler.py`：选择 SHQ→EXQ 端口和 EXQ→EXU 发射顺序。
+- `execution/scheduler.py`：协调 SHQ→EXQ 的端口分配和计算指令流转，组件负责局部就绪与发射条件。
 - `execution/loop_control.py`：维护 VLOOP、循环迭代及顶层 block 的开放时刻。
 - `execution/membar.py`：维护 barrier admission、同步、release、retire 和消费者门控。
-- `uarch/`：分别拥有 IFU、IDU、register banks、SHQ、EXQ、EXU 和 LSU 的状态。
-- `common/`：动态指令、Uop、结果类型及按显式声明查询存储类别的代码。
+- `uarch/`：IFU、IDU、register banks、SHQ、EXQ、EXU 和 LSU 各自维护状态及局部行为；IDU 内含地址更新与顺序 dispatch，EXQ/EXU 内含队首选择和发射约束。
+- `execution/instruction.py`：定义动态指令与 Uop；`execution/prepare.py` 准备程序并提供存储类别查询。
 - `params/`：loader 读取配置，types 定义结构化参数，ParamDB 查询与缓存，uarch 合并架构配置，fallback 处理缺失参数。
-- `trace/`：记录并写出执行日志及 Perfetto 文件。
+- `trace/`：定义仿真结果，记录并写出执行日志及 Perfetto 文件。
 
 寄存器在最后一个 consumer 开始后经过配置延迟，并满足映射、pending producer、
 consumer 数量和 generation 条件时归还。LOAD/STORE 使用 LSU 内部 LSQ 和共享 UB
@@ -195,7 +195,7 @@ Membar 自身的 retire 时序仍计入 VF 结束周期。UB 一般 RAW/WAR/WAW 
 
 1. 更新 IDU 可见 credit，并交付 IDU→后端传输管线。
 2. IFU 填充 IDU；membar 交给控制逻辑。
-3. 更新 membar 状态，再执行 IDU dispatch 和后端接收。
+3. 更新 membar 状态，由 IDU 执行顺序 dispatch，再进行后端接收。
 4. 处理寄存器/SHQ 释放及 EXU/LSU 完成事件。
 5. 更新 ready，先进行一次 LSU 仲裁，再进行 compute 调度，最后使用剩余 LSU 预算。
 6. 检查前端、管线、未完成指令和 membar 是否排空。
@@ -319,7 +319,7 @@ api/json/            Canonical JSON 格式校验和序列化
 api/programmatic/    Builder 程序化构造
 api/common/          共享 Canonical 类型、Catalog 和语义校验
 api/native/          C++ Canonical 合同、JSON adapter 和共享配置接口
-core/                Python simulator 入口及 execution/uarch/common/params/trace
+core/                Python simulator 入口及 execution/uarch/params/trace
 native/              C++ 执行核心、构建目标和 Native 测试
 configs/             指令及微架构参数
 tests/               Python 单元测试和共享 fixtures

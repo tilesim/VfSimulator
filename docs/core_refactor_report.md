@@ -8,8 +8,8 @@
 - Core 根目录仅保留 `simulator.py` 作为公开入口；`main.py` 通过该入口运行。
 - 公开输入仅为 `CanonicalVfInfo`。文件读取和 JSON 解码由 InputAPI 完成。
 - 执行准备、动态展开、周期推进、调度、loop 和 membar 放入 `execution/`。
-- IFU、IDU、Registers、SHQ、EXQ、EXU、LSU 及地址状态放入 `uarch/`，分别拥有组件状态。
-- 动态指令、Uop、结果和严格存储类型查询放入 `common/`；参数和日志分别放入 `params/`、`trace/`。
+- IFU、IDU、Registers、SHQ、EXQ、EXU、LSU 放入 `uarch/`，各组件完整维护状态与局部行为；地址状态并入 IDU。
+- 动态指令、Uop 和严格存储类型查询归入 `execution/`；参数放入 `params/`，结果定义和日志输出放入 `trace/`。
 - 删除旧 Core 工厂、旧基类、旧 runner、旧寄存器/循环 normalization 和名称推断路径。
 - 删除 ROB 容量及按序退休；完成事件由 EXU、LSU 产生，未完成登记表只用于排空。
 - 保留 membar 自身的 retire、循环开放、forwarding、II、寄存器释放和信用反馈时序。
@@ -113,3 +113,71 @@ ParamDB 保留参数查询及缓存；uarch 复用已解析基础配置、合并
 新测试覆盖统一路径优先级、可选文件格式错误、无效 forwarding/II 单元格、结构化配置
 合并与不可重绑定，以及合法端口解析和 Profile 缓存归属。configs、API、Native 和优化器
 内容保持不变。
+
+## 后续调整：对齐状态归入 Registers
+
+`AlignProducerRecord`、`AlignGeneration` 从 `common/instruction.py` 移入
+`uarch/registers.py`。对齐状态初始化、分组及生产者/消费者绑定也从 LSU 移入 Registers；
+开始和完成时间通过现有 `on_uop_start/on_uop_done` 通知更新。Registers 提供
+`align_ready_cycle()`，LSU 综合对齐就绪周期、普通寄存器依赖及访存资源进行仲裁。
+Uop 保留记录引用，类型导入使用 TYPE_CHECKING 避免运行时循环依赖。
+
+验证：311 项 Python 测试（301 通过、10 项 Native 测试跳过）；22 个 smoke case 的
+周期完全一致，198 个日志文件逐字节一致。另对比 5 个对齐状态案例，覆盖加载初始化及
+重新初始化、多个存储生产者、空状态组、谓词存储独立状态以及消费时封闭状态组；周期
+完全一致，47 个日志文件逐字节一致。Python 3.10 语法检查通过。
+
+## 后续调整：结果定义合并到输出模块
+
+将小型 `SimulationResult` 定义合并到 `trace/writer.py`，删除 `common/result.py`，
+Engine 从 writer 导入结果类型。周期计算仍在 Engine 中，结果字段与 `to_dict()` 行为
+保持不变，关闭日志输出时仍返回完整的周期结果。代码导览和 README 同步更新。
+
+验证：311 项 Python 测试（301 通过、10 项 Native 测试跳过）；默认 CLI 仍为
+`cycles_executed=35`、`vf_end_cycle=47`，日志及 Perfetto 文件正常输出。Python 3.10
+语法检查通过。
+
+## 后续调整：取消 Core common 目录
+
+将 `common/instruction.py` 移至 `execution/instruction.py`，保留独立的动态指令与 Uop
+数据模型；将 `ValueStorageLookup` 合并至已有的 `execution/prepare.py`。删除
+`core/common/`，直接更新所有组件、日志和测试引用，不保留兼容转发模块。之前已完成的
+对齐状态归入 Registers、结果定义归入 trace/writer 调整一并保留。
+
+验证：311 项 Python 测试（301 通过、10 项 Native 测试跳过）；默认 CLI 仍为
+`cycles_executed=35`、`vf_end_cycle=47`，9 个日志文件与目录整理前逐字节一致。
+Python 3.10 语法检查通过，代码及测试无旧 `core.common` 导入。
+
+## 后续调整：IDU dispatch 归入 Scheduler
+
+将 IDU.dispatch 移至 Scheduler.dispatch_idu，统一前端 dispatch 和计算后端调度的
+代码归属。IDU 保留窗口、宽度、地址更新状态及基本接收/移出操作，不保留 dispatch
+转发入口。循环开放、资源预算、地址依赖判断及 dispatch/阻塞日志由 Scheduler 处理；
+DispatchBudget 也移入 scheduler.py。Engine 保留预算计算、资源预留、传输延迟和 admit
+重命名/入队流程，只更新构造顺序和调用位置。日志 writer 和现有测试同步迁移。
+
+保持选中指令时发布地址更新、批量选定后通知循环控制的时机，以及每周期各阶段顺序。
+
+验证：311 项 Python 测试（301 通过、10 项 Native 测试跳过）；22 个 smoke case
+的周期完全一致，198 个日志文件逐字节一致。另对比 10 种配置，覆盖 0/1/7 周期传输、
+显式/非显式信用、受限寄存器、直接后端发射和两种理论模式，周期及 90 个日志文件均
+完全一致。Python 3.10 语法检查通过。
+
+## 后续调整：按组件状态与局部行为组织
+
+保留 IFU、IDU、SHQ、EXQ、EXU、Registers 和 LSU 的独立文件，每个组件共同维护
+状态、局部约束与状态转换。IDU dispatch 及日志归回 IDU，DispatchBudget 和
+AddressStateTracker 合并至 idu.py，删除单独的 address_state.py。
+
+SHQ 负责等待指令的就绪状态及信用释放；Registers 提供 ready_cycle 查询；EXQ
+负责实际/准入占用、容量检查、接收/排队预测及各 FU 队首选择；EXU 负责端口可用、
+在执行容量、II、执行开始和完成。Scheduler 保留 SHQ→EXQ 的跨端口策略和计算流转，
+不再遍历 EXQ 内部队列、读取 EXU 发射历史或包含 IDU 的局部规则。删除未使用的
+总在执行计数及预测调用中的冗余 opcode/form 入参。Engine 保持唯一周期、阶段顺序、
+资源预算、传输延迟和重命名入队流程，不引入状态机框架或事件总线。
+
+验证：316 项 Python 测试（306 通过、10 项 Native 测试跳过）；新增 5 项组件生命周期
+测试覆盖 FU 队首阻塞、接收延迟、完成后恢复容量、准入计入在执行指令、不同 II 规则
+和延迟信用仅发布一次。22 个 smoke case 周期一致，198 个日志文件逐字节一致；
+另对比 11 种计算调度配置（110 个日志）和 10 种前端/理论配置（90 个日志），周期与
+日志均一致。Python 3.10 语法检查通过。API、configs、Native 与优化器均未改动。

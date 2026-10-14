@@ -7,7 +7,7 @@ from pathlib import Path
 from core.simulator import CoreVfCostModel
 from api.json.serialization import canonical_vf_info_to_dict
 from api.input_api import InputAPI
-from core.common.instruction import Uop
+from core.execution.instruction import Uop
 from tests.core_support import component_engine
 from core.params.database import ParamDB
 ROOT = Path(__file__).resolve().parents[1]

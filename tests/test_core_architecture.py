@@ -6,7 +6,7 @@ from pathlib import Path
 
 from api.common.schema import StorageKind
 from api.json.serialization import canonical_vf_info_from_dict, canonical_vf_info_to_dict
-from core.common.values import ValueStorageLookup
+from core.execution.prepare import ValueStorageLookup
 from core.simulator import CoreVfCostModel
 from tests.core_support import engine_for
 from tests.test_predicate_registers import parse, records

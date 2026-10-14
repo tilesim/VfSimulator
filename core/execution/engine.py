@@ -1,31 +1,21 @@
 from __future__ import annotations
 from core.params.types import UarchParameters
-from dataclasses import dataclass
 from collections import deque
-from core.common.instruction import DynamicInstruction
-from core.common.result import SimulationResult
-from core.common.values import ValueStorageLookup
+from core.execution.instruction import DynamicInstruction
+from core.execution.prepare import ValueStorageLookup
 from core.uarch.registers import Registers
 from core.uarch.shq import SHQ
 from core.uarch.exq import EXQ
 from core.uarch.exu import EXU
 from core.uarch.lsu import LSU
-from core.uarch.idu import IDU
+from core.uarch.idu import DispatchBudget, IDU
 from core.uarch.ifu import IFU
 from core.execution.loop_control import LoopControl
 from core.execution.membar import MembarController, TimedMembarController
 from core.execution.scheduler import Scheduler
 from core.trace.recorder import TraceRecorder
-from core.trace.writer import dump_logs
+from core.trace.writer import SimulationResult, dump_logs
 from api.common.instruction_catalog import DEFAULT_INSTRUCTION_CATALOG
-
-@dataclass(frozen=True)
-class DispatchBudget:
-    vector: int
-    predicate: int
-    shq_queue: int
-    lsq: int
-    shq: int
 
 class Engine:
 
@@ -42,15 +32,15 @@ class Engine:
         values = ValueStorageLookup(program.values)
         self.registers = Registers(uarch, db, values, dtype=fallback_dtype)
         self.shq = SHQ(uarch)
-        self.exq = EXQ(uarch)
         self.exu = EXU(uarch, db)
+        self.exq = EXQ(uarch, db, self.registers, self.exu)
         self.trace = TraceRecorder(self.registers)
         startup = db.vf_timing.startup_cost
         self.control = TimedMembarController(db, 'fp32', uarch.membar_timing, issue_floor=startup) if uarch.membar_timing is not None else MembarController(db, 'fp32')
         self.lsu = LSU(uarch, db, self.registers, self.shq, self.trace, self.control)
-        self.scheduler = Scheduler(uarch, self.registers, self.shq, self.exq, self.exu, db, self.trace)
         self.loops = LoopControl(uarch, program.top_block_loop_bounds, program.empty_top_blocks)
         self.idu = IDU(uarch, db, self.loops, values)
+        self.scheduler = Scheduler(uarch, self.registers, self.shq, self.exq, self.exu, self.trace)
         self.ifu = IFU(program.instructions)
         self.explicit = uarch.use_explicit_idu_credit_bank
         self.vector_credit = self.registers.get_free_preg()
@@ -67,7 +57,7 @@ class Engine:
         u = self.registers.rename(inst, profile, self.cycle)
         u.admission_seq = self.next_admission
         self.next_admission += 1
-        self.lsu.bind_align_state(u, inst.attributes)
+        self.registers.bind_align_state(u, inst.attributes)
         if profile.op_class in ('LOAD', 'STORE'):
             spec = DEFAULT_INSTRUCTION_CATALOG.lookup(u.op)
             mode = inst.attributes.get('catalog_mode')
@@ -113,14 +103,10 @@ class Engine:
         self.registers.try_free_eligible_pregs()
         self.lsu.update_ready(c)
 
-        def ready_compute():
-            for u in self.shq.SHQ:
-                u.ready_cycle = self.registers._compute_ready_cycle(u)
-                u.state = 'ready' if c >= u.ready_cycle else 'blocked'
-        ready_compute()
+        self.shq.update_ready(c, self.registers)
         blocked = set()
         counts = self.lsu._issue_ready_lsu(c, 0, 0, 0, blocked)
-        ready_compute()
+        self.shq.update_ready(c, self.registers)
         self.lsu.update_ready(c, stores_only=True)
         used = [False] * self.exu.issue_ports
         if self.uarch.enable_isu_queue_model:

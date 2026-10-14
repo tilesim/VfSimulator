@@ -1,6 +1,6 @@
 from __future__ import annotations
 from typing import Any, Dict, List
-from core.common.instruction import Uop
+from core.execution.instruction import Uop
 import json
 
 class TraceRecorder:

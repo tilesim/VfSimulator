@@ -1,25 +1,64 @@
 from __future__ import annotations
 from core.params.types import UarchParameters
 from collections import deque
-from core.common.instruction import DynamicInstruction
-from core.uarch.address_state import AddressStateTracker
+from core.execution.instruction import DynamicInstruction
+from dataclasses import dataclass
+
+@dataclass(frozen=True)
+class DispatchBudget:
+    vector: int
+    predicate: int
+    shq_queue: int
+    lsq: int
+    shq: int
+
+class AddressStateTracker:
+    def __init__(self, update_latency: int):
+        if type(update_latency) is not int or not 0 < update_latency < 2**63:
+            raise ValueError("idu_post_update_ready_latency must be a positive int64")
+        self.update_latency = update_latency
+        self.updates: dict[str, dict] = {}
+
+    def dependencies(self, accesses) -> list[dict]:
+        states = {a["address_state_id"] for a in accesses
+                  if a.get("address_state_id") is not None}
+        return [dict(self.updates[s]) for s in sorted(states) if s in self.updates]
+
+    def can_dispatch(self, accesses, cycle: int) -> bool:
+        return all(cycle >= d["ready_cycle"] for d in self.dependencies(accesses))
+
+    def notify_dispatch(self, inst_id: int, accesses, cycle: int) -> None:
+        states = {a["address_state_id"] for a in accesses
+                  if a.get("address_state_id") is not None
+                  and a.get("update_mode") == "post_update"}
+        if states and cycle > 2**63 - 1 - self.update_latency:
+            raise ValueError("Address ready_cycle exceeds int64")
+        for state in states:
+            self.updates[state] = {
+                "address_state_id": state,
+                "producer_inst_id": inst_id,
+                "producer_dispatch_cycle": cycle,
+                "ready_cycle": cycle + self.update_latency,
+            }
+
 
 class IDU:
+    """Decode window, ordered dispatch and pointer-update timing."""
 
-    def __init__(self, uarch: UarchParameters, pdb, loops, value_storage):
+    def __init__(self, uarch: UarchParameters, db, loops, value_storage):
         self.window_width = uarch.IDU_window_width
         self.issue_width = uarch.IDU_issue_width
         self.theoretical_limit_mode = uarch.theoretical_limit_mode
-        self.global_shq_preg_gate = uarch.global_shq_preg_gate
-        self.vf_startup_cost = pdb.vf_timing.startup_cost
-        self.idu_dispatch_start_advance = uarch.idu_dispatch_start_advance
-        self.loops = loops
         self.address_states = AddressStateTracker(uarch.idu_post_update_ready_latency)
         self.window = deque()
+        self.loops = loops
+        self.value_storage = value_storage
+        self.global_shq_preg_gate = uarch.global_shq_preg_gate
+        self.vf_startup_cost = db.vf_timing.startup_cost
+        self.idu_dispatch_start_advance = uarch.idu_dispatch_start_advance
         self.dispatch_log = []
         self.address_block_log = []
         self.resource_block_log = []
-        self.value_storage = value_storage
 
     def empty(self) -> bool:
         return len(self.window) == 0
@@ -35,7 +74,7 @@ class IDU:
         if self.theoretical_limit_mode or len(self.window) < self.window_width:
             self.window.append(inst)
 
-    def dispatch(self, cycle, budget):
+    def dispatch(self, cycle: int, budget: DispatchBudget) -> list[DynamicInstruction]:
         if not self.window:
             return []
         dispatch_start_gate = max(0, int(self.vf_startup_cost) - int(self.idu_dispatch_start_advance))

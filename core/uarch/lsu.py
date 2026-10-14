@@ -1,7 +1,7 @@
 from __future__ import annotations
 from core.params.types import UarchParameters
-from typing import Any, Dict, List, Optional, Set, Tuple
-from core.common.instruction import Uop, AlignGeneration, AlignProducerRecord
+from typing import List, Optional, Set, Tuple
+from core.execution.instruction import Uop
 
 class LSU:
 
@@ -24,17 +24,14 @@ class LSU:
         self.ub_budget_cycle = -1
         self.ub_bytes_issued = 0
         self.LSQ: List[Uop] = []
-        self.align_state_open: Dict[str, AlignGeneration] = {}
-        self.align_state_next_generation: Dict[str, int] = {}
-        self.align_load_initializers: Dict[str, AlignProducerRecord] = {}
 
     def _load_ready_cycle(self, u: Uop) -> int:
         ready = max(self.vf_startup_cost, int(getattr(u, 'lsq_ready_cycle', 0)))
-        producer = u.align_load_producer
-        if producer is not None:
-            if producer.start_cycle is None:
-                return 10 ** 9
-            ready = max(ready, producer.start_cycle + self.db.get_forwarding_for_profiles(producer.profile, u.profile))
+        align_ready = self.registers.align_ready_cycle(u)
+        if align_ready is not None:
+            if align_ready == 10 ** 9:
+                return align_ready
+            ready = max(ready, align_ready)
         return ready
 
     def _store_ready_cycle(self, u: Uop) -> Tuple[int, Optional[str], Optional[str], Optional[int]]:
@@ -65,62 +62,17 @@ class LSU:
                 pform = prod_form
                 pst = prod_start
         has_dependency = best_t >= 0
-        generation = u.align_generation
-        if u.align_state_operation == 'consume' and generation is not None:
-            if any((record.start_cycle is None for record in generation.producers)):
-                return (10 ** 9, pop, pform, pst)
-            state_ready = int(getattr(u, 'lsq_ready_cycle', 0))
-            for record in generation.producers:
-                state_ready = max(
-                    state_ready,
-                    int(record.start_cycle) + int(self.db.get_forwarding_for_profiles(record.profile, u.profile))
-                )
-            best_t = max(best_t, state_ready)
+        align_ready = self.registers.align_ready_cycle(u)
+        if align_ready is not None:
+            if align_ready == 10 ** 9:
+                return (align_ready, pop, pform, pst)
+            best_t = max(best_t, align_ready)
             has_dependency = True
         if not has_dependency:
             return (10 ** 9, None, None, None)
         best_t = max(best_t, int(getattr(u, 'lsq_ready_cycle', 0)))
         u.store_dependencies_resolved = True
         return (best_t, pop, pform, pst)
-
-    def bind_align_state(self, u: Uop, attributes: Any) -> None:
-        if not isinstance(attributes, dict):
-            return
-        operation = str(attributes.get('align_state_operation', '')).lower()
-        state_id = str(attributes.get('align_state_id', ''))
-        if operation in {'load_init', 'load_use'}:
-            if not state_id:
-                raise ValueError('Load align state ID is required')
-            u.align_state_operation, u.align_state_id = (operation, state_id)
-            if operation == 'load_init':
-                record = AlignProducerRecord(u.inst_id, u.stream_seq, u.profile)
-                self.align_load_initializers[state_id] = record
-                u.align_producer_record = record
-            else:
-                if state_id not in self.align_load_initializers:
-                    raise ValueError(f'Uninitialized load align state: {state_id}')
-                u.align_load_producer = self.align_load_initializers[state_id]
-            return
-        if operation not in {'append', 'consume'} or not state_id:
-            return
-        generation = self.align_state_open.get(state_id)
-        if generation is None:
-            generation_id = self.align_state_next_generation.get(state_id, 0)
-            generation = AlignGeneration(state_id, generation_id)
-            self.align_state_open[state_id] = generation
-            self.align_state_next_generation[state_id] = generation_id + 1
-        u.align_state_operation = operation
-        u.align_state_id = state_id
-        u.align_generation = generation
-        if operation == 'append':
-            record = AlignProducerRecord(inst_id=u.inst_id, stream_seq=u.stream_seq, profile=u.profile)
-            generation.producers.append(record)
-            u.align_producer_record = record
-            return
-        generation.consumer_inst_id = u.inst_id
-        generation_id = self.align_state_next_generation.get(state_id, generation.generation_id + 1)
-        self.align_state_open[state_id] = AlignGeneration(state_id, generation_id)
-        self.align_state_next_generation[state_id] = generation_id + 1
 
     def _log_membar_blocked(self, u: Uop) -> None:
         old_reason = u.blocked_reason
@@ -190,16 +142,13 @@ class LSU:
             u.done_cycle = cycle + u.profile.latency
             u.state = 'running'
             self.running[u.inst_id] = u
-            if u.align_producer_record is not None:
-                u.align_producer_record.start_cycle = cycle
             self.registers.on_uop_start(u)
             if op_class == 'LOAD':
                 issued_loads += 1
             else:
                 issued_stores += 1
-                if self.enable_shq_credit_model and bool(getattr(u, 'shq_tracked', False)):
-                    self.shq.schedule_shq_release(cycle, 1)
-                    u.shq_tracked = False
+                if self.enable_shq_credit_model:
+                    self.shq.release_credit(u, cycle)
             issued_total += 1
             self.ub_bytes_issued += transfer_bytes
             self.trace._log('start', u)
@@ -226,8 +175,6 @@ class LSU:
         for key, u in list(self.running.items()):
             if cycle >= u.done_cycle:
                 u.state = 'done'
-                if u.align_producer_record is not None:
-                    u.align_producer_record.done_cycle = u.done_cycle
                 completed.append(u)
                 del self.running[key]
         return completed

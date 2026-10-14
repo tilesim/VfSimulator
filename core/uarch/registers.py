@@ -1,9 +1,26 @@
 from __future__ import annotations
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional, Set, Tuple
-from core.common.instruction import Uop
+from core.execution.instruction import Uop
 from core.params.types import InstructionProfile, UarchParameters
 from core.uarch.register_bank import PhysicalRegisterBank
+
+@dataclass
+class AlignProducerRecord:
+    """Producer identity and timing for an alignment-state dependency."""
+    inst_id: int
+    stream_seq: int
+    profile: InstructionProfile
+    start_cycle: Optional[int] = None
+    done_cycle: Optional[int] = None
+
+@dataclass
+class AlignGeneration:
+    """Alignment producers grouped for one consuming instruction."""
+    state_id: str
+    generation_id: int
+    producers: List[AlignProducerRecord] = field(default_factory=list)
+    consumer_inst_id: Optional[int] = None
 
 @dataclass
 class SrcReleaseEvent:
@@ -61,6 +78,66 @@ class Registers:
         self.visible_preg_free_events: Dict[int, int] = {}
         self.idu_mailbox_preg_release_delta: int = 0
         self.value_storage = value_storage
+        self.align_state_open: Dict[str, AlignGeneration] = {}
+        self.align_state_next_generation: Dict[str, int] = {}
+        self.align_load_initializers: Dict[str, AlignProducerRecord] = {}
+
+    def bind_align_state(self, u: Uop, attributes: Any) -> None:
+        if not isinstance(attributes, dict):
+            return
+        operation = str(attributes.get('align_state_operation', '')).lower()
+        state_id = str(attributes.get('align_state_id', ''))
+        if operation in {'load_init', 'load_use'}:
+            if not state_id:
+                raise ValueError('Load align state ID is required')
+            u.align_state_operation, u.align_state_id = (operation, state_id)
+            if operation == 'load_init':
+                record = AlignProducerRecord(u.inst_id, u.stream_seq, u.profile)
+                self.align_load_initializers[state_id] = record
+                u.align_producer_record = record
+            else:
+                if state_id not in self.align_load_initializers:
+                    raise ValueError(f'Uninitialized load align state: {state_id}')
+                u.align_load_producer = self.align_load_initializers[state_id]
+            return
+        if operation not in {'append', 'consume'} or not state_id:
+            return
+        generation = self.align_state_open.get(state_id)
+        if generation is None:
+            generation_id = self.align_state_next_generation.get(state_id, 0)
+            generation = AlignGeneration(state_id, generation_id)
+            self.align_state_open[state_id] = generation
+            self.align_state_next_generation[state_id] = generation_id + 1
+        u.align_state_operation = operation
+        u.align_state_id = state_id
+        u.align_generation = generation
+        if operation == 'append':
+            record = AlignProducerRecord(inst_id=u.inst_id, stream_seq=u.stream_seq, profile=u.profile)
+            generation.producers.append(record)
+            u.align_producer_record = record
+            return
+        generation.consumer_inst_id = u.inst_id
+        generation_id = self.align_state_next_generation.get(state_id, generation.generation_id + 1)
+        self.align_state_open[state_id] = AlignGeneration(state_id, generation_id)
+        self.align_state_next_generation[state_id] = generation_id + 1
+
+    def align_ready_cycle(self, u: Uop) -> Optional[int]:
+        """Return alignment readiness, or None when there is no alignment dependency."""
+        if u.align_load_producer is not None:
+            producers = [u.align_load_producer]
+        elif u.align_state_operation == 'consume' and u.align_generation is not None:
+            producers = u.align_generation.producers
+        else:
+            return None
+        if any(record.start_cycle is None for record in producers):
+            return 10 ** 9
+        ready = int(getattr(u, 'lsq_ready_cycle', 0))
+        for record in producers:
+            ready = max(
+                ready,
+                int(record.start_cycle) + self.db.get_forwarding_for_profiles(record.profile, u.profile)
+            )
+        return ready
 
     def is_renameable(self, name: Any) -> bool:
         return self.value_storage.is_renameable(name)
@@ -98,7 +175,7 @@ class Registers:
             return prod_start + max(0, fwd - 1)
         return prod_start + fwd
 
-    def _compute_ready_cycle(self, u: Uop) -> int:
+    def ready_cycle(self, u: Uop) -> int:
         t = max(self.vf_startup_cost, int(getattr(u, 'shq_ready_cycle', 0)))
         for ps in u.preg_src:
             if ps is None:
@@ -145,6 +222,8 @@ class Registers:
         return True
 
     def on_uop_done(self, u: Uop) -> None:
+        if u.align_producer_record is not None:
+            u.align_producer_record.done_cycle = u.done_cycle
         if self.assert_start_release_integrity:
             exp = int(self.src_release_expected.get(u.inst_id, 0))
             seen = int(self.src_release_seen.get(u.inst_id, 0))
@@ -309,6 +388,8 @@ class Registers:
         return u
 
     def on_uop_start(self, uop):
+        if uop.align_producer_record is not None:
+            uop.align_producer_record.start_cycle = uop.start_cycle
         self.schedule_src_release_from_start(uop)
         if uop.op_class in ('LOAD', 'COMPUTE'):
             for physical_id in uop.preg_dst:

@@ -2,7 +2,7 @@ import unittest
 import json
 import tempfile
 from pathlib import Path
-from core.common.instruction import Uop
+from core.execution.instruction import Uop
 from tests.core_support import component_engine
 from core.params.database import ParamDB
 from core.uarch.register_bank import PhysicalRegisterBank
