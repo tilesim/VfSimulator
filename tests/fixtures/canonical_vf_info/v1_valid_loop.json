@@ -62,7 +62,6 @@
           "outputs": [
             {"value_id": "acc.0", "role": "destination", "dtype": "fp32"}
           ],
-          "dependencies": [],
           "attributes": {}
         }
       ]

@@ -276,12 +276,6 @@ validateCanonicalVfInfo(const CanonicalVfInfo &vfInfo) {
   }
 
   std::unordered_set<std::string> registeredNodeIds;
-  struct PendingDependency {
-    std::string producer;
-    std::string consumer;
-    std::string path;
-  };
-  std::vector<PendingDependency> pendingDependencies;
   std::unordered_map<std::string, std::vector<std::string>> producedDefinitions;
 
   auto registerNodeId =
@@ -309,32 +303,6 @@ validateCanonicalVfInfo(const CanonicalVfInfo &vfInfo) {
     return true;
   };
 
-  auto validateDependencies =
-      [&](const std::vector<CanonicalDependencyRef> &dependencies,
-          const std::string &consumer, const std::string &path) {
-        for (size_t index = 0; index < dependencies.size(); ++index) {
-          const auto &dependency = dependencies[index];
-          const std::string itemPath = path + "[" + std::to_string(index) + "]";
-          if (dependency.producerNodeId == consumer)
-            error("self_dependency", "Node cannot depend on itself", itemPath);
-          if (dependency.kind != CanonicalDependencyKind::Memory &&
-              dependency.kind != CanonicalDependencyKind::Control)
-            error("unsupported_dependency_kind",
-                  "Explicit dependency must be memory or control", itemPath);
-          if (dependency.operandIndex && *dependency.operandIndex < 0)
-            error("invalid_dependency_operand_index",
-                  "Dependency operand_index must be non-negative", itemPath);
-          auto producer = nodeInfo.find(dependency.producerNodeId);
-          if (producer != nodeInfo.end() &&
-              !producerVisibleTo(dependency.producerNodeId, consumer))
-            error("dependency_producer_not_visible",
-                  "Dependency producer is not visible before consumer",
-                  itemPath);
-          pendingDependencies.push_back(
-              {dependency.producerNodeId, consumer, itemPath});
-        }
-      };
-
   std::function<void(const std::vector<CanonicalNode> &, const std::string &,
                      std::unordered_set<std::string>)>
       validateNodes;
@@ -356,7 +324,8 @@ validateCanonicalVfInfo(const CanonicalVfInfo &vfInfo) {
         if (inst->form.empty())
           error("missing_instruction_form", "Instruction form is required",
                 nodePath, inst->sourceLocation);
-        const auto *catalogSpec = validateInstructionForm(vfInfo, *inst, nodePath, error);
+        const auto *catalogSpec =
+            validateInstructionForm(vfInfo, *inst, nodePath, error);
         validateScalarMap(inst->attributes, nodePath + ".attributes");
 
         auto validateOperands = [&](const std::vector<CanonicalOperand>
@@ -521,9 +490,8 @@ validateCanonicalVfInfo(const CanonicalVfInfo &vfInfo) {
             (hasInputMemory || hasOutputMemory))
           error("instruction_class_memory_access_mismatch",
                 "Compute/control instructions cannot access memory", nodePath);
-        validateInstructionOperands(vfInfo, *inst, catalogSpec, nodePath, error);
-        validateDependencies(inst->dependencies, inst->instructionId,
-                             nodePath + ".dependencies");
+        validateInstructionOperands(vfInfo, *inst, catalogSpec, nodePath,
+                                    error);
         continue;
       }
 
@@ -674,8 +642,6 @@ validateCanonicalVfInfo(const CanonicalVfInfo &vfInfo) {
       if (membar.barrier.empty())
         error("missing_membar_type", "Membar type is required", nodePath,
               membar.sourceLocation);
-      validateDependencies(membar.dependencies, membar.instructionId,
-                           nodePath + ".dependencies");
     }
   };
   validateNodes(vfInfo.context, "context", {});
@@ -713,11 +679,6 @@ validateCanonicalVfInfo(const CanonicalVfInfo &vfInfo) {
             "Producer node emits the same definition more than once",
             "values." + definitionId + ".producer_node_id",
             value.sourceLocation);
-  }
-  for (const auto &dependency : pendingDependencies) {
-    if (!nodeInfo.count(dependency.producer))
-      error("unknown_dependency_producer",
-            "Dependency references unknown producer node", dependency.path);
   }
   return result;
 }

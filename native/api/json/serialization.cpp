@@ -150,40 +150,12 @@ CanonicalOperandRole operandRole(const std::string &value) {
   throw std::runtime_error("unsupported canonical operand role: " + value);
 }
 
-CanonicalDependencyKind dependencyKind(const std::string &value) {
-  if (value == "memory")
-    return CanonicalDependencyKind::Memory;
-  if (value == "control")
-    return CanonicalDependencyKind::Control;
-  throw std::runtime_error("unsupported canonical dependency kind: " + value);
-}
-
 CanonicalIntegerExpression integerExpression(const json::Value &value) {
   if (value.isInt())
     return value.asInt();
   if (value.isString())
     return value.asString();
   throw std::runtime_error("canonical integer expression must be int/string");
-}
-
-CanonicalDependencyRef dependency(const json::Value &value) {
-  const auto &object = value.asObject();
-  rejectUnknownFields(object, {"producer_node_id", "kind", "operand_index"},
-                      "canonical dependency");
-  CanonicalDependencyRef result;
-  result.producerNodeId = required(object, "producer_node_id").asString();
-  result.kind = dependencyKind(required(object, "kind").asString());
-  result.operandIndex = optionalInt(object, "operand_index");
-  return result;
-}
-
-std::vector<CanonicalDependencyRef> dependencies(const json::Value *value) {
-  std::vector<CanonicalDependencyRef> result;
-  if (!value)
-    return result;
-  for (const auto &item : value->asArray())
-    result.push_back(dependency(item));
-  return result;
 }
 
 CanonicalOperand operand(const json::Value &value) {
@@ -270,7 +242,7 @@ CanonicalNode node(const json::Value &value) {
     rejectUnknownFields(object,
                         {"kind", "instruction_id", "opcode",
                          "instruction_class", "form", "inputs", "outputs",
-                         "dependencies", "attributes", "source_location"},
+                         "attributes", "source_location"},
                         "canonical instruction");
     CanonicalInstruction result;
     result.instructionId = required(object, "instruction_id").asString();
@@ -280,7 +252,6 @@ CanonicalNode node(const json::Value &value) {
     result.form = required(object, "form").asString();
     result.inputs = operands(find(object, "inputs"));
     result.outputs = operands(find(object, "outputs"));
-    result.dependencies = dependencies(find(object, "dependencies"));
     result.attributes = scalarMap(find(object, "attributes"));
     result.sourceLocation = sourceLocation(find(object, "source_location"));
     return CanonicalNode::makeInstruction(std::move(result));
@@ -326,14 +297,12 @@ CanonicalNode node(const json::Value &value) {
     return CanonicalNode::makeLoop(std::move(result));
   }
   if (kind == "membar") {
-    rejectUnknownFields(object,
-                        {"kind", "instruction_id", "barrier", "dependencies",
-                         "source_location"},
-                        "canonical membar");
+    rejectUnknownFields(
+        object, {"kind", "instruction_id", "barrier", "source_location"},
+        "canonical membar");
     CanonicalMembar result;
     result.instructionId = required(object, "instruction_id").asString();
     result.barrier = required(object, "barrier").asString();
-    result.dependencies = dependencies(find(object, "dependencies"));
     result.sourceLocation = sourceLocation(find(object, "source_location"));
     return CanonicalNode::makeMembar(std::move(result));
   }
@@ -505,21 +474,6 @@ Array encodeOperands(const std::vector<CanonicalOperand> &operands) {
   }
   return result;
 }
-Array encodeDependencies(
-    const std::vector<CanonicalDependencyRef> &dependencies) {
-  Array result;
-  for (const auto &dependency : dependencies) {
-    if (dependency.kind == CanonicalDependencyKind::Unknown)
-      throw std::runtime_error("Cannot encode unknown dependency kind");
-    result.emplace_back(
-        JsonObject{{"producer_node_id", dependency.producerNodeId},
-                   {"kind", dependency.kind == CanonicalDependencyKind::Memory
-                                ? "memory"
-                                : "control"},
-                   {"operand_index", encodeOptional(dependency.operandIndex)}});
-  }
-  return result;
-}
 Array encodeNodes(const std::vector<CanonicalNode> &nodes) {
   Array result;
   for (const auto &node : nodes) {
@@ -540,7 +494,6 @@ Array encodeNodes(const std::vector<CanonicalNode> &nodes) {
                      {"form", i->form},
                      {"inputs", encodeOperands(i->inputs)},
                      {"outputs", encodeOperands(i->outputs)},
-                     {"dependencies", encodeDependencies(i->dependencies)},
                      {"attributes", encodeScalars(i->attributes)},
                      {"source_location", encodeLocation(i->sourceLocation)}});
     } else if (const auto *m = std::get_if<CanonicalMembar>(&node.payload)) {
@@ -548,7 +501,7 @@ Array encodeNodes(const std::vector<CanonicalNode> &nodes) {
           JsonObject{{"kind", "membar"},
                      {"instruction_id", m->instructionId},
                      {"barrier", m->barrier},
-                     {"dependencies", encodeDependencies(m->dependencies)},
+
                      {"source_location", encodeLocation(m->sourceLocation)}});
     } else {
       const auto &pointer =

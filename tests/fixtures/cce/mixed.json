@@ -16,7 +16,6 @@
           "memory_access": null
         }
       ],
-      "dependencies": [],
       "attributes": {},
       "source_location": {
         "source": "canonical_vf",
@@ -89,7 +88,6 @@
               "memory_access": null
             }
           ],
-          "dependencies": [],
           "attributes": {},
           "source_location": {
             "source": "canonical_vf",
@@ -132,7 +130,6 @@
               "memory_access": null
             }
           ],
-          "dependencies": [],
           "attributes": {},
           "source_location": {
             "source": "canonical_vf",
@@ -186,7 +183,6 @@
               }
             }
           ],
-          "dependencies": [],
           "attributes": {},
           "source_location": {
             "source": "canonical_vf",
@@ -199,7 +195,6 @@
           "kind": "membar",
           "instruction_id": "membar.0",
           "barrier": "VST_VLD",
-          "dependencies": [],
           "source_location": {
             "source": "canonical_vf",
             "line": 12,

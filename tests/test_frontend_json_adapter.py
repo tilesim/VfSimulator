@@ -104,18 +104,23 @@ class CanonicalJsonVfInfoAdapterTest(unittest.TestCase):
             {"canonical_json_schema_error"},
         )
 
-    def test_misspelled_dependencies_field_is_not_silently_dropped(self):
-        payload = self._valid_payload()
-        instruction = payload["context"][0]["body"][0]
-        instruction["dependecies"] = instruction.pop("dependencies")
-
-        with self.assertRaises(VfInfoValidationError) as raised:
-            CanonicalJsonVfInfoAdapter.from_payload(payload)
-
-        self.assertEqual(
-            {item.code for item in raised.exception.diagnostics},
-            {"canonical_json_schema_error"},
-        )
+    def test_removed_dependencies_field_is_rejected(self):
+        for kind in ("instruction", "membar"):
+            for dependencies in ([], [{"producer_node_id": "inst.load", "kind": "memory"}]):
+                with self.subTest(kind=kind, dependencies=dependencies):
+                    payload = self._valid_payload()
+                    if kind == "instruction":
+                        node = payload["context"][0]["body"][0]
+                    else:
+                        node = {"kind": "membar", "instruction_id": "barrier.removed", "barrier": "VST_VLD"}
+                        payload["context"].append(node)
+                    node["dependencies"] = dependencies
+                    with self.assertRaises(VfInfoValidationError) as raised:
+                        CanonicalJsonVfInfoAdapter.from_payload(payload)
+                    self.assertEqual(
+                        {item.code for item in raised.exception.diagnostics},
+                        {"canonical_json_schema_error"},
+                    )
 
     def test_missing_jsonschema_only_disables_canonical_json_loading(self):
         missing = ModuleNotFoundError("No module named 'jsonschema'")

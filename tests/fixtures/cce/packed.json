@@ -16,7 +16,6 @@
           "memory_access": null
         }
       ],
-      "dependencies": [],
       "attributes": {},
       "source_location": {
         "source": "vf",
@@ -65,7 +64,6 @@
           "memory_access": null
         }
       ],
-      "dependencies": [],
       "attributes": {
         "catalog_mode": "DINTLV_B32"
       },
@@ -116,7 +114,6 @@
           }
         }
       ],
-      "dependencies": [],
       "attributes": {},
       "source_location": {
         "source": "vf",
@@ -165,7 +162,6 @@
           }
         }
       ],
-      "dependencies": [],
       "attributes": {},
       "source_location": {
         "source": "vf",

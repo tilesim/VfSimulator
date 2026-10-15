@@ -410,7 +410,6 @@ int main() {
           CanonicalInstructionClass::Unknown ||
       CanonicalOperand{}.role != CanonicalOperandRole::Unknown ||
       CanonicalMemoryAccess{}.accessKind != CanonicalAccessKind::Unknown ||
-      CanonicalDependencyRef{}.kind != CanonicalDependencyKind::Unknown ||
       CanonicalStorageObject{}.storage != CanonicalStorageKind::Unknown ||
       CanonicalValue{}.storage != CanonicalStorageKind::Unknown)
     throw std::runtime_error("native required enum defaults must be Unknown");
@@ -480,5 +479,33 @@ int main() {
       nonFiniteResult.diagnostics.front().code != "invalid_scalar_attribute")
     throw std::runtime_error("non-finite native scalar was not diagnosed");
 
+  // Removed Canonical fields are rejected even when their value is empty.
+  for (const auto &node : std::vector<json::Value::Object>{
+           {{"kind", "instruction"},
+            {"instruction_id", "removed.inst"},
+            {"opcode", "VUNKNOWN"},
+            {"instruction_class", "compute"},
+            {"form", "fp32"},
+            {"dependencies", json::Value::Array{}}},
+           {{"kind", "membar"},
+            {"instruction_id", "removed.membar"},
+            {"barrier", "VST_VLD"},
+            {"dependencies", json::Value::Array{}}},
+       }) {
+    bool rejected = false;
+    try {
+      decodeCanonicalVfInfoJson(
+          json::Value::Object{{"schema_version", int64_t{1}},
+                              {"context", json::Value::Array{node}},
+                              {"values", json::Value::Object{}}});
+    } catch (const std::runtime_error &error) {
+      rejected =
+          std::string(error.what()).find("unknown field: dependencies") !=
+          std::string::npos;
+    }
+    if (!rejected)
+      throw std::runtime_error(
+          "Removed Canonical dependencies field was accepted");
+  }
   return 0;
 }

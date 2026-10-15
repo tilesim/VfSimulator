@@ -44,11 +44,6 @@ class AccessKind(str, Enum):
     WRITE = "write"
 
 
-class DependencyKind(str, Enum):
-    MEMORY = "memory"
-    CONTROL = "control"
-
-
 @dataclass(frozen=True)
 class SourceLocation:
     source: str | None = None
@@ -110,13 +105,6 @@ class CanonicalOperand:
 
 
 @dataclass(frozen=True)
-class DependencyRef:
-    producer_node_id: str
-    kind: DependencyKind
-    operand_index: int | None = None
-
-
-@dataclass(frozen=True)
 class CanonicalInstruction:
     instruction_id: str
     opcode: str
@@ -124,7 +112,6 @@ class CanonicalInstruction:
     form: str
     inputs: tuple[CanonicalOperand, ...] = ()
     outputs: tuple[CanonicalOperand, ...] = ()
-    dependencies: tuple[DependencyRef, ...] = ()
     attributes: Mapping[str, ScalarValue] = field(default_factory=dict)
     source_location: SourceLocation | None = None
 
@@ -159,7 +146,6 @@ class CanonicalLoop:
 class CanonicalMembar:
     instruction_id: str
     barrier: str
-    dependencies: tuple[DependencyRef, ...] = ()
     source_location: SourceLocation | None = None
 
 

@@ -16,7 +16,6 @@
           "memory_access": null
         }
       ],
-      "dependencies": [],
       "attributes": {},
       "source_location": {
         "source": "vmulscvt_vf",
@@ -59,7 +58,6 @@
           "memory_access": null
         }
       ],
-      "dependencies": [],
       "attributes": {},
       "source_location": {
         "source": "vmulscvt_vf",

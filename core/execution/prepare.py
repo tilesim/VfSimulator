@@ -119,8 +119,6 @@ class CoreLoweringPass:
         def visit(nodes: Iterable[CanonicalNode]) -> None:
             for node in nodes:
                 if isinstance(node, CanonicalInstruction):
-                    if node.dependencies:
-                        issues.append(f'instruction {node.instruction_id} has explicit dependencies')
                     spec = DEFAULT_INSTRUCTION_CATALOG.lookup(node.opcode)
                     if spec is None and node.instruction_class != InstructionClass.COMPUTE:
                         issues.append(f'unknown {node.instruction_class.value} instruction {node.instruction_id} cannot use Core ISA classification')
@@ -128,8 +126,6 @@ class CoreLoweringPass:
                         issues.append(f'control instruction {node.instruction_id} is not a Membar node')
                     continue
                 if isinstance(node, CanonicalMembar):
-                    if node.dependencies:
-                        issues.append(f'Membar {node.instruction_id} has explicit dependencies')
                     continue
                 unroll = resolve(node.unroll)
                 count = resolve(node.count)
@@ -157,11 +153,6 @@ class CoreLoweringPass:
                 'static_instruction_id': node.instruction_id,
                 'instruction_class': node.instruction_class.value,
                 'attributes': dict(node.attributes),
-                'dependencies': [{
-                    'producer_node_id': item.producer_node_id,
-                    'kind': item.kind.value,
-                    'operand_index': item.operand_index
-                } for item in node.dependencies],
                 'memory_accesses': self._memory_accesses(node),
                 'source_location': _source_location(node.source_location)
             }

@@ -16,7 +16,6 @@
           "memory_access": null
         }
       ],
-      "dependencies": [],
       "attributes": {},
       "source_location": {
         "source": "alias_case",
@@ -53,7 +52,6 @@
           "memory_access": null
         }
       ],
-      "dependencies": [],
       "attributes": {},
       "source_location": {
         "source": "alias_case",
@@ -90,7 +88,6 @@
           "memory_access": null
         }
       ],
-      "dependencies": [],
       "attributes": {},
       "source_location": {
         "source": "alias_case",
@@ -133,7 +130,6 @@
           "memory_access": null
         }
       ],
-      "dependencies": [],
       "attributes": {},
       "source_location": {
         "source": "alias_case",

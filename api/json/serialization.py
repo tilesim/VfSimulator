@@ -14,8 +14,6 @@ from api.common.schema import (
     CanonicalStorageObject,
     CanonicalValue,
     CanonicalVfInfo,
-    DependencyKind,
-    DependencyRef,
     InductionVariable,
     InstructionClass,
     LoopCarriedValue,
@@ -34,14 +32,6 @@ def _source_location_to_dict(value: SourceLocation | None) -> dict[str, Any] | N
         "line": value.line,
         "column": value.column,
         "path": value.path,
-    }
-
-
-def _dependency_to_dict(value: DependencyRef) -> dict[str, Any]:
-    return {
-        "producer_node_id": value.producer_node_id,
-        "kind": value.kind.value,
-        "operand_index": value.operand_index,
     }
 
 
@@ -90,9 +80,6 @@ def _node_to_dict(value) -> dict[str, Any]:
             "form": value.form,
             "inputs": [_operand_to_dict(item) for item in value.inputs],
             "outputs": [_operand_to_dict(item) for item in value.outputs],
-            "dependencies": [
-                _dependency_to_dict(item) for item in value.dependencies
-            ],
             "attributes": dict(value.attributes),
             "source_location": _source_location_to_dict(value.source_location),
         }
@@ -124,9 +111,6 @@ def _node_to_dict(value) -> dict[str, Any]:
             "kind": "membar",
             "instruction_id": value.instruction_id,
             "barrier": value.barrier,
-            "dependencies": [
-                _dependency_to_dict(item) for item in value.dependencies
-            ],
             "source_location": _source_location_to_dict(value.source_location),
         }
     raise TypeError(f"unsupported canonical node: {type(value).__name__}")
@@ -177,14 +161,6 @@ def _source_location(value: Any) -> SourceLocation | None:
     )
 
 
-def _dependency(value: Mapping[str, Any]) -> DependencyRef:
-    return DependencyRef(
-        producer_node_id=value["producer_node_id"],
-        kind=DependencyKind(value["kind"]),
-        operand_index=value.get("operand_index"),
-    )
-
-
 def _operand(value: Mapping[str, Any]) -> CanonicalOperand:
     memory_value = value.get("memory_access")
     memory = None
@@ -230,9 +206,6 @@ def _node(value: Mapping[str, Any]):
             form=value["form"],
             inputs=tuple(_operand(item) for item in value.get("inputs", ())),
             outputs=tuple(_operand(item) for item in value.get("outputs", ())),
-            dependencies=tuple(
-                _dependency(item) for item in value.get("dependencies", ())
-            ),
             attributes=dict(value.get("attributes", {})),
             source_location=_source_location(value.get("source_location")),
         )
@@ -261,9 +234,6 @@ def _node(value: Mapping[str, Any]):
         return CanonicalMembar(
             instruction_id=value["instruction_id"],
             barrier=value["barrier"],
-            dependencies=tuple(
-                _dependency(item) for item in value.get("dependencies", ())
-            ),
             source_location=_source_location(value.get("source_location")),
         )
     raise ValueError(f"unsupported canonical node kind: {kind!r}")

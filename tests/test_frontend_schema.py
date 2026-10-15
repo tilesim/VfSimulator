@@ -5,7 +5,7 @@ import unittest
 from dataclasses import replace
 from pathlib import Path
 
-from api.common import (AccessKind, AffineExpression, AffineTerm, CanonicalInstruction, CanonicalLoop, CanonicalMembar, CanonicalOperand, CanonicalStorageObject, CanonicalValue, CanonicalVfInfo, DependencyKind, DependencyRef, InductionVariable, InstructionClass, LoopCarriedValue, MemoryAccess, OperandRole, SourceLocation, StorageKind, validate_canonical_vf_info)
+from api.common import (AccessKind, AffineExpression, AffineTerm, CanonicalInstruction, CanonicalLoop, CanonicalMembar, CanonicalOperand, CanonicalStorageObject, CanonicalValue, CanonicalVfInfo, InductionVariable, InstructionClass, LoopCarriedValue, MemoryAccess, OperandRole, SourceLocation, StorageKind, validate_canonical_vf_info)
 from api.json.serialization import (canonical_vf_info_from_dict)
 from api.common.uarch_validation import (
     UARCH_FIELD_SPECS,
@@ -160,17 +160,6 @@ class CanonicalVfInfoValidatorTest(unittest.TestCase):
             membar_location,
         )
 
-    def test_explicit_data_dependency_is_not_a_supported_kind(self):
-        vf_info = self._valid_vf_info()
-        loop = vf_info.context[0]
-        store = replace(
-            loop.body[1],
-            dependencies=(DependencyRef("inst.load", "data", 0),),  # type: ignore[arg-type]
-        )
-        invalid = replace(vf_info, context=(replace(loop, body=(loop.body[0], store)),))
-        codes = {item.code for item in validate_canonical_vf_info(invalid).errors}
-        self.assertIn("unsupported_dependency_kind", codes)
-
     def test_plain_strings_are_not_accepted_as_enum_members(self):
         vf_info = self._valid_vf_info()
         loop = vf_info.context[0]
@@ -187,18 +176,10 @@ class CanonicalVfInfoValidatorTest(unittest.TestCase):
                 ),
             ),),
         )
-        store = replace(
-            loop.body[1],
-            dependencies=(
-                DependencyRef(
-                    "inst.load", "memory", 0  # type: ignore[arg-type]
-                ),
-            ),
-        )
+        store = loop.body[1]
         invalid = replace(vf_info, context=(replace(loop, body=(load, store)),))
         codes = {item.code for item in validate_canonical_vf_info(invalid).errors}
         self.assertIn("unsupported_memory_access_kind", codes)
-        self.assertIn("unsupported_dependency_kind", codes)
 
     def test_producer_must_actually_emit_definition(self):
         producer = CanonicalInstruction(
@@ -413,17 +394,15 @@ class CanonicalVfInfoValidatorTest(unittest.TestCase):
             (CanonicalOperand("input.0", OperandRole.MEMORY, "fp32", invalid_memory),),
             (CanonicalOperand("acc.0", OperandRole.DESTINATION),),
             attributes={"huge": 2**100, "infinite": math.inf},
-            dependencies=(DependencyRef("membar.before", DependencyKind.CONTROL, True),),
         )
         contract = self._contract(
-            (CanonicalMembar("membar.before", "VST_VLD"), inst),
+            (inst,),
             params={"ROWS": 4},
         )
         codes = {item.code for item in validate_canonical_vf_info(contract).errors}
         self.assertIn("invalid_scalar_attribute", codes)
         self.assertIn("invalid_int64", codes)
         self.assertIn("invalid_memory_span", codes)
-        self.assertIn("invalid_dependency_operand_index", codes)
 
     def test_unknown_uarch_field_is_rejected(self):
         for name in ("shq_dept", "unrecognized_setting"):

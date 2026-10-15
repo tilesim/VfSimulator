@@ -124,16 +124,6 @@
         "memory_access": {"anyOf": [{"$ref": "#/$defs/memoryAccess"}, {"type": "null"}]}
       }
     },
-    "dependency": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": ["producer_node_id", "kind"],
-      "properties": {
-        "producer_node_id": {"type": "string", "minLength": 1},
-        "kind": {"enum": ["memory", "control"]},
-        "operand_index": {"type": ["integer", "null"], "minimum": 0, "maximum": 9223372036854775807}
-      }
-    },
     "instruction": {
       "type": "object",
       "additionalProperties": false,
@@ -146,7 +136,6 @@
         "form": {"type": "string", "minLength": 1},
         "inputs": {"type": "array", "items": {"$ref": "#/$defs/operand"}},
         "outputs": {"type": "array", "items": {"$ref": "#/$defs/operand"}},
-        "dependencies": {"type": "array", "items": {"$ref": "#/$defs/dependency"}},
         "attributes": {"$ref": "#/$defs/scalarMap"},
         "source_location": {"anyOf": [{"$ref": "#/$defs/sourceLocation"}, {"type": "null"}]}
       }
@@ -195,7 +184,6 @@
         "kind": {"const": "membar"},
         "instruction_id": {"type": "string", "minLength": 1},
         "barrier": {"type": "string", "minLength": 1},
-        "dependencies": {"type": "array", "items": {"$ref": "#/$defs/dependency"}},
         "source_location": {"anyOf": [{"$ref": "#/$defs/sourceLocation"}, {"type": "null"}]}
       }
     },

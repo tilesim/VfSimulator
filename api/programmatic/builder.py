@@ -13,7 +13,6 @@ from api.common.schema import (
     CanonicalStorageObject,
     CanonicalValue,
     CanonicalVfInfo,
-    DependencyRef,
     InductionVariable,
     InstructionClass,
     LoopCarriedValue,
@@ -153,7 +152,6 @@ class VfInfoBuilder:
         form: str,
         inputs: Iterable[CanonicalOperand] = (),
         outputs: Iterable[CanonicalOperand] = (),
-        dependencies: Iterable[DependencyRef] = (),
         attributes: Mapping[str, ScalarValue] | None = None,
         source_location: SourceLocation | None = None,
     ) -> CanonicalInstruction:
@@ -164,7 +162,6 @@ class VfInfoBuilder:
             form=form,
             inputs=tuple(inputs),
             outputs=tuple(outputs),
-            dependencies=tuple(dependencies),
             attributes=dict(attributes or {}),
             source_location=source_location,
         )
@@ -177,13 +174,11 @@ class VfInfoBuilder:
         instruction_id: str,
         *,
         barrier: str,
-        dependencies: Iterable[DependencyRef] = (),
         source_location: SourceLocation | None = None,
     ) -> CanonicalMembar:
         membar = CanonicalMembar(
             instruction_id=instruction_id,
             barrier=barrier,
-            dependencies=tuple(dependencies),
             source_location=source_location,
         )
         self._reserve_node_id(instruction_id)

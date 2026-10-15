@@ -17,8 +17,6 @@ from api.common.schema import (
     CanonicalMembar,
     CanonicalOperand,
     CanonicalVfInfo,
-    DependencyKind,
-    DependencyRef,
     InstructionClass,
     OperandRole,
     SourceLocation,
@@ -52,9 +50,6 @@ class _NodeInfo:
 def validate_canonical_vf_info(vf_info: CanonicalVfInfo) -> ValidationResult:
     diagnostics: list[Diagnostic] = []
     registered_node_ids: set[str] = set()
-    dependency_refs: list[
-        tuple[DependencyRef, str, str, SourceLocation | None]
-    ] = []
     node_info: dict[str, _NodeInfo] = {}
     produced_definitions: dict[str, list[str]] = {}
     next_order = 0
@@ -260,56 +255,6 @@ def validate_canonical_vf_info(vf_info: CanonicalVfInfo) -> ValidationResult:
                 node_id=node_id,
             )
         registered_node_ids.add(node_id)
-
-    def validate_dependencies(
-        dependencies: Iterable[DependencyRef],
-        consumer_id: str,
-        path: str,
-    ) -> None:
-        consumer = node_info.get(consumer_id)
-        for index, dependency in enumerate(dependencies):
-            dependency_path = f"{path}[{index}]"
-            if dependency.producer_node_id == consumer_id:
-                error("self_dependency", "Node cannot depend on itself", path=dependency_path)
-            if not isinstance(dependency.kind, DependencyKind):
-                error(
-                    "unsupported_dependency_kind",
-                    "Explicit dependency must be memory or control",
-                    path=dependency_path,
-                )
-            if dependency.operand_index is not None:
-                validate_int64(
-                    dependency.operand_index,
-                    f"{dependency_path}.operand_index",
-                    minimum=0,
-                    code="invalid_dependency_operand_index",
-                )
-            producer = node_info.get(dependency.producer_node_id)
-            if producer is not None and consumer is not None:
-                visible = (
-                    producer.order < consumer.order
-                    and consumer.scope[: len(producer.scope)] == producer.scope
-                    and not (
-                        producer.kind == "loop"
-                        and len(consumer.scope) > len(producer.scope)
-                        and consumer.scope[len(producer.scope)]
-                        == dependency.producer_node_id
-                    )
-                )
-                if not visible:
-                    error(
-                        "dependency_producer_not_visible",
-                        "Dependency producer must precede the consumer in a visible scope",
-                        path=dependency_path,
-                    )
-            dependency_refs.append(
-                (
-                    dependency,
-                    consumer_id,
-                    dependency_path,
-                    current_node_location,
-                )
-            )
 
     def validate_operand(
         operand: CanonicalOperand,
@@ -555,7 +500,6 @@ def validate_canonical_vf_info(vf_info: CanonicalVfInfo) -> ValidationResult:
                         path=node_path,
                     )
                 validate_instruction_operands(vf_info, node, catalog_spec, node_path, error)
-                validate_dependencies(node.dependencies, node.instruction_id, f"{node_path}.dependencies")
                 current_node_location = previous_location
                 continue
 
@@ -638,7 +582,6 @@ def validate_canonical_vf_info(vf_info: CanonicalVfInfo) -> ValidationResult:
                 validate_location(node.source_location, f"{node_path}.source_location")
                 if not node.barrier:
                     error("missing_membar_type", "Membar type is required", path=node_path)
-                validate_dependencies(node.dependencies, node.instruction_id, f"{node_path}.dependencies")
                 current_node_location = previous_location
                 continue
 
@@ -688,17 +631,6 @@ def validate_canonical_vf_info(vf_info: CanonicalVfInfo) -> ValidationResult:
                 definition_id=definition_id,
                 producer_node_id=value.producer_node_id,
             )
-    for dependency, consumer_id, path, consumer_location in dependency_refs:
-        if dependency.producer_node_id not in node_info:
-            error(
-                "unknown_dependency_producer",
-                "Dependency references unknown producer node",
-                location=consumer_location,
-                path=path,
-                consumer_id=consumer_id,
-                producer_node_id=dependency.producer_node_id,
-            )
-
     return ValidationResult(tuple(diagnostics))
 
 

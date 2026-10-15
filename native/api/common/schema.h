@@ -43,7 +43,6 @@ enum class CanonicalOperandRole {
   Config
 };
 enum class CanonicalAccessKind { Unknown, Read, Write };
-enum class CanonicalDependencyKind { Unknown, Memory, Control };
 
 struct CanonicalSourceLocation {
   std::optional<std::string> source;
@@ -98,12 +97,6 @@ struct CanonicalOperand {
   std::optional<CanonicalMemoryAccess> memoryAccess;
 };
 
-struct CanonicalDependencyRef {
-  std::string producerNodeId;
-  CanonicalDependencyKind kind = CanonicalDependencyKind::Unknown;
-  std::optional<int64_t> operandIndex;
-};
-
 struct CanonicalInstruction {
   std::string instructionId;
   std::string opcode;
@@ -112,7 +105,6 @@ struct CanonicalInstruction {
   std::string form;
   std::vector<CanonicalOperand> inputs;
   std::vector<CanonicalOperand> outputs;
-  std::vector<CanonicalDependencyRef> dependencies;
   std::map<std::string, CanonicalScalar> attributes;
   std::optional<CanonicalSourceLocation> sourceLocation;
 };
@@ -120,7 +112,6 @@ struct CanonicalInstruction {
 struct CanonicalMembar {
   std::string instructionId;
   std::string barrier;
-  std::vector<CanonicalDependencyRef> dependencies;
   std::optional<CanonicalSourceLocation> sourceLocation;
 };
 

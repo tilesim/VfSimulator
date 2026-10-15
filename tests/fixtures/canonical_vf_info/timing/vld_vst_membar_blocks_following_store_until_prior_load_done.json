@@ -54,7 +54,6 @@
               "memory_access": null
             }
           ],
-          "dependencies": [],
           "attributes": {},
           "source_location": null
         },
@@ -62,7 +61,6 @@
           "kind": "membar",
           "instruction_id": "membar.0",
           "barrier": "VLD_VST",
-          "dependencies": [],
           "source_location": null
         },
         {
@@ -99,7 +97,6 @@
               }
             }
           ],
-          "dependencies": [],
           "attributes": {},
           "source_location": null
         }

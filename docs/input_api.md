@@ -89,7 +89,7 @@ schema v1/v2 的读写由 [serialization.py](../api/json/serialization.py)处理
 `VfInfoValidationError`。校验失败的正式输入入口抛出该异常；单独检查函数返回诊断结果。
 
 Core 的执行能力检查位于 `CoreLoweringPass.ensure_current_core_compatible()`。
-其约束包括显式 dependency、CONTROL 指令形式、非最内层 unroll，以及次数与 unroll
+其约束包括 CONTROL 指令形式、非最内层 unroll，以及次数与 unroll
 整除关系。合法的 Canonical 数据需要同时满足所选执行模型的能力范围。
 
 ## C++ 输入接口
