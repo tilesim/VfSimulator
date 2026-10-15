@@ -15,8 +15,10 @@
 
 #include <filesystem>
 #include <map>
+#include <memory>
 #include <mutex>
 #include <string>
+#include <tuple>
 #include <unordered_map>
 #include <vector>
 
@@ -25,11 +27,13 @@ namespace vfsim {
 class ParamDB {
 public:
   explicit ParamDB(std::filesystem::path baseDir = {});
+  // Shared configuration is immutable; caches and warnings belong to this run.
+  explicit ParamDB(std::shared_ptr<const ParamBundle> parameters);
 
-  const ParamBundle &bundle() const noexcept { return bundle_; }
-  const UarchConfig &uarch() const noexcept { return bundle_.uarch; }
+  const ParamBundle &bundle() const noexcept { return *bundle_; }
+  const UarchConfig &uarch() const noexcept { return bundle_->uarch; }
   const IsaDefaults &isaDefaults() const noexcept {
-    return bundle_.isaDefaults;
+    return bundle_->isaDefaults;
   }
 
   bool hasInst(const std::string &op, const std::string &dtype) const;
@@ -50,11 +54,20 @@ public:
   static std::filesystem::path resolveBaseDir(std::filesystem::path baseDir);
 
 private:
+  int64_t computeForwardingCycles(const std::string &prod,
+                                  const std::string &prodForm,
+                                  const std::string &cons,
+                                  const std::string &consForm) const;
   InstructionProfile computeInst(const std::string &op,
                                  const std::string &form) const;
-  ParamBundle bundle_;
-  std::filesystem::path baseDir_;
+  std::shared_ptr<const ParamBundle> bundle_;
   mutable std::map<std::string, InstructionProfile> profileCache_;
+  // Parameters are immutable for this instance. Cache relative latency, never
+  // producer start times or register readiness. Cache lifetime and concurrency
+  // requirements follow this ParamDB instance, just like profileCache_.
+  using ForwardingKey =
+      std::tuple<std::string, std::string, std::string, std::string>;
+  mutable std::map<ForwardingKey, int64_t, std::less<>> forwardingCache_;
   mutable std::map<std::string, ModelWarning> warnings_;
   mutable std::mutex warningsMutex_;
 

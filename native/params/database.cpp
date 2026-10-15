@@ -32,8 +32,13 @@ std::string warningKey(const std::string &kind,
 
 } // namespace
 ParamDB::ParamDB(std::filesystem::path baseDir)
-    : baseDir_(resolveBaseDir(baseDir)) {
-  bundle_ = loadParameters(baseDir_);
+    : ParamDB(std::make_shared<const ParamBundle>(
+          loadParameters(resolveBaseDir(std::move(baseDir))))) {}
+
+ParamDB::ParamDB(std::shared_ptr<const ParamBundle> parameters)
+    : bundle_(std::move(parameters)) {
+  if (!bundle_)
+    throw std::invalid_argument("ParamDB requires a parameter bundle");
 }
 const InstructionProfile &ParamDB::inst(const std::string &op,
                                         const std::string &form) const {
@@ -51,8 +56,8 @@ std::filesystem::path ParamDB::resolveBaseDir(std::filesystem::path baseDir) {
 }
 
 bool ParamDB::hasInst(const std::string &op, const std::string &dtype) const {
-  const auto opIt = bundle_.isa.find(op);
-  if (opIt == bundle_.isa.end())
+  const auto opIt = bundle_->isa.find(op);
+  if (opIt == bundle_->isa.end())
     return false;
   for (const std::string &candidate : param_fallback::formCandidates(dtype)) {
     if (opIt->second.find(candidate) != opIt->second.end())
@@ -63,8 +68,8 @@ bool ParamDB::hasInst(const std::string &op, const std::string &dtype) const {
 
 InstructionProfile ParamDB::computeInst(const std::string &op,
                                         const std::string &dtype) const {
-  const auto opIt = bundle_.isa.find(op);
-  if (opIt == bundle_.isa.end())
+  const auto opIt = bundle_->isa.find(op);
+  if (opIt == bundle_->isa.end())
     return fallbackInst(op, dtype, false);
   const auto dtypeIt = opIt->second.find(dtype);
   if (dtypeIt != opIt->second.end())
@@ -120,6 +125,20 @@ int64_t ParamDB::forwardingCycles(const std::string &prod,
                                   const std::string &prodForm,
                                   const std::string &cons,
                                   const std::string &consForm) const {
+  // Look up with references to avoid allocating strings on the hot path.
+  const auto key = std::tie(prod, prodForm, cons, consForm);
+  const auto it = forwardingCache_.find(key);
+  if (it != forwardingCache_.end())
+    return it->second;
+  const int64_t cycles = computeForwardingCycles(prod, prodForm, cons, consForm);
+  forwardingCache_.emplace(key, cycles);
+  return cycles;
+}
+
+int64_t ParamDB::computeForwardingCycles(const std::string &prod,
+                                         const std::string &prodForm,
+                                         const std::string &cons,
+                                         const std::string &consForm) const {
   const auto *spec = defaultInstructionCatalog().lookup(prod);
   if (spec && !spec->forwardingOpcode.empty())
     return forwardingCycles(spec->forwardingOpcode, prodForm, cons, consForm);
@@ -127,8 +146,8 @@ int64_t ParamDB::forwardingCycles(const std::string &prod,
   const std::string requestedCons = qualifyOp(cons, consForm);
   for (const auto &candidate :
        param_fallback::pairKeyCandidates(prod, prodForm, cons, consForm)) {
-    const auto prodIt = bundle_.forwardingByForm.find(candidate.producer);
-    if (prodIt != bundle_.forwardingByForm.end()) {
+    const auto prodIt = bundle_->forwardingByForm.find(candidate.producer);
+    if (prodIt != bundle_->forwardingByForm.end()) {
       const auto consIt = prodIt->second.find(candidate.consumer);
       if (consIt != prodIt->second.end()) {
         if (candidate.usedCompatible) {
@@ -142,8 +161,8 @@ int64_t ParamDB::forwardingCycles(const std::string &prod,
       }
     }
   }
-  const auto defaults = bundle_.forwardingByForm.find(requestedProd);
-  if (defaults != bundle_.forwardingByForm.end()) {
+  const auto defaults = bundle_->forwardingByForm.find(requestedProd);
+  if (defaults != bundle_->forwardingByForm.end()) {
     const auto wildcard = defaults->second.find("*");
     if (wildcard != defaults->second.end())
       return std::max<int64_t>(0, wildcard->second);
@@ -153,7 +172,7 @@ int64_t ParamDB::forwardingCycles(const std::string &prod,
   const bool lsuDefault =
       prodCfg.opClass == "LOAD" && consCfg.opClass == "STORE";
   const int64_t value = param_fallback::missingForwarding(
-      prodCfg, consCfg, bundle_.forwardingDefaultOffset);
+      prodCfg, consCfg, bundle_->forwardingDefaultOffset);
   recordWarningOnce(
       "missing_forwarding_pair",
       {{"producer", qualifyOp(prod, prodForm)},
@@ -174,8 +193,8 @@ int64_t ParamDB::initiationInterval(const std::string &prev,
   for (const auto &candidate :
        param_fallback::pairKeyCandidates(prev, prevForm, cur, curForm)) {
     const auto prevIt =
-        bundle_.initiationIntervalByForm.find(candidate.producer);
-    if (prevIt != bundle_.initiationIntervalByForm.end()) {
+        bundle_->initiationIntervalByForm.find(candidate.producer);
+    if (prevIt != bundle_->initiationIntervalByForm.end()) {
       const auto curIt = prevIt->second.find(candidate.consumer);
       if (curIt != prevIt->second.end()) {
         if (candidate.usedCompatible) {
