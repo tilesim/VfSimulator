@@ -1,0 +1,3 @@
+void vf(__ubuf__ float *p,__ubuf__ float *q){__VEC_SCOPE__{vector_f32 a,b;vector_align s,t;vector_bool mask=pset_b32(PAT_ALL);vldas(s,p);vldas(t,q);
+#pragma unroll(1)
+for(int i=0;i<4;++i){vldus(a,s,p,64,POST_UPDATE);vldus(b,t,q,64,POST_UPDATE);vadd(a,a,b,mask);vsts(a,q,0,NORM_B32,mask);}vldas(s,p);vldus(a,s,p);vsts(a,q,0,NORM_B32,mask);}}

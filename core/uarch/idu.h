@@ -84,7 +84,7 @@ struct IDUDispatchRecord {
   int64_t lsq = 0;
   int64_t shq = 0;
   std::string staticInstructionId;
-  std::vector<std::pair<std::string, int64_t>> iterationPath;
+  std::vector<IterationIdentity> iterationPath;
   int64_t streamSeq = -1;
   std::vector<AddressDependency> addressDependencies;
   std::string event = "dispatch";

@@ -11,10 +11,11 @@ public:
     for (int64_t i = 0; i < capacity; ++i)
       free_.push_back(prefix_ + std::to_string(i));
   }
-  std::string allocate(bool unlimited = false) {
+  std::string allocate(bool unlimited = false, int64_t dynamicId = -1) {
     std::string id;
     if (unlimited)
-      id = prefix_ + std::to_string(next_++);
+      id = dynamicId >= 0 ? "p" + std::to_string(dynamicId)
+                          : prefix_ + std::to_string(next_++);
     else {
       if (free_.empty())
         throw std::runtime_error("Physical register pool exhausted");

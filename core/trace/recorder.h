@@ -2,6 +2,9 @@
 #include "core/execution/instruction.h"
 namespace vfsim {
 class Registers;
+json::Value iterationPathJson(const std::vector<IterationIdentity> &path);
+json::Value valueInstancesJson(const std::vector<ValueInstance> &values);
+json::Value::Object instructionTraceIdentity(const Uop &instruction);
 struct TraceEvent {
   int64_t cycle;
   std::string event;

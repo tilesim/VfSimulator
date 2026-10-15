@@ -14,5 +14,6 @@ struct SimulationResult {
   int64_t linearInstCount = 0;
 };
 void dumpLogs(const std::filesystem::path &, const TraceRecorder &, const IDU &,
-              const LoopControl &, const MembarController &, const ParamDB &);
+              const LoopControl &, const MembarController &, const ParamDB &,
+              int64_t issuePorts);
 } // namespace vfsim

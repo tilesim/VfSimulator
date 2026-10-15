@@ -23,10 +23,11 @@ std::string upper(std::string value) {
 }
 
 std::string warningKey(const std::string &kind,
-                       const std::map<std::string, std::string> &fields) {
+                       const std::map<std::string, json::Value> &fields) {
   std::string key = kind;
   for (const auto &[k, v] : fields)
-    key += "|" + k + "=" + v;
+    if (k != "used_defaults" && k != "sample_inst_ids")
+      key += "|" + k + "=" + json::stringify(v);
   return key;
 }
 
@@ -40,9 +41,9 @@ ParamDB::ParamDB(std::shared_ptr<const ParamBundle> parameters)
   if (!bundle_)
     throw std::invalid_argument("ParamDB requires a parameter bundle");
 }
-const InstructionProfile &ParamDB::inst(const std::string &op,
-                                        const std::string &form,
-                                        const std::string &instructionClass) const {
+const InstructionProfile &
+ParamDB::inst(const std::string &op, const std::string &form,
+              const std::string &instructionClass) const {
   const std::string canonical = upper(op);
   const std::string key = canonical + "\x1f" + form + "\x1f" + instructionClass;
   auto it = profileCache_.find(key);
@@ -54,13 +55,16 @@ const InstructionProfile &ParamDB::inst(const std::string &op,
   if (profile.fuType.empty())
     profile.fuType = "ALU";
   profile.allowedExuPorts = profile.dispatchExu == "EXU0_ONLY"
-                                ? std::vector<int>{0} : std::vector<int>{0, 1};
+                                ? std::vector<int>{0}
+                                : std::vector<int>{0, 1};
   return profileCache_.emplace(key, std::move(profile)).first->second;
 }
 std::filesystem::path ParamDB::resolveBaseDir(std::filesystem::path baseDir) {
   if (baseDir.empty())
-    return std::filesystem::absolute(std::filesystem::path(VFSIM_SOURCE_ROOT));
-  return std::filesystem::absolute(std::move(baseDir));
+    return std::filesystem::weakly_canonical(
+        std::filesystem::absolute(std::filesystem::path(VFSIM_SOURCE_ROOT)));
+  return std::filesystem::weakly_canonical(
+      std::filesystem::absolute(std::move(baseDir)));
 }
 
 bool ParamDB::hasInst(const std::string &op, const std::string &dtype) const {
@@ -96,7 +100,7 @@ InstructionProfile ParamDB::computeInst(const std::string &op,
 }
 
 void ParamDB::recordWarning(const std::string &kind,
-                            std::map<std::string, std::string> fields) const {
+                            std::map<std::string, json::Value> fields) const {
   const std::lock_guard<std::mutex> lock(warningsMutex_);
   const std::string key = warningKey(kind, fields);
   auto it = warnings_.find(key);
@@ -109,24 +113,34 @@ void ParamDB::recordWarning(const std::string &kind,
   warning.fields = std::move(fields);
   warning.count = 1;
   warnings_.emplace(key, std::move(warning));
+  warningOrder_.push_back(key);
 }
 
 std::vector<ModelWarning> ParamDB::warnings() const {
   const std::lock_guard<std::mutex> lock(warningsMutex_);
   std::vector<ModelWarning> out;
   out.reserve(warnings_.size());
-  for (const auto &[_, warning] : warnings_)
-    out.push_back(warning);
+  for (const auto &key : warningOrder_)
+    out.push_back(warnings_.at(key));
+  auto field = [](const ModelWarning &w, const char *name) {
+    const auto it = w.fields.find(name);
+    return it == w.fields.end() ? std::string{} : it->second.asString();
+  };
+  std::stable_sort(out.begin(), out.end(), [&](const auto &a, const auto &b) {
+    return std::make_tuple(a.kind, field(a, "op"), field(a, "form")) <
+           std::make_tuple(b.kind, field(b, "op"), field(b, "form"));
+  });
   return out;
 }
 
 void ParamDB::recordWarningOnce(
-    const std::string &kind, std::map<std::string, std::string> fields) const {
+    const std::string &kind, std::map<std::string, json::Value> fields) const {
   const std::lock_guard<std::mutex> lock(warningsMutex_);
   const std::string key = warningKey(kind, fields);
   if (warnings_.find(key) != warnings_.end())
     return;
   warnings_.emplace(key, ModelWarning{kind, std::move(fields), 1});
+  warningOrder_.push_back(key);
 }
 
 int64_t ParamDB::forwardingCycles(const std::string &prod,
@@ -138,7 +152,8 @@ int64_t ParamDB::forwardingCycles(const std::string &prod,
   const auto it = forwardingCache_.find(key);
   if (it != forwardingCache_.end())
     return it->second;
-  const int64_t cycles = computeForwardingCycles(prod, prodForm, cons, consForm);
+  const int64_t cycles =
+      computeForwardingCycles(prod, prodForm, cons, consForm);
   forwardingCache_.emplace(key, cycles);
   return cycles;
 }
@@ -185,8 +200,8 @@ int64_t ParamDB::computeForwardingCycles(const std::string &prod,
       "missing_forwarding_pair",
       {{"producer", qualifyOp(prod, prodForm)},
        {"consumer", qualifyOp(cons, consForm)},
-       {"producer_latency", std::to_string(prodCfg.latency)},
-       {"used_default", std::to_string(value)},
+       {"producer_latency", prodCfg.latency},
+       {"used_default", value},
        {"rule", lsuDefault ? "load_store_default"
                            : "producer_latency_minus_default_offset"}});
   return value;
@@ -196,6 +211,13 @@ int64_t ParamDB::initiationInterval(const std::string &prev,
                                     const std::string &prevForm,
                                     const std::string &cur,
                                     const std::string &curForm) const {
+  const auto key = std::tie(prev, prevForm, cur, curForm);
+  if (auto it = iiCache_.find(key); it != iiCache_.end())
+    return it->second;
+  const auto cache = [&](int64_t cycles) {
+    iiCache_.emplace(key, cycles);
+    return cycles;
+  };
   const std::string requestedPrev = qualifyOp(prev, prevForm);
   const std::string requestedCur = qualifyOp(cur, curForm);
   for (const auto &candidate :
@@ -212,7 +234,7 @@ int64_t ParamDB::initiationInterval(const std::string &prev,
                              {"used_prev", candidate.producer},
                              {"used_cur", candidate.consumer}});
         }
-        return std::max<int64_t>(1, curIt->second);
+        return cache(std::max<int64_t>(1, curIt->second));
       }
     }
   }
@@ -222,12 +244,12 @@ int64_t ParamDB::initiationInterval(const std::string &prev,
   recordWarningOnce("missing_ii_pair",
                     {{"prev", qualifyOp(prev, prevForm)},
                      {"cur", qualifyOp(cur, curForm)},
-                     {"prev_latency", std::to_string(prevCfg.latency)},
-                     {"cur_latency", std::to_string(curCfg.latency)},
-                     {"used_default", std::to_string(value)},
+                     {"prev_latency", prevCfg.latency},
+                     {"cur_latency", curCfg.latency},
+                     {"used_default", value},
                      {"rule", value == 2 ? "prev_latency_minus_cur_latency_eq_1"
                                          : "default_one"}});
-  return value;
+  return cache(value);
 }
 
 } // namespace vfsim

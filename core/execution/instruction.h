@@ -15,6 +15,16 @@ struct ValueInfo {
 };
 struct AlignProducerRecord;
 struct AlignGeneration;
+struct IterationIdentity {
+  std::string loopId;
+  int64_t iteration = 0;
+  std::string inductionVariable;
+  int64_t inductionValue = 0;
+};
+struct ValueInstance {
+  std::string definitionId;
+  std::vector<IterationIdentity> iterationPath;
+};
 struct DynamicInst {
   std::string opClass = "COMPUTE";
   int64_t instId = 0;
@@ -33,7 +43,8 @@ struct DynamicInst {
   std::vector<bool> srcValueRelease;
   std::vector<bool> dstValueKeep;
   std::string staticInstructionId;
-  std::vector<std::pair<std::string, int64_t>> iterationPath;
+  std::vector<IterationIdentity> iterationPath;
+  std::vector<ValueInstance> srcValueInstances, dstValueInstances;
   std::vector<int64_t> iterStack;
   int64_t topBlockId = 0;
   bool isLastInTopBlock = false;
@@ -51,7 +62,8 @@ struct Uop {
   std::vector<std::optional<int64_t>> pregSrcGen;
   std::vector<std::string> pregDst;
 
-  // Owned by the run-local ParamDB; its lifetime covers all components and traces.
+  // Owned by the run-local ParamDB; its lifetime covers all components and
+  // traces.
   const InstructionProfile *profile = nullptr;
   int64_t ubTransferBytes = 0;
 
@@ -75,7 +87,8 @@ struct Uop {
   bool isLastInTopBlock = false;
   int64_t streamSeq = -1;
   std::string staticInstructionId;
-  std::vector<std::pair<std::string, int64_t>> iterationPath;
+  std::vector<IterationIdentity> iterationPath;
+  std::vector<ValueInstance> srcValueInstances, dstValueInstances;
   int exuPort = -1;
   int64_t shqReadyCycle = 0;
   int64_t lsqReadyCycle = 0;

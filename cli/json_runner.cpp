@@ -1,78 +1,94 @@
 // Copyright (c) 2026 Huawei Technologies Co., Ltd.
-// This program is free software, you can redistribute it and/or modify it under
-// the terms and conditions of CANN Open Software License Agreement Version 2.0
-// (the "License"). Please refer to the License for details. You may not use
-// this file except in compliance with the License. THIS SOFTWARE IS PROVIDED ON
-// AN "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, EITHER
-// EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
-// MERCHANTABILITY, or FITNESS FOR A PARTICULAR PURPOSE. See LICENSE in the root
-// of the software repository for the full text of the License.
-
+// SPDX-License-Identifier: CANN-1.0
 #include "api/input_api.h"
-#include "core/params/database.h"
 #include "core/simulator.h"
-
-#include <filesystem>
 #include <iostream>
 #include <stdexcept>
-#include <string>
-
 namespace {
-
-using namespace vfsim;
-
 struct Args {
-  std::filesystem::path tracePath;
-  std::filesystem::path outDir;
+  std::filesystem::path tracePath, ccePath, outDir = "results";
+  std::string kernelName;
   int64_t maxCycles = 0;
+  bool vloopOnly = false, directIssue = false, help = false;
 };
-
 Args parseArgs(int argc, char **argv) {
   Args args;
   for (int i = 1; i < argc; ++i) {
-    const std::string cur = argv[i];
-    if (cur == "--trace" && i + 1 < argc) {
-      args.tracePath = argv[++i];
+    const std::string key = argv[i];
+    if (key == "--help" || key == "-h") {
+      args.help = true;
       continue;
     }
-    if (cur == "--out-dir" && i + 1 < argc) {
-      args.outDir = argv[++i];
+    if (key == "--theoretical-limit-vloop-only") {
+      args.vloopOnly = true;
       continue;
     }
-    if (cur == "--max-cycles" && i + 1 < argc) {
-      args.maxCycles = std::stoll(argv[++i]);
-      if (args.maxCycles <= 0)
+    if (key ==
+        "--theoretical-limit-vloop-only-legacy-forwarding-direct-issue") {
+      args.directIssue = true;
+      continue;
+    }
+    if (i + 1 >= argc)
+      throw std::runtime_error("Incomplete argument: " + key);
+    const std::string value = argv[++i];
+    if (key == "--trace")
+      args.tracePath = value;
+    else if (key == "--cce")
+      args.ccePath = value;
+    else if (key == "--cce-kernel")
+      args.kernelName = value;
+    else if (key == "--out-dir" || key == "--out_dir")
+      args.outDir = value;
+    else if (key == "--max-cycles") {
+      size_t used = 0;
+      args.maxCycles = std::stoll(value, &used);
+      if (used != value.size() || args.maxCycles <= 0)
         throw std::runtime_error("--max-cycles must be positive");
-      continue;
-    }
-    throw std::runtime_error("unknown or incomplete argument: " + cur);
+    } else
+      throw std::runtime_error("Unknown argument: " + key);
   }
-  if (args.tracePath.empty())
-    throw std::runtime_error("missing --trace");
+  if (!args.tracePath.empty() && !args.ccePath.empty())
+    throw std::runtime_error("Please provide only one input: --trace or --cce");
   return args;
 }
-
 } // namespace
-
 int main(int argc, char **argv) {
   try {
-    const Args args = parseArgs(argc, argv);
-    const std::filesystem::path root = std::filesystem::path(VFSIM_SOURCE_ROOT);
-    CoreVfCostModel simulator(root, args.outDir);
-
-    const CanonicalVfInfo vfInfo = InputAPI::loadJson(args.tracePath);
-    const auto result = simulator.runVfInfo(vfInfo, args.maxCycles);
-
-    std::cout << "cyclesExecuted=" << result.cyclesExecuted << "\n";
-    std::cout << "vfEndCycle=" << result.vfEndCycle << "\n";
-    std::cout << "linearInstCount=" << result.linearInstCount << "\n";
+    const auto args = parseArgs(argc, argv);
+    if (args.help) {
+      std::cout
+          << "Usage: vfsim_native_json_runner [--trace INPUT.json | --cce "
+             "INPUT.cce] [--cce-kernel NAME]\n"
+             "  --out_dir DIR (alias: --out-dir), default: results\n"
+             "  --max-cycles N\n"
+             "  --theoretical-limit-vloop-only\n"
+             "  "
+             "--theoretical-limit-vloop-only-legacy-forwarding-direct-issue\n";
+      return 0;
+    }
+    const auto root =
+        std::filesystem::path(VFSIM_SOURCE_ROOT).lexically_normal();
+    auto path = args.ccePath.empty() ? args.tracePath : args.ccePath;
+    if (path.empty())
+      path = "tests/fixtures/canonical_vf_info/v1_valid_loop.json";
+    if (!path.is_absolute())
+      path = root / path;
+    const auto vf = args.ccePath.empty()
+                        ? vfsim::InputAPI::loadJson(path)
+                        : vfsim::InputAPI::loadCce(path, args.kernelName);
+    vfsim::CoreVfCostModel model(root, args.outDir, args.vloopOnly,
+                                 args.directIssue);
+    const auto result = model.runVfInfo(vf, args.maxCycles);
+    std::cout << "cyclesExecuted=" << result.cyclesExecuted << '\n'
+              << "vfEndCycle=" << result.vfEndCycle << '\n'
+              << "linearInstCount=" << result.linearInstCount << '\n';
     if (!result.tracePath.empty())
-      std::cout << "tracePath=" << result.tracePath << "\n";
+      std::cout << "tracePath=" << result.tracePath << '\n';
     if (!result.resultsDir.empty())
-      std::cout << "resultsDir=" << result.resultsDir << "\n";
+      std::cout << "resultsDir=" << result.resultsDir << '\n';
     return 0;
-  } catch (const std::exception &ex) {
-    std::cerr << "vfsim_native_json_runner failed: " << ex.what() << '\n';
+  } catch (const std::exception &error) {
+    std::cerr << "vfsim_native_json_runner failed: " << error.what() << '\n';
     return 1;
   }
 }

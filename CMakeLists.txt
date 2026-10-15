@@ -10,6 +10,13 @@ add_library(vfsim_native_core STATIC
   api/common/schema.cpp
   api/common/uarch_validation.cpp
   api/common/validator.cpp
+  api/cce/source.cpp
+  api/cce/affine.cpp
+  api/cce/normalization.cpp
+  api/cce/parser.cpp
+  api/cce/value_versioning.cpp
+  api/cce/adapter.cpp
+  api/programmatic/builder.cpp
   api/input_api.cpp
   api/json/serialization.cpp
   api/json/value.cpp

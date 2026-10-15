@@ -62,9 +62,9 @@ void MembarController::acceptMembar(const DynamicInst &inst, int64_t cycle) {
   } else {
     if (db_ != nullptr) {
       db_->recordWarning("unsupported_membar_type",
-                         {{"pc", std::to_string(inst.pc)},
+                         {{"pc", inst.pc},
                           {"barrier", barrier.empty() ? inst.barrier : barrier},
-                          {"stream_seq", std::to_string(inst.streamSeq)}});
+                          {"stream_seq", inst.streamSeq}});
     }
     return;
   }

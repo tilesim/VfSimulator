@@ -14,13 +14,16 @@ std::vector<DynamicInst> IDU::dispatch(int64_t cycle,
   if (cycle < dispatchStartGate)
     return {};
 
-  int64_t credits = budget.theoreticalLimitMode ? (1LL << 60) : budget.freePreg;
-  int64_t predicateCredits =
-      budget.theoreticalLimitMode ? (1LL << 60) : budget.freePredicate;
+  int64_t credits =
+      budget.theoreticalLimitMode ? 1000000000000000000LL : budget.freePreg;
+  int64_t predicateCredits = budget.theoreticalLimitMode ? 1000000000000000000LL
+                                                         : budget.freePredicate;
   int64_t shqQueueFree =
-      budget.theoreticalLimitMode ? (1LL << 60) : budget.freeShqQueue;
-  int64_t lsqFree = budget.theoreticalLimitMode ? (1LL << 60) : budget.freeLsq;
-  int64_t shqFree = budget.theoreticalLimitMode ? (1LL << 60) : budget.freeShq;
+      budget.theoreticalLimitMode ? 1000000000000000000LL : budget.freeShqQueue;
+  int64_t lsqFree =
+      budget.theoreticalLimitMode ? 1000000000000000000LL : budget.freeLsq;
+  int64_t shqFree =
+      budget.theoreticalLimitMode ? 1000000000000000000LL : budget.freeShq;
   const int64_t issueBudget = budget.theoreticalLimitMode
                                   ? static_cast<int64_t>(window_.size())
                                   : budget.issueBudget;
@@ -109,6 +112,16 @@ std::vector<DynamicInst> IDU::dispatch(int64_t cycle,
     }
   }
 
+  credits =
+      budget.theoreticalLimitMode ? 1000000000000000000LL : budget.freePreg;
+  predicateCredits = budget.theoreticalLimitMode ? 1000000000000000000LL
+                                                 : budget.freePredicate;
+  shqQueueFree =
+      budget.theoreticalLimitMode ? 1000000000000000000LL : budget.freeShqQueue;
+  lsqFree =
+      budget.theoreticalLimitMode ? 1000000000000000000LL : budget.freeLsq;
+  shqFree =
+      budget.theoreticalLimitMode ? 1000000000000000000LL : budget.freeShq;
   size_t dispatchIndex = 0;
   for (const auto &inst : dispatched) {
     window_.pop_front();

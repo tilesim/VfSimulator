@@ -37,11 +37,11 @@ public:
   }
 
   bool hasInst(const std::string &op, const std::string &dtype) const;
-  const InstructionProfile &inst(const std::string &op,
-                                 const std::string &dtype,
-                                 const std::string &instructionClass = {}) const;
+  const InstructionProfile &
+  inst(const std::string &op, const std::string &dtype,
+       const std::string &instructionClass = {}) const;
   void recordWarning(const std::string &kind,
-                     std::map<std::string, std::string> fields = {}) const;
+                     std::map<std::string, json::Value> fields = {}) const;
   std::vector<ModelWarning> warnings() const;
 
   int64_t forwardingCycles(const std::string &prod, const std::string &prodForm,
@@ -70,13 +70,15 @@ private:
       std::tuple<std::string, std::string, std::string, std::string>;
   mutable std::map<ForwardingKey, int64_t, std::less<>> forwardingCache_;
   mutable std::map<std::string, ModelWarning> warnings_;
+  mutable std::vector<std::string> warningOrder_;
+  mutable std::map<ForwardingKey, int64_t, std::less<>> iiCache_;
   mutable std::mutex warningsMutex_;
 
   InstructionProfile fallbackInst(const std::string &op,
                                   const std::string &dtype,
                                   bool unsupportedForm) const;
   void recordWarningOnce(const std::string &kind,
-                         std::map<std::string, std::string> fields) const;
+                         std::map<std::string, json::Value> fields) const;
 };
 
 } // namespace vfsim

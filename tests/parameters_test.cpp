@@ -27,22 +27,24 @@ std::string read(const std::filesystem::path &path) {
 void testParameterReuse(const std::filesystem::path &root) {
   std::filesystem::create_directories(root / "configs");
   write(root / "configs/uarch.json", "{}");
-  write(root / "configs/isa.json",
-        R"({"schema_version":2,"defaults":{"vf_startup_cost":23,"vf_drain_cost":12},"instructions":{"VLDS":{"op_class":"LOAD","forms":{"fp32":{"latency":9}}}}})");
+  write(
+      root / "configs/isa.json",
+      R"({"schema_version":2,"defaults":{"vf_startup_cost":23,"vf_drain_cost":12},"instructions":{"VLDS":{"op_class":"LOAD","forms":{"fp32":{"latency":9}}}}})");
   write(root / "configs/forwarding.json", "{}");
   write(root / "configs/InitiationInterval.json", "{}");
   auto parameters = std::make_shared<const ParamBundle>(loadParameters(root));
   ParamDB first(parameters), second(parameters);
-  require(&first.bundle() == &second.bundle(), "Runs share the parameter bundle");
+  require(&first.bundle() == &second.bundle(),
+          "Runs share the parameter bundle");
   first.forwardingCycles("VLDS", "fp32", "VLDS", "fp32");
   require(!first.warnings().empty() && second.warnings().empty(),
           "Shared parameters keep warnings local");
   second.forwardingCycles("VLDS", "fp32", "VLDS", "fp32");
   require(!second.warnings().empty(), "Each run records its own cache misses");
 
-  const auto vf = InputAPI::loadJson(
-      std::filesystem::path(VFSIM_SOURCE_ROOT) /
-      "tests/fixtures/canonical_vf_info/v1_valid_loop.json");
+  const auto vf =
+      InputAPI::loadJson(std::filesystem::path(VFSIM_SOURCE_ROOT) /
+                         "tests/fixtures/canonical_vf_info/v1_valid_loop.json");
   const auto output = root / "output";
   CoreVfCostModel model(root, output);
   const auto baseline = model.runVfInfo(vf);
@@ -55,8 +57,9 @@ void testParameterReuse(const std::filesystem::path &root) {
               read(output / "start_by_cycle.json") == starts,
           "Runs reset hardware state and isolate VF overrides");
 
-  write(root / "configs/isa.json",
-        R"({"schema_version":2,"defaults":{"vf_startup_cost":23,"vf_drain_cost":29},"instructions":{"VLDS":{"op_class":"LOAD","forms":{"fp32":{"latency":9}}}}})");
+  write(
+      root / "configs/isa.json",
+      R"({"schema_version":2,"defaults":{"vf_startup_cost":23,"vf_drain_cost":29},"instructions":{"VLDS":{"op_class":"LOAD","forms":{"fp32":{"latency":9}}}}})");
   CoreVfCostModel updated(root);
   require(model.predictVfCycles(vf) == baseline.vfEndCycle &&
               updated.predictVfCycles(vf) == baseline.vfEndCycle + 17,
@@ -133,15 +136,17 @@ int main() {
                 warnings[i].fields == cachedWarnings[i].fields &&
                 warnings[i].count == cachedWarnings[i].count,
             "Cache hits preserve warning fields and counts");
-  write(root / "configs/forwarding.json",
-        R"({"default":5,"forwarding":{"CUSTOM.fp32":{"OTHER.fp32":8,"OTHER.fp16":2},"CUSTOM.fp16":{"OTHER.fp32":4},"OTHER.fp32":{"*":7},"VLDS.fp32":{"OTHER.fp32":9}}})");
+  write(
+      root / "configs/forwarding.json",
+      R"({"default":5,"forwarding":{"CUSTOM.fp32":{"OTHER.fp32":8,"OTHER.fp16":2},"CUSTOM.fp16":{"OTHER.fp32":4},"OTHER.fp32":{"*":7},"VLDS.fp32":{"OTHER.fp32":9}}})");
   ParamDB otherDb(root);
   for (int i = 0; i < 2; ++i) {
     require(otherDb.forwardingCycles("CUSTOM", "fp32", "OTHER", "fp32") == 8 &&
                 db.forwardingCycles("CUSTOM", "fp32", "OTHER", "fp32") == 3,
             "Forwarding caches must be isolated between parameter instances");
     require(otherDb.forwardingCycles("CUSTOM", "fp32", "OTHER", "fp16") == 2 &&
-                otherDb.forwardingCycles("CUSTOM", "fp16", "OTHER", "fp32") == 4,
+                otherDb.forwardingCycles("CUSTOM", "fp16", "OTHER", "fp32") ==
+                    4,
             "Both producer and consumer forms are part of the cache key");
     require(otherDb.forwardingCycles("OTHER", "fp32", "CUSTOM", "fp32") == 7,
             "Wildcard forwarding is cached");
@@ -167,6 +172,18 @@ int main() {
     invalid = true;
   }
   require(invalid, "Unknown configuration field must fail");
+  require(db.inst("PSTU", "uint32").opClass == "STORE" &&
+              db.inst("VLDAS", "fp32").opClass == "LOAD" &&
+              db.inst("VLD_FUTURE", "fp32").opClass == "LOAD",
+          "Missing ISA entries use Catalog instruction classes");
+  for (const auto &warning : db.warnings())
+    if (warning.kind == "unsupported_isa_op" &&
+        warning.fields.at("op").asString() == "PSTU")
+      require(warning.fields.at("used_defaults")
+                      .asObject()
+                      .at("op_class")
+                      .asString() == "STORE",
+              "PSTU fallback warning preserves its store classification");
   testParameterReuse(root / "snapshot");
   std::filesystem::remove_all(root);
   std::cout

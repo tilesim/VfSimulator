@@ -32,8 +32,6 @@ void LoopControl::setTopBlockVloop(int64_t topBlockId, int64_t startCycle) {
     return;
   topBlockVloopStart_[topBlockId] = startCycle;
   topBlockBodyOpenTime_[topBlockId] = startCycle + vloopToDispatchDelay_;
-  vloopTrace_.push_back(
-      VloopTraceRecord{topBlockId, "top_block", {}, startCycle});
 }
 
 void LoopControl::initTopBlockNestedStarts(int64_t topBlockId,
@@ -50,16 +48,19 @@ void LoopControl::initTopBlockNestedStarts(int64_t topBlockId,
     const std::string key0 = makeKey(topBlockId, "loop0", {});
     vloopStart_[key0] = topVloopStart;
     bodyOpenTime_[key0] = topVloopStart + vloopToDispatchDelay_;
+    vloopTrace_.push_back({topBlockId, "loop0", {}, topVloopStart});
   }
   if (depth >= 2 && bounds[0] > 0) {
     const std::string key1 = makeKey(topBlockId, "loop1", {0});
     vloopStart_[key1] = topVloopStart + nestedVloopInitialStartGap_;
     bodyOpenTime_[key1] = vloopStart_[key1] + vloopToDispatchDelay_;
+    vloopTrace_.push_back({topBlockId, "loop1", {0}, vloopStart_[key1]});
   }
   if (depth >= 3 && bounds[0] > 0 && bounds[1] > 0) {
     const std::string key2 = makeKey(topBlockId, "loop2", {0, 0});
     vloopStart_[key2] = topVloopStart + 2 * nestedVloopInitialStartGap_;
     bodyOpenTime_[key2] = vloopStart_[key2] + vloopToDispatchDelay_;
+    vloopTrace_.push_back({topBlockId, "loop2", {0, 0}, vloopStart_[key2]});
   }
 }
 

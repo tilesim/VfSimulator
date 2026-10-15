@@ -32,14 +32,16 @@ struct Value {
       data;
 
   Value() = default;
-  explicit Value(std::nullptr_t) : kind(Kind::Null), data(std::monostate{}) {}
-  explicit Value(bool v) : kind(Kind::Bool), data(v) {}
-  explicit Value(int64_t v) : kind(Kind::Int), data(v) {}
-  explicit Value(double v) : kind(Kind::Double), data(v) {}
-  explicit Value(std::string v) : kind(Kind::String), data(std::move(v)) {}
-  explicit Value(Object v)
+  Value(const char *v) : Value(std::string(v)) {}
+  Value(int v) : Value(int64_t(v)) {}
+  Value(std::nullptr_t) : kind(Kind::Null), data(std::monostate{}) {}
+  Value(bool v) : kind(Kind::Bool), data(v) {}
+  Value(int64_t v) : kind(Kind::Int), data(v) {}
+  Value(double v) : kind(Kind::Double), data(v) {}
+  Value(std::string v) : kind(Kind::String), data(std::move(v)) {}
+  Value(Object v)
       : kind(Kind::Object), data(std::make_shared<Object>(std::move(v))) {}
-  explicit Value(Array v)
+  Value(Array v)
       : kind(Kind::Array), data(std::make_shared<Array>(std::move(v))) {}
 
   bool isNull() const { return kind == Kind::Null; }
@@ -59,6 +61,8 @@ struct Value {
 };
 
 std::string escapeString(const std::string &text);
+std::string stringify(const Value &value);
+bool operator==(const Value &lhs, const Value &rhs);
 
 Value parseFile(const std::filesystem::path &path);
 Value parseString(const std::string &text);

@@ -8,8 +8,8 @@ namespace vfsim {
 Registers::Registers(const UarchConfig &cfg, const ParamDB &db,
                      const std::unordered_map<std::string, ValueInfo> &values)
     : cfg_(cfg), db_(db), valueStorage_(values), vector_(cfg.vregNum, "p"),
-      predicate_(cfg.physicalPredicateRegisters, "pp"),
-      visibleVector_(cfg.vregNum),
+      predicate_(cfg.physicalPredicateRegisters, "pred"),
+      nextDynamicPregId_(cfg.vregNum), visibleVector_(cfg.vregNum),
       visiblePredicate_(cfg.physicalPredicateRegisters) {}
 int64_t Registers::freeVector() const {
   return cfg_.theoreticalLimitMode
@@ -38,6 +38,8 @@ UopPtr Registers::rename(const DynamicInst &inst, int64_t cycle) {
   u.streamSeq = inst.streamSeq;
   u.staticInstructionId = inst.staticInstructionId;
   u.iterationPath = inst.iterationPath;
+  u.srcValueInstances = inst.srcValueInstances;
+  u.dstValueInstances = inst.dstValueInstances;
   int vec = 0, pred = 0;
   for (const auto &d : u.dst) {
     vec += valueStorage_.isRegister(d);
@@ -74,12 +76,13 @@ UopPtr Registers::rename(const DynamicInst &inst, int64_t cycle) {
   for (size_t i = 0; i < u.dst.size(); ++i) {
     const auto &id = u.dst[i];
     if (!valueStorage_.isRenameable(id)) {
-      u.pregDst.emplace_back();
       continue;
     }
     const bool pred = valueStorage_.isPredicate(id);
     const std::string physical =
-        (pred ? predicate_ : vector_).allocate(cfg_.theoreticalLimitMode);
+        (pred ? predicate_ : vector_)
+            .allocate(cfg_.theoreticalLimitMode,
+                      cfg_.theoreticalLimitMode ? nextDynamicPregId_++ : -1);
     if (pred)
       predicateIds_.insert(physical);
     auto old = rat_.find(id);
@@ -112,10 +115,11 @@ std::optional<ProducerInfo> Registers::producer(const std::string &id) const {
 int64_t Registers::readyTimeForSource(const ProducerInfo &p,
                                       const Uop &u) const {
   const auto fwd = db_.forwardingCycles(p.op, p.form, u.op, u.form);
-  return p.startCycle + ((u.profile->opClass == "COMPUTE" && cfg_.enableIsuQueueModel &&
-                          !cfg_.theoreticalLimitLegacyForwarding)
-                             ? std::max<int64_t>(0, fwd - 1)
-                             : fwd);
+  return p.startCycle +
+         ((u.profile->opClass == "COMPUTE" && cfg_.enableIsuQueueModel &&
+           !cfg_.theoreticalLimitLegacyForwarding)
+              ? std::max<int64_t>(0, fwd - 1)
+              : fwd);
 }
 int64_t Registers::readyCycle(const Uop &u) const {
   int64_t ready = std::max(db_.isaDefaults().vfStartupCost, u.shqReadyCycle);
@@ -163,7 +167,8 @@ void Registers::onStart(Uop &u, int64_t cycle) {
   if (u.profile->opClass == "LOAD" || u.profile->opClass == "COMPUTE")
     for (const auto &id : u.pregDst)
       if (!id.empty()) {
-        pregProducer_[id] = ProducerInfo{u.op, u.form, cycle, u.profile->opClass};
+        pregProducer_[id] =
+            ProducerInfo{u.op, u.form, cycle, u.profile->opClass};
         pregPending_.erase(id);
       }
 }

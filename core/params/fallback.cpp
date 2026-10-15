@@ -58,25 +58,32 @@ InstructionProfile ParamDB::fallbackInst(const std::string &op,
   InstructionProfile cfg;
   cfg.latency = 9;
   const auto *spec = defaultInstructionCatalog().lookup(canon);
-  cfg.opClass =
-      spec && spec->instructionClass == CatalogInstructionClass::Load ? "LOAD"
-      : spec && spec->instructionClass == CatalogInstructionClass::Store
-          ? "STORE"
-          : "COMPUTE";
+  if (spec) {
+    cfg.opClass =
+        spec->instructionClass == CatalogInstructionClass::Load    ? "LOAD"
+        : spec->instructionClass == CatalogInstructionClass::Store ? "STORE"
+                                                                   : "COMPUTE";
+  } else if (canon.rfind("VLD", 0) == 0) {
+    cfg.opClass = "LOAD";
+  } else if (canon.rfind("VST", 0) == 0) {
+    cfg.opClass = "STORE";
+  } else {
+    cfg.opClass = "COMPUTE";
+  }
   if (cfg.opClass == "COMPUTE") {
     cfg.fuType = "ALU";
     cfg.dispatchExu = "EXU01";
   }
 
+  json::Value::Object defaults{{"op_class", cfg.opClass},
+                               {"latency", cfg.latency}};
+  if (cfg.opClass == "COMPUTE") {
+    defaults.emplace("EXU", "ALU");
+    defaults.emplace("dispatch_exu", "EXU01");
+  }
   recordWarningOnce(unsupportedForm ? "unsupported_isa_form"
                                     : "unsupported_isa_op",
-                    {
-                        {"op", op},
-                        {"form", dtype},
-                        {"used_op_class", cfg.opClass},
-                        {"used_latency", std::to_string(cfg.latency)},
-                        {"used_dispatch_exu", cfg.dispatchExu},
-                    });
+                    {{"op", op}, {"form", dtype}, {"used_defaults", defaults}});
   return cfg;
 }
 
