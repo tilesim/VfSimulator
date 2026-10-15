@@ -42,7 +42,7 @@ void testParameterReuse(const std::filesystem::path &root) {
 
   const auto vf = InputAPI::loadJson(
       std::filesystem::path(VFSIM_SOURCE_ROOT) /
-      "tests/fixtures/canonical_vf_info/v1_valid_loop.json");
+      "native/tests/fixtures/canonical_vf_info/v1_valid_loop.json");
   const auto output = root / "output";
   CoreVfCostModel model(root, output);
   const auto baseline = model.runVfInfo(vf);
@@ -67,7 +67,7 @@ void testParameterReuse(const std::filesystem::path &root) {
 
   const auto warningVf = InputAPI::loadJson(
       std::filesystem::path(VFSIM_SOURCE_ROOT) /
-      "tests/fixtures/canonical_vf_info/timing/"
+      "native/tests/fixtures/canonical_vf_info/timing/"
       "cli_writes_instruction_fallback_warnings_without_vreg_warning.json");
   const auto warningsPath = output / "model_warnings.json";
   model.runVfInfo(warningVf);

@@ -2,7 +2,7 @@
 
 C++17 实现使用 CanonicalVfInfo 描述程序，并逐 cycle 推进微架构组件。
 `native/api/input_api.h` 提供输入接收接口，`native/core/simulator.h` 提供周期预测接口。
-Python 与 C++ 共享 Canonical JSON、指令 Catalog、参数配置和回归用例。
+Canonical JSON、指令 Catalog、参数配置和测试输入随仓库提供。
 
 ## 输入与调用
 
@@ -11,7 +11,7 @@ Python 与 C++ 共享 Canonical JSON、指令 Catalog、参数配置和回归用
 两种输入在 API 出口完成通用语义校验。
 `CoreVfCostModel` 构造时加载参数快照，`runVfInfo()` 接收校验成功的对象，
 合并 VF 配置覆盖、准备指令并运行仿真。
-CCE 文件通过 Python InputAPI 前端转换为 Canonical JSON，供 C++ 输入层接收。
+其他程序格式需在调用前转换为 Canonical 输入。
 
 ```cpp
 #include "native/api/input_api.h"
@@ -37,7 +37,7 @@ native/
     input_api.h/.cpp
     common/          Canonical、Catalog、诊断与校验
     json/            JSON 解析与 Canonical 解码
-    generated/       共享配置生成的数据表
+    generated/       编译进库的指令和配置字段数据表
   core/
     simulator.h/.cpp
     execution/       指令准备、展开、Engine、loop 与 membar
@@ -84,7 +84,8 @@ Uop 引用本次运行的 ParamDB 持有的只读 InstructionProfile；指令类
 
 `native/api/common/` 定义语义类型、Catalog、诊断和校验；
 `native/api/json/` 负责 JSON 解析及 Canonical 解码；
-`native/api/generated/` 存放共享配置生成的数据表。
+`native/api/generated/` 存放编译进库的数据表，与 `configs/instruction_catalog.json`
+及 `configs/uarch_override_schema.json` 配套维护。普通构建直接使用这些数据表。
 
 ## 周期推进
 
@@ -100,15 +101,13 @@ cmake -S native -B build-native -DCMAKE_BUILD_TYPE=Release -DVFSIM_BUILD_TESTS=O
 cmake --build build-native -j4
 ctest --test-dir build-native --output-on-failure
 build-native/vfsim_native_json_runner \
-  --trace tests/fixtures/canonical_vf_info/v1_valid_loop.json \
+  --trace native/tests/fixtures/canonical_vf_info/v1_valid_loop.json \
   --out-dir /tmp/vfsim-native
-VFSIM_NATIVE_RUNNER="$PWD/build-native/vfsim_native_json_runner" \
-  python3 -m unittest discover -s tests
 ```
 
 库目标为 `vfsim::native_core`，可通过 `add_subdirectory(native)` 引入。
 JSON runner 独立于测试开关构建。`--max-cycles` 可覆盖程序的周期上限。
-参数文件从 baseDir 下的 configs/ 读取；环境变量路径选择与 Python params/ 一致。
+参数文件从 baseDir 下的 configs/ 读取；环境变量路径选择见[参数配置](../docs/configuration.md)。
 同一模型的连续运行共享只读 `ParamBundle`，配置文件和路径环境变量的更新在创建
 新的模型实例后生效。每次运行创建独立的 `ParamDB`、查询缓存、警告和微架构状态。
 forwarding 按 producer opcode/form 与 consumer opcode/form 缓存相对周期数。

@@ -103,7 +103,7 @@ int main() {
 
   auto packed = decodeCanonicalVfInfoJson(json::parseFile(
       std::filesystem::path(VFSIM_SOURCE_ROOT) /
-      "tests/fixtures/canonical_vf_info/v2_plt_packed_fp16.json"));
+      "native/tests/fixtures/canonical_vf_info/v2_plt_packed_fp16.json"));
   if (!validateCanonicalVfInfo(packed).ok())
     throw std::runtime_error("PLT/packed fp16 fixture rejected");
   if (instructionCatalog.lookupMemoryMode("VSTS", "PK_B32")->ubTransferBytes !=
@@ -116,7 +116,7 @@ int main() {
 
   const auto sharedFixtureJson =
       json::parseFile(std::filesystem::path(VFSIM_SOURCE_ROOT) /
-                      "tests/fixtures/canonical_vf_info/v1_valid_loop.json");
+                      "native/tests/fixtures/canonical_vf_info/v1_valid_loop.json");
   CanonicalVfInfo canonicalContract =
       decodeCanonicalVfInfoJson(sharedFixtureJson);
   if (!validateCanonicalVfInfo(canonicalContract).ok())
@@ -150,7 +150,7 @@ int main() {
         "native validator accepted VSTAS without align-state attributes");
   const auto sharedCarriedJson = json::parseFile(
       std::filesystem::path(VFSIM_SOURCE_ROOT) /
-      "tests/fixtures/canonical_vf_info/v1_valid_loop_carried.json");
+      "native/tests/fixtures/canonical_vf_info/v1_valid_loop_carried.json");
   CanonicalVfInfo canonicalCarriedContract =
       decodeCanonicalVfInfoJson(sharedCarriedJson);
   if (!validateCanonicalVfInfo(canonicalCarriedContract).ok())
@@ -186,7 +186,7 @@ int main() {
       runProgram(canonicalContract, db, canonicalOutDir.string());
   if (canonicalResult.cyclesExecuted != 35 || canonicalResult.vfEndCycle != 47)
     throw std::runtime_error(
-        "native canonical loop result differs from Python: cycles=" +
+        "native canonical loop result differs from expected timing: cycles=" +
         std::to_string(canonicalResult.cyclesExecuted) +
         ", end=" + std::to_string(canonicalResult.vfEndCycle));
   const std::string canonicalHistory =
@@ -204,12 +204,12 @@ int main() {
   if (canonicalCarriedResult.cyclesExecuted != 40 ||
       canonicalCarriedResult.vfEndCycle != 52)
     throw std::runtime_error(
-        "native canonical loop-carried result differs from Python: cycles=" +
+        "native canonical loop-carried result differs from expected timing: cycles=" +
         std::to_string(canonicalCarriedResult.cyclesExecuted) +
         ", end=" + std::to_string(canonicalCarriedResult.vfEndCycle));
   const auto topBlockJson = json::parseFile(
       std::filesystem::path(VFSIM_SOURCE_ROOT) /
-      "tests/fixtures/canonical_vf_info/v1_valid_top_blocks.json");
+      "native/tests/fixtures/canonical_vf_info/v1_valid_top_blocks.json");
   const CanonicalVfInfo topBlockContract =
       decodeCanonicalVfInfoJson(topBlockJson);
   const PreparedProgram topBlockRuntime =
@@ -231,7 +231,7 @@ int main() {
         "native canonical loop-epilogue-membar-loop did not complete");
   const auto emptyTopBlockJson = json::parseFile(
       std::filesystem::path(VFSIM_SOURCE_ROOT) /
-      "tests/fixtures/canonical_vf_info/v1_valid_empty_top_block.json");
+      "native/tests/fixtures/canonical_vf_info/v1_valid_empty_top_block.json");
   const CanonicalVfInfo emptyTopBlockContract =
       decodeCanonicalVfInfoJson(emptyTopBlockJson);
   const PreparedProgram emptyTopBlockRuntime =
@@ -248,7 +248,7 @@ int main() {
   if (emptyTopBlockResult.cyclesExecuted != 33 ||
       emptyTopBlockResult.vfEndCycle != 45)
     throw std::runtime_error(
-        "native canonical zero-iteration top block differs from Python");
+        "native canonical zero-iteration top block differs from expected timing");
   CanonicalVfInfo canonicalUnrolledContract = canonicalCarriedContract;
   CanonicalLoop unrolledLoop = *std::get<std::shared_ptr<const CanonicalLoop>>(
       canonicalUnrolledContract.context.front().payload);
@@ -260,7 +260,7 @@ int main() {
   if (canonicalUnrolledResult.cyclesExecuted != 40 ||
       canonicalUnrolledResult.vfEndCycle != 52)
     throw std::runtime_error(
-        "native canonical structured unroll differs from Python: cycles=" +
+        "native canonical structured unroll differs from expected timing: cycles=" +
         std::to_string(canonicalUnrolledResult.cyclesExecuted) +
         ", end=" + std::to_string(canonicalUnrolledResult.vfEndCycle));
   CanonicalVfInfo canonicalMembarUnrollContract = canonicalCarriedContract;
@@ -291,7 +291,7 @@ int main() {
   if (canonicalUarchResult.cyclesExecuted != 68 ||
       canonicalUarchResult.vfEndCycle != 80)
     throw std::runtime_error(
-        "native canonical uarch override differs from Python: cycles=" +
+        "native canonical uarch override differs from expected timing: cycles=" +
         std::to_string(canonicalUarchResult.cyclesExecuted) +
         ", end=" + std::to_string(canonicalUarchResult.vfEndCycle));
   for (const auto *field :
@@ -437,14 +437,14 @@ int main() {
 
   const auto sharedInvalidJson = json::parseFile(
       std::filesystem::path(VFSIM_SOURCE_ROOT) /
-      "tests/fixtures/canonical_vf_info/v1_invalid_loop_scope.json");
+      "native/tests/fixtures/canonical_vf_info/v1_invalid_loop_scope.json");
   const auto sharedInvalidResult =
       validateCanonicalVfInfo(decodeCanonicalVfInfoJson(sharedInvalidJson));
   if (sharedInvalidResult.ok() || sharedInvalidResult.diagnostics.size() != 1 ||
       sharedInvalidResult.diagnostics.front().code !=
           "loop_back_edge_out_of_scope")
     throw std::runtime_error(
-        "shared invalid fixture did not match Python diagnostic");
+        "shared invalid fixture did not match expected diagnostic");
 
   CanonicalVfInfo nullLoopContract;
   nullLoopContract.context.push_back(
