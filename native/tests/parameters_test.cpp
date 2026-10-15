@@ -1,8 +1,8 @@
 // Copyright (c) 2026 Huawei Technologies Co., Ltd.
 // SPDX-License-Identifier: CANN-1.0
 
-#include "api/native/common/uarch_validation.h"
-#include "native/params/loader.h"
+#include "native/api/common/uarch_validation.h"
+#include "native/core/params/loader.h"
 #include "native/tests/support.h"
 #include <chrono>
 #include <fstream>
@@ -106,7 +106,7 @@ int main() {
               db.isaDefaults().vfDrainCost == 8,
           "VF timing loads ISA defaults");
   require(db.inst("CUSTOM", "fp32").latency == 11 &&
-              db.inst("CUSTOM", "fp32").exu == "ALU",
+              db.inst("CUSTOM", "fp32").fuType == "ALU",
           "Forms inherit instruction and ISA defaults");
   require(db.forwardingCycles("CUSTOM", "fp32", "OTHER", "fp32") == 3,
           "Qualified forwarding pair is loaded");

@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: CANN-1.0
 
 #include "native/tests/support.h"
-#include "native/uarch/idu.h"
+#include "native/core/uarch/idu.h"
 
 #include <iostream>
 #include <stdexcept>

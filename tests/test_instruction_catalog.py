@@ -182,7 +182,7 @@ class InstructionCatalogTest(unittest.TestCase):
             (ROOT / "configs/instruction_catalog.json").read_text()
         )
         generated = (
-            ROOT / "api/native/generated/InstructionCatalogData.inc"
+            ROOT / "native/api/generated/InstructionCatalogData.inc"
         ).read_text()
         self.assertEqual(generated, render_catalog_cpp(payload))
 
@@ -191,7 +191,7 @@ class InstructionCatalogTest(unittest.TestCase):
             (ROOT / "configs/uarch_override_schema.json").read_text()
         )
         generated = (
-            ROOT / "api/native/generated/UarchOverrideSchemaData.inc"
+            ROOT / "native/api/generated/UarchOverrideSchemaData.inc"
         ).read_text()
         self.assertEqual(generated, render_uarch_override_schema_cpp(payload))
 

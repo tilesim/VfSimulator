@@ -5,14 +5,14 @@
 // Copyright (c) 2026 Huawei Technologies Co., Ltd.
 // SPDX-License-Identifier: CANN-1.0
 
-#include "api/native/common/instruction_catalog.h"
-#include "api/native/common/schema.h"
+#include "native/api/common/instruction_catalog.h"
+#include "native/api/common/schema.h"
 
-#include "api/native/common/uarch_validation.h"
+#include "native/api/common/uarch_validation.h"
 
-#include "api/native/json/serialization.h"
-#include "api/native/json/value.h"
-#include "native/params/database.h"
+#include "native/api/json/serialization.h"
+#include "native/api/json/value.h"
+#include "native/core/params/database.h"
 
 #include <filesystem>
 #include <fstream>

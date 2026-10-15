@@ -32,11 +32,11 @@ loop、membar 及 source location。存储类别通过显式声明识别。
 `common/instruction_catalog.py` 从 `configs/instruction_catalog.json` 读取指令语义。
 JSON 的 schema v1/v2 由 `json/serialization.py` 处理。
 
-`api/native/input_api.h` 接收 Canonical JSON 和直接构造的 C++ CanonicalVfInfo，
-在输入出口统一完成语义校验。`native/common/` 定义语义类型、诊断、Catalog 和校验，
-`native/json/` 负责 JSON 解析与 Canonical 解码。
+`native/api/input_api.h` 接收 Canonical JSON 和直接构造的 C++ CanonicalVfInfo，
+在输入出口统一完成语义校验。`native/api/common/` 定义语义类型、诊断、Catalog 和校验，
+`native/api/json/` 负责 JSON 解析与 Canonical 解码。
 
-`api/native/generated/` 保存从共享 Catalog 和 override schema 生成的 C++ 数据表，
+`native/api/generated/` 保存从共享 Catalog 和 override schema 生成的 C++ 数据表，
 生成脚本位于 `tools/`，一致性由 `tests/test_instruction_catalog.py` 检查。
 
 调用示例见 [Python 接口](../api.md)，字段及转换流程见 [输入 API 说明](../docs/input_api.md)，

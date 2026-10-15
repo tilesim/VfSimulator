@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: CANN-1.0
 
 #include "native/tests/support.h"
-#include "native/uarch/register_bank.h"
+#include "native/core/uarch/register_bank.h"
 #include <iostream>
 using namespace vfsim;
 namespace {
@@ -15,10 +15,7 @@ UopPtr compute(int64_t id, const std::string &op, const ParamDB &db) {
   u->instId = id;
   u->op = op;
   u->form = "fp32";
-  const auto &p = db.inst(op, u->form);
-  u->fuType = p.exu;
-  u->latency = p.latency;
-  u->dispatchExu = p.dispatchExu;
+  u->profile = &db.inst(op, u->form, "COMPUTE");
   return u;
 }
 } // namespace
@@ -55,6 +52,22 @@ int main() {
   }
   require(undeclared, "Undeclared storage must fail");
   Registers regs(cfg, db, values);
+  DynamicInst instruction;
+  instruction.op = "VADD";
+  instruction.form = "fp32";
+  instruction.opClass = "COMPUTE";
+  instruction.dst = {"mem_like_vector"};
+  auto renamed = regs.rename(instruction, 0);
+  const auto *profile = &db.inst("VADD", "fp32", "COMPUTE");
+  require(renamed->profile == profile,
+          "Renamed instructions reference the database profile");
+  require(profile->allowedExuPorts == std::vector<int>({0, 1}),
+          "Profiles resolve allowed execution ports");
+  require(db.inst("UNKNOWN", "fp32", "LOAD").opClass == "LOAD" &&
+              db.inst("UNKNOWN", "fp32", "COMPUTE").opClass == "COMPUTE",
+          "Declared instruction classes have independent profiles");
+  require(renamed->profile == profile && profile->latency > 0,
+          "Profile references survive further parameter lookups");
   EXU exu(cfg, db);
   EXQ exq(cfg, db, regs, exu);
   auto first = compute(0, "VADD", db);
@@ -66,12 +79,15 @@ int main() {
   exu.start(first, 0, 30, true);
   require(exq.canAccept(0), "Popped instruction frees waiting capacity");
   require(!exu.canAccept(0, true), "EXU enforces queued inflight cap");
-  require(exu.finish(30 + first->latency - 1).empty(),
+  require(exu.finish(30 + first->profile->latency - 1).empty(),
           "EXU does not finish early");
-  require(exu.finish(30 + first->latency).size() == 1,
+  require(exu.finish(30 + first->profile->latency).size() == 1,
           "EXU completes at latency boundary");
   require(exu.canAccept(0, true), "Completion returns inflight credit");
-  second->dispatchExu = "EXU0_ONLY";
+  auto restrictedProfile = *second->profile;
+  restrictedProfile.dispatchExu = "EXU0_ONLY";
+  restrictedProfile.allowedExuPorts = {0};
+  second->profile = &restrictedProfile;
   require(!exu.canIssue(*second, 1, 100, true),
           "EXU0-only instruction cannot use port 1");
   cfg.exqCapacityCountsInflight = true;

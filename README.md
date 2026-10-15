@@ -101,7 +101,7 @@ LoopControl 控制循环与 block 的开放时间；Membar 控制器管理访存
 | `regression_suite/` | 算子输入、周期基线、误差指标和报告 |
 | `cce_code/`、`ascend_runner/` | CCE 示例、探针及编译运行和校准工具 |
 | `optimizer/`、`tools/` | 计划搜索、分区、回归、生成和分析工具 |
-| `api/native/`、`native/` | C++ 输入数据、执行核心、构建和测试 |
+| `native/` | C++ 子项目：api、core、cli、tests 和 CMake 构建 |
 | `docs/` | 模块、参数、模型和验证说明 |
 
 微架构基础配置位于 `configs/uarch.json`，单次覆盖由 Canonical 的 `uarch` 提供。

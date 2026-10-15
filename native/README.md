@@ -1,7 +1,7 @@
 # C++ 微架构仿真器
 
 C++17 实现使用 CanonicalVfInfo 描述程序，并逐 cycle 推进微架构组件。
-`api/native/input_api.h` 提供输入接收接口，`native/simulator.h` 提供周期预测接口。
+`native/api/input_api.h` 提供输入接收接口，`native/core/simulator.h` 提供周期预测接口。
 Python 与 C++ 共享 Canonical JSON、指令 Catalog、参数配置和回归用例。
 
 ## 输入与调用
@@ -14,8 +14,8 @@ Python 与 C++ 共享 Canonical JSON、指令 Catalog、参数配置和回归用
 CCE 文件通过 Python InputAPI 前端转换为 Canonical JSON，供 C++ 输入层接收。
 
 ```cpp
-#include "api/native/input_api.h"
-#include "native/simulator.h"
+#include "native/api/input_api.h"
+#include "native/core/simulator.h"
 
 const auto vf = vfsim::InputAPI::loadJson("program.json");
 vfsim::CoreVfCostModel simulator("/path/to/VfSimulator", "/tmp/vfsim-result");
@@ -30,35 +30,61 @@ Core 的执行准备检查显式依赖、控制指令和循环展开等执行能
 
 ## 目录职责
 
+```text
+native/
+  CMakeLists.txt
+  api/
+    input_api.h/.cpp
+    common/          Canonical、Catalog、诊断与校验
+    json/            JSON 解析与 Canonical 解码
+    generated/       共享配置生成的数据表
+  core/
+    simulator.h/.cpp
+    execution/       指令准备、展开、Engine、loop 与 membar
+    uarch/           硬件组件与状态转换
+    params/          参数快照、Profile、时序查询与回退
+    trace/           事件记录、结果写出与 Perfetto 导出
+  cli/               命令行入口
+  tests/             C++ 组件与契约测试
+```
+
+
 | 目录或文件 | 功能 |
 | --- | --- |
-| `simulator.h/.cpp` | 公共仿真接口、配置组合和结果返回 |
-| `execution/instruction.h` | 动态指令、重命名后的 Uop 和内部 value 信息 |
-| `execution/prepare.*` | 执行能力检查、内部 value 表准备 |
-| `execution/expansion.*` | 循环展开、动态定义身份、末次使用和循环边界标注 |
-| `execution/engine.*` | 全局 cycle、传输延迟、分派预算、组件协作和排空 |
-| `execution/loop_control.*` | VLOOP 启动、循环反馈与分派开放时间 |
-| `execution/membar.*` | 屏障接收、同步释放、消费者门控和控制完成 |
-| `uarch/ifu.h` | 已准备的指令流 |
-| `uarch/idu.*` | 有序分派、资源预算和地址更新依赖 |
-| `uarch/register_bank.h`、`registers.*` | 物理寄存器、重命名、源释放、可见信用和对齐状态 |
-| `uarch/shq.h` | 计算等待队列及共享 SHQ 信用 |
-| `uarch/ooo.*` | 就绪指令选择、SHQ 到 EXQ 的端口分配和直接发射 |
-| `uarch/exq.*` | 各端口的 FU 队列、接收时间和队首选择 |
-| `uarch/exu.*` | EXU 端口约束、II、运行中指令和完成 |
-| `uarch/lsu.*` | LSQ、访存依赖、load/store 优先级及共享 UB 预算 |
-| `params/` | 参数类型、文件读取、配置解析、指令查询和缺失项回退 |
-| `trace/` | 事件快照、结果类型、日志及 Perfetto Trace 写出 |
+| `core/simulator.h/.cpp` | 公共仿真接口、配置组合和结果返回 |
+| `core/execution/instruction.h` | 动态指令、重命名后的 Uop 和内部 value 信息 |
+| `core/execution/prepare.*` | 执行能力检查、内部 value 表准备 |
+| `core/execution/expansion.*` | 循环展开、动态定义身份、末次使用和循环边界标注 |
+| `core/execution/engine.*` | 全局 cycle、传输延迟、分派预算、组件协作和排空 |
+| `core/execution/loop_control.*` | VLOOP 启动、循环反馈与分派开放时间 |
+| `core/execution/membar.*` | 屏障接收、同步释放、消费者门控和控制完成 |
+| `core/uarch/ifu.h` | 已准备的指令流 |
+| `core/uarch/idu.*` | 有序分派、资源预算和地址更新依赖 |
+| `core/uarch/register_bank.h`、`core/uarch/registers.*` | 物理寄存器、重命名、源释放、可见信用和对齐状态 |
+| `core/uarch/shq.h` | 计算等待队列及共享 SHQ 信用 |
+| `core/uarch/ooo.*` | 就绪指令选择、SHQ 到 EXQ 的端口分配和直接发射 |
+| `core/uarch/exq.*` | 各端口的 FU 队列、接收时间和队首选择 |
+| `core/uarch/exu.*` | EXU 端口约束、II、运行中指令和完成 |
+| `core/uarch/lsu.*` | LSQ、访存依赖、load/store 优先级及共享 UB 预算 |
+| `core/params/` | 参数类型、文件读取、配置解析、指令查询和缺失项回退 |
+| `core/trace/` | 事件快照、结果类型、日志及 Perfetto Trace 写出 |
 | `cli/` | Canonical JSON 命令行工具 |
 | `tests/` | 输入契约、组件时序、资源、地址、谓词和 membar 测试 |
 
 组件持有各自的队列和运行状态；Engine 管理组件之间的时序。
 SHQ、EXQ、EXU、LSU 和完成跟踪共用同一 Uop 对象。
 Engine 的活跃指令集合用于完成检查与排空。
+Uop 引用本次运行的 ParamDB 持有的只读 InstructionProfile；指令类别、latency、FU 和
+允许端口由 Profile 提供。ParamDB 的生命周期覆盖 Engine、各组件和 Trace 写出。
 
-`api/native/common/` 定义语义类型、Catalog、诊断和校验；
-`api/native/json/` 负责 JSON 解析及 Canonical 解码；
-`api/native/generated/` 存放共享配置生成的数据表。
+`api/common/validator.*` 校验定义、作用域、循环、访存和依赖；
+`api/common/instruction_validation.*` 校验 Catalog 的指令形式和操作数。
+`core/trace/recorder.*` 记录事件，`writer.*` 写出结果和事件文件，
+`perfetto.*` 将事件导出为 Perfetto JSON。
+
+`native/api/common/` 定义语义类型、Catalog、诊断和校验；
+`native/api/json/` 负责 JSON 解析及 Canonical 解码；
+`native/api/generated/` 存放共享配置生成的数据表。
 
 ## 周期推进
 

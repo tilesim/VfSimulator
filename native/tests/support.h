@@ -1,9 +1,9 @@
 #pragma once
-#include "api/native/input_api.h"
-#include "api/native/json/serialization.h"
-#include "native/execution/engine.h"
-#include "native/params/uarch.h"
-#include "native/simulator.h"
+#include "native/api/input_api.h"
+#include "native/api/json/serialization.h"
+#include "native/core/execution/engine.h"
+#include "native/core/params/uarch.h"
+#include "native/core/simulator.h"
 namespace vfsim {
 inline SimulationResult runProgram(CanonicalVfInfo vf, const ParamDB &db,
                                    const std::filesystem::path &out = {},

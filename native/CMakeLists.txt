@@ -3,32 +3,34 @@ project(VfSimulatorNative LANGUAGES CXX)
 include(CTest)
 option(VFSIM_BUILD_TESTS "Build native simulator tests" ${PROJECT_IS_TOP_LEVEL})
 add_library(vfsim_native_core STATIC
-  ../api/native/common/diagnostics.cpp
-  ../api/native/common/instruction_catalog.cpp
-  ../api/native/common/schema.cpp
-  ../api/native/common/uarch_validation.cpp
-  ../api/native/common/validator.cpp
-  ../api/native/input_api.cpp
-  ../api/native/json/serialization.cpp
-  ../api/native/json/value.cpp
-  execution/engine.cpp
-  execution/expansion.cpp
-  execution/loop_control.cpp
-  execution/membar.cpp
-  execution/prepare.cpp
-  params/database.cpp
-  params/fallback.cpp
-  params/loader.cpp
-  params/uarch.cpp
-  simulator.cpp
-  trace/recorder.cpp
-  trace/writer.cpp
-  uarch/exq.cpp
-  uarch/exu.cpp
-  uarch/idu.cpp
-  uarch/lsu.cpp
-  uarch/ooo.cpp
-  uarch/registers.cpp
+  api/common/diagnostics.cpp
+  api/common/instruction_catalog.cpp
+  api/common/instruction_validation.cpp
+  api/common/schema.cpp
+  api/common/uarch_validation.cpp
+  api/common/validator.cpp
+  api/input_api.cpp
+  api/json/serialization.cpp
+  api/json/value.cpp
+  core/execution/engine.cpp
+  core/execution/expansion.cpp
+  core/execution/loop_control.cpp
+  core/execution/membar.cpp
+  core/execution/prepare.cpp
+  core/params/database.cpp
+  core/params/fallback.cpp
+  core/params/loader.cpp
+  core/params/uarch.cpp
+  core/simulator.cpp
+  core/trace/perfetto.cpp
+  core/trace/recorder.cpp
+  core/trace/writer.cpp
+  core/uarch/exq.cpp
+  core/uarch/exu.cpp
+  core/uarch/idu.cpp
+  core/uarch/lsu.cpp
+  core/uarch/ooo.cpp
+  core/uarch/registers.cpp
 )
 add_library(vfsim::native_core ALIAS vfsim_native_core)
 target_include_directories(vfsim_native_core PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/..)

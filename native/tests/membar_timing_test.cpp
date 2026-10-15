@@ -1,8 +1,8 @@
 // Copyright (c) 2026 Huawei Technologies Co., Ltd.
 // SPDX-License-Identifier: CANN-1.0
 
-#include "api/native/json/value.h"
-#include "native/execution/membar.h"
+#include "native/api/json/value.h"
+#include "native/core/execution/membar.h"
 
 #include <filesystem>
 #include <iostream>

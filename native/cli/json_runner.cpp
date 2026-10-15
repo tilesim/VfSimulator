@@ -8,9 +8,9 @@
 // MERCHANTABILITY, or FITNESS FOR A PARTICULAR PURPOSE. See LICENSE in the root
 // of the software repository for the full text of the License.
 
-#include "api/native/input_api.h"
-#include "native/params/database.h"
-#include "native/simulator.h"
+#include "native/api/input_api.h"
+#include "native/core/params/database.h"
+#include "native/core/simulator.h"
 
 #include <filesystem>
 #include <iostream>

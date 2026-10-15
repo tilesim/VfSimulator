@@ -107,3 +107,25 @@ configs/           指令语义与微架构时序参数
 [perfetto.py](../core/trace/perfetto.py)将执行事件转换为 Perfetto 时间线。
 
 结果字段、日志格式和检查方法见[验证与精度](validation.md)。
+
+## C++ 子项目
+
+`native/` 包含 C++ 的输入层、仿真核心、命令行入口、测试和 CMake 构建。
+两种实现按相同的职责划分目录：
+
+| Python | C++ | 职责 |
+| --- | --- | --- |
+| `api/input_api.py` | `native/api/input_api.h/.cpp` | 接收与校验 Canonical 输入 |
+| `api/common/` | `native/api/common/` | 数据合同、Catalog、通用与指令校验 |
+| `api/json/` | `native/api/json/` | Canonical JSON 输入 |
+| `core/simulator.py` | `native/core/simulator.h/.cpp` | 参数生命周期、组件组装和预测入口 |
+| `core/execution/` | `native/core/execution/` | 准备、展开、周期协调、循环与屏障 |
+| `core/uarch/` | `native/core/uarch/` | 各组件的状态与局部时序 |
+| `core/params/` | `native/core/params/` | 参数加载、Profile 和查询缓存 |
+| `core/trace/` | `native/core/trace/` | 事件记录、结果和 Perfetto 导出 |
+| `main.py` | `native/cli/json_runner.cpp` | 命令行入口 |
+
+C++ 使用 `.h/.cpp` 声明和实现模块；IFU、SHQ 和寄存器 bank 的小型实现位于头文件。
+两种核心都通过 Uop 的 Profile 引用取得执行时序和端口约束。
+CCE 解析与 Python Builder 位于 Python 输入层；C++ 接收转换后的 Canonical JSON
+或通过 C++ API 校验的 CanonicalVfInfo 对象。
