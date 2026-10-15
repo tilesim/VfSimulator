@@ -4,7 +4,7 @@ VfSimulator 是面向 Ascend 风格 VF（Vector Function）的周期级性能模
 模型根据指令依赖、队列容量、物理寄存器、执行端口、forwarding、II、UB 预算和
 Membar 时序，预测向量函数从启动到执行排空的周期。
 
-Python 输入层支持 CCE/DSL 文件、Canonical JSON 文件和 `CanonicalVfInfo` 对象。
+Python 与 C++ 输入层支持 CCE/DSL 文件、Canonical JSON 文件和 `CanonicalVfInfo` 对象。
 API 统一接收并校验数据，Core 将程序展开为动态指令，再按周期协调微架构组件。
 模型输出周期、执行事件和 Perfetto 时间线。算子数值正确性通过独立 golden、CAModel
 或设备运行验证。

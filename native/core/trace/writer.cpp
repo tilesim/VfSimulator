@@ -1,242 +1,189 @@
 // Copyright (c) 2026 Huawei Technologies Co., Ltd.
 // SPDX-License-Identifier: CANN-1.0
-
 #include "native/core/trace/writer.h"
 #include "native/core/execution/membar.h"
-#include "native/core/trace/recorder.h"
 #include "native/core/trace/perfetto.h"
-#include "native/api/json/value.h"
+#include "native/core/trace/recorder.h"
 #include "native/core/uarch/idu.h"
 #include "native/core/uarch/registers.h"
 #include <algorithm>
 #include <fstream>
-#include <sstream>
-#include <stdexcept>
 namespace vfsim {
 namespace {
-
-template <typename T> std::string joinJsonArray(const std::vector<T> &values) {
-  std::ostringstream oss;
-  oss << "[";
-  for (size_t i = 0; i < values.size(); ++i) {
-    if (i)
-      oss << ", ";
-    oss << values[i];
-  }
-  oss << "]";
-  return oss.str();
+using Object = json::Value::Object;
+using Array = json::Value::Array;
+template <class T> json::Value optional(const std::optional<T> &value) {
+  return value ? json::Value(*value) : json::Value{};
 }
-
-template <>
-std::string joinJsonArray<std::string>(const std::vector<std::string> &values) {
-  std::ostringstream oss;
-  oss << "[";
-  for (size_t i = 0; i < values.size(); ++i) {
-    if (i)
-      oss << ", ";
-    oss << '"' << json::escapeString(values[i]) << '"';
-  }
-  oss << "]";
-  return oss.str();
+template <class T> Array array(const std::vector<T> &values) {
+  Array result;
+  for (const auto &value : values)
+    result.emplace_back(value);
+  return result;
 }
-
-template <>
-std::string joinJsonArray<std::optional<std::string>>(
-    const std::vector<std::optional<std::string>> &values) {
-  std::ostringstream oss;
-  oss << "[";
-  for (size_t i = 0; i < values.size(); ++i) {
-    if (i)
-      oss << ", ";
-    if (values[i].has_value())
-      oss << '"' << json::escapeString(*values[i]) << '"';
-    else
-      oss << "null";
-  }
-  oss << "]";
-  return oss.str();
+template <class T> Array array(const std::vector<std::optional<T>> &values) {
+  Array result;
+  for (const auto &value : values)
+    result.emplace_back(optional(value));
+  return result;
 }
-
-std::string
-joinIterationPath(const std::vector<std::pair<std::string, int64_t>> &path) {
-  std::ostringstream oss;
-  oss << "[";
-  for (size_t index = 0; index < path.size(); ++index) {
-    if (index)
-      oss << ", ";
-    oss << "{\"loop_id\":\"" << json::escapeString(path[index].first)
-        << "\",\"iteration\":" << path[index].second << "}";
-  }
-  oss << "]";
-  return oss.str();
+void writeJson(const std::filesystem::path &path, const json::Value &value) {
+  std::ofstream output(path);
+  if (!output)
+    throw std::runtime_error("Cannot write simulator trace: " + path.string());
+  output << json::stringify(value) << '\n';
 }
-
 void dumpIDULog(const std::vector<IDUDispatchRecord> &records,
-                const std::string &path) {
-  std::ofstream os(path);
+                const std::filesystem::path &path,
+                const std::map<int64_t, const Uop *> &instructions) {
+  std::ofstream output(path);
   for (const auto &r : records) {
-    os << "{\"cy\":" << r.cycle << ",\"inst_id\":" << r.instId << ",\"op\":\""
-       << json::escapeString(r.op) << "\""
-       << ",\"dst\":" << joinJsonArray(r.dst)
-       << ",\"src\":" << joinJsonArray(r.src)
-       << ",\"top_block_id\":" << r.topBlockId << ",\"vreg\":" << r.vreg
-       << ",\"predicate_phys_free\":" << r.predicatePhysFree
-       << ",\"SHQ_QUEUE\":" << r.shqQueue << ",\"LSQ\":" << r.lsq
-       << ",\"SHQ\":" << r.shq << ",\"static_instruction_id\":\""
-       << json::escapeString(r.staticInstructionId) << "\""
-       << ",\"iteration_path\":" << joinIterationPath(r.iterationPath)
-       << ",\"stream_seq\":" << r.streamSeq << ",\"event\":\"" << r.event
-       << "\"";
-    if (r.event == "blocked")
-      os << ",\"blocked_reason\":\"" << r.blockedReason << "\"";
-    os << ",\"address_dependencies\":[";
-    for (size_t i = 0; i < r.addressDependencies.size(); ++i) {
-      const auto &d = r.addressDependencies[i];
-      if (i)
-        os << ",";
-      os << "{\"address_state_id\":\"" << json::escapeString(d.stateId)
-         << "\",\"producer_inst_id\":" << d.producerInstId
-         << ",\"producer_dispatch_cycle\":" << d.producerDispatchCycle
-         << ",\"ready_cycle\":" << d.readyCycle << "}";
+    Object row{{"cy", r.cycle},
+               {"inst_id", r.instId},
+               {"op", r.op},
+               {"static_instruction_id", r.staticInstructionId},
+               {"iteration_path", iterationPathJson(r.iterationPath)},
+               {"stream_seq", r.streamSeq},
+               {"event", r.event},
+               {"predicate_phys_free", r.predicatePhysFree}};
+    if (r.event == "dispatch") {
+      const auto it = instructions.find(r.instId);
+      Object identity = it == instructions.end()
+                            ? Object{}
+                            : instructionTraceIdentity(*it->second);
+      row["dst"] = it == instructions.end() ? json::Value(array(r.dst))
+                                            : identity.at("dst");
+      row["src"] = it == instructions.end() ? json::Value(array(r.src))
+                                            : identity.at("src");
+      row["top_block_id"] = r.topBlockId;
+      row["vreg"] = r.vreg;
+      row["SHQ_QUEUE"] = r.shqQueue;
+      row["LSQ"] = r.lsq;
+      row["SHQ"] = r.shq;
+    } else if (!r.blockedReason.empty() && r.blockedReason != "address_state") {
+      row["blocked_reason"] = r.blockedReason;
+      row["vreg"] = r.vreg;
     }
-    os << "]}\n";
+    Array dependencies;
+    for (const auto &d : r.addressDependencies)
+      dependencies.emplace_back(
+          Object{{"address_state_id", d.stateId},
+                 {"producer_inst_id", d.producerInstId},
+                 {"producer_dispatch_cycle", d.producerDispatchCycle},
+                 {"ready_cycle", d.readyCycle}});
+    if (r.event == "dispatch" || r.blockedReason.empty() ||
+        r.blockedReason == "address_state")
+      row["address_dependencies"] = dependencies;
+    if (r.event == "blocked" &&
+        (r.blockedReason.empty() || r.blockedReason == "address_state")) {
+      row["blocked_reason"] = "address_state";
+      row.erase("predicate_phys_free");
+    }
+    output << json::stringify(row) << '\n';
   }
-}
-
-void dumpVloopTrace(const LoopControl &loops, const std::string &path) {
-  std::ofstream os(path);
-  for (const auto &r : loops.trace()) {
-    os << "{\"top_block_id\":" << r.topBlockId << ",\"loop_id\":\""
-       << json::escapeString(r.loopId) << "\""
-       << ",\"iter\":" << joinJsonArray(r.iter)
-       << ",\"start_cycle\":" << r.startCycle << "}\n";
-  }
-}
-
-void dumpModelWarnings(const ParamDB &db, const std::string &path) {
-  const auto warnings = db.warnings();
-  if (warnings.empty())
-    return;
-  std::ofstream os(path);
-  os << "{\n"
-     << "  \"has_warning\": true,\n"
-     << "  \"instruction_fallback_warnings\": [\n";
-  for (size_t i = 0; i < warnings.size(); ++i) {
-    const auto &warning = warnings[i];
-    os << "    {\"kind\":\"" << json::escapeString(warning.kind) << "\"";
-    for (const auto &[key, value] : warning.fields)
-      os << ",\"" << json::escapeString(key) << "\":\"" << json::escapeString(value) << "\"";
-    os << ",\"count\":" << warning.count << "}";
-    if (i + 1 < warnings.size())
-      os << ",";
-    os << "\n";
-  }
-  os << "  ]\n"
-     << "}\n";
-}
-
-void writeIdentity(std::ostream &out, const Uop &u) {
-  out << "\"op\":\"" << json::escapeString(u.op) << "\",\"form\":\""
-      << json::escapeString(u.form) << "\",\"op_class\":\"" << u.profile->opClass
-      << "\",\"src\":" << joinJsonArray(u.src)
-      << ",\"dst\":" << joinJsonArray(u.dst) << ",\"static_instruction_id\":\""
-      << json::escapeString(u.staticInstructionId)
-      << "\",\"iteration_path\":" << joinIterationPath(u.iterationPath)
-      << ",\"stream_seq\":" << u.streamSeq;
-}
-template <typename T>
-std::string optionalNumber(const std::optional<T> &value) {
-  return value ? std::to_string(*value) : "null";
-}
-std::string optionalText(const std::optional<std::string> &value) {
-  return value ? "\"" + json::escapeString(*value) + "\"" : "null";
 }
 } // namespace
 void dumpLogs(const std::filesystem::path &root, const TraceRecorder &trace,
               const IDU &idu, const LoopControl &loops,
-              const MembarController &control, const ParamDB &db) {
+              const MembarController &control, const ParamDB &db,
+              int64_t issuePorts) {
   std::filesystem::create_directories(root);
-  std::ofstream history(root / "sim_history.json"),
-      start(root / "start_by_cycle.json"), done(root / "done_by_cycle.json");
-  if (!history || !start || !done)
+  std::ofstream start(root / "start_by_cycle.json"),
+      done(root / "done_by_cycle.json");
+  if (!start || !done)
     throw std::runtime_error("Cannot write simulator trace: " + root.string());
-  history << "[\n";
-  bool first = true;
-  for (const auto &row : trace.history()) {
-    const auto &u = row.instruction;
-    if (!first)
-      history << ",\n";
-    first = false;
-    history << "{\"cy\":" << row.cycle << ",\"event\":\"" << row.event
-            << "\",\"id\":" << u.instId << ",";
-    writeIdentity(history, u);
-    history << ",\"state\":\"" << u.state
-            << "\",\"blocked_reason\":" << optionalText(u.blockedReason)
-            << ",\"ready\":" << u.readyCycle
-            << ",\"start\":" << optionalNumber(u.startCycle)
-            << ",\"done\":" << optionalNumber(u.doneCycle)
-            << ",\"preg_src\":" << joinJsonArray(u.pregSrc)
-            << ",\"preg_dst\":" << joinJsonArray(u.pregDst)
-            << ",\"vector_phys_free\":" << row.vectorFree
-            << ",\"predicate_phys_free\":" << row.predicateFree
-            << ",\"src_predicate_phys\":" << joinJsonArray(row.sourcePredicates)
-            << ",\"dst_predicate_phys\":"
-            << joinJsonArray(row.destinationPredicates)
-            << ",\"producer_op_for_store\":"
-            << optionalText(u.producerOpForStore)
-            << ",\"producer_form_for_store\":"
-            << optionalText(u.producerFormForStore)
-            << ",\"producer_start_for_store\":"
-            << optionalNumber(u.producerStartForStore)
-            << ",\"store_dependencies_resolved\":"
-            << (u.storeDependenciesResolved ? "true" : "false")
-            << ",\"align_state_operation\":\"" << u.alignStateOperation
-            << "\",\"align_state_id\":\"" << json::escapeString(u.alignStateId)
-            << "\",\"align_generation\":"
-            << (u.alignGeneration
-                    ? std::to_string(u.alignGeneration->generationId)
-                    : "null")
-            << "}";
-    if (row.event == "start" || row.event == "done") {
-      auto &out = row.event == "start" ? start : done;
-      out << "{\"cy\":"
-          << (row.event == "done" ? u.doneCycle.value_or(row.cycle) : row.cycle)
-          << ",\"inst_id\":" << u.instId << ",";
-      writeIdentity(out, u);
-      if (row.event == "start")
-        out << ",\"exu_port\":"
-            << (u.exuPort >= 0 ? std::to_string(u.exuPort) : "null")
-            << ",\"ready_cycle\":" << u.readyCycle
-            << ",\"preg_src\":" << joinJsonArray(u.pregSrc)
-            << ",\"preg_dst\":" << joinJsonArray(u.pregDst);
-      out << "}\n";
+  Array history;
+  std::map<int64_t, const Uop *> instructions;
+  for (const auto &event : trace.history()) {
+    const auto &u = event.instruction;
+    instructions[u.instId] = &u;
+    auto row = instructionTraceIdentity(u);
+    row["cy"] = event.cycle;
+    row["event"] = event.event;
+    row["id"] = u.instId;
+    row["state"] = u.state;
+    row["blocked_reason"] = optional(u.blockedReason);
+    row["ready"] = u.readyCycle;
+    row["start"] = optional(u.startCycle);
+    row["done"] = optional(u.doneCycle);
+    row["preg_src"] = array(u.pregSrc);
+    row["preg_dst"] = array(u.pregDst);
+    row["vector_phys_free"] = event.vectorFree;
+    row["predicate_phys_free"] = event.predicateFree;
+    row["src_predicate_phys"] = array(event.sourcePredicates);
+    row["dst_predicate_phys"] = array(event.destinationPredicates);
+    row["producer_op_for_store"] = optional(u.producerOpForStore);
+    row["producer_form_for_store"] = optional(u.producerFormForStore);
+    row["producer_start_for_store"] = optional(u.producerStartForStore);
+    row["store_dependencies_resolved"] = u.storeDependenciesResolved;
+    row["align_state_operation"] = u.alignStateOperation.empty()
+                                       ? json::Value{}
+                                       : json::Value(u.alignStateOperation);
+    row["align_state_id"] =
+        u.alignStateId.empty() ? json::Value{} : json::Value(u.alignStateId);
+    row["align_generation"] = u.alignGeneration
+                                  ? json::Value(u.alignGeneration->generationId)
+                                  : json::Value{};
+    history.emplace_back(std::move(row));
+    if (event.event != "start" && event.event != "done")
+      continue;
+    row = instructionTraceIdentity(u);
+    row["cy"] =
+        event.event == "done" ? u.doneCycle.value_or(event.cycle) : event.cycle;
+    row["inst_id"] = u.instId;
+    row["op_class"] = u.profile->opClass;
+    row["fu_type"] = u.profile->opClass == "COMPUTE"
+                         ? json::Value(u.profile->fuType)
+                         : json::Value{};
+    if (event.event == "start") {
+      row["exu_port"] = u.exuPort < 0 ? json::Value{} : json::Value(u.exuPort);
+      row["ready_cycle"] = u.readyCycle;
+      row["preg_src"] = array(u.pregSrc);
+      row["preg_dst"] = array(u.pregDst);
     }
-
+    (event.event == "start" ? start : done) << json::stringify(row) << '\n';
   }
-  history << "\n]\n";
-  dumpPerfettoTrace(trace, root / "trace.json");
-  dumpIDULog(idu.dispatchLog(), (root / "idu_to_ooo.json").string());
-  dumpIDULog(idu.addressBlockLog(),
-             (root / "idu_address_blocked.json").string());
-  dumpIDULog(idu.resourceBlockLog(),
-             (root / "idu_resource_blocked.json").string());
-  dumpVloopTrace(loops, (root / "vloop_trace.json").string());
-  dumpModelWarnings(db, (root / "model_warnings.json").string());
-  if (control.hasTiming()) {
-    std::ofstream out(root / "membar_history.json");
-    if (!out)
-      throw std::runtime_error("Cannot write membar history");
-    out << "[\n";
-    bool first = true;
-    for (const auto &e : control.history()) {
-      if (!first)
-        out << ",\n";
-      first = false;
-      out << "{\"cy\":" << e.cy << ",\"stream_seq\":" << e.streamSeq
-          << ",\"pc\":" << e.pc << ",\"event\":\"" << json::escapeString(e.event)
-          << "\",\"barrier\":\"" << json::escapeString(e.barrier) << "\"}";
+  writeJson(root / "sim_history.json", history);
+  dumpPerfettoTrace(trace, root / "trace.json", issuePorts);
+  dumpIDULog(idu.dispatchLog(), root / "idu_to_ooo.json", instructions);
+  dumpIDULog(idu.addressBlockLog(), root / "idu_address_blocked.json",
+             instructions);
+  dumpIDULog(idu.resourceBlockLog(), root / "idu_resource_blocked.json",
+             instructions);
+  auto loopEvents = loops.trace();
+  std::sort(loopEvents.begin(), loopEvents.end(),
+            [](const auto &a, const auto &b) {
+              return std::tie(a.topBlockId, a.startCycle, a.loopId, a.iter) <
+                     std::tie(b.topBlockId, b.startCycle, b.loopId, b.iter);
+            });
+  std::ofstream loopOutput(root / "vloop_trace.json");
+  for (const auto &r : loopEvents)
+    loopOutput << json::stringify(Object{{"top_block_id", r.topBlockId},
+                                         {"loop_id", r.loopId},
+                                         {"iter", array(r.iter)},
+                                         {"start_cycle", r.startCycle}})
+               << '\n';
+  if (!db.warnings().empty()) {
+    Array warnings;
+    for (const auto &warning : db.warnings()) {
+      Object payload(warning.fields.begin(), warning.fields.end());
+      payload["kind"] = warning.kind;
+      payload["count"] = warning.count;
+      warnings.emplace_back(std::move(payload));
     }
-    out << "\n]\n";
+    writeJson(root / "model_warnings.json",
+              Object{{"has_warning", true},
+                     {"instruction_fallback_warnings", warnings}});
+  }
+  if (control.hasTiming()) {
+    Array barriers;
+    for (const auto &e : control.history())
+      barriers.emplace_back(Object{{"cy", e.cy},
+                                   {"stream_seq", e.streamSeq},
+                                   {"pc", e.pc},
+                                   {"event", e.event},
+                                   {"barrier", e.barrier}});
+    writeJson(root / "membar_history.json", barriers);
   }
 }
 } // namespace vfsim

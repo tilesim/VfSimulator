@@ -127,5 +127,6 @@ configs/           指令语义与微架构时序参数
 
 C++ 使用 `.h/.cpp` 声明和实现模块；IFU、SHQ 和寄存器 bank 的小型实现位于头文件。
 两种核心都通过 Uop 的 Profile 引用取得执行时序和端口约束。
-CCE 解析与 Python Builder 位于 Python 输入层；C++ 接收转换后的 Canonical JSON
-或通过 C++ API 校验的 CanonicalVfInfo 对象。
+两种实现的输入层均支持 CCE、Canonical JSON 和直接构造的 CanonicalVfInfo。
+`native/api/cce/` 对应 Python 的源码扫描、解析、规范化、仿射表达式和值版本化；
+`native/api/programmatic/` 提供显式 Builder 和 C++ 循环作用域守卫。

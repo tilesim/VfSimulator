@@ -5,6 +5,8 @@
 
 #include <algorithm>
 #include <cmath>
+#include <map>
+#include <set>
 #include <sstream>
 #include <stdexcept>
 #include <unordered_map>
@@ -37,6 +39,8 @@ struct Frame {
   int64_t iteration = 0;
   int64_t scheduledIteration = 0;
   int64_t topBlockId = 0;
+  std::string variable;
+  int64_t start = 0, step = 1;
 };
 
 class Expander {
@@ -48,6 +52,24 @@ public:
     runtime_.params = vfInfo.params;
     runtime_.values = std::move(values);
     indexLoops(vfInfo.context, 0);
+    std::set<std::string> occupied;
+    for (const auto &[id, value] : vfInfo.values)
+      occupied.insert(id);
+    std::map<std::string, std::string> ubNames;
+    for (const auto &[id, object] : vfInfo.storageObjects) {
+      std::string name = "__canonical_ub__" + id;
+      while (occupied.count(name))
+        name += ":ub";
+      occupied.insert(name);
+      ubNames.emplace(id, name);
+    }
+    for (const auto &[id, value] : vfInfo.values) {
+      const auto name = value.storage == CanonicalStorageKind::UB
+                            ? ubNames.at(*value.storageObjectId)
+                            : id;
+      staticNames_.emplace(id, name);
+      instances_.emplace(id, ValueInstance{name, {}});
+    }
   }
 
   PreparedProgram run() {
@@ -84,6 +106,10 @@ private:
   std::unordered_map<std::string, std::string> bindings_;
   std::unordered_map<std::string, int64_t> loopTopBlockIds_;
   std::vector<Frame> frames_;
+  std::unordered_map<std::string, ValueInstance> instances_;
+  std::unordered_map<std::string, std::string> staticNames_;
+  std::unordered_map<std::string, int64_t> staticLoopIds_, staticPc_;
+  int64_t nextPc_ = 0;
   int64_t nextTopBlockId_ = 0;
   int64_t activeTopBlockId_ = 0;
 
@@ -91,12 +117,22 @@ private:
     for (const auto &node : nodes) {
       const auto *loopPtr =
           std::get_if<std::shared_ptr<const CanonicalLoop>>(&node.payload);
-      if (loopPtr == nullptr || !*loopPtr)
+      if (loopPtr == nullptr || !*loopPtr) {
+        if (const auto *inst = std::get_if<CanonicalInstruction>(&node.payload))
+          staticPc_[inst->instructionId] = nextPc_;
+        else if (const auto *barrier =
+                     std::get_if<CanonicalMembar>(&node.payload))
+          staticPc_[barrier->instructionId] = nextPc_;
+        ++nextPc_;
         continue;
+      }
       const CanonicalLoop &loop = **loopPtr;
+      staticLoopIds_[loop.loopId] = staticLoopIds_.size();
+      staticPc_[loop.loopId] = nextPc_++;
       if (depth == 0)
         loopTopBlockIds_[loop.loopId] = nextTopBlockId_++;
       indexLoops(loop.body, depth + 1);
+      ++nextPc_;
     }
   }
 
@@ -130,7 +166,9 @@ private:
         frames_.empty() ? activeTopBlockId_ : frames_.front().topBlockId;
     for (const auto &frame : frames_) {
       inst.iterStack.push_back(frame.scheduledIteration);
-      inst.iterationPath.emplace_back(frame.loopId, frame.iteration);
+      inst.iterationPath.push_back(
+          {frame.loopId, frame.iteration, frame.variable,
+           frame.start + frame.iteration * frame.step});
     }
   }
 
@@ -149,6 +187,7 @@ private:
         mode != instruction.attributes.end())
       dynamic.catalogMode = std::get<std::string>(mode->second);
     dynamic.staticInstructionId = instruction.instructionId;
+    dynamic.pc = staticPc_.at(instruction.instructionId);
     for (const auto &operand : instruction.inputs)
       if (operand.memoryAccess)
         dynamic.memoryAccesses.push_back(*operand.memoryAccess);
@@ -173,11 +212,25 @@ private:
       dynamic.alignStateId = *value;
     }
     fillDynamicMetadata(dynamic);
-    for (const auto &operand : instruction.inputs)
-      dynamic.src.push_back(resolve(operand.valueId));
+    for (const auto &operand : instruction.inputs) {
+      const auto identity = resolve(operand.valueId);
+      dynamic.src.push_back(identity);
+      dynamic.srcValueInstances.push_back(instances_.at(identity));
+    }
     for (const auto &operand : instruction.outputs) {
       const std::string identity = dynamicName(operand.valueId);
       dynamic.dst.push_back(identity);
+      ValueInstance instance{staticNames_.at(operand.valueId),
+                             dynamic.iterationPath};
+      instances_[identity] = instance;
+      if (vfInfo_.values.at(operand.valueId).storage ==
+          CanonicalStorageKind::UB) {
+        for (const auto &[id, value] : vfInfo_.values)
+          if (value.storage == CanonicalStorageKind::UB &&
+              staticNames_.at(id) == instance.definitionId)
+            instances_[id] = instance;
+      }
+      dynamic.dstValueInstances.push_back(std::move(instance));
       bindings_[operand.valueId] = identity;
     }
     runtime_.instructions.push_back(std::move(dynamic));
@@ -189,6 +242,7 @@ private:
     dynamic.type = "membar";
     dynamic.barrier = membar.barrier;
     dynamic.staticInstructionId = membar.instructionId;
+    dynamic.pc = staticPc_.at(membar.instructionId);
     fillDynamicMetadata(dynamic);
     runtime_.instructions.push_back(std::move(dynamic));
   }
@@ -234,6 +288,9 @@ private:
     if (!innermost && unroll > 1)
       throw std::runtime_error(
           "Canonical non-innermost loop cannot use unroll > 1: " + loop.loopId);
+    if (count % unroll != 0)
+      throw std::runtime_error(
+          "Canonical loop count is not divisible by unroll: " + loop.loopId);
     const bool hasMembar = containsMembar(loop);
     if (hasMembar && unroll > 1) {
       const auto membar = std::find_if(
@@ -243,11 +300,13 @@ private:
       db_.recordWarning(
           "membar_unroll_disabled",
           {
-              {"pc", "-1"},
+              {"pc",
+               staticPc_.at(
+                   std::get<CanonicalMembar>(membar->payload).instructionId)},
               {"barrier", std::get<CanonicalMembar>(membar->payload).barrier},
-              {"loop_id", loop.loopId},
-              {"requested_unroll", std::to_string(unroll)},
-              {"used_unroll", "1"},
+              {"loop_id", staticLoopIds_.at(loop.loopId)},
+              {"requested_unroll", unroll},
+              {"used_unroll", int64_t{1}},
               {"reason", "membar_in_unrolled_innermost_loop"},
           });
       unroll = 1;
@@ -279,7 +338,12 @@ private:
             bindings_[*loop.carriedValues[index].entryValueId] =
                 currentValues[index];
         frames_.push_back(
-            Frame{loop.loopId, iteration, base / unroll, topBlock});
+            Frame{loop.loopId, iteration, base / unroll, topBlock,
+                  loop.induction.variableId,
+                  resolveInteger(loop.induction.start, vfInfo_.params,
+                                 "induction start"),
+                  resolveInteger(loop.induction.step, vfInfo_.params,
+                                 "induction step")});
         const size_t start = runtime_.instructions.size();
         expandNodes(loop.body, depth + 1);
         std::vector<DynamicInst> laneInstructions(

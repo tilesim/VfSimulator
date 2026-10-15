@@ -63,6 +63,7 @@ private:
   const ParamDB &db_;
   ValueStorageLookup valueStorage_;
   PhysicalRegisterBank vector_, predicate_;
+  int64_t nextDynamicPregId_;
   std::unordered_set<std::string> predicateIds_;
   std::unordered_map<std::string, std::string> rat_;
   std::unordered_map<std::string, ProducerInfo> pregProducer_;

@@ -58,6 +58,11 @@ def warning_list(warnings):
 
 
 def fallback_op_class(op):
+    from api.common.instruction_catalog import DEFAULT_INSTRUCTION_CATALOG
+
+    spec = DEFAULT_INSTRUCTION_CATALOG.lookup(op)
+    if spec is not None:
+        return spec.instruction_class.value.upper()
     if op.startswith("VLD"):
         return "LOAD"
     if op.startswith("VST"):

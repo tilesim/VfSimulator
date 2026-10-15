@@ -394,3 +394,218 @@ CanonicalVfInfo decodeCanonicalVfInfoJson(const json::Value &rootValue) {
 }
 
 } // namespace vfsim
+
+namespace vfsim {
+namespace {
+using Array = json::Value::Array;
+using JsonObject = json::Value::Object;
+template <class T> json::Value encodeOptional(const std::optional<T> &value) {
+  return value ? json::Value(*value) : json::Value{};
+}
+json::Value encodeScalar(const CanonicalScalar &value) {
+  return std::visit(
+      [](const auto &item) -> json::Value {
+        using T = std::decay_t<decltype(item)>;
+        if constexpr (std::is_same_v<T, std::monostate>)
+          return {};
+        else
+          return item;
+      },
+      value);
+}
+json::Value encodeInteger(const CanonicalIntegerExpression &value) {
+  return std::visit([](const auto &item) -> json::Value { return item; },
+                    value);
+}
+JsonObject encodeScalars(const std::map<std::string, CanonicalScalar> &items) {
+  JsonObject result;
+  for (const auto &[key, value] : items)
+    result[key] = encodeScalar(value);
+  return result;
+}
+Array encodeShape(const std::vector<int64_t> &shape) {
+  Array result;
+  for (auto dimension : shape)
+    result.emplace_back(dimension);
+  return result;
+}
+json::Value
+encodeLocation(const std::optional<CanonicalSourceLocation> &value) {
+  if (!value)
+    return {};
+  return JsonObject{{"source", encodeOptional(value->source)},
+                    {"line", encodeOptional(value->line)},
+                    {"column", encodeOptional(value->column)},
+                    {"path", encodeOptional(value->path)}};
+}
+const char *storageName(CanonicalStorageKind kind) {
+  switch (kind) {
+  case CanonicalStorageKind::Register:
+    return "Register";
+  case CanonicalStorageKind::PredicateRegister:
+    return "PredicateRegister";
+  case CanonicalStorageKind::UB:
+    return "UB";
+  case CanonicalStorageKind::Scalar:
+    return "Scalar";
+  default:
+    throw std::runtime_error("Cannot encode unknown Canonical storage kind");
+  }
+}
+const char *roleName(CanonicalOperandRole role) {
+  switch (role) {
+  case CanonicalOperandRole::Source:
+    return "source";
+  case CanonicalOperandRole::Destination:
+    return "destination";
+  case CanonicalOperandRole::Memory:
+    return "memory";
+  case CanonicalOperandRole::Scalar:
+    return "scalar";
+  case CanonicalOperandRole::Predicate:
+    return "predicate";
+  case CanonicalOperandRole::Config:
+    return "config";
+  default:
+    throw std::runtime_error("Cannot encode unknown Canonical operand role");
+  }
+}
+json::Value encodeAffine(const CanonicalAffineExpression &value) {
+  Array terms;
+  for (const auto &term : value.terms)
+    terms.emplace_back(JsonObject{{"variable_id", term.variableId},
+                                  {"coefficient", term.coefficient}});
+  return JsonObject{{"constant", value.constant}, {"terms", terms}};
+}
+Array encodeOperands(const std::vector<CanonicalOperand> &operands) {
+  Array result;
+  for (const auto &operand : operands) {
+    json::Value memory;
+    if (operand.memoryAccess) {
+      const auto &m = *operand.memoryAccess;
+      if (m.accessKind == CanonicalAccessKind::Unknown)
+        throw std::runtime_error("Cannot encode unknown access kind");
+      memory = JsonObject{
+          {"base_object_id", m.baseObjectId},
+          {"offset", encodeAffine(m.offset)},
+          {"access_kind",
+           m.accessKind == CanonicalAccessKind::Read ? "read" : "write"},
+          {"span", encodeOptional(m.span)},
+          {"alias_group", encodeOptional(m.aliasGroup)},
+          {"address_state_id", encodeOptional(m.addressStateId)},
+          {"update_mode", m.updateMode},
+          {"post_update_delta_bytes",
+           m.postUpdateDeltaBytes ? encodeAffine(*m.postUpdateDeltaBytes)
+                                  : json::Value{}}};
+    }
+    result.emplace_back(JsonObject{{"value_id", operand.valueId},
+                                   {"role", roleName(operand.role)},
+                                   {"dtype", encodeOptional(operand.dtype)},
+                                   {"memory_access", memory}});
+  }
+  return result;
+}
+Array encodeDependencies(
+    const std::vector<CanonicalDependencyRef> &dependencies) {
+  Array result;
+  for (const auto &dependency : dependencies) {
+    if (dependency.kind == CanonicalDependencyKind::Unknown)
+      throw std::runtime_error("Cannot encode unknown dependency kind");
+    result.emplace_back(
+        JsonObject{{"producer_node_id", dependency.producerNodeId},
+                   {"kind", dependency.kind == CanonicalDependencyKind::Memory
+                                ? "memory"
+                                : "control"},
+                   {"operand_index", encodeOptional(dependency.operandIndex)}});
+  }
+  return result;
+}
+Array encodeNodes(const std::vector<CanonicalNode> &nodes) {
+  Array result;
+  for (const auto &node : nodes) {
+    if (const auto *i = std::get_if<CanonicalInstruction>(&node.payload)) {
+      const char *cls =
+          i->instructionClass == CanonicalInstructionClass::Load    ? "load"
+          : i->instructionClass == CanonicalInstructionClass::Store ? "store"
+          : i->instructionClass == CanonicalInstructionClass::Compute
+              ? "compute"
+              : "control";
+      if (i->instructionClass == CanonicalInstructionClass::Unknown)
+        throw std::runtime_error("Cannot encode unknown instruction class");
+      result.emplace_back(
+          JsonObject{{"kind", "instruction"},
+                     {"instruction_id", i->instructionId},
+                     {"opcode", i->opcode},
+                     {"instruction_class", cls},
+                     {"form", i->form},
+                     {"inputs", encodeOperands(i->inputs)},
+                     {"outputs", encodeOperands(i->outputs)},
+                     {"dependencies", encodeDependencies(i->dependencies)},
+                     {"attributes", encodeScalars(i->attributes)},
+                     {"source_location", encodeLocation(i->sourceLocation)}});
+    } else if (const auto *m = std::get_if<CanonicalMembar>(&node.payload)) {
+      result.emplace_back(
+          JsonObject{{"kind", "membar"},
+                     {"instruction_id", m->instructionId},
+                     {"barrier", m->barrier},
+                     {"dependencies", encodeDependencies(m->dependencies)},
+                     {"source_location", encodeLocation(m->sourceLocation)}});
+    } else {
+      const auto &pointer =
+          std::get<std::shared_ptr<const CanonicalLoop>>(node.payload);
+      if (!pointer)
+        throw std::runtime_error("Cannot encode null Canonical loop");
+      const auto &loop = *pointer;
+      Array carried;
+      for (const auto &item : loop.carriedValues)
+        carried.emplace_back(
+            JsonObject{{"logical_id", item.logicalId},
+                       {"entry_value_id", encodeOptional(item.entryValueId)},
+                       {"back_edge_value_id", item.backEdgeValueId},
+                       {"exit_value_id", item.exitValueId}});
+      result.emplace_back(
+          JsonObject{{"kind", "loop"},
+                     {"loop_id", loop.loopId},
+                     {"induction",
+                      JsonObject{{"variable_id", loop.induction.variableId},
+                                 {"start", encodeInteger(loop.induction.start)},
+                                 {"step", encodeInteger(loop.induction.step)}}},
+                     {"count", encodeInteger(loop.count)},
+                     {"unroll", encodeInteger(loop.unroll)},
+                     {"carried_values", carried},
+                     {"body", encodeNodes(loop.body)},
+                     {"source_location", encodeLocation(loop.sourceLocation)}});
+    }
+  }
+  return result;
+}
+} // namespace
+json::Value encodeCanonicalVfInfoJson(const CanonicalVfInfo &vf) {
+  JsonObject values, objects, params;
+  for (const auto &[id, value] : vf.values)
+    values[id] =
+        JsonObject{{"definition_id", value.definitionId},
+                   {"logical_id", value.logicalId},
+                   {"storage", storageName(value.storage)},
+                   {"dtype", value.dtype},
+                   {"shape", encodeShape(value.shape)},
+                   {"producer_node_id", encodeOptional(value.producerNodeId)},
+                   {"storage_object_id", encodeOptional(value.storageObjectId)},
+                   {"source_location", encodeLocation(value.sourceLocation)}};
+  for (const auto &[id, object] : vf.storageObjects)
+    objects[id] =
+        JsonObject{{"object_id", object.objectId},
+                   {"storage", storageName(object.storage)},
+                   {"shape", encodeShape(object.shape)},
+                   {"source_location", encodeLocation(object.sourceLocation)}};
+  for (const auto &[key, value] : vf.params)
+    params[key] = value;
+  return JsonObject{{"schema_version", vf.schemaVersion},
+                    {"context", encodeNodes(vf.context)},
+                    {"values", values},
+                    {"storage_objects", objects},
+                    {"params", params},
+                    {"uarch", encodeScalars(vf.uarch)},
+                    {"source", encodeScalars(vf.source)}};
+}
+} // namespace vfsim

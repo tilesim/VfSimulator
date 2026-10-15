@@ -1,0 +1,16 @@
+// Copyright (c) 2026 Huawei Technologies Co., Ltd.
+// SPDX-License-Identifier: CANN-1.0
+#include "native/api/cce/adapter.h"
+#include "native/api/cce/value_versioning.h"
+#include "native/api/common/validator.h"
+namespace vfsim::cce {
+CanonicalVfInfo parseCanonical(const std::filesystem::path &path,
+                               const std::string &name,
+                               const IntegerParams &params) {
+  auto vf =
+      versionValues(parseProgram(path, name, params),
+                    {{"adapter", std::string("cce")}, {"path", path.string()}});
+  requireValidCanonicalVfInfo(vf);
+  return vf;
+}
+} // namespace vfsim::cce

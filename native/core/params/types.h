@@ -11,6 +11,7 @@
 #ifndef VFSIM_NATIVE_PARAMS_TYPES_H
 #define VFSIM_NATIVE_PARAMS_TYPES_H
 
+#include "native/api/json/value.h"
 #include <cstdint>
 #include <map>
 #include <optional>
@@ -135,7 +136,7 @@ struct ParamBundle {
 
 struct ModelWarning {
   std::string kind;
-  std::map<std::string, std::string> fields;
+  std::map<std::string, json::Value> fields;
   int64_t count = 1;
 };
 

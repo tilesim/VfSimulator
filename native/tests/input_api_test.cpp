@@ -186,25 +186,29 @@ int main() {
       runProgram(canonicalContract, db, canonicalOutDir.string());
   if (canonicalResult.cyclesExecuted != 35 || canonicalResult.vfEndCycle != 47)
     throw std::runtime_error(
-        "native canonical loop result differs from Python: cycles=" +
+        "native canonical loop result differs from expected timing: cycles=" +
         std::to_string(canonicalResult.cyclesExecuted) +
         ", end=" + std::to_string(canonicalResult.vfEndCycle));
   const std::string canonicalHistory =
       readText(canonicalOutDir / "sim_history.json");
-  if (canonicalHistory.find("\"static_instruction_id\":\"inst.load\"") ==
-          std::string::npos ||
-      canonicalHistory.find(
-          "\"iteration_path\":[{\"loop_id\":\"loop.row\",\"iteration\":0}]") ==
-          std::string::npos ||
-      canonicalHistory.find("\"stream_seq\":0") == std::string::npos)
+  const auto historyRows = json::parseString(canonicalHistory).asArray();
+  const auto &identity = historyRows.front().asObject();
+  const auto &iteration =
+      identity.at("iteration_path").asArray().front().asObject();
+  if (identity.at("static_instruction_id").asString() != "inst.load" ||
+      iteration.at("loop_id").asString() != "loop.row" ||
+      iteration.at("iteration").asInt() != 0 ||
+      iteration.at("induction_variable").asString() != "i" ||
+      identity.at("stream_seq").asInt() != 0)
     throw std::runtime_error(
-        "native canonical dynamic identity was not preserved in history");
+        "Canonical dynamic identity was not preserved in history");
   const SimulationResult canonicalCarriedResult =
       runProgram(canonicalCarriedContract, db);
   if (canonicalCarriedResult.cyclesExecuted != 40 ||
       canonicalCarriedResult.vfEndCycle != 52)
     throw std::runtime_error(
-        "native canonical loop-carried result differs from Python: cycles=" +
+        "native canonical loop-carried result differs from expected timing: "
+        "cycles=" +
         std::to_string(canonicalCarriedResult.cyclesExecuted) +
         ", end=" + std::to_string(canonicalCarriedResult.vfEndCycle));
   const auto topBlockJson = json::parseFile(
@@ -247,8 +251,8 @@ int main() {
       runProgram(emptyTopBlockContract, db, {}, 1000);
   if (emptyTopBlockResult.cyclesExecuted != 33 ||
       emptyTopBlockResult.vfEndCycle != 45)
-    throw std::runtime_error(
-        "native canonical zero-iteration top block differs from Python");
+    throw std::runtime_error("native canonical zero-iteration top block "
+                             "differs from expected timing");
   CanonicalVfInfo canonicalUnrolledContract = canonicalCarriedContract;
   CanonicalLoop unrolledLoop = *std::get<std::shared_ptr<const CanonicalLoop>>(
       canonicalUnrolledContract.context.front().payload);
@@ -260,7 +264,8 @@ int main() {
   if (canonicalUnrolledResult.cyclesExecuted != 40 ||
       canonicalUnrolledResult.vfEndCycle != 52)
     throw std::runtime_error(
-        "native canonical structured unroll differs from Python: cycles=" +
+        "native canonical structured unroll differs from expected timing: "
+        "cycles=" +
         std::to_string(canonicalUnrolledResult.cyclesExecuted) +
         ", end=" + std::to_string(canonicalUnrolledResult.vfEndCycle));
   CanonicalVfInfo canonicalMembarUnrollContract = canonicalCarriedContract;
@@ -291,7 +296,8 @@ int main() {
   if (canonicalUarchResult.cyclesExecuted != 68 ||
       canonicalUarchResult.vfEndCycle != 80)
     throw std::runtime_error(
-        "native canonical uarch override differs from Python: cycles=" +
+        "native canonical uarch override differs from expected timing: "
+        "cycles=" +
         std::to_string(canonicalUarchResult.cyclesExecuted) +
         ", end=" + std::to_string(canonicalUarchResult.vfEndCycle));
   for (const auto *field :
@@ -444,7 +450,7 @@ int main() {
       sharedInvalidResult.diagnostics.front().code !=
           "loop_back_edge_out_of_scope")
     throw std::runtime_error(
-        "shared invalid fixture did not match Python diagnostic");
+        "shared invalid fixture did not match expected diagnostic");
 
   CanonicalVfInfo nullLoopContract;
   nullLoopContract.context.push_back(

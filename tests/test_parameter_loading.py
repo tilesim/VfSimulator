@@ -115,6 +115,22 @@ class ParameterLoadingTest(unittest.TestCase):
                     with self.assertRaisesRegex(ValueError, 'Unknown uarch field: unrecognized_setting'):
                         ParamDB(base_dir=ROOT, uarch_path=path)
 
+    def test_missing_isa_uses_catalog_instruction_class(self):
+        with tempfile.TemporaryDirectory() as folder:
+            path = Path(folder) / "isa.json"
+            path.write_text(json.dumps({"schema_version": 2, "defaults": {}, "instructions": {}}))
+            db = ParamDB(base_dir=ROOT, isa_path=path)
+            for opcode, form, expected in (
+                ("PSTU", "uint32", "STORE"),
+                ("VLDAS", "fp32", "LOAD"),
+                ("VMOV", "fp32", "COMPUTE"),
+                ("VLD_FUTURE", "fp32", "LOAD"),
+            ):
+                with self.subTest(opcode=opcode):
+                    self.assertEqual(db.resolve_inst(opcode, form).op_class, expected)
+                    warning = next(item for item in db.get_warnings() if item.get("op") == opcode)
+                    self.assertEqual(warning["used_defaults"]["op_class"], expected)
+
     def test_instruction_form_takes_precedence_over_fallback_dtype(self):
         db = ParamDB(base_dir=ROOT)
         for op, form in (('VADD', 'fp32'), ('VADD', 'fp16'),

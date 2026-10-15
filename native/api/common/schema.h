@@ -170,6 +170,9 @@ struct CanonicalVfInfo {
   std::map<std::string, CanonicalScalar> source;
 };
 
+int64_t emissionSchemaVersion(
+    const std::unordered_map<std::string, CanonicalValue> &values,
+    const std::vector<CanonicalNode> &nodes);
 } // namespace vfsim
 
 #endif // VFSIM_API_NATIVE_COMMON_SCHEMA_H

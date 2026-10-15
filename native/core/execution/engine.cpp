@@ -43,7 +43,6 @@ void Engine::admit(const DynamicInst &inst) {
     shq_.enqueue(u, cycle_);
   shq_.reserve(*u);
   active_.emplace(u->instId, u);
-  trace_.log("rename", *u, cycle_);
 }
 bool Engine::hasPendingDispatch(int64_t seq) const {
   for (const auto &i : idu_.window())
@@ -191,12 +190,12 @@ SimulationResult Engine::run(const std::filesystem::path &outDir,
     }
     ++cycle_;
   }
-  if (!outDir.empty())
-    dumpLogs(outDir, trace_, idu_, loops_, control_, db_);
   if (!completed)
     throw std::runtime_error(
         "Simulation did not complete before max_cycles: cycle=" +
         std::to_string(cycle_));
+  if (!outDir.empty())
+    dumpLogs(outDir, trace_, idu_, loops_, control_, db_, cfg_.issuePorts);
   return {cycle_, lastDone_ + db_.isaDefaults().vfDrainCost, outDir.string(),
           outDir.empty() ? std::string{} : (outDir / "trace.json").string(),
           program_.linearInstCount};

@@ -1,0 +1,8 @@
+
+        void vmulscvt_vf() {
+          __VEC_SCOPE__ {
+            vector_f32 expv;
+            vector_f16 cvt;
+            vmulscvt(cvt, expv, 1.0f, pset_b32(PAT_ALL), PART_EVEN);
+          }
+        }

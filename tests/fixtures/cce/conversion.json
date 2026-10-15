@@ -1,0 +1,121 @@
+{
+  "schema_version": 2,
+  "context": [
+    {
+      "kind": "instruction",
+      "instruction_id": "instruction.0",
+      "opcode": "PSET_B32",
+      "instruction_class": "compute",
+      "form": "b32",
+      "inputs": [],
+      "outputs": [
+        {
+          "value_id": "predicate_inline_0.def0",
+          "role": "destination",
+          "dtype": "bool",
+          "memory_access": null
+        }
+      ],
+      "dependencies": [],
+      "attributes": {},
+      "source_location": {
+        "source": "vmulscvt_vf",
+        "line": 6,
+        "column": null,
+        "path": "<cce>"
+      }
+    },
+    {
+      "kind": "instruction",
+      "instruction_id": "instruction.1",
+      "opcode": "VMULSCVT",
+      "instruction_class": "compute",
+      "form": "f32_to_f16",
+      "inputs": [
+        {
+          "value_id": "expv.def1",
+          "role": "source",
+          "dtype": "fp32",
+          "memory_access": null
+        },
+        {
+          "value_id": "1.0f.def2",
+          "role": "scalar",
+          "dtype": "fp32",
+          "memory_access": null
+        },
+        {
+          "value_id": "predicate_inline_0.def0",
+          "role": "predicate",
+          "dtype": "bool",
+          "memory_access": null
+        }
+      ],
+      "outputs": [
+        {
+          "value_id": "cvt.def3",
+          "role": "destination",
+          "dtype": "fp16",
+          "memory_access": null
+        }
+      ],
+      "dependencies": [],
+      "attributes": {},
+      "source_location": {
+        "source": "vmulscvt_vf",
+        "line": 6,
+        "column": null,
+        "path": "<cce>"
+      }
+    }
+  ],
+  "values": {
+    "predicate_inline_0.def0": {
+      "definition_id": "predicate_inline_0.def0",
+      "logical_id": "__predicate_inline_0",
+      "storage": "PredicateRegister",
+      "dtype": "bool",
+      "shape": [],
+      "producer_node_id": "instruction.0",
+      "storage_object_id": null,
+      "source_location": null
+    },
+    "expv.def1": {
+      "definition_id": "expv.def1",
+      "logical_id": "expv",
+      "storage": "Register",
+      "dtype": "fp32",
+      "shape": [],
+      "producer_node_id": null,
+      "storage_object_id": null,
+      "source_location": null
+    },
+    "1.0f.def2": {
+      "definition_id": "1.0f.def2",
+      "logical_id": "1.0f",
+      "storage": "Scalar",
+      "dtype": "fp32",
+      "shape": [],
+      "producer_node_id": null,
+      "storage_object_id": null,
+      "source_location": null
+    },
+    "cvt.def3": {
+      "definition_id": "cvt.def3",
+      "logical_id": "cvt",
+      "storage": "Register",
+      "dtype": "fp16",
+      "shape": [],
+      "producer_node_id": "instruction.1",
+      "storage_object_id": null,
+      "source_location": null
+    }
+  },
+  "storage_objects": {},
+  "params": {},
+  "uarch": {},
+  "source": {
+    "adapter": "cce",
+    "path": "<cce>"
+  }
+}

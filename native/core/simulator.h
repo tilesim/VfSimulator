@@ -8,7 +8,7 @@ struct ParamBundle;
 class CoreVfCostModel {
 public:
   explicit CoreVfCostModel(std::filesystem::path baseDir = {},
-                           std::filesystem::path outDir = {},
+                           std::filesystem::path outDir = "results/cost_model",
                            bool vloopOnly = false, bool directIssue = false);
   SimulationResult runVfInfo(const CanonicalVfInfo &vf,
                              int64_t maxCycles = 0) const;

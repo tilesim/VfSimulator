@@ -11,7 +11,10 @@
 #include "native/api/json/value.h"
 
 #include <cctype>
+#include <cmath>
 #include <fstream>
+#include <iomanip>
+#include <map>
 #include <sstream>
 #include <stdexcept>
 
@@ -313,4 +316,54 @@ std::string escapeString(const std::string &text) {
   return out;
 }
 
+} // namespace vfsim::json
+
+namespace vfsim::json {
+std::string stringify(const Value &value) {
+  switch (value.kind) {
+  case Value::Kind::Null:
+    return "null";
+  case Value::Kind::Bool:
+    return value.asBool() ? "true" : "false";
+  case Value::Kind::Int:
+    return std::to_string(value.asInt());
+  case Value::Kind::Double: {
+    const double number = value.asDouble();
+    if (!std::isfinite(number))
+      throw std::runtime_error("Cannot serialize non-finite JSON number");
+    std::ostringstream out;
+    out << std::setprecision(17) << number;
+    auto text = out.str();
+    if (text.find_first_of(".eE") == std::string::npos)
+      text += ".0";
+    return text;
+  }
+  case Value::Kind::String:
+    return "\"" + escapeString(value.asString()) + "\"";
+  case Value::Kind::Array: {
+    std::string out = "[";
+    for (const auto &item : value.asArray()) {
+      if (out.size() > 1)
+        out += ",";
+      out += stringify(item);
+    }
+    return out + "]";
+  }
+  case Value::Kind::Object: {
+    std::map<std::string, Value> sorted(value.asObject().begin(),
+                                        value.asObject().end());
+    std::string out = "{";
+    for (const auto &[key, item] : sorted) {
+      if (out.size() > 1)
+        out += ",";
+      out += "\"" + escapeString(key) + "\":" + stringify(item);
+    }
+    return out + "}";
+  }
+  }
+  throw std::runtime_error("Unknown JSON value kind");
+}
+bool operator==(const Value &lhs, const Value &rhs) {
+  return stringify(lhs) == stringify(rhs);
+}
 } // namespace vfsim::json

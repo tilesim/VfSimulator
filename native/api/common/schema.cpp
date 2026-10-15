@@ -17,3 +17,25 @@ CanonicalNode CanonicalNode::makeMembar(CanonicalMembar value) {
 }
 
 } // namespace vfsim
+
+namespace vfsim {
+int64_t emissionSchemaVersion(
+    const std::unordered_map<std::string, CanonicalValue> &values,
+    const std::vector<CanonicalNode> &nodes) {
+  for (const auto &[id, value] : values)
+    if (value.storage == CanonicalStorageKind::PredicateRegister)
+      return kCurrentSchemaVersion;
+  for (const auto &node : nodes) {
+    const auto *loop =
+        std::get_if<std::shared_ptr<const CanonicalLoop>>(&node.payload);
+    if (!loop || !*loop)
+      continue;
+    for (const auto &carried : (*loop)->carriedValues)
+      if (!carried.entryValueId)
+        return kCurrentSchemaVersion;
+    if (emissionSchemaVersion({}, (*loop)->body) == kCurrentSchemaVersion)
+      return kCurrentSchemaVersion;
+  }
+  return kLegacyEmissionSchemaVersion;
+}
+} // namespace vfsim

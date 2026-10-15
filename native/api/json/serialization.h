@@ -10,7 +10,8 @@
 namespace vfsim {
 
 // Language-neutral CanonicalVfInfo v1 object decoder shared by the product
-// JSON adapter and Python/C++ conformance tests.
+// JSON adapter and Canonical input contract tests.
+json::Value encodeCanonicalVfInfoJson(const CanonicalVfInfo &value);
 CanonicalVfInfo decodeCanonicalVfInfoJson(const json::Value &root);
 
 } // namespace vfsim

@@ -91,3 +91,13 @@ schema v1/v2 的读写由 [serialization.py](../api/json/serialization.py)处理
 Core 的执行能力检查位于 `CoreLoweringPass.ensure_current_core_compatible()`。
 其约束包括显式 dependency、CONTROL 指令形式、非最内层 unroll，以及次数与 unroll
 整除关系。合法的 Canonical 数据需要同时满足所选执行模型的能力范围。
+
+## C++ 输入接口
+
+`native/api/input_api.h` 提供 `loadCce(path, kernelName, loopParams)`、`loadJson(path)`、
+`fromCanonical(vf)` 和 `newBuilder(params, uarch, source)`。
+`native/api/cce/` 按源码扫描、解析、规范化、仿射表达式和值版本化拆分，生成经过校验的 Canonical 对象。
+`native/api/programmatic/builder.*` 提供 `registerStorageObject/registerValue`、`addInstruction/addMembar/addLoop`。
+`builder.loop(definition)` 返回作用域守卫，正常结束提交 body，异常展开回滚声明和节点。
+`encodeCanonicalVfInfoJson()` / `decodeCanonicalVfInfoJson()` 提供 JSON 编解码。
+C++ 前端和 Builder 使用统一 Catalog 及 Canonical 校验，不依赖 Python 运行时。

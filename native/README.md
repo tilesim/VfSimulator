@@ -11,7 +11,9 @@ Python 与 C++ 共享 Canonical JSON、指令 Catalog、参数配置和回归用
 两种输入在 API 出口完成通用语义校验。
 `CoreVfCostModel` 构造时加载参数快照，`runVfInfo()` 接收校验成功的对象，
 合并 VF 配置覆盖、准备指令并运行仿真。
-CCE 文件通过 Python InputAPI 前端转换为 Canonical JSON，供 C++ 输入层接收。
+`InputAPI::loadCce(path, kernelName, loopParams)` 独立解析 CCE/DSL，进行规范化和值版本化，并在 API 出口校验。
+`InputAPI::newBuilder(params, uarch, source)` 返回显式 Canonical Builder，支持值/存储声明、指令、屏障和循环作用域。
+`encodeCanonicalVfInfoJson()` 与 `decodeCanonicalVfInfoJson()` 提供完整 Canonical JSON 往返转换。
 
 ```cpp
 #include "native/api/input_api.h"
@@ -35,8 +37,10 @@ native/
   CMakeLists.txt
   api/
     input_api.h/.cpp
+    cce/             CCE 扫描、Catalog 调用绑定、规范化和定义版本化
+    programmatic/    Canonical Builder 及循环作用域
     common/          Canonical、Catalog、诊断与校验
-    json/            JSON 解析与 Canonical 解码
+    json/            JSON 解析与 Canonical 编解码
     generated/       共享配置生成的数据表
   core/
     simulator.h/.cpp
@@ -68,7 +72,7 @@ native/
 | `core/uarch/lsu.*` | LSQ、访存依赖、load/store 优先级及共享 UB 预算 |
 | `core/params/` | 参数类型、文件读取、配置解析、指令查询和缺失项回退 |
 | `core/trace/` | 事件快照、结果类型、日志及 Perfetto Trace 写出 |
-| `cli/` | Canonical JSON 命令行工具 |
+| `cli/` | CCE / Canonical JSON 命令行工具 |
 | `tests/` | 输入契约、组件时序、资源、地址、谓词和 membar 测试 |
 
 组件持有各自的队列和运行状态；Engine 管理组件之间的时序。
@@ -119,3 +123,10 @@ linearInstCount 统计静态线性布局条目，包含循环首尾控制条目�
 idu_to_ooo.json、地址与资源阻塞日志、vloop_trace.json 和 trace.json。
 启用 membar timing 时输出 membar_history.json；发生参数回退时输出 model_warnings.json。
 开始和完成事件使用静态指令 ID、迭代路径和 stream_seq 关联到 Canonical 程序。
+
+C++ 命令行通过 `--cce` / `--trace` 选择输入，通过 `--cce-kernel` 选择 VF kernel。
+`--out_dir` 和 `--out-dir` 指定结果目录，默认 `results/`。
+两个 theoretical-limit 开关与 Python 主入口对应。
+库模型默认输出 `results/cost_model/`，传入空输出路径可关闭文件写出；超时抛出异常。
+开始和完成日志包含 `fu_type`、源/目的动态值实例及完整 induction 迭代路径。
+Perfetto 输出进程、线程元数据和实际开始/完成区间。警告 JSON 保留标量及嵌套对象类型。

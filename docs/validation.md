@@ -102,3 +102,9 @@ VFSIM_NATIVE_RUNNER=/path/to/vfsim_native_json_runner python3 -m unittest tests.
 C++ 组件测试通过 `ctest --test-dir build-native --output-on-failure` 执行，
 覆盖 Canonical 输入、循环展开、地址更新、谓词寄存器、membar、队列与执行容量及参数读取。
 `test_native_modes_parity` 对照 21 种前后端配置的周期和开始/完成事件。
+
+`test_native_contract_parity` 对固定 Canonical 程序逐字段比较全部输出文件，覆盖动态身份、
+寄存器、地址阻塞、membar、循环、参数警告和 Perfetto，同时验证 CCE/kernel 选择、理论模式、
+循环展开拒绝边界及超时输出行为。
+C++ 的 `vfsim_cce_test` 使用 CCE 正反例和完整 Canonical 固定契约验证前端，
+`vfsim_programmatic_test` 验证 Builder、JSON 往返、作用域回滚及公共执行边界。
