@@ -9,7 +9,8 @@ Python 与 C++ 共享 Canonical JSON、指令 Catalog、参数配置和回归用
 `InputAPI::loadJson(path)` 解码并校验 Canonical JSON v1/v2。
 `InputAPI::fromCanonical(vf)` 校验直接构造的 CanonicalVfInfo，返回接收成功的对象。
 两种输入在 API 出口完成通用语义校验。
-`CoreVfCostModel::runVfInfo()` 接收校验成功的对象，完成配置解析、执行准备和仿真。
+`CoreVfCostModel` 构造时加载参数快照，`runVfInfo()` 接收校验成功的对象，
+合并 VF 配置覆盖、准备指令并运行仿真。
 CCE 文件通过 Python InputAPI 前端转换为 Canonical JSON，供 C++ 输入层接收。
 
 ```cpp
@@ -82,6 +83,9 @@ VFSIM_NATIVE_RUNNER="$PWD/build-native/vfsim_native_json_runner" \
 库目标为 `vfsim::native_core`，可通过 `add_subdirectory(native)` 引入。
 JSON runner 独立于测试开关构建。`--max-cycles` 可覆盖程序的周期上限。
 参数文件从 baseDir 下的 configs/ 读取；环境变量路径选择与 Python params/ 一致。
+同一模型的连续运行共享只读 `ParamBundle`，配置文件和路径环境变量的更新在创建
+新的模型实例后生效。每次运行创建独立的 `ParamDB`、查询缓存、警告和微架构状态。
+forwarding 按 producer opcode/form 与 consumer opcode/form 缓存相对周期数。
 
 结果包括 cyclesExecuted、vfEndCycle、linearInstCount、resultsDir 和 tracePath。
 linearInstCount 统计静态线性布局条目，包含循环首尾控制条目。

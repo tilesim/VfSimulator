@@ -1,15 +1,15 @@
 #pragma once
 #include "api/native/common/schema.h"
 #include "native/trace/writer.h"
+#include <memory>
 namespace vfsim {
+struct ParamBundle;
 // Accepts CanonicalVfInfo validated by InputAPI.
 class CoreVfCostModel {
 public:
   explicit CoreVfCostModel(std::filesystem::path baseDir = {},
                            std::filesystem::path outDir = {},
-                           bool vloopOnly = false, bool directIssue = false)
-      : baseDir_(std::move(baseDir)), outDir_(std::move(outDir)),
-        vloopOnly_(vloopOnly), directIssue_(directIssue) {}
+                           bool vloopOnly = false, bool directIssue = false);
   SimulationResult runVfInfo(const CanonicalVfInfo &vf,
                              int64_t maxCycles = 0) const;
   int64_t predictVfCycles(const CanonicalVfInfo &vf,
@@ -20,5 +20,6 @@ public:
 private:
   std::filesystem::path baseDir_, outDir_;
   bool vloopOnly_, directIssue_;
+  std::shared_ptr<const ParamBundle> parameters_;
 };
 } // namespace vfsim
