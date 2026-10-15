@@ -1,6 +1,6 @@
 # 参数配置
 
-`native/core/params/loader.*` 读取配置，`database.*::ParamDB` 提供指令 Profile、forwarding 和 II 查询，`uarch.*` 解析资源配置并应用 VF 覆盖。结构化参数定义位于 `types.h`。
+`core/params/loader.*` 读取配置，`database.*::ParamDB` 提供指令 Profile、forwarding 和 II 查询，`uarch.*` 解析资源配置并应用 VF 覆盖。结构化参数定义位于 `types.h`。
 
 | 文件 | 内容与使用方式 |
 | --- | --- |
@@ -11,7 +11,7 @@
 | `configs/forwarding.json` | producer 到 consumer 的数据可用间隔 |
 | `configs/InitiationInterval.json` | 前后指令在同端口的发射间隔 |
 
-Catalog 和覆盖字段表编译在 `native/api/generated/*.inc` 中；变更其语义声明时同步维护对应数据表并重新构建。其余四类参数文件在模型构造时读取。
+Catalog 和覆盖字段表编译在 `api/generated/*.inc` 中；变更其语义声明时同步维护对应数据表并重新构建。其余四类参数文件在模型构造时读取。
 
 ## 文件选择与快照
 

@@ -1,5 +1,4 @@
 /build*/
-/native/build*/
 /cmake-build*/
 /results/
 CMakeUserPresets.json

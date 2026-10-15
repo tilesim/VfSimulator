@@ -1,6 +1,6 @@
 # 执行模型
 
-`native/core/simulator.*::CoreVfCostModel` 接收经过 API 校验的 `CanonicalVfInfo`，应用 VF 配置覆盖，调用 `prepareProgram()` 并创建 `Engine`。Engine 按 cycle 推进组件，直到指令流、传输、执行状态及屏障排空。
+`core/simulator.*::CoreVfCostModel` 接收经过 API 校验的 `CanonicalVfInfo`，应用 VF 配置覆盖，调用 `prepareProgram()` 并创建 `Engine`。Engine 按 cycle 推进组件，直到指令流、传输、执行状态及屏障排空。
 
 ## 程序准备
 

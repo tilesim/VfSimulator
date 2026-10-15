@@ -1,6 +1,6 @@
 # Membar 时序模型
 
-`native/core/execution/membar.*::MembarController` 管理屏障接收、发射、同步放行和退休，并向 LSU 提供后续访存门控。Engine 每周期调用控制器，LSU 报告开始与完成进度。
+`core/execution/membar.*::MembarController` 管理屏障接收、发射、同步放行和退休，并向 LSU 提供后续访存门控。Engine 每周期调用控制器，LSU 报告开始与完成进度。
 
 `VLD_VST` 等待前序 LOAD 完成并控制后续 STORE；`VST_VLD` 等待前序 STORE 完成并控制后续 LOAD。COMPUTE 按自身数据依赖推进。
 
@@ -28,4 +28,4 @@ consumer_gate = release_cycle + consumer_delay
 
 尾部屏障的 retire 参与 VF 结束周期。启用 timing 时，`membar_history.json` 输出 issue、sync_release 和 retire 事件。
 
-`native/tests/membar_timing_test.cpp` 验证连续屏障、LSU 开始反馈、延迟完成、尾部屏障与配置边界；Canonical 测试输入位于 `native/tests/fixtures/canonical_vf_info/timing/`。
+`tests/membar_timing_test.cpp` 验证连续屏障、LSU 开始反馈、延迟完成、尾部屏障与配置边界；Canonical 测试输入位于 `tests/fixtures/canonical_vf_info/timing/`。

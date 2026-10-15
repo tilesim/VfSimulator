@@ -1,6 +1,6 @@
 # 寄存器与依赖模型
 
-`native/core/uarch/registers.*::Registers` 管理动态定义到物理资源的映射、数据依赖、源引用释放、信用可见性和对齐状态。`register_bank.h::PhysicalRegisterBank` 管理资源池的容量、分配和回收。
+`core/uarch/registers.*::Registers` 管理动态定义到物理资源的映射、数据依赖、源引用释放、信用可见性和对齐状态。`register_bank.h::PhysicalRegisterBank` 管理资源池的容量、分配和回收。
 
 ## 动态身份与资源
 
@@ -24,4 +24,4 @@ VLDAS 建立加载状态生产者，VLDUS 入队时捕获该生产者。重新�
 
 VSTUS、PSTU 等 append 指令加入当前存储组；VSTAS 封存并消费该组，随后打开下一组。`alignReady()` 汇总组内 producer 的开始和 forwarding 约束，供 LSU 仲裁。
 
-相关验证位于 `native/tests/predicate_register_test.cpp`、`components_test.cpp` 和 `input_api_test.cpp`。
+相关验证位于 `tests/predicate_register_test.cpp`、`components_test.cpp` 和 `input_api_test.cpp`。
