@@ -1,10 +1,10 @@
 """Runtime parameter lookup and caches; configuration I/O lives in loader.py."""
 from __future__ import annotations
-from dataclasses import dataclass
+from dataclasses import InitVar, dataclass
 from pathlib import Path
 from copy import deepcopy
 from typing import Any, Dict, Optional
-from .types import InstructionProfile
+from .types import InstructionProfile, LoadedParameters
 from .loader import load_parameters, merge_parameters
 from .uarch import allowed_exu_ports
 from .fallback import compatible_form, form_candidates, pair_key_candidates, record_warning, warning_list, fallback_op_class, missing_instruction, missing_forwarding, missing_ii
@@ -16,10 +16,11 @@ class ParamDB:
     uarch_path: str | None = None
     forwarding_path: str | None = None
     ii_path: str | None = None
+    parameters: InitVar[LoadedParameters | None] = None
 
-    def __post_init__(self):
+    def __post_init__(self, parameters):
         self.base_dir = str(Path(self.base_dir or Path(__file__).resolve().parents[2]))
-        data = load_parameters(
+        data = parameters if parameters is not None else load_parameters(
             self.base_dir,
             isa_path=self.isa_path,
             uarch_path=self.uarch_path,

@@ -1,10 +1,12 @@
 """CanonicalVfInfo is the sole simulator input; adapters live in api/."""
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 from api.common.schema import CanonicalVfInfo
 from core.execution.prepare import prepare_program
 from core.execution.engine import Engine
 from core.params.database import ParamDB
+from core.params.loader import load_parameters
+from core.params.types import LoadedParameters
 from core.params.uarch import resolve_uarch
 
 @dataclass
@@ -14,6 +16,11 @@ class CoreVfCostModel:
     fallback_dtype: str = 'fp32'
     theoretical_limit_vloop_only: bool = False
     theoretical_limit_direct_issue: bool = False
+    _parameters: LoadedParameters = field(init=False, repr=False, compare=False)
+
+    def __post_init__(self):
+        self.base_dir = Path(self.base_dir).resolve()
+        self._parameters = load_parameters(self.base_dir)
 
     def predict_vf_cycles(self, vf_info: CanonicalVfInfo) -> int:
         return self.run_vf_info(vf_info)['vf_end_cycle']
@@ -22,7 +29,7 @@ class CoreVfCostModel:
         """Run Canonical input already validated by the API boundary."""
         if not isinstance(vf_info, CanonicalVfInfo):
             raise TypeError('Core accepts only CanonicalVfInfo; use InputAPI to load files or JSON')
-        db = ParamDB(base_dir=str(self.base_dir))
+        db = ParamDB(base_dir=str(self.base_dir), parameters=self._parameters)
         uarch = resolve_uarch(db.base_uarch, vf_info.uarch,
                               theoretical_vloop_only=self.theoretical_limit_vloop_only,
                               direct_issue=self.theoretical_limit_direct_issue)

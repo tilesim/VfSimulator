@@ -27,6 +27,12 @@ Catalog 提供语义声明，ISA、forwarding 和 II 提供执行时序。Catalo
 ISA 与 uarch 文件必须存在；可选 forwarding/II 文件缺失时使用查询回退规则。
 格式错误、字段类型错误和无效的表格单元会抛出异常。
 
+`CoreVfCostModel` 创建时加载一次参数快照，连续调用 `run_vf_info()` 复用该快照。
+配置文件或路径环境变量的更新在创建新的模型实例后生效。
+每次运行创建独立的 `ParamDB`、查询缓存、警告记录和微架构状态；
+VF 的 `uarch` 覆盖只作用于本次运行。forwarding 查询结果按 producer/consumer
+Profile 对缓存，缓存值为相对周期数。
+
 `resolve_uarch(db.base_uarch, vf_info.uarch)` 在已解析的基础配置上应用 VF 覆盖。
 基础配置字段来自 `UarchParameters`；未知字段报错。Canonical 的 `uarch` 只接收
 合同声明的标量字段，`membar_timing` 作为对象配置放在基础 `uarch.json`。

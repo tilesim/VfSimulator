@@ -162,6 +162,95 @@ class ParameterLoadingTest(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'different ParamDB'):
             db.get_ii_for_profiles(None, other.resolve_inst('VADD', 'fp32'))
 
+class ParameterReuseTest(unittest.TestCase):
+    def test_model_reads_parameters_once_for_repeated_runs(self):
+        from core.params.loader import read_json
+        vf = InputAPI.load_json(ROOT / 'tests/fixtures/canonical_vf_info/v1_valid_loop.json')
+        with patch('core.params.loader.read_json', wraps=read_json) as reads:
+            model = CoreVfCostModel(base_dir=ROOT, out_dir=None)
+            self.assertEqual(reads.call_count, 4)
+            baseline = model.run_vf_info(vf)
+            overridden = InputAPI.from_canonical(replace(vf, uarch={'issue_ports': 1, 'vreg_num': 1}))
+            model.run_vf_info(overridden)
+            self.assertEqual(model.run_vf_info(vf), baseline)
+            self.assertEqual(reads.call_count, 4)
+
+    def test_file_updates_require_a_new_model(self):
+        vf = InputAPI.load_json(ROOT / 'tests/fixtures/canonical_vf_info/v1_valid_loop.json')
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / 'configs').mkdir()
+            for name in ('isa.json', 'uarch.json', 'forwarding.json', 'InitiationInterval.json'):
+                (root / 'configs' / name).write_text((ROOT / 'configs' / name).read_text())
+            model = CoreVfCostModel(base_dir=root, out_dir=None)
+            baseline = model.run_vf_info(vf)
+            isa_path = root / 'configs/isa.json'
+            isa = json.loads(isa_path.read_text())
+            isa['defaults']['vf_drain_cost'] += 17
+            isa_path.write_text(json.dumps(isa))
+            self.assertEqual(model.run_vf_info(vf), baseline)
+            fresh = CoreVfCostModel(base_dir=root, out_dir=None)
+            self.assertEqual(fresh.run_vf_info(vf)['vf_end_cycle'], baseline['vf_end_cycle'] + 17)
+            # All four files may disappear after construction; the snapshot is sufficient.
+            for path in (root / 'configs').iterdir():
+                path.unlink()
+            self.assertEqual(model.run_vf_info(vf), baseline)
+
+    def test_repeated_runs_keep_warnings_independent(self):
+        warning_vf = InputAPI.load_json(ROOT / 'tests/fixtures/canonical_vf_info/timing/cli_writes_instruction_fallback_warnings_without_vreg_warning.json')
+        clean_vf = InputAPI.load_json(ROOT / 'tests/fixtures/canonical_vf_info/v1_valid_loop.json')
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            model = CoreVfCostModel(base_dir=ROOT, out_dir=root / 'first')
+            model.run_vf_info(warning_vf)
+            first = json.loads((root / 'first/model_warnings.json').read_text())
+            self.assertTrue(first['instruction_fallback_warnings'])
+            model.out_dir = root / 'second'
+            model.run_vf_info(warning_vf)
+            self.assertEqual(json.loads((root / 'second/model_warnings.json').read_text()), first)
+            model.out_dir = root / 'clean'
+            model.run_vf_info(clean_vf)
+            self.assertFalse((root / 'clean/model_warnings.json').exists())
+
+    def test_shared_parameters_keep_profiles_and_warnings_local(self):
+        from core.params.loader import load_parameters
+        parameters = load_parameters(ROOT)
+        first = ParamDB(parameters=parameters)
+        second = ParamDB(parameters=parameters)
+        producer = first.resolve_inst('VADD', 'fp32')
+        consumer = first.resolve_inst('VADD', 'fp32')
+        first.get_forwarding_for_profiles(producer, consumer)
+        first.record_warning('run_local')
+        self.assertFalse(second.get_warnings())
+        with self.assertRaisesRegex(ValueError, 'different ParamDB'):
+            second.get_forwarding_for_profiles(producer, consumer)
+
+    def test_forwarding_cache_preserves_zero_compatible_fallback_and_alias(self):
+        from core.params.loader import load_parameters
+        parameters = load_parameters(ROOT)
+        parameters = replace(parameters, forwarding={'defaults': 3, 'forwarding': {
+            'VADD.fp32': {'VMUL.fp32': 0},
+            'VMUL.fp32': {'*': 7},
+            'VLDS.fp32': {'VADD.fp32': 9},
+        }})
+        for producer, consumer, pform, cform, expected in (
+            ('VADD', 'VMUL', 'fp32', 'fp32', 0),
+            ('VADD', 'VMUL', 'b32', 'b32', 0),
+            ('VMUL', 'VADD', 'fp32', 'fp32', 7),
+            ('VLDUS', 'VADD', 'fp32', 'fp32', 9),
+            ('UNMODELED', 'VADD', 'fp32', 'fp32', 6),
+        ):
+            with self.subTest(pair=(producer, consumer, pform, cform)):
+                db = ParamDB(parameters=parameters)
+                with patch.object(db, '_compute_forwarding_cycles', wraps=db._compute_forwarding_cycles) as compute:
+                    query = lambda: db.get_forwarding_cycles(producer, consumer, producer_form=pform, consumer_form=cform)
+                    self.assertEqual(query(), expected)
+                    calls, warnings = compute.call_count, db.get_warnings()
+                    for _ in range(5):
+                        self.assertEqual(query(), expected)
+                    self.assertEqual(compute.call_count, calls)
+                    self.assertEqual(db.get_warnings(), warnings)
+
 
 if __name__ == '__main__':
     unittest.main()
