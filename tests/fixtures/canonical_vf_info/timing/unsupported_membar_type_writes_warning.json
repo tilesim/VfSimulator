@@ -24,7 +24,6 @@
           "kind": "membar",
           "instruction_id": "membar.0",
           "barrier": "VV_ALL",
-          "dependencies": [],
           "source_location": null
         },
         {
@@ -61,7 +60,6 @@
               "memory_access": null
             }
           ],
-          "dependencies": [],
           "attributes": {},
           "source_location": null
         }

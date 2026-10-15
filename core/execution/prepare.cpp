@@ -13,10 +13,6 @@ int64_t checkExecutionSupport(const std::vector<CanonicalNode> &nodes) {
   for (const auto &node : nodes) {
     ++count;
     if (const auto *inst = std::get_if<CanonicalInstruction>(&node.payload)) {
-      if (!inst->dependencies.empty())
-        throw std::runtime_error("Canonical explicit dependencies are not "
-                                 "supported by native Core: " +
-                                 inst->instructionId);
       if (inst->instructionClass == CanonicalInstructionClass::Control)
         throw std::runtime_error(
             "Canonical control instruction must use a Membar node: " +
@@ -26,15 +22,10 @@ int64_t checkExecutionSupport(const std::vector<CanonicalNode> &nodes) {
         throw std::runtime_error(
             "Unknown native canonical load/store/control opcode: " +
             inst->opcode);
-    } else if (const auto *membar =
-                   std::get_if<CanonicalMembar>(&node.payload)) {
-      if (!membar->dependencies.empty())
-        throw std::runtime_error(
-            "Canonical explicit Membar dependencies are not supported: " +
-            membar->instructionId);
-    } else {
-      const auto &loop =
-          std::get<std::shared_ptr<const CanonicalLoop>>(node.payload);
+    } else if (const auto *pointer =
+                   std::get_if<std::shared_ptr<const CanonicalLoop>>(
+                       &node.payload)) {
+      const auto &loop = *pointer;
       if (!loop)
         throw std::runtime_error("Canonical loop payload is null");
       count += 1 + checkExecutionSupport(loop->body);

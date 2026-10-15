@@ -29,7 +29,6 @@
           "memory_access": null
         }
       ],
-      "dependencies": [],
       "attributes": {
         "active_elements": 37
       },
@@ -69,7 +68,6 @@
           "memory_access": null
         }
       ],
-      "dependencies": [],
       "attributes": {
         "catalog_mode": "UNPK_B16"
       },
@@ -115,7 +113,6 @@
           }
         }
       ],
-      "dependencies": [],
       "attributes": {
         "catalog_mode": "PK_B32"
       },

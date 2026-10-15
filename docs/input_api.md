@@ -30,4 +30,4 @@ CCE 支持 vector/predicate/标量声明、UB 指针和别名、Catalog 声明�
 
 `encodeCanonicalVfInfoJson()` 和 `decodeCanonicalVfInfoJson()` 支持 Canonical 对象与 JSON 值的往返转换，`json::stringify()` 生成 JSON 文本。解码后的直接对象通过 `InputAPI::fromCanonical()` 接收。
 
-Core 支持普通寄存器依赖、循环 carried values 和 Membar。非空的显式 `dependencies` 仍由执行能力检查拒绝。循环 count 与 unroll 的整除条件在展开回退前检查。
+Core 支持普通寄存器依赖、循环 carried values 和 Membar。循环 count 与 unroll 的整除条件在展开回退前检查。

@@ -16,7 +16,6 @@
           "memory_access": null
         }
       ],
-      "dependencies": [],
       "attributes": {},
       "source_location": {
         "source": "vf",
@@ -52,7 +51,6 @@
         }
       ],
       "outputs": [],
-      "dependencies": [],
       "attributes": {
         "align_state_operation": "load_init",
         "align_state_id": "vf:align:0:s"
@@ -91,7 +89,6 @@
         }
       ],
       "outputs": [],
-      "dependencies": [],
       "attributes": {
         "align_state_operation": "load_init",
         "align_state_id": "vf:align:1:t"
@@ -165,7 +162,6 @@
               "memory_access": null
             }
           ],
-          "dependencies": [],
           "attributes": {
             "align_state_operation": "load_use",
             "align_state_id": "vf:align:0:s"
@@ -214,7 +210,6 @@
               "memory_access": null
             }
           ],
-          "dependencies": [],
           "attributes": {
             "align_state_operation": "load_use",
             "align_state_id": "vf:align:1:t"
@@ -260,7 +255,6 @@
               "memory_access": null
             }
           ],
-          "dependencies": [],
           "attributes": {},
           "source_location": {
             "source": "vf",
@@ -309,7 +303,6 @@
               }
             }
           ],
-          "dependencies": [],
           "attributes": {},
           "source_location": {
             "source": "vf",
@@ -353,7 +346,6 @@
         }
       ],
       "outputs": [],
-      "dependencies": [],
       "attributes": {
         "align_state_operation": "load_init",
         "align_state_id": "vf:align:0:s"
@@ -399,7 +391,6 @@
           "memory_access": null
         }
       ],
-      "dependencies": [],
       "attributes": {
         "align_state_operation": "load_use",
         "align_state_id": "vf:align:0:s"
@@ -451,7 +442,6 @@
           }
         }
       ],
-      "dependencies": [],
       "attributes": {},
       "source_location": {
         "source": "vf",
