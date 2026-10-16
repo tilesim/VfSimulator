@@ -23,12 +23,6 @@ const std::regex identifier(R"([A-Za-z_]\w*)");
 bool begins(const std::string &s, const std::string &prefix) {
   return s.compare(0, prefix.size(), prefix) == 0;
 }
-std::string withoutSemicolon(std::string s) {
-  s = trim(s);
-  if (!s.empty() && s.back() == ';')
-    s.pop_back();
-  return trim(s);
-}
 bool integerDtype(const std::string &s) {
   return s != "float" && s != "double" && s != "half";
 }

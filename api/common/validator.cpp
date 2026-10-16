@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: CANN-1.0
 
 #include "api/common/validator.h"
+#include "api/common/value_views.h"
 #include "api/common/instruction_validation.h"
 #include "api/common/uarch_validation.h"
 
@@ -646,6 +647,7 @@ validateCanonicalVfInfo(const CanonicalVfInfo &vfInfo) {
   };
   validateNodes(vfInfo.context, "context", {});
 
+  const auto views = registerViewSources(vfInfo);
   for (const auto &[definitionId, value] : vfInfo.values) {
     if (!value.producerNodeId)
       continue;
@@ -669,16 +671,17 @@ validateCanonicalVfInfo(const CanonicalVfInfo &vfInfo) {
                               : static_cast<int64_t>(std::count(
                                     emitted->second.begin(),
                                     emitted->second.end(), definitionId));
-    if (count == 0)
+    if (count == 0 && !views.count(definitionId)) {
       error("producer_definition_not_emitted",
             "Producer node does not emit the claimed value definition",
             "values." + definitionId + ".producer_node_id",
             value.sourceLocation);
-    else if (count > 1)
+    } else if (count > 1) {
       error("definition_emitted_multiple_times",
             "Producer node emits the same definition more than once",
             "values." + definitionId + ".producer_node_id",
             value.sourceLocation);
+    }
   }
   return result;
 }

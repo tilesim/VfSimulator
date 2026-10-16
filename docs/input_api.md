@@ -31,3 +31,14 @@ CCE 支持 vector/predicate/标量声明、UB 指针和别名、Catalog 声明�
 `encodeCanonicalVfInfoJson()` 和 `decodeCanonicalVfInfoJson()` 支持 Canonical 对象与 JSON 值的往返转换，`json::stringify()` 生成 JSON 文本。解码后的直接对象通过 `InputAPI::fromCanonical()` 接收。
 
 Core 支持普通寄存器依赖、循环 carried values 和 Membar。循环 count 与 unroll 的整除条件在展开回退前检查。
+
+## 寄存器位视图
+
+PTOAS 的 `vbitcast` 不生成模拟指令。对应的 CanonicalValue 使用独立 definition ID 和目标
+dtype/shape，但与原值共享 logical ID 和 producer。原值必须是该 producer 直接输出的
+Register，且双方总位宽相等。校验器检查此关系；执行展开时，视图引用同一动态寄存器定义，
+保留数据依赖，不额外分配寄存器或计入周期。不同 logical ID、未知 producer 或位宽不等的
+未输出定义仍然报错。此约定不增加 JSON 字段。
+
+对没有 producer 的外部寄存器输入，视图的 logical ID 指向原输入的 definition ID，
+相同总位宽的视图同样共享该外部寄存器。

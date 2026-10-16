@@ -1,8 +1,12 @@
+# Copyright (c) 2026 Huawei Technologies Co., Ltd.
+# SPDX-License-Identifier: CANN-1.0
+
 cmake_minimum_required(VERSION 3.20)
 project(VfSimulator LANGUAGES CXX)
 
 include(CTest)
 option(VFSIM_BUILD_TESTS "Build simulator tests" ${PROJECT_IS_TOP_LEVEL})
+option(VFSIM_ENABLE_MLIR_PLANNER "Build the PTOAS MLIR adapters" OFF)
 add_library(vfsim_native_core STATIC
   api/common/diagnostics.cpp
   api/common/instruction_catalog.cpp
@@ -10,6 +14,7 @@ add_library(vfsim_native_core STATIC
   api/common/schema.cpp
   api/common/uarch_validation.cpp
   api/common/validator.cpp
+  api/common/value_views.cpp
   api/cce/source.cpp
   api/cce/affine.cpp
   api/cce/normalization.cpp
@@ -44,6 +49,13 @@ add_library(vfsim::native_core ALIAS vfsim_native_core)
 target_include_directories(vfsim_native_core PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_compile_features(vfsim_native_core PUBLIC cxx_std_17)
 target_compile_definitions(vfsim_native_core PUBLIC VFSIM_SOURCE_ROOT="${CMAKE_CURRENT_SOURCE_DIR}")
+if(VFSIM_ENABLE_MLIR_PLANNER)
+  if(NOT TARGET MLIRIR)
+    enable_language(C)
+    find_package(MLIR REQUIRED CONFIG)
+  endif()
+  add_subdirectory(ptoas_adapter)
+endif()
 add_executable(vfsim_native_json_runner cli/json_runner.cpp)
 target_link_libraries(vfsim_native_json_runner PRIVATE vfsim::native_core)
 if(VFSIM_BUILD_TESTS AND BUILD_TESTING)

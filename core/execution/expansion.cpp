@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: CANN-1.0
 
 #include "core/execution/expansion.h"
+#include "api/common/value_views.h"
 
 #include <algorithm>
 #include <cmath>
@@ -48,7 +49,7 @@ public:
   explicit Expander(const CanonicalVfInfo &vfInfo, const ParamDB &db,
                     const UarchConfig &cfg,
                     std::unordered_map<std::string, ValueInfo> values)
-      : vfInfo_(vfInfo), db_(db), cfg_(cfg) {
+      : vfInfo_(vfInfo), db_(db), cfg_(cfg), views_(registerViewSources(vfInfo)) {
     runtime_.params = vfInfo.params;
     runtime_.values = std::move(values);
     indexLoops(vfInfo.context, 0);
@@ -96,6 +97,7 @@ private:
   const CanonicalVfInfo &vfInfo_;
   const ParamDB &db_;
   const UarchConfig &cfg_;
+  const std::unordered_map<std::string, std::string> views_;
   int64_t dynamicCount_ = 0;
   void countInstruction() {
     if (cfg_.canonicalDynamicInstructionLimit > 0 &&
@@ -137,8 +139,10 @@ private:
   }
 
   std::string resolve(const std::string &definitionId) const {
-    const auto found = bindings_.find(definitionId);
-    return found == bindings_.end() ? definitionId : found->second;
+    auto view = views_.find(definitionId);
+    const auto &source = view == views_.end() ? definitionId : view->second;
+    const auto found = bindings_.find(source);
+    return found == bindings_.end() ? source : found->second;
   }
 
   std::string dynamicName(const std::string &definitionId) {

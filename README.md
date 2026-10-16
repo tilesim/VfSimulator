@@ -43,6 +43,10 @@ const auto cycles = result.vfEndCycle;
 
 ## 目录与文档
 
+PTOAS 的可选 MLIR 接口位于 [`ptoas_adapter/`](ptoas_adapter/README.md)，
+其中 `tileop/` 和 `vmi/` 分别维护 Legacy TileOp 与 VMI unroll planner。
+配置 `VFSIM_ENABLE_MLIR_PLANNER=ON` 后构建；默认的独立仿真器无需 MLIR。
+
 | 目录 | 职责 |
 | --- | --- |
 | `api/` | CCE 解析、Canonical 类型与 Builder、JSON 编解码、Catalog 与输入校验 |
