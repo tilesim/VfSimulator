@@ -385,10 +385,14 @@ class _VFScopeParser:
                 source=self._typed_register(src),
                 source_location=self._source_location(line),
             )
-        assignment = re.fullmatch(r"([A-Za-z_]\w*)\s*=\s*(pset_b(?:8|16|32))\s*\((.*)\)\s*;", stmt, re.DOTALL)
+        assignment = re.fullmatch(
+            r"([A-Za-z_]\w*)\s*=\s*(pset_b(?:8|16|32)|movp_b(?:16|32))\s*\((.*)\)\s*;",
+            stmt, re.DOTALL,
+        )
         if assignment:
             name, call, arguments = assignment.groups()
-            return self._parse_statement(f"{call}({name}, {arguments});", induction_variables, line)
+            bound_arguments = ", ".join([name, *_split_args(arguments)])
+            return self._parse_statement(f"{call}({bound_arguments});", induction_variables, line)
         smem_bar = re.match(r"SMEM_BAR\s*\.\s*([A-Za-z_]\w*)\s*;", stmt, re.IGNORECASE)
         if smem_bar:
             return AdapterMembar(

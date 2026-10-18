@@ -2,6 +2,8 @@
   "schema_version": 2,
   "defaults": 3,
   "forwarding": {
+    "MOVP_B16.b16":{"VDUP.fp16":2,"VSEL.fp16":2,"PSTS.b8":4},
+    "MOVP_B32.b32":{"VDUP.fp32":2,"VSEL.fp32":2,"PSTS.b8":4},
     "VINTLV.fp32":{"VSTS.fp32":9,"VSTS.b32":9},
     "VINTLV.b32":{"VSTS.fp32":9,"VSTS.b32":9},
     "VDINTLV.fp32":{"VSTS.fp32":9,"VSTS.b32":9},

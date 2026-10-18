@@ -2,6 +2,8 @@
   "schema_version": 2,
   "defaults": 1,
   "InitiationInterval": {
+    "MOVP_B16.b16":{"MOVP_B16.b16":1},
+    "MOVP_B32.b32":{"MOVP_B32.b32":1},
     "VCI.int32": {
       "VCI.int32": 2
     },
