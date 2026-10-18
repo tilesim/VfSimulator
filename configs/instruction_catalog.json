@@ -1,6 +1,9 @@
 {
   "schema_version": 1,
   "signatures": {
+    "predicate_from_spr": [
+      {"name":"dst","argument_index":0,"direction":"output","role":"destination","kind":"predicate"}
+    ],
     "predicate_load": [
       {"name":"dst","argument_index":0,"direction":"output","role":"destination","kind":"predicate"},
       {"name":"memory","argument_index":1,"direction":"input","role":"memory","kind":"ub"},
@@ -201,6 +204,8 @@
     ]
   },
   "instructions": {
+    "MOVP_B16": {"class":"compute","signature":"predicate_from_spr","forms":["b16"],"form_rule":"fixed","fixed_form":"b16"},
+    "MOVP_B32": {"class":"compute","signature":"predicate_from_spr","forms":["b32"],"form_rule":"fixed","fixed_form":"b32"},
     "PLDS": {"class":"load","forms":["b8"],"signature":"predicate_load","form_rule":"fixed","fixed_form":"b8","ub_transfer_bytes":256,"memory_span_by_form":{"b8":32},"memory_address_unit_bytes":1},
     "PSTS": {"class":"store","forms":["b8"],"signature":"predicate_store","form_rule":"fixed","fixed_form":"b8","ub_transfer_bytes":256,"memory_span_by_form":{"b8":32},"memory_address_unit_bytes":1},
     "PLT": {"class":"compute","signature":"predicate_from_count","forms":["b8","b16","b32"],"timing_optional":true},
