@@ -157,7 +157,7 @@ python3 tools/run_cost_model_regression.py --tier full --out-dir results/regress
 
 - 更新日期：2026-09-28；分支：`vfinfo-core-api-unification`；代码 commit：`bdea3dcc01b3be0a0c602320e9e6b9508bc7010a`。
 - 策略沿用上述当前 A5 默认配置：Canonical + 平衡预留 RR（lookahead=8、min_count=1、cap=7），全局 Membar。
-- 范围为 [cce_code/softmax](../../cce_code/softmax) 中实际存在的四组 U1/U2/U4，共 12 个 CCE；本表不包含该目录 README 中提及但当前目录未收录的 ABCABC 用例。
+- 范围为 [VFtest/cce/softmax](../../VFtest/cce/softmax) 中实际存在的四组 U1/U2/U4，共 12 个 CCE；本表不包含该目录 README 中提及但当前目录未收录的 ABCABC 用例。
 - VfSim 由当前 CCE 前端重新解析后预测，包含当前支持的 PSET/predicate 与 POST_UPDATE 语义，不复用历史 README 中的预测值。
 - CAModel 周期取自各 CCE 同目录的 `core0.veccore0.instr_log.dump` 中的 `vf_execute_time`。本次未重跑 CAModel，也未重新执行数值正确性校验。
 - 时间单位为 cycle，VfSim 使用含尾开销的 VF end；误差 = VfSim - CAModel；预测精度 = `(1 - abs(VfSim - CAModel) / CAModel) * 100%`，不是算子数值精度。
@@ -183,5 +183,5 @@ python3 tools/run_cost_model_regression.py --tier full --out-dir results/regress
 单个 case 复现示例（在仓库根目录运行）：
 
 ```bash
-python3 main.py --cce cce_code/softmax/expdif_mulcvt/u1_misched0/fa_softmax_macro_instr_ir_layout.cce --out_dir results/regression_suite/softmax_precision_refresh_bdea3dc/expdif_mulcvt/u1
+python3 main.py --cce VFtest/cce/softmax/expdif_mulcvt/u1_misched0/fa_softmax_macro_instr_ir_layout.cce --out_dir results/regression_suite/softmax_precision_refresh_bdea3dc/expdif_mulcvt/u1
 ```

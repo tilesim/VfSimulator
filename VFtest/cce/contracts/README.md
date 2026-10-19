@@ -1,0 +1,7 @@
+# CCE Canonical 合同用例
+
+CCE 源码覆盖 alias、仿射地址、循环、谓词、对齐状态、打包访存、指针更新及转换形式。
+每份源码在 `VFtest/canonical/cce_expected/` 中有同名 JSON 预期结果。
+预期数据的 source path 使用 `<cce>`，使合同比较与工作区路径无关。
+
+`native/tests/cce_test.cpp` 比较完整 Canonical 输出；Python/C++ 对比测试同时核对执行结果和日志。

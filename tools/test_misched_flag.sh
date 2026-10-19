@@ -2,7 +2,7 @@
 set -euo pipefail
 
 CCEC="/home/lenovo/Ascend/ascend-toolkit/cann-9.0.0-beta.1/x86_64-linux/bin/ccec"
-SRC_DSL="/mnt/d/VfSimulator/cce_code/GeLU_poly.dsl"
+SRC_DSL="/mnt/d/VfSimulator/VFtest/cce/GeLU_poly.cce"
 OUT_DIR="/mnt/d/VfSimulator/ascend_runner/build/flag_try"
 SRC_CCE="${OUT_DIR}/GeLU_poly_for_flag_test.cce"
 OUT_OBJ="${OUT_DIR}/GeLU_poly_misched0.o"

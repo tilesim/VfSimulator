@@ -20,7 +20,8 @@ python3 -m unittest tests.test_ooo_dispatch
 组件测试可单独设置队列和状态；完整预测测试通过 InputAPI 接收 Canonical 输入。
 参数组装使用 ParamDB.base_uarch 与 VF override。
 
-`fixtures/` 保存固定输入，`fixtures/canonical_vf_info/README.md` 说明 Canonical 用例。
+固定输入统一保存在 [VFtest/](../VFtest/README.md)。CCE 用例位于 `VFtest/cce/`，
+Canonical 合同和预期结果位于 `VFtest/canonical/`，JSON 文件输入位于 `VFtest/json/`。
 指令探针生成测试只检查源码与 golden，运行硬件测量需要对应 CANN 环境。
 
 Native 对比统一读取 `VFSIM_NATIVE_RUNNER`。缺少 runner 的独立 Native 测试会跳过，

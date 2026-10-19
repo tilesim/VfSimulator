@@ -9,8 +9,8 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
-TEMPLATE_PATH = ROOT / "VFtest" / "VADD_twoloop.json"
-TRACE_DIR = ROOT / "VFtest" / "vadd_twoloop_tests"
+TEMPLATE_PATH = ROOT / "VFtest" / "json" / "VADD_twoloop.json"
+TRACE_DIR = ROOT / "VFtest" / "json" / "vadd_twoloop_tests"
 RESULT_DIR = ROOT / "results" / "VADD_twoloop_test"
 ISA_PATH = ROOT / "configs" / "isa.json"
 GRID_VALUES = [2, 4, 6, 8, 16]

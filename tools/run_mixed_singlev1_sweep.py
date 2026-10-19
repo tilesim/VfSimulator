@@ -9,7 +9,7 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
-SOURCE_DIR = ROOT / "VFtest" / "vadd_fusion_singlev1_tests"
+SOURCE_DIR = ROOT / "VFtest" / "json" / "vadd_fusion_singlev1_tests"
 RESULTS_ROOT = ROOT / "results" / "MIXED_test"
 LOOP_CHOICES = [1, 2, 4, 8, 16, 32, 64, 128, 256, 512]
 TRIP_COUNTS = [2, 4, 8, 16, 32, 64, 128]

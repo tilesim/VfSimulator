@@ -8,7 +8,7 @@ LDLLD="$ACL/x86_64-linux/bin/ld.lld"
 
 u=8
 stem="SwiGLU_I96_U${u}_misched0_recheck"
-dsl="$REPO/results/unroll_test/sweep_u1248_misched0_unrollfix/SwiGLU_I96_U${u}/SwiGLU_I96_U${u}.dsl"
+dsl="$REPO/results/unroll_test/sweep_u1248_misched0_unrollfix/SwiGLU_I96_U${u}/SwiGLU_I96_U${u}.cce"
 build="$REPO/ascend_runner/build/${stem}_native_simexec"
 cce="$build/${stem}.cce"
 aiv="$build/${stem}_mix_aiv.o"

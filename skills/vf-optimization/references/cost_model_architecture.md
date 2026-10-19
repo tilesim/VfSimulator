@@ -15,13 +15,13 @@ python main.py --trace <trace.json> --out_dir <out_dir>
 CCE/DSL file:
 
 ```bash
-python main.py --cce <kernel.dsl> --out_dir <out_dir>
+python main.py --cce <kernel.cce> --out_dir <out_dir>
 ```
 
 If a CCE file contains multiple `__VEC_SCOPE__` kernels, select one explicitly:
 
 ```bash
-python main.py --cce <kernel.dsl> --cce-kernel <kernel_name> --out_dir <out_dir>
+python main.py --cce <kernel.cce> --cce-kernel <kernel_name> --out_dir <out_dir>
 ```
 
 CCE 路径先转换为 canonical API 对象：

@@ -9,7 +9,7 @@ from core.params.database import ParamDB
 from tests import test_pstu as shared
 
 
-FIXTURE = Path(__file__).parent / "fixtures/canonical_vf_info/v2_external_predicate_forms.json"
+FIXTURE = Path(__file__).resolve().parents[1] / "VFtest/canonical/fixtures/v2_external_predicate_forms.json"
 
 
 class ExternalPredicateFormsTest(unittest.TestCase):

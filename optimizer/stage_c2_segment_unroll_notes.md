@@ -38,7 +38,7 @@ Main CLI:
 
 ```bash
 python optimizer/stage_c2_segment_unroll_optimizer.py \
-  VFtest/GeLU_poly.json \
+  VFtest/json/GeLU_poly.json \
   --trip-count 64 \
   --loop-opt-mode loop_cut_loose \
   --u-candidates 1,2,3,4 \

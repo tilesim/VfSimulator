@@ -74,7 +74,7 @@ class InputApiTest(unittest.TestCase):
 
     def test_api_rejects_mutated_canonical_maps_before_prediction(self):
         vf_info = InputAPI.load_json(
-            ROOT / "tests/fixtures/canonical_vf_info/v1_valid_loop.json"
+            ROOT / "VFtest/canonical/fixtures/v1_valid_loop.json"
         )
         operand = vf_info.context[0].body[0].outputs[0]
         del vf_info.values[operand.value_id]
@@ -94,7 +94,7 @@ class InputApiTest(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             cce = Path(tmp) / "input.cce"
             cce.write_text(SOURCE)
-            fixture = ROOT / "tests/fixtures/canonical_vf_info/v1_valid_loop.json"
+            fixture = ROOT / "VFtest/canonical/fixtures/v1_valid_loop.json"
             template = InputAPI.load_json(fixture)
             direct = CanonicalVfInfo(
                 context=template.context, values=dict(template.values),
@@ -137,7 +137,7 @@ class InputApiTest(unittest.TestCase):
                     self.assertGreater(result["vf_end_cycle"], 0)
 
     def test_unknown_uarch_is_rejected_by_every_input_path(self):
-        fixture = ROOT / 'tests/fixtures/canonical_vf_info/v1_valid_loop.json'
+        fixture = ROOT / 'VFtest/canonical/fixtures/v1_valid_loop.json'
         template = InputAPI.load_json(fixture)
         overrides = {'unrecognized_setting': True}
         with self.assertRaises(VfInfoValidationError) as direct_error:
@@ -156,7 +156,7 @@ class InputApiTest(unittest.TestCase):
         self.assertIn('unknown_uarch_field', {d.code for d in json_error.exception.diagnostics})
 
     def test_core_rejects_valid_but_unsupported_execution_semantics(self):
-        template = InputAPI.load_json(ROOT / "tests/fixtures/canonical_vf_info/v1_valid_loop.json")
+        template = InputAPI.load_json(ROOT / "VFtest/canonical/fixtures/v1_valid_loop.json")
         # Partial unroll is valid Canonical input but is not implemented by this Core.
         vf = InputAPI.from_canonical(replace(
             template, context=(replace(template.context[0], unroll=3),),

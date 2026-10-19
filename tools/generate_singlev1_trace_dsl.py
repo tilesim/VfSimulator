@@ -131,7 +131,7 @@ def batch_generate(input_root: Path) -> None:
         dsl_dir = traces_dir.parent / "DSL_traces"
         dsl_dir.mkdir(parents=True, exist_ok=True)
         for trace_path in sorted(traces_dir.glob("*.json")):
-            output_path = dsl_dir / f"{trace_path.stem}.dsl"
+            output_path = dsl_dir / f"{trace_path.stem}.cce"
             simd_name = output_path.stem.lower() + "_simd_ub"
             generate(trace_path, output_path, simd_name)
 

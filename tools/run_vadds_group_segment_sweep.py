@@ -10,7 +10,7 @@ import numpy as np
 
 ROOT = Path(__file__).resolve().parents[1]
 PYTHON_EXE = Path(r"D:\miniconda3\envs\vfsim\python.exe")
-TRACE_ROOT = ROOT / "VFtest" / "vadds_group_segment_tests"
+TRACE_ROOT = ROOT / "VFtest" / "json" / "vadds_group_segment_tests"
 RESULT_ROOT = ROOT / "results" / "VADDS_group_segment_test"
 
 

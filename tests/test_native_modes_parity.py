@@ -36,7 +36,7 @@ class NativeModesParityTests(unittest.TestCase):
             self.assertEqual(events("python"), events("native"), name)
 
     def test_frontend_transport_credits_and_theoretical_modes(self):
-        vf = InputAPI.load_json(ROOT / "tests/fixtures/canonical_vf_info/v1_valid_loop.json")
+        vf = InputAPI.load_json(ROOT / "VFtest/canonical/fixtures/v1_valid_loop.json")
         cases = [(f"delay_{delay}_explicit_{explicit}", {
             "idu_to_ooo_delay": delay, "use_explicit_idu_credit_bank": explicit, "vreg_num": 2})
                  for delay in (0, 1, 7) for explicit in (False, True)]

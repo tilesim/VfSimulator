@@ -31,7 +31,7 @@ $theoreticalOut = Join-Path $root "results\${ResultStem}_theoretical"
 $optJson = Join-Path $root "results\${ResultStem}_optimized.json"
 $optMeta = Join-Path $root "results\${ResultStem}_optimized_meta.json"
 $optDag = Join-Path $root "results\${ResultStem}_optimized_dag.png"
-$optDsl = Join-Path $root "cce_code\consumer_done\${ResultStem}_optimized.dsl"
+$optDsl = Join-Path $root "VFtest/cce\consumer_done\${ResultStem}_optimized.cce"
 
 Write-Host "[workflow] preparing trip-count-adjusted baseline trace"
 $j = Get-Content $traceAbs -Raw | ConvertFrom-Json

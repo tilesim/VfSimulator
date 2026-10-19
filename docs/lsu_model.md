@@ -91,7 +91,7 @@ FP16 的 POST_UPDATE 增量 64 对应 128 B。部分 mask 保持声明的调度�
 数值转换由显式 VCVT 描述。
 
 模式、form、操作数和 span 由 API 按 Catalog 统一检查。示例见
-[v2_plt_packed_fp16.json](../tests/fixtures/canonical_vf_info/v2_plt_packed_fp16.json)。
+[v2_plt_packed_fp16.json](../VFtest/canonical/fixtures/v2_plt_packed_fp16.json)。
 
 ## 测试
 

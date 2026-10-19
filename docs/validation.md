@@ -48,7 +48,7 @@ python3 tools/run_cost_model_regression.py --tier full --out-dir results/regress
 使用以下命令可检查输出链路：
 
 ```bash
-python3 main.py --trace tests/fixtures/canonical_vf_info/v1_valid_loop.json --out_dir results/fixture
+python3 main.py --trace VFtest/canonical/fixtures/v1_valid_loop.json --out_dir results/fixture
 ```
 
 日志对比应统一配置、输入和计时口径，逐项检查 inst_id、stream_seq、iteration_path、

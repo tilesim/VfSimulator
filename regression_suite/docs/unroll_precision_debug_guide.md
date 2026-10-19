@@ -26,7 +26,7 @@
 ## 2.1 模型日志（本仓库 cost model）
 
 ```bash
-python main.py --trace VFtest/GeLU_poly.json --out_dir results/unroll_test/model_logs/I96_unroll4
+python main.py --trace VFtest/json/GeLU_poly.json --out_dir results/unroll_test/model_logs/I96_unroll4
 ```
 
 关键输出：

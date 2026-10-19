@@ -13,7 +13,7 @@
       "id": "gelu_poly_i16_u1",
       "tier": "smoke",
       "kind": "simulate",
-      "trace": "VFtest/GeLU_poly.json",
+      "trace": "VFtest/json/GeLU_poly.json",
       "params": {
         "I": 16,
         "U": 1
@@ -25,7 +25,7 @@
       "id": "gelu_poly_i64_u1",
       "tier": "smoke",
       "kind": "simulate",
-      "trace": "VFtest/GeLU_poly.json",
+      "trace": "VFtest/json/GeLU_poly.json",
       "params": {
         "I": 64,
         "U": 1
@@ -37,7 +37,7 @@
       "id": "gelu_poly_i96_u1",
       "tier": "full",
       "kind": "simulate",
-      "trace": "VFtest/GeLU_poly.json",
+      "trace": "VFtest/json/GeLU_poly.json",
       "params": {
         "I": 96,
         "U": 1
@@ -50,7 +50,7 @@
       "id": "gelu_i16_u1",
       "tier": "smoke",
       "kind": "simulate",
-      "trace": "VFtest/GeLU.json",
+      "trace": "VFtest/json/GeLU.json",
       "params": {
         "I": 16,
         "U": 1
@@ -62,7 +62,7 @@
       "id": "online_update_i64_u1",
       "tier": "smoke",
       "kind": "simulate",
-      "trace": "VFtest/online_update.json",
+      "trace": "VFtest/json/online_update.json",
       "params": {
         "I": 64,
         "U": 1
@@ -74,7 +74,7 @@
       "id": "probe_src_fanout",
       "tier": "smoke",
       "kind": "simulate",
-      "trace": "VFtest/reg_release_probes/src_fanout_probe.json",
+      "trace": "VFtest/json/reg_release_probes/src_fanout_probe.json",
       "cce_vf_end": 285,
       "ooo_model": "queue_level3"
     },
@@ -82,7 +82,7 @@
       "id": "probe_branch_live_range",
       "tier": "smoke",
       "kind": "simulate",
-      "trace": "VFtest/reg_release_probes/branch_live_range_probe.json",
+      "trace": "VFtest/json/reg_release_probes/branch_live_range_probe.json",
       "cce_vf_end": 221,
       "ooo_model": "queue_level3"
     },
@@ -90,7 +90,7 @@
       "id": "probe_store_capture_reuse",
       "tier": "smoke",
       "kind": "simulate",
-      "trace": "VFtest/reg_release_probes/store_capture_reuse_probe.json",
+      "trace": "VFtest/json/reg_release_probes/store_capture_reuse_probe.json",
       "cce_vf_end": 319,
       "ooo_model": "queue_level3"
     },
@@ -98,7 +98,7 @@
       "id": "vadds_longchain_i16_1x512",
       "tier": "smoke",
       "kind": "simulate",
-      "trace": "VFtest/vadd_fusion_singlev1_tests/I16/VADD_singleV1_fusion_1loops_512vadds.json",
+      "trace": "VFtest/json/vadd_fusion_singlev1_tests/I16/VADD_singleV1_fusion_1loops_512vadds.json",
       "cce_vf_end": 21823,
       "ooo_model": "queue_level3"
     },
@@ -106,7 +106,7 @@
       "id": "vadds_longchain_i64_8x64",
       "tier": "smoke",
       "kind": "simulate",
-      "trace": "VFtest/vadd_fusion_singlev1_tests/I64/VADD_singleV1_fusion_8loops_64vadds.json",
+      "trace": "VFtest/json/vadd_fusion_singlev1_tests/I64/VADD_singleV1_fusion_8loops_64vadds.json",
       "cce_vf_end": 37281,
       "ooo_model": "queue_level3"
     },
@@ -114,7 +114,7 @@
       "id": "vadds_longchain_i128_128x4",
       "tier": "full",
       "kind": "simulate",
-      "trace": "VFtest/vadd_fusion_singlev1_tests/I128/VADD_singleV1_fusion_128loops_4vadds.json",
+      "trace": "VFtest/json/vadd_fusion_singlev1_tests/I128/VADD_singleV1_fusion_128loops_4vadds.json",
       "cce_vf_end": 36641,
       "cce_vf_end_source": "/home/lenovo/msprof_run/reg_vadds_i128_4vadds_native_simexec/core0.veccore0.instr_log.dump vf_execute_time",
       "ooo_model": "queue_level3"
@@ -123,7 +123,7 @@
       "id": "vexp_longchain_i16_1x512",
       "tier": "smoke",
       "kind": "simulate",
-      "trace": "VFtest/vadd_fusion_singlev1_tests/I16/VADD_singleV1_fusion_1loops_512vadds.json",
+      "trace": "VFtest/json/vadd_fusion_singlev1_tests/I16/VADD_singleV1_fusion_1loops_512vadds.json",
       "transform": {
         "replace_op": {
           "from": "VADDS",
@@ -137,7 +137,7 @@
       "id": "vexp_longchain_i64_8x64",
       "tier": "smoke",
       "kind": "simulate",
-      "trace": "VFtest/vadd_fusion_singlev1_tests/I64/VADD_singleV1_fusion_8loops_64vadds.json",
+      "trace": "VFtest/json/vadd_fusion_singlev1_tests/I64/VADD_singleV1_fusion_8loops_64vadds.json",
       "transform": {
         "replace_op": {
           "from": "VADDS",
@@ -151,7 +151,7 @@
       "id": "vexp_longchain_i128_128x4",
       "tier": "full",
       "kind": "simulate",
-      "trace": "VFtest/vadd_fusion_singlev1_tests/I128/VADD_singleV1_fusion_128loops_4vadds.json",
+      "trace": "VFtest/json/vadd_fusion_singlev1_tests/I128/VADD_singleV1_fusion_128loops_4vadds.json",
       "transform": {
         "replace_op": {
           "from": "VADDS",
@@ -164,7 +164,7 @@
       "id": "gelu_poly_i96_u2",
       "tier": "smoke",
       "kind": "simulate",
-      "trace": "VFtest/GeLU_poly.json",
+      "trace": "VFtest/json/GeLU_poly.json",
       "params": {
         "I": 96,
         "U": 2
@@ -177,7 +177,7 @@
       "id": "gelu_poly_i96_u4",
       "tier": "smoke",
       "kind": "simulate",
-      "trace": "VFtest/GeLU_poly.json",
+      "trace": "VFtest/json/GeLU_poly.json",
       "params": {
         "I": 96,
         "U": 4
@@ -190,7 +190,7 @@
       "id": "gelu_poly_i96_u8",
       "tier": "smoke",
       "kind": "simulate",
-      "trace": "VFtest/GeLU_poly.json",
+      "trace": "VFtest/json/GeLU_poly.json",
       "params": {
         "I": 96,
         "U": 8
@@ -203,7 +203,7 @@
       "id": "silu_i16_u1",
       "tier": "smoke",
       "kind": "simulate",
-      "trace": "VFtest/SiLU.json",
+      "trace": "VFtest/json/SiLU.json",
       "params": {
         "I": 16,
         "U": 1
@@ -216,7 +216,7 @@
       "id": "swiglu_i16_u1",
       "tier": "smoke",
       "kind": "simulate",
-      "trace": "VFtest/SwiGLU.json",
+      "trace": "VFtest/json/SwiGLU.json",
       "params": {
         "I": 16,
         "U": 1
@@ -229,7 +229,7 @@
       "id": "silu_i64_u1",
       "tier": "smoke",
       "kind": "simulate",
-      "trace": "VFtest/SiLU.json",
+      "trace": "VFtest/json/SiLU.json",
       "params": {
         "I": 64,
         "U": 1
@@ -242,7 +242,7 @@
       "id": "silu_i96_u1",
       "tier": "smoke",
       "kind": "simulate",
-      "trace": "VFtest/SiLU.json",
+      "trace": "VFtest/json/SiLU.json",
       "params": {
         "I": 96,
         "U": 1
@@ -255,7 +255,7 @@
       "id": "swiglu_i64_u1",
       "tier": "smoke",
       "kind": "simulate",
-      "trace": "VFtest/SwiGLU.json",
+      "trace": "VFtest/json/SwiGLU.json",
       "params": {
         "I": 64,
         "U": 1
@@ -268,7 +268,7 @@
       "id": "swiglu_i96_u1",
       "tier": "smoke",
       "kind": "simulate",
-      "trace": "VFtest/SwiGLU.json",
+      "trace": "VFtest/json/SwiGLU.json",
       "params": {
         "I": 96,
         "U": 1

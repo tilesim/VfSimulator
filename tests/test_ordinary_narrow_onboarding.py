@@ -10,7 +10,7 @@ from core.params.database import ParamDB
 
 
 ROOT = Path(__file__).resolve().parents[1]
-BATCH3 = ROOT / "tests/fixtures/ordinary_instructions/batch3.cce"
+BATCH3 = ROOT / "VFtest/cce/ordinary_instructions/batch3.cce"
 MEASURED = {
     "VDUP": ("int8", "int8", 6),
     "VBR": ("int8", "int8", 6),

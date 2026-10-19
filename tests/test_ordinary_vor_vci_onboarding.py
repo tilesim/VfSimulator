@@ -10,7 +10,7 @@ from core.params.database import ParamDB
 
 
 ROOT = Path(__file__).resolve().parents[1]
-BATCH2 = ROOT / 'tests/fixtures/ordinary_instructions/batch2.cce'
+BATCH2 = ROOT / 'VFtest/cce/ordinary_instructions/batch2.cce'
 
 
 class OrdinaryVorVciOnboardingTest(unittest.TestCase):

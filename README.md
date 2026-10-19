@@ -4,7 +4,7 @@ VfSimulator 是面向 Ascend 风格 VF（Vector Function）的周期级性能模
 模型根据指令依赖、队列容量、物理寄存器、执行端口、forwarding、II、UB 预算和
 Membar 时序，预测向量函数从启动到执行排空的周期。
 
-Python 与 C++ 输入层支持 CCE/DSL 文件、Canonical JSON 文件和 `CanonicalVfInfo` 对象。
+Python 与 C++ 输入层支持 CCE 文件、Canonical JSON 文件和 `CanonicalVfInfo` 对象。
 API 统一接收并校验数据，Core 将程序展开为动态指令，再按周期协调微架构组件。
 模型输出周期、执行事件和 Perfetto 时间线。算子数值正确性通过独立 golden、CAModel
 或设备运行验证。
@@ -17,21 +17,21 @@ Python 实现使用 Python 3.10 及以上版本。Canonical JSON 的格式校验
 python3 -m pip install jsonschema
 ```
 
-在仓库根目录执行示例命令。Python 稀疏检出包含 API、Core、配置、测试及回归输入；
-完整检出还提供 C++、优化器、校准工具和硬件探针的配套源码。
+在仓库根目录执行示例命令。Python 与 C++ 共享 `configs/` 和 `VFtest/`，
+测试案例目录见 [VFtest/README.md](VFtest/README.md)。
 
 ## 快速开始
 
-运行包含 `__VEC_SCOPE__` 的 CCE/DSL：
+运行包含 `__VEC_SCOPE__` 的 CCE：
 
 ```bash
-python3 main.py --cce cce_code/GeLU_poly.dsl --out_dir results/gelu
+python3 main.py --cce VFtest/cce/GeLU_poly.cce --out_dir results/gelu
 ```
 
 运行 Canonical JSON：
 
 ```bash
-python3 main.py --trace tests/fixtures/canonical_vf_info/v1_valid_loop.json --out_dir results/fixture
+python3 main.py --trace VFtest/canonical/fixtures/v1_valid_loop.json --out_dir results/fixture
 ```
 
 默认 JSON 示例的执行 cycle 为 35，包含 drain 的 VF 结束 cycle 为 47。
@@ -46,7 +46,7 @@ python3 main.py --trace tests/fixtures/canonical_vf_info/v1_valid_loop.json --ou
 from api.input_api import InputAPI
 from core.simulator import CoreVfCostModel
 
-vf_info = InputAPI.load_json("tests/fixtures/canonical_vf_info/v1_valid_loop.json")
+vf_info = InputAPI.load_json("VFtest/canonical/fixtures/v1_valid_loop.json")
 model = CoreVfCostModel(out_dir=None)
 result = model.run_vf_info(vf_info)
 print(result["vf_end_cycle"])
@@ -97,9 +97,11 @@ LoopControl 控制循环与 block 的开放时间；Membar 控制器管理访存
 | `core/params/` | 参数加载、结构化记录、缓存查询和缺失参数策略 |
 | `core/trace/` | 结果、事件日志和 Perfetto 输出 |
 | `configs/` | 指令语义、微架构资源、ISA、forwarding 和 II |
-| `tests/` | 自动化测试、组件辅助工具和固定 fixture |
-| `regression_suite/` | 算子输入、周期基线、误差指标和报告 |
-| `cce_code/`、`ascend_runner/` | CCE 示例、探针及编译运行和校准工具 |
+| `tests/` | 自动化测试代码及组件辅助工具 |
+| `regression_suite/` | 回归清单、周期基线、误差报告和 CAModel 证据 |
+| `VFtest/` | 测试案例：`cce/` 源码、`canonical/` 标准结构及预期结果、`json/` 文件输入 |
+| `skills/vfsim-instruction-benchmark/` | 指令参数标定流程、实验脚本、host 程序及测量记录 |
+| `ascend_runner/` | CCE 编译运行和校准配套工具 |
 | `optimizer/`、`tools/` | 计划搜索、分区、回归、生成和分析工具 |
 | `native/` | C++ 子项目：api、core、cli、tests 和 CMake 构建 |
 | `docs/` | 模块、参数、模型和验证说明 |

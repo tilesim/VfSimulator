@@ -127,7 +127,7 @@ class MembarFixtureTest(unittest.TestCase):
         reference = json.loads((ROOT / 'docs/validation/membar_timing_summary.json').read_text())
         for case in reference['cases']:
             with self.subTest(case=case['name']):
-                vf = InputAPI.load_cce(ROOT / 'tests/fixtures/membar_timing' / case['fixture'])
+                vf = InputAPI.load_cce(ROOT / 'VFtest/cce/membar_timing' / case['fixture'])
                 result = CoreVfCostModel(base_dir=ROOT, out_dir=None).run_vf_info(vf)
                 self.assertEqual(result['vf_end_cycle'], case['global_cycles'])
 

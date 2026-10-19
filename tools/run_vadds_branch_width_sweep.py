@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 
 ROOT = Path(__file__).resolve().parents[1]
 PYTHON_EXE = Path(r"D:\miniconda3\envs\vfsim\python.exe")
-TRACE_ROOT = ROOT / "VFtest" / "vadds_branch_width_tests"
+TRACE_ROOT = ROOT / "VFtest" / "json" / "vadds_branch_width_tests"
 RESULT_ROOT = ROOT / "results" / "VADDS_branch_test"
 
 

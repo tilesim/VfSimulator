@@ -49,7 +49,7 @@ class CCEParserTest(unittest.TestCase):
         }
         """
         with tempfile.TemporaryDirectory() as tmpdir:
-            path = Path(tmpdir) / "softmax.dsl"
+            path = Path(tmpdir) / "softmax.cce"
             path.write_text(source, encoding="utf-8")
             vf_info = _parse_cce_adapter_program(path, kernel_name="softmax_vf")
 
@@ -112,7 +112,7 @@ class CCEParserTest(unittest.TestCase):
         }
         """
         with tempfile.TemporaryDirectory() as tmpdir:
-            path = Path(tmpdir) / "loop_bound.dsl"
+            path = Path(tmpdir) / "loop_bound.cce"
             path.write_text(source, encoding="utf-8")
             vf_info = _parse_cce_adapter_program(
                 path,
@@ -135,7 +135,7 @@ class CCEParserTest(unittest.TestCase):
         }
         """
         with tempfile.TemporaryDirectory() as tmpdir:
-            path = Path(tmpdir) / "vmulscvt.dsl"
+            path = Path(tmpdir) / "vmulscvt.cce"
             path.write_text(source, encoding="utf-8")
             vf_info = _parse_cce_adapter_program(path, kernel_name="vmulscvt_vf")
 
@@ -154,7 +154,7 @@ class CCEParserTest(unittest.TestCase):
         }
         """
         with tempfile.TemporaryDirectory() as tmpdir:
-            path = Path(tmpdir) / "binary_mode.dsl"
+            path = Path(tmpdir) / "binary_mode.cce"
             path.write_text(source, encoding="utf-8")
             vf_info = _parse_cce_adapter_program(path, kernel_name="binary_mode_vf")
 
@@ -178,7 +178,7 @@ class CCEParserTest(unittest.TestCase):
         }
         """
         with tempfile.TemporaryDirectory() as tmpdir:
-            path = Path(tmpdir) / "loop_decl.dsl"
+            path = Path(tmpdir) / "loop_decl.cce"
             path.write_text(source, encoding="utf-8")
             vf_info = _parse_cce_adapter_program(path, kernel_name="loop_decl_vf")
 
@@ -219,7 +219,7 @@ class CCEParserTest(unittest.TestCase):
         }
         for name, source in sources.items():
             with self.subTest(name=name), tempfile.TemporaryDirectory() as tmpdir:
-                path = Path(tmpdir) / "bad.dsl"
+                path = Path(tmpdir) / "bad.cce"
                 path.write_text(source, encoding="utf-8")
                 with self.assertRaises(ValueError):
                     _parse_cce_adapter_program(path, kernel_name="bad")
@@ -256,7 +256,7 @@ class CCEParserTest(unittest.TestCase):
         }
         for name, source in sources.items():
             with self.subTest(name=name), tempfile.TemporaryDirectory() as tmpdir:
-                path = Path(tmpdir) / "bad_form.dsl"
+                path = Path(tmpdir) / "bad_form.cce"
                 path.write_text(source, encoding="utf-8")
                 with self.assertRaisesRegex(ValueError, "Unsupported semantic form"):
                     _parse_cce_adapter_program(path, kernel_name="bad")
@@ -307,7 +307,7 @@ class CCEParserTest(unittest.TestCase):
         }
         for name, source in sources.items():
             with self.subTest(name=name), tempfile.TemporaryDirectory() as tmpdir:
-                path = Path(tmpdir) / "bad_argument.dsl"
+                path = Path(tmpdir) / "bad_argument.cce"
                 path.write_text(source, encoding="utf-8")
                 with self.assertRaises(ValueError):
                     _parse_cce_adapter_program(path, kernel_name="bad")
@@ -323,7 +323,7 @@ class CCEParserTest(unittest.TestCase):
             }
         """
         with tempfile.TemporaryDirectory() as tmpdir:
-            path = Path(tmpdir) / "predicate.dsl"
+            path = Path(tmpdir) / "predicate.cce"
             path.write_text(source, encoding="utf-8")
             vf_info = _parse_cce_adapter_program(path, kernel_name="valid")
         self.assertEqual(vf_info.context[0].name, "VADD")
@@ -354,7 +354,7 @@ class CCEParserTest(unittest.TestCase):
         }
         for name, source in sources.items():
             with self.subTest(name=name), tempfile.TemporaryDirectory() as tmpdir:
-                path = Path(tmpdir) / "bad_scope.dsl"
+                path = Path(tmpdir) / "bad_scope.cce"
                 path.write_text(source, encoding="utf-8")
                 with self.assertRaisesRegex(ValueError, "must be a predicate"):
                     _parse_cce_adapter_program(path, kernel_name="bad")
@@ -373,7 +373,7 @@ class CCEParserTest(unittest.TestCase):
             }
         """
         with tempfile.TemporaryDirectory() as tmpdir:
-            path = Path(tmpdir) / "call_variants.dsl"
+            path = Path(tmpdir) / "call_variants.cce"
             path.write_text(source, encoding="utf-8")
             vf_info = _parse_cce_adapter_program(path, kernel_name="valid")
         self.assertEqual(
@@ -393,7 +393,7 @@ class CCEParserTest(unittest.TestCase):
             }
         """
         with tempfile.TemporaryDirectory() as tmpdir:
-            path = Path(tmpdir) / "optional_stores.dsl"
+            path = Path(tmpdir) / "optional_stores.cce"
             path.write_text(source, encoding="utf-8")
             vf_info = _parse_cce_adapter_program(path, kernel_name="valid")
         self.assertEqual(
@@ -417,7 +417,7 @@ class CCEParserTest(unittest.TestCase):
         )
         for call in sources:
             with self.subTest(call=call), tempfile.TemporaryDirectory() as tmpdir:
-                path = Path(tmpdir) / "bad_vdup.dsl"
+                path = Path(tmpdir) / "bad_vdup.cce"
                 path.write_text(
                     f"""
                     void bad() {{
@@ -436,7 +436,7 @@ class CCEParserTest(unittest.TestCase):
     def test_cce_offset_rejects_non_affine_products(self):
         for expression in ("i * j", "i * i"):
             with self.subTest(expression=expression), tempfile.TemporaryDirectory() as tmpdir:
-                path = Path(tmpdir) / "non_affine.dsl"
+                path = Path(tmpdir) / "non_affine.cce"
                 path.write_text(
                     f"""
                     void bad(__ubuf__ float *a) {{
@@ -462,7 +462,7 @@ class CCEParserTest(unittest.TestCase):
         )
         for call in calls:
             with self.subTest(call=call), tempfile.TemporaryDirectory() as tmpdir:
-                path = Path(tmpdir) / "integer_config.dsl"
+                path = Path(tmpdir) / "integer_config.cce"
                 path.write_text(
                     f"""
                     void bad(__ubuf__ float *mem) {{
@@ -493,7 +493,7 @@ class CCEParserTest(unittest.TestCase):
             }
         """
         with tempfile.TemporaryDirectory() as tmpdir:
-            path = Path(tmpdir) / "local_affine.dsl"
+            path = Path(tmpdir) / "local_affine.cce"
             path.write_text(source, encoding="utf-8")
             vf_info = _parse_cce_adapter_program(path, kernel_name="valid")
         self.assertEqual(vf_info.context[0].body[0].name, "VLDS")
@@ -544,7 +544,7 @@ class CCEParserTest(unittest.TestCase):
         }
         for name, (message, source) in sources.items():
             with self.subTest(name=name), tempfile.TemporaryDirectory() as tmpdir:
-                path = Path(tmpdir) / "bad_local_scalar.dsl"
+                path = Path(tmpdir) / "bad_local_scalar.cce"
                 path.write_text(source, encoding="utf-8")
                 with self.assertRaisesRegex(ValueError, message):
                     _parse_cce_adapter_program(path, kernel_name="bad")
@@ -561,7 +561,7 @@ class CCEParserTest(unittest.TestCase):
             }
         """
         with tempfile.TemporaryDirectory() as tmpdir:
-            path = Path(tmpdir) / "local_float.dsl"
+            path = Path(tmpdir) / "local_float.cce"
             path.write_text(source, encoding="utf-8")
             vf_info = _parse_cce_adapter_program(path, kernel_name="valid")
         self.assertEqual(vf_info.context[1].src, ["src", "scale", "mask"])
@@ -578,7 +578,7 @@ class CCEParserTest(unittest.TestCase):
             }
         """
         with tempfile.TemporaryDirectory() as tmpdir:
-            path = Path(tmpdir) / "delayed_scalar.dsl"
+            path = Path(tmpdir) / "delayed_scalar.cce"
             path.write_text(source, encoding="utf-8")
             vf_info = _parse_cce_adapter_program(path, kernel_name="valid")
         self.assertEqual(vf_info.context[1].src, ["src", "tid", "mask"])
@@ -593,7 +593,7 @@ class CCEParserTest(unittest.TestCase):
             }
         """
         with tempfile.TemporaryDirectory() as tmpdir:
-            path = Path(tmpdir) / "invalid_delayed_offset.dsl"
+            path = Path(tmpdir) / "invalid_delayed_offset.cce"
             path.write_text(offset_source, encoding="utf-8")
             with self.assertRaisesRegex(ValueError, "invalid offset expression"):
                 _parse_cce_adapter_program(path, kernel_name="bad")
@@ -605,7 +605,7 @@ class CCEParserTest(unittest.TestCase):
         }
         for name, statement in sources.items():
             with self.subTest(name=name), tempfile.TemporaryDirectory() as tmpdir:
-                path = Path(tmpdir) / "unsupported_statement.dsl"
+                path = Path(tmpdir) / "unsupported_statement.cce"
                 path.write_text(
                     f"""
                     void bad() {{
@@ -637,7 +637,7 @@ class CCEParserTest(unittest.TestCase):
             }
         """
         with tempfile.TemporaryDirectory() as tmpdir:
-            path = Path(tmpdir) / "pset_noop.dsl"
+            path = Path(tmpdir) / "pset_noop.cce"
             path.write_text(source, encoding="utf-8")
             with self.assertRaisesRegex(ValueError, "must be a predicate"):
                 _parse_cce_adapter_program(path, kernel_name="valid")
@@ -654,7 +654,7 @@ class CCEParserTest(unittest.TestCase):
         }
         """
         with tempfile.TemporaryDirectory() as tmpdir:
-            path = Path(tmpdir) / "barrier.dsl"
+            path = Path(tmpdir) / "barrier.cce"
             path.write_text(source, encoding="utf-8")
             vf_info = _parse_cce_adapter_program(path, kernel_name="barrier_vf")
 
@@ -676,7 +676,7 @@ class CCEParserTest(unittest.TestCase):
         }
         """
         with tempfile.TemporaryDirectory() as tmpdir:
-            path = Path(tmpdir) / "scalar_param.dsl"
+            path = Path(tmpdir) / "scalar_param.cce"
             path.write_text(source, encoding="utf-8")
             vf_info = _parse_cce_adapter_program(path, kernel_name="scalar_param_vf")
 

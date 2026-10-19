@@ -8,7 +8,7 @@
 
 ```bash
 python main.py ^
-  --cce cce_code/GeLU_poly.dsl ^
+  --cce VFtest/cce/GeLU_poly.cce ^
   --out_dir results/tmp_model/gelu_poly_cce
 ```
 
@@ -28,7 +28,7 @@ CCE/DSL 源码
 
 ```bash
 python main.py ^
-  --cce cce_code/example.dsl ^
+  --cce VFtest/cce/example.cce ^
   --cce-kernel selected_kernel ^
   --out_dir results/tmp_model/selected_kernel
 ```
@@ -39,9 +39,9 @@ python main.py ^
 from api.cce_adapter import list_cce_vf_kernels, parse_cce_canonical_vf_info
 from api.simulator_costmodel import CoreVfCostModel
 
-kernels = list_cce_vf_kernels("cce_code/example.dsl")
+kernels = list_cce_vf_kernels("VFtest/cce/example.cce")
 vf_info = parse_cce_canonical_vf_info(
-    "cce_code/example.dsl",
+    "VFtest/cce/example.cce",
     kernel_name=kernels[0],
 )
 cycles = CoreVfCostModel(
@@ -55,7 +55,7 @@ cycles = CoreVfCostModel(
 from api.simulator_costmodel import predict_cce_file_cycles
 
 cycles = predict_cce_file_cycles(
-    "cce_code/example.dsl",
+    "VFtest/cce/example.cce",
     kernel_name="selected_kernel",
 )
 ```
@@ -118,7 +118,7 @@ CCE native 仿真依赖独立环境，常用辅助命令为：
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File tools\run_cce_round.ps1 `
-  -DslPath cce_code\GeLU_poly.dsl `
+  -DslPath VFtest/cce\GeLU_poly.cce `
   -RoundTag gelu_poly_probe `
   -TotalElems 6144
 ```
@@ -127,7 +127,7 @@ powershell -ExecutionPolicy Bypass -File tools\run_cce_round.ps1 `
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File tools\run_cce_round.ps1 `
-  -DslPath cce_code\GeLU_poly.dsl `
+  -DslPath VFtest/cce\GeLU_poly.cce `
   -RoundTag gelu_poly_probe `
   -TotalElems 6144 `
   -WslDistro "-Ubuntu"
@@ -198,7 +198,7 @@ python tools/plot_cce_model_ipc_compare.py ^
 运行命令：
 
 ```bash
-python main.py --trace VFtest/GeLU_poly.json --out_dir results/tmp_model/gelu_poly_json
+python main.py --trace VFtest/json/GeLU_poly.json --out_dir results/tmp_model/gelu_poly_json
 ```
 
 `main.py` 会通过 `LegacyCanonicalJsonAdapter` 将旧 JSON 转换为 `CanonicalVfInfo`，随后复用同一 `CoreLoweringPass` 和 Core 执行路径。旧 JSON 不拥有独立模拟语义。

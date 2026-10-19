@@ -51,8 +51,8 @@ echo "[INFO] out_dir=${out_dir}" | tee -a "${log_file}"
 echo "[INFO] msprof_root=${msprof_root}" | tee -a "${log_file}"
 
 # single-op fp16: full 15
-for dsl in ascend_runner/single_op_param_suite/cases/fp16/singleop_*.dsl; do
-  b="$(basename "${dsl}" .dsl)"
+for dsl in VFtest/cce/benchmarks/single_op/fp16/singleop_*.cce; do
+  b="$(basename "${dsl}" .cce)"
   inputs=1
   case "${b}" in
     singleop_vadd|singleop_vsub|singleop_vmul|singleop_vmax|singleop_vmin|singleop_vdiv) inputs=2 ;;
@@ -61,14 +61,14 @@ for dsl in ascend_runner/single_op_param_suite/cases/fp16/singleop_*.dsl; do
 done
 
 # forwarding fp16: full 225
-for dsl in ascend_runner/forwarding_param_suite/cases/fp16/fwd_*.dsl; do
-  b="$(basename "${dsl}" .dsl)"
+for dsl in VFtest/cce/benchmarks/forwarding/fp16/fwd_*.cce; do
+  b="$(basename "${dsl}" .cce)"
   run_case "${dsl}" "${b}_fp16" 1 128 || true
 done
 
 # II fp16: full 225
-for dsl in ascend_runner/ii_param_suite/cases/fp16/ii_*.dsl; do
-  b="$(basename "${dsl}" .dsl)"
+for dsl in VFtest/cce/benchmarks/ii/fp16/ii_*.cce; do
+  b="$(basename "${dsl}" .cce)"
   run_case "${dsl}" "${b}_fp16" 2 4096 || true
 done
 

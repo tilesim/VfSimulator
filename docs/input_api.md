@@ -22,7 +22,7 @@ Builder 的三个参数都使用关键字传入：`params` 提供循环次数等
 from api.input_api import InputAPI
 from core.simulator import CoreVfCostModel
 
-vf_info = InputAPI.load_cce("cce_code/GeLU_poly.dsl")
+vf_info = InputAPI.load_cce("VFtest/cce/GeLU_poly.cce")
 result = CoreVfCostModel(out_dir="results/gelu").run_vf_info(vf_info)
 print(result["vf_end_cycle"])
 ```

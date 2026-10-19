@@ -257,11 +257,13 @@ json::Value normalizeSourcePaths(const json::Value &value) {
 
 void canonicalContractFixtures() {
   const auto root =
-      std::filesystem::path(VFSIM_SOURCE_ROOT) / "tests/fixtures/cce";
+      std::filesystem::path(VFSIM_SOURCE_ROOT) / "VFtest/cce/contracts";
   for (const auto *name :
        {"mixed", "alias", "packed", "post_update", "align", "conversion"}) {
     const auto vf = InputAPI::loadCce(root / (std::string(name) + ".cce"));
-    const auto expected = json::parseFile(root / (std::string(name) + ".json"));
+    const auto expected = json::parseFile(
+        std::filesystem::path(VFSIM_SOURCE_ROOT) /
+        "VFtest/canonical/cce_expected" / (std::string(name) + ".json"));
     require(normalizeSourcePaths(encodeCanonicalVfInfoJson(vf)) == expected,
             "CCE Canonical contract fixture mismatch: " + std::string(name));
   }

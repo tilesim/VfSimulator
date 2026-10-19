@@ -149,7 +149,7 @@ extern "C" __global__ __aicore__ void foo_add(
 
 
 def main() -> None:
-    out_dir = Path(__file__).resolve().parent / "cases"
+    out_dir = Path(__file__).resolve().parents[2] / "VFtest/cce/benchmarks/ii"
     out_dir.mkdir(parents=True, exist_ok=True)
 
     total = 0
@@ -160,7 +160,7 @@ def main() -> None:
         for prev in OPS:
             for cur in OPS:
                 stem = f"ii_{prev.lower()}_to_{cur.lower()}"
-                (dtype_dir / f"{stem}.dsl").write_text(render_case(prev, cur, dtype), encoding="utf-8")
+                (dtype_dir / f"{stem}.cce").write_text(render_case(prev, cur, dtype), encoding="utf-8")
                 stems.append(stem)
                 total += 1
         list_path = Path(__file__).resolve().parents[2] / "tools" / f"ii_all_cases_{dtype}.txt"

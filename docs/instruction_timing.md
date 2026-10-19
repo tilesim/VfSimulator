@@ -102,18 +102,19 @@ DINTLV 的双发实验观察到 IDU `UOP-Split number reached`；不同 workload
 
 ## 探针和测试
 
-完整检出中的 `cce_code/predicate_select_test/` 提供生成、运行、golden 校验和归档脚本，
+完整检出中的 `skills/vfsim-instruction-benchmark/scripts/` 提供生成、运行、golden 校验和归档脚本，
+CCE 测试源码保存在 `VFtest/cce/`，host 程序位于该 skill 的 `assets/`。
 运行环境需要对应 CANN 编译器和 CAModel。
 
 ```bash
-python3 cce_code/predicate_select_test/run.py --probe vmov_chain
-python3 cce_code/predicate_select_test/run.py --probe vmov_independent
-python3 cce_code/predicate_select_test/run.py --probe pset_vadd_gap --gap 12
-python3 cce_code/predicate_select_test/run.py --probe vintlv --reverse-stores
-python3 cce_code/predicate_select_test/compute_sweep.py --out /tmp/predicate-compute-probe
-python3 cce_code/predicate_select_test/memory_probe.py --kind vldus_no_update --dtype fp32 --offset 1 --iterations 1
-python3 cce_code/predicate_select_test/memory_probe.py --kind pstu --offset 0 --iterations 5
-python3 cce_code/predicate_select_test/memory_probe.py --kind unpack_pack_tail --dtype fp16 --offset 0 --iterations 1 --active-elements 37
+python3 skills/vfsim-instruction-benchmark/scripts/run.py --probe vmov_chain
+python3 skills/vfsim-instruction-benchmark/scripts/run.py --probe vmov_independent
+python3 skills/vfsim-instruction-benchmark/scripts/run.py --probe pset_vadd_gap --gap 12
+python3 skills/vfsim-instruction-benchmark/scripts/run.py --probe vintlv --reverse-stores
+python3 skills/vfsim-instruction-benchmark/scripts/compute_sweep.py --out /tmp/predicate-compute-probe
+python3 skills/vfsim-instruction-benchmark/scripts/memory_probe.py --kind vldus_no_update --dtype fp32 --offset 1 --iterations 1
+python3 skills/vfsim-instruction-benchmark/scripts/memory_probe.py --kind pstu --offset 0 --iterations 5
+python3 skills/vfsim-instruction-benchmark/scripts/memory_probe.py --kind unpack_pack_tail --dtype fp16 --offset 0 --iterations 1 --active-elements 37
 ```
 
 相关模型测试为 `test_ordinary_fp32_onboarding`、`test_ordinary_bf16_onboarding`、

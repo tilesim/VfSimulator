@@ -109,7 +109,7 @@ def main() -> None:
     configured = {(p, c) for p, cs in cfg.items() for c in cs.keys()}
     ops = sorted(OP_SPEC.keys())
 
-    out_dir = Path(__file__).resolve().parent / "cases"
+    out_dir = Path(__file__).resolve().parents[2] / "VFtest/cce/benchmarks/forwarding"
     out_dir.mkdir(parents=True, exist_ok=True)
 
     stems: list[str] = []
@@ -118,7 +118,7 @@ def main() -> None:
             if (p, c) in configured:
                 continue
             stem = f"fwdx_{p.lower()}_to_{c.lower()}"
-            (out_dir / f"{stem}.dsl").write_text(render_case(p, c, stem), encoding="utf-8")
+            (out_dir / f"{stem}.cce").write_text(render_case(p, c, stem), encoding="utf-8")
             stems.append(stem)
 
     list_path = repo / "tools" / "fwd_unconfigured_cases.txt"

@@ -8,7 +8,7 @@ def main():
     # Use the specific conda python interpreter provided by the user
     python_exe = r"D:\miniconda3\envs\vfsim\python.exe"
     base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    test_dir = os.path.join(base_dir, "VFtest", "vadd_fusion_tests")
+    test_dir = os.path.join(base_dir, "VFtest", "json", "vadd_fusion_tests")
     results_root = os.path.join(base_dir, "results", "fusion_sweep")
     os.makedirs(results_root, exist_ok=True)
 

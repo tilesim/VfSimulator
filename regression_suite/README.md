@@ -1,137 +1,33 @@
-# Cost Model 回归测试集
+# 回归测试与测量证据
 
-这个目录是 VfSimulator 的回归测试包，用来维护稳定输入、基线和精度报告。
+本目录保存回归清单、周期基线、精度报告及 CAModel 运行证据。固定输入统一位于 `VFtest/`。
 
-主要用途：
+| 路径 | 内容 |
+| --- | --- |
+| `cases/cost_model_regression_cases.json` | case ID、输入路径、参数覆盖、参考周期和容差 |
+| `cases/baseline_canonical_membar.json` | 当前默认周期基线 |
+| `cases/archive/` | 历史实验清单及基线 |
+| `evidence/cce/` | 对应 CCE 实验的原始日志、输出及二进制证据 |
+| `reports/` | 精度与验证结果报告 |
+| `docs/` | 回归分析方法 |
 
-1. cost model 精度回归：同一 trace 在模型里的 `VF end cycle` 是否漂移。
-2. CCE/camodel 精度守门：模型相对 CCE/camodel 的误差是否变差。
-3. 稳定报告归档：保存人工整理过的精度对比表，避免散落在 `results/` 中。
+主清单引用 `VFtest/canonical/` 的输入。CCE 源码位于 `VFtest/cce/`，
+JSON 文件入口案例位于 `VFtest/json/`。共享案例供 Python/C++ 使用。
 
-## 目录结构
-
-```text
-regression_suite/
-  README.md
-  cases/
-    cost_model_regression_cases.json
-    baseline_canonical_membar.json
-    baseline_balanced_exu0_reserve.json
-    baseline_queue_level4_ooo_transfer_delay.json
-    baseline_consumer_done.json
-    archive/
-      ...
-  inputs/
-    json/
-      ...
-    cce/
-      README.md
-  reports/
-    precision_compare_3modes.md
-  docs/
-    unroll_precision_debug_guide.md
-```
-
-## 文件说明
-
-- `cases/cost_model_regression_cases.json`：主测试集清单，包含 case id、trace、参数、CCE/camodel 参考时间和容忍阈值。
-- `cases/baseline_canonical_membar.json`：主线默认基线，对应 Canonical 入口、平衡预留策略与全局 membar 时序模型；详见 [合并验证报告](reports/master_canonical_merge_20260914.md)。
-- `cases/baseline_balanced_exu0_reserve.json`：2026-08-19 平衡预留历史基线，保留供对比。
-- `cases/baseline_queue_level4_ooo_transfer_delay.json`：旧 OoO transfer-delay 基线，仅用于历史对比。
-- `cases/baseline_consumer_done.json`：历史 consumer-done 基线，仅用于结果追溯。
-- `cases/archive/`：历史 queue-level 对比实验的 case/baseline，保留供追溯，不作为主线默认入口。
-- `inputs/json/`：主回归 manifest 使用的 JSON trace 副本，使回归包能自包含地复现输入。
-- `inputs/cce/`：用于存放生成 CCE/camodel ground truth 的 CCE/DSL 文件；当前部分 ground truth 仅记录为 `cce_vf_end_source`。
-- `reports/precision_compare_3modes.md`：稳定精度汇总报告。
-- `docs/unroll_precision_debug_guide.md`：unroll 精度排查指南。
-
-## 一键命令
-
-基线使用平衡 EXU0 预留策略：向后观察 8 条 SHQ 指令、`min_count=1`、
-每端口执行中指令上限 `cap=7`。确认需要整体刷新时运行：
+在仓库根目录运行 Python 回归：
 
 ```bash
-python tools/run_cost_model_regression.py --tier full --update-baseline
+python3 tools/run_cost_model_regression.py --tier smoke
+python3 tools/run_cost_model_regression.py --tier full
 ```
 
-之后每次改模型后做回归对比：
-
-```bash
-python tools/run_cost_model_regression.py --tier smoke
-```
-
-跑全量：
-
-```bash
-python tools/run_cost_model_regression.py --tier full
-```
-
-## Native C++ 回归
-
-native C++ 回归复用同一份 case manifest 和 baseline，但会先把 JSON trace 转成
-canonical `VfInfo`，再 lower 成 native runner 可读的 payload，最后调用
-`build-native/vfsim_native_json_runner`。
-
-先构建 native runner：
+构建并运行 C++ 回归：
 
 ```bash
 cmake -S native -B build-native -DVFSIM_BUILD_TESTS=ON
 cmake --build build-native -j2
+python3 tools/run_native_cost_model_regression.py --tier smoke
 ```
 
-跑 smoke：
-
-```bash
-python tools/run_native_cost_model_regression.py --tier smoke
-```
-
-跑全量：
-
-```bash
-python tools/run_native_cost_model_regression.py --tier full
-```
-
-默认输出位置：
-
-- `results/native_regression_suite/latest/current_metrics.json`
-- `results/native_regression_suite/latest/compare_summary.json`
-
-如果需要显式指定路径：
-
-```bash
-python tools/run_cost_model_regression.py \
-  --suite regression_suite/cases/cost_model_regression_cases.json \
-  --baseline regression_suite/cases/baseline_canonical_membar.json \
-  --tier smoke
-```
-
-## 输出位置
-
-自动运行产生的临时结果仍放在 `results/`，不放进 `regression_suite/`：
-
-- 运行目录：`results/regression_suite/latest/`
-- 当前结果：`results/regression_suite/latest/current_metrics.json`
-- 对比结果：`results/regression_suite/latest/compare_summary.json`
-
-## 通过/失败规则
-
-每个 case 用 `primary_metric` 对比基线，若满足以下任一条件即判定通过：
-
-- 绝对误差 `abs_diff <= abs_tol`
-- 相对误差 `rel_diff <= rel_tol`
-
-默认阈值在 `cases/cost_model_regression_cases.json` 的 `defaults` 里，个别 case 可单独覆盖。
-
-## CCE 基准精度守门
-
-测试项可选填写 `cce_vf_end`，表示 CCE/camodel 的 VF 总时间。脚本会自动计算：
-
-- `error_to_cce_abs`
-- `error_to_cce_rel`
-
-并在回归时检查：当前版本相对 CCE/camodel 的误差，不能比平衡 EXU0 预留基线变差太多。
-
-默认阈值在 `cases/cost_model_regression_cases.json` 的 `defaults`：
-
-- `cce_error_abs_worse_tol`
-- `cce_error_rel_worse_tol`
+脚本生成本次 metrics 和对比报告。确认参数、执行行为和精度变化后，
+可按任务要求通过 `--update-baseline` 保存新的参考结果。

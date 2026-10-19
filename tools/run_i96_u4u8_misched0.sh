@@ -8,7 +8,7 @@ LDLLD="$ACL/x86_64-linux/bin/ld.lld"
 
 for u in 4 8; do
   stem="GeLU_poly_I96_unroll${u}_misched0"
-  dsl="$REPO/cce_code/GeLU_poly_I96_unroll${u}.dsl"
+  dsl="$REPO/VFtest/cce/GeLU_poly_I96_unroll${u}.cce"
   build="$REPO/ascend_runner/build/${stem}_native_simexec"
   cce="$build/${stem}.cce"
   aiv="$build/${stem}_mix_aiv.o"

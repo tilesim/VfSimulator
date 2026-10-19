@@ -1,7 +1,7 @@
 import json
 import os
 
-def generate_vf_fusion_tests(output_dir=os.path.join("VFtest", "vadd_fusion_tests"), total_vadds=1024, loop_bound=2):
+def generate_vf_fusion_tests(output_dir=os.path.join("VFtest", "json", "vadd_fusion_tests"), total_vadds=1024, loop_bound=2):
     """
     Generates JSON test files representing different levels of VF loop fusion.
     Total VADDs = 1024.

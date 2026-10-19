@@ -9,7 +9,7 @@
 from api.input_api import InputAPI
 from core.simulator import CoreVfCostModel
 
-vf_info = InputAPI.load_json("tests/fixtures/canonical_vf_info/v1_valid_loop.json")
+vf_info = InputAPI.load_json("VFtest/canonical/fixtures/v1_valid_loop.json")
 result = CoreVfCostModel(out_dir=None).run_vf_info(vf_info)
 print(result["cycles_executed"], result["vf_end_cycle"])
 ```

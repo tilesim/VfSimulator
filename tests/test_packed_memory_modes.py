@@ -92,7 +92,7 @@ class PackedMemoryModeTest(unittest.TestCase):
 
     def test_checked_in_canonical_payload(self):
         from api.json.serialization import canonical_vf_info_from_dict
-        fixture = Path(__file__).parent/"fixtures/canonical_vf_info/v2_plt_packed_fp16.json"
+        fixture = Path(__file__).resolve().parents[1]/"VFtest/canonical/fixtures/v2_plt_packed_fp16.json"
         vf = canonical_vf_info_from_dict(json.loads(fixture.read_text()))
         self.assertTrue(validate_canonical_vf_info(vf).ok)
 

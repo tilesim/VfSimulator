@@ -140,7 +140,7 @@ extern "C" __global__ __aicore__ void foo_add(
 
 
 def main() -> None:
-    out_dir = Path(__file__).resolve().parent / "cases"
+    out_dir = Path(__file__).resolve().parents[2] / "VFtest/cce/benchmarks/forwarding"
     out_dir.mkdir(parents=True, exist_ok=True)
 
     n = 0
@@ -151,7 +151,7 @@ def main() -> None:
         for prod in ops:
             for cons in ops:
                 stem = f"fwd_{prod.lower()}_to_{cons.lower()}"
-                (dtype_dir / f"{stem}.dsl").write_text(render_case(prod, cons, dtype), encoding="utf-8")
+                (dtype_dir / f"{stem}.cce").write_text(render_case(prod, cons, dtype), encoding="utf-8")
                 n += 1
     print(f"Generated {n} forwarding DSL files in {out_dir}")
 

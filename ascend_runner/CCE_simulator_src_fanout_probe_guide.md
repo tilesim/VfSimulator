@@ -11,10 +11,10 @@ The route is now generic enough to cover different kernel argument shapes, as lo
 
 Two validated examples are already covered by this route:
 
-- `cce_code/src_fanout_probe.dsl`
+- `VFtest/cce/src_fanout_probe.cce`
   - kernel name: `src_fanout_probe`
   - shape: `1 input + 1 output`
-- `cce_code/GeLU_poly.dsl`
+- `VFtest/cce/GeLU_poly.cce`
   - kernel name: `foo_add`
   - shape: `2 inputs + 1 output`
 
@@ -55,12 +55,12 @@ What we are **not** relying on for the main path anymore:
 
 ### 3.1 Input DSL
 
-Any `.dsl` or `.cce` file can be used as input.
+Any `.cce` file can be used as input.
 
 Validated examples:
 
-- `cce_code/src_fanout_probe.dsl`
-- `cce_code/GeLU_poly.dsl`
+- `VFtest/cce/src_fanout_probe.cce`
+- `VFtest/cce/GeLU_poly.cce`
 
 ### 3.2 Build script
 
@@ -109,19 +109,19 @@ Run in WSL Ubuntu from repo root:
 
 ```bash
 cd /mnt/d/VfSimulator
-bash ascend_runner/current/build_native_simexec.sh <path-to.dsl-or.cce> [output-stem]
+bash ascend_runner/current/build_native_simexec.sh <path-to.cce-or.cce> [output-stem]
 ```
 
 Example 1:
 
 ```bash
-bash ascend_runner/current/build_native_simexec.sh cce_code/src_fanout_probe.dsl src_fanout_probe
+bash ascend_runner/current/build_native_simexec.sh VFtest/cce/src_fanout_probe.cce src_fanout_probe
 ```
 
 Example 2:
 
 ```bash
-bash ascend_runner/current/build_native_simexec.sh cce_code/GeLU_poly.dsl GeLU_poly
+bash ascend_runner/current/build_native_simexec.sh VFtest/cce/GeLU_poly.cce GeLU_poly
 ```
 
 What this produces:
@@ -292,7 +292,7 @@ Reported stats:
 The generic runner currently has built-in CPU golden logic for:
 
 - `src_fanout_probe`
-- `foo_add` from `GeLU_poly.dsl`
+- `foo_add` from `GeLU_poly.cce`
 
 ### 7.2 Example successful checks
 

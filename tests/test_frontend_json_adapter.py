@@ -14,7 +14,7 @@ from api.common.schema import SUPPORTED_SCHEMA_VERSIONS
 
 class CanonicalJsonVfInfoAdapterTest(unittest.TestCase):
     def setUp(self):
-        self.fixtures = Path(__file__).parent / "fixtures/canonical_vf_info"
+        self.fixtures = Path(__file__).resolve().parents[1] / "VFtest/canonical/fixtures"
         self.root = Path(__file__).parents[1]
 
     def test_input_api_loads_and_validates_canonical_json(self):
@@ -155,7 +155,7 @@ class CanonicalJsonVfInfoAdapterTest(unittest.TestCase):
         }
         self.assertTrue(trace_paths)
         for trace in trace_paths:
-            self.assertIn("regression_suite/inputs/canonical/", trace)
+            self.assertIn("VFtest/canonical/", trace)
             vf_info = InputAPI.load_json(self.root / trace)
             self.assertIn(vf_info.schema_version, SUPPORTED_SCHEMA_VERSIONS)
 

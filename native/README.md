@@ -104,7 +104,7 @@ cmake -S native -B build-native -DCMAKE_BUILD_TYPE=Release -DVFSIM_BUILD_TESTS=O
 cmake --build build-native -j4
 ctest --test-dir build-native --output-on-failure
 build-native/vfsim_native_json_runner \
-  --trace tests/fixtures/canonical_vf_info/v1_valid_loop.json \
+  --trace VFtest/canonical/fixtures/v1_valid_loop.json \
   --out-dir /tmp/vfsim-native
 VFSIM_NATIVE_RUNNER="$PWD/build-native/vfsim_native_json_runner" \
   python3 -m unittest discover -s tests

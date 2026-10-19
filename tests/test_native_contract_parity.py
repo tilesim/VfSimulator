@@ -55,7 +55,7 @@ class NativeContractParityTests(unittest.TestCase):
                 self.assertEqual(read_json(root / "python" / name), read_json(root / "cpp" / name))
 
     def test_complete_canonical_fixture_outputs(self):
-        for fixture in sorted((ROOT / "tests/fixtures/canonical_vf_info").rglob("*.json")):
+        for fixture in sorted((ROOT / "VFtest/canonical/fixtures").rglob("*.json")):
             if "invalid" in fixture.name:
                 continue
             with self.subTest(fixture=fixture.name), tempfile.TemporaryDirectory() as folder:
@@ -83,18 +83,18 @@ class NativeContractParityTests(unittest.TestCase):
             self.assertNotEqual(rejected.returncode, 0)
 
     def test_cce_fixture_outputs(self):
-        for fixture in sorted((ROOT / "tests/fixtures/cce").glob("*.cce")):
+        for fixture in sorted((ROOT / "VFtest/cce/contracts").glob("*.cce")):
             with self.subTest(fixture=fixture.name), tempfile.TemporaryDirectory() as folder:
                 self.compare(InputAPI.load_cce(fixture), Path(folder), arguments=["--cce", str(fixture)])
 
     def test_theoretical_public_options(self):
-        fixture = ROOT / "tests/fixtures/canonical_vf_info/v1_valid_loop.json"
+        fixture = ROOT / "VFtest/canonical/fixtures/v1_valid_loop.json"
         for direct in (False, True):
             with self.subTest(direct=direct), tempfile.TemporaryDirectory() as folder:
                 self.compare(InputAPI.load_json(fixture), Path(folder), vloop_only=not direct, direct_issue=direct)
 
     def test_membar_does_not_bypass_unroll_validation(self):
-        fixture = ROOT / "tests/fixtures/canonical_vf_info/timing/membar_disables_innermost_unroll_with_warning.json"
+        fixture = ROOT / "VFtest/canonical/fixtures/timing/membar_disables_innermost_unroll_with_warning.json"
         vf = InputAPI.load_json(fixture)
         vf = InputAPI.from_canonical(replace(vf, context=(replace(vf.context[0], count=3),)))
         with tempfile.TemporaryDirectory() as folder:
@@ -109,7 +109,7 @@ class NativeContractParityTests(unittest.TestCase):
             self.assertFalse((root / "cpp").exists())
 
     def test_timeouts_leave_no_partial_output(self):
-        fixture = ROOT / "tests/fixtures/canonical_vf_info/v1_valid_loop.json"
+        fixture = ROOT / "VFtest/canonical/fixtures/v1_valid_loop.json"
         vf = InputAPI.load_json(fixture)
         vf = InputAPI.from_canonical(replace(vf, params={**vf.params, "max_cycles": 1}))
         with tempfile.TemporaryDirectory() as folder:

@@ -108,7 +108,7 @@ class InstructionFallbackTest(unittest.TestCase):
         self.assertEqual(db.get_ii('VPREV_LAT10', 'VCUR_LAT9', dtype='fp32', prev_form='fp32', cur_form='fp32'), 2)
 
     def test_load_store_done_latency_uses_instruction_latency(self):
-        payload = InputAPI.load_json(ROOT / 'tests/fixtures/canonical_vf_info/timing/load_store_done_latency_uses_instruction_latency.json')
+        payload = InputAPI.load_json(ROOT / 'VFtest/canonical/fixtures/timing/load_store_done_latency_uses_instruction_latency.json')
         with tempfile.TemporaryDirectory() as tmpdir:
             out_dir = Path(tmpdir)
             CoreVfCostModel(base_dir=ROOT, out_dir=out_dir).run_vf_info(payload)
@@ -162,7 +162,7 @@ class InstructionFallbackTest(unittest.TestCase):
         self.assertEqual(db.get_forwarding_cycles('VEXPDIF', 'VADD', dtype='fp32', producer_form='fp32', consumer_form='fp32'), 15)
 
     def test_vpack_vsstb_forms_do_not_fallback_through_python_idu(self):
-        payload = InputAPI.load_json(ROOT / 'tests/fixtures/canonical_vf_info/timing/vpack_vsstb_forms_do_not_fallback_through_python_idu.json')
+        payload = InputAPI.load_json(ROOT / 'VFtest/canonical/fixtures/timing/vpack_vsstb_forms_do_not_fallback_through_python_idu.json')
         with tempfile.TemporaryDirectory() as tmpdir:
             out_dir = Path(tmpdir)
             CoreVfCostModel(base_dir=ROOT, out_dir=out_dir).run_vf_info(payload)
@@ -222,7 +222,7 @@ class InstructionFallbackTest(unittest.TestCase):
         self.assertEqual(params['dispatch_exu'], 'EXU01')
 
     def test_cli_writes_instruction_fallback_warnings_without_vreg_warning(self):
-        trace = InputAPI.load_json(ROOT / 'tests/fixtures/canonical_vf_info/timing/cli_writes_instruction_fallback_warnings_without_vreg_warning.json')
+        trace = InputAPI.load_json(ROOT / 'VFtest/canonical/fixtures/timing/cli_writes_instruction_fallback_warnings_without_vreg_warning.json')
         with tempfile.TemporaryDirectory() as tmpdir:
             tmp = Path(tmpdir)
             trace_path = tmp / 'unknown_trace.json'
@@ -235,7 +235,7 @@ class InstructionFallbackTest(unittest.TestCase):
         self.assertTrue(payload['instruction_fallback_warnings'])
 
     def _run_fixture_logs(self, filename, include_history=False):
-        vf_info = InputAPI.load_json(ROOT / 'tests/fixtures/canonical_vf_info/timing' / filename)
+        vf_info = InputAPI.load_json(ROOT / 'VFtest/canonical/fixtures/timing' / filename)
         with tempfile.TemporaryDirectory() as tmpdir:
             out_dir = Path(tmpdir)
             CoreVfCostModel(base_dir=ROOT, out_dir=out_dir).run_vf_info(vf_info)
@@ -274,7 +274,7 @@ class InstructionFallbackTest(unittest.TestCase):
         self.assertTrue(any((item.get('event') == 'blocked' and item.get('op') == 'VLDS' and (item.get('state') == 'ready') and (item.get('blocked_reason') == 'membar') for item in history)))
 
     def test_loop_membar_uses_dynamic_stream_sequence_not_static_pc(self):
-        payload = InputAPI.load_json(ROOT / 'tests/fixtures/canonical_vf_info/timing/loop_membar_uses_dynamic_stream_sequence_not_static_pc.json')
+        payload = InputAPI.load_json(ROOT / 'VFtest/canonical/fixtures/timing/loop_membar_uses_dynamic_stream_sequence_not_static_pc.json')
         with tempfile.TemporaryDirectory() as tmpdir:
             out_dir = Path(tmpdir)
             CoreVfCostModel(base_dir=ROOT, out_dir=out_dir).run_vf_info(payload)
@@ -285,7 +285,7 @@ class InstructionFallbackTest(unittest.TestCase):
         self.assertLess(first_post_barrier_load_start, second_store_done)
 
     def test_membar_disables_innermost_unroll_with_warning(self):
-        trace = InputAPI.load_json(ROOT / 'tests/fixtures/canonical_vf_info/timing/membar_disables_innermost_unroll_with_warning.json')
+        trace = InputAPI.load_json(ROOT / 'VFtest/canonical/fixtures/timing/membar_disables_innermost_unroll_with_warning.json')
         with tempfile.TemporaryDirectory() as tmpdir:
             tmp = Path(tmpdir)
             trace_path = tmp / 'membar_unroll.json'
@@ -307,7 +307,7 @@ class InstructionFallbackTest(unittest.TestCase):
         self.assertFalse(any(('_lane' in value for value in touched_values)))
 
     def test_unsupported_membar_type_writes_warning(self):
-        trace = InputAPI.load_json(ROOT / 'tests/fixtures/canonical_vf_info/timing/unsupported_membar_type_writes_warning.json')
+        trace = InputAPI.load_json(ROOT / 'VFtest/canonical/fixtures/timing/unsupported_membar_type_writes_warning.json')
         with tempfile.TemporaryDirectory() as tmpdir:
             tmp = Path(tmpdir)
             trace_path = tmp / 'unsupported_membar.json'

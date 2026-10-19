@@ -4,12 +4,12 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
 
-if [[ ! -d "${SCRIPT_DIR}/cases" ]]; then
+if [[ ! -d "${REPO_ROOT}/VFtest/cce/benchmarks/single_op" ]]; then
   echo "[INFO] generating DSL cases"
   python3 "${SCRIPT_DIR}/generate_cases.py"
 fi
 
-if [[ ! -d "${SCRIPT_DIR}/cases" ]]; then
+if [[ ! -d "${REPO_ROOT}/VFtest/cce/benchmarks/single_op" ]]; then
   echo "cases dir not found"
   exit 2
 fi
@@ -38,7 +38,7 @@ run_one() {
   fi
 }
 
-for dsl in "${SCRIPT_DIR}"/cases/singleop_*.dsl; do
+for dsl in "${REPO_ROOT}/VFtest/cce/benchmarks/single_op"/singleop_*.cce; do
   run_one "${dsl}"
 done
 

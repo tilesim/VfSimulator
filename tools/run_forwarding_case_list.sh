@@ -14,7 +14,7 @@ while IFS= read -r stem; do
   [[ -z "$stem" ]] && continue
   [[ "$stem" =~ ^# ]] && continue
 
-  dsl="ascend_runner/forwarding_param_suite/cases/${stem}.dsl"
+  dsl="VFtest/cce/benchmarks/forwarding/${stem}.cce"
   if [[ ! -f "$dsl" ]]; then
     echo "[SKIP] missing DSL: $dsl"
     continue

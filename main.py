@@ -7,7 +7,7 @@ from core.simulator import CoreVfCostModel
 def build_arg_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description='VF Simulator Main Entry')
     parser.add_argument('--trace', type=str, help='Path to the JSON trace file')
-    parser.add_argument('--cce', type=str, help='Path to a CCE/DSL file. When provided, parse __VEC_SCOPE__ into CanonicalVfInfo.')
+    parser.add_argument('--cce', type=str, help='Path to a .cce file. When provided, parse __VEC_SCOPE__ into CanonicalVfInfo.')
     parser.add_argument('--cce-kernel', type=str, default=None, help='Select a specific __VEC_SCOPE__ kernel name when the CCE file has multiple VF kernels.')
     parser.add_argument('--out_dir', type=str, default='results', help='Directory to save simulation logs')
     parser.add_argument('--theoretical-limit-vloop-only', action='store_true', help='Theoretical limit variant: keep top-level VLOOPv2 start timing but remove cross-iteration exposure gates')
@@ -15,7 +15,7 @@ def build_arg_parser() -> argparse.ArgumentParser:
     return parser
 
 def resolve_trace_path(base_dir: str, trace_arg: str | None) -> str:
-    trace_path = trace_arg or os.path.join(base_dir, 'tests', 'fixtures', 'canonical_vf_info', 'v1_valid_loop.json')
+    trace_path = trace_arg or os.path.join(base_dir, 'VFtest', 'canonical', 'fixtures', 'v1_valid_loop.json')
     if not os.path.isabs(trace_path):
         trace_path = os.path.join(base_dir, trace_path)
     return trace_path

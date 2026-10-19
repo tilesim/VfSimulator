@@ -166,7 +166,7 @@ extern "C" __global__ __aicore__ void {stem}(
 }}
 """
     txt = txt.replace("  ", " ")
-    path = case_dir / f"{stem}.dsl"
+    path = case_dir / f"{stem}.cce"
     path.write_text(txt, encoding="utf-8")
     return path
 

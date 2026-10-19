@@ -5,14 +5,14 @@ CCE 前端读取包含 `__VEC_SCOPE__` 的 CCE/DSL，生成通过校验的 `Cano
 ## 调用
 
 ```bash
-python3 main.py --cce cce_code/GeLU_poly.dsl --out_dir results/gelu
+python3 main.py --cce VFtest/cce/GeLU_poly.cce --out_dir results/gelu
 ```
 
 ```python
 from api.input_api import InputAPI
 from core.simulator import CoreVfCostModel
 
-vf_info = InputAPI.load_cce("cce_code/GeLU_poly.dsl")
+vf_info = InputAPI.load_cce("VFtest/cce/GeLU_poly.cce")
 cycles = CoreVfCostModel(out_dir=None).predict_vf_cycles(vf_info)
 print(cycles)
 ```

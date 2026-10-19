@@ -82,22 +82,22 @@ class CanonicalVfInfoValidatorTest(unittest.TestCase):
         )
 
     def test_shared_v1_serialization_fixture(self):
-        fixture = Path(__file__).parent / "fixtures/canonical_vf_info/v1_valid_loop.json"
+        fixture = Path(__file__).resolve().parents[1] / "VFtest/canonical/fixtures/v1_valid_loop.json"
         vf_info = canonical_vf_info_from_dict(json.loads(fixture.read_text()))
         result = validate_canonical_vf_info(vf_info)
         self.assertTrue(result.ok, result.diagnostics)
         self.assertEqual(vf_info.context[0].induction.variable_id, "i")
 
         carried_fixture = (
-            Path(__file__).parent
-            / "fixtures/canonical_vf_info/v1_valid_loop_carried.json"
+            Path(__file__).resolve().parents[1]
+            / "VFtest/canonical/fixtures/v1_valid_loop_carried.json"
         )
         carried = canonical_vf_info_from_dict(json.loads(carried_fixture.read_text()))
         self.assertTrue(validate_canonical_vf_info(carried).ok)
 
         invalid_fixture = (
-            Path(__file__).parent
-            / "fixtures/canonical_vf_info/v1_invalid_loop_scope.json"
+            Path(__file__).resolve().parents[1]
+            / "VFtest/canonical/fixtures/v1_invalid_loop_scope.json"
         )
         invalid = canonical_vf_info_from_dict(json.loads(invalid_fixture.read_text()))
         self.assertEqual(

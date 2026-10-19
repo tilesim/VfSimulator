@@ -15,8 +15,8 @@ Goal:
 ## Directory Layout
 
 - `generate_cases.py`
-  Generates all minimal DSL files into `cases/`.
-- `cases/singleop_*.dsl`
+  Generates all minimal DSL files into `VFtest/cce/benchmarks/single_op/`.
+- `VFtest/cce/benchmarks/single_op/singleop_*.cce`
   One-op kernels (`repeat_times=1`) for clean timing extraction.
 - `run_suite.sh`
   Batch build + run all cases through current native simexec flow.

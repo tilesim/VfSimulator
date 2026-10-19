@@ -55,12 +55,12 @@ consumer_gate = release_cycle + consumer_delay
 | interleaved8.cce | 348 | 339 |
 | spill.cce | 396 | 391 |
 
-Python 值可通过当前代码和 [fixtures/membar_timing](../tests/fixtures/membar_timing)
+Python 值可通过当前代码和 [fixtures/membar_timing](../VFtest/cce/membar_timing)
 重现。CAModel 值来自保留的测量记录，描述这些用例下的观测。
 
 ```bash
 python3 -m unittest tests.test_membar_timing
-python3 main.py --cce tests/fixtures/membar_timing/single.cce --out_dir results/membar_single
+python3 main.py --cce VFtest/cce/membar_timing/single.cce --out_dir results/membar_single
 ```
 
 [test_membar_timing.py](../tests/test_membar_timing.py)覆盖连续屏障、乱序 LSU start、

@@ -17,7 +17,7 @@ from core.params.database import ParamDB
 class CanonicalCoreLoweringTest(unittest.TestCase):
 
     def setUp(self):
-        self.fixtures = Path(__file__).parent / 'fixtures/canonical_vf_info'
+        self.fixtures = Path(__file__).resolve().parents[1] / 'VFtest/canonical/fixtures'
 
     def _fixture(self, name):
         payload = json.loads((self.fixtures / name).read_text(encoding='utf-8'))

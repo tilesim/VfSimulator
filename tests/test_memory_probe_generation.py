@@ -1,6 +1,12 @@
 import struct
 import unittest
-from cce_code.predicate_select_test.memory_probe import make_case
+from pathlib import Path
+from runpy import run_path
+
+make_case = run_path(str(
+    Path(__file__).resolve().parents[1]
+    / "skills/vfsim-instruction-benchmark/scripts/memory_probe.py"
+))["make_case"]
 
 
 class MemoryProbeGenerationTest(unittest.TestCase):

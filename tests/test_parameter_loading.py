@@ -84,7 +84,7 @@ class ParameterLoadingTest(unittest.TestCase):
                         ParamDB(base_dir=ROOT, uarch_path=path)
 
     def test_model_accepts_supported_exu_ports_and_rejects_out_of_range(self):
-        vf = InputAPI.load_json(ROOT / 'tests/fixtures/canonical_vf_info/v1_valid_loop.json')
+        vf = InputAPI.load_json(ROOT / 'VFtest/canonical/fixtures/v1_valid_loop.json')
         for ports in (1, 2):
             with self.subTest(ports=ports):
                 accepted = InputAPI.from_canonical(replace(vf, uarch={'issue_ports': ports}))
@@ -97,7 +97,7 @@ class ParameterLoadingTest(unittest.TestCase):
                     CoreVfCostModel(base_dir=ROOT, out_dir=None).run_vf_info(accepted)
 
     def test_config_file_port_count_is_checked_at_model_assembly(self):
-        vf = InputAPI.load_json(ROOT / 'tests/fixtures/canonical_vf_info/v1_valid_loop.json')
+        vf = InputAPI.load_json(ROOT / 'VFtest/canonical/fixtures/v1_valid_loop.json')
         config = json.loads((ROOT / 'configs/uarch.json').read_text())
         with tempfile.TemporaryDirectory() as tmp:
             path = Path(tmp) / 'uarch.json'
@@ -181,7 +181,7 @@ class ParameterLoadingTest(unittest.TestCase):
 class ParameterReuseTest(unittest.TestCase):
     def test_model_reads_parameters_once_for_repeated_runs(self):
         from core.params.loader import read_json
-        vf = InputAPI.load_json(ROOT / 'tests/fixtures/canonical_vf_info/v1_valid_loop.json')
+        vf = InputAPI.load_json(ROOT / 'VFtest/canonical/fixtures/v1_valid_loop.json')
         with patch('core.params.loader.read_json', wraps=read_json) as reads:
             model = CoreVfCostModel(base_dir=ROOT, out_dir=None)
             self.assertEqual(reads.call_count, 4)
@@ -192,7 +192,7 @@ class ParameterReuseTest(unittest.TestCase):
             self.assertEqual(reads.call_count, 4)
 
     def test_file_updates_require_a_new_model(self):
-        vf = InputAPI.load_json(ROOT / 'tests/fixtures/canonical_vf_info/v1_valid_loop.json')
+        vf = InputAPI.load_json(ROOT / 'VFtest/canonical/fixtures/v1_valid_loop.json')
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             (root / 'configs').mkdir()
@@ -213,8 +213,8 @@ class ParameterReuseTest(unittest.TestCase):
             self.assertEqual(model.run_vf_info(vf), baseline)
 
     def test_repeated_runs_keep_warnings_independent(self):
-        warning_vf = InputAPI.load_json(ROOT / 'tests/fixtures/canonical_vf_info/timing/cli_writes_instruction_fallback_warnings_without_vreg_warning.json')
-        clean_vf = InputAPI.load_json(ROOT / 'tests/fixtures/canonical_vf_info/v1_valid_loop.json')
+        warning_vf = InputAPI.load_json(ROOT / 'VFtest/canonical/fixtures/timing/cli_writes_instruction_fallback_warnings_without_vreg_warning.json')
+        clean_vf = InputAPI.load_json(ROOT / 'VFtest/canonical/fixtures/v1_valid_loop.json')
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             model = CoreVfCostModel(base_dir=ROOT, out_dir=root / 'first')

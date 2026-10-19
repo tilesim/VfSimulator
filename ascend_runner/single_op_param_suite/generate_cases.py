@@ -155,14 +155,14 @@ __attribute__((always_inline)) inline [aicore] void single_{name}_simd_ub(
 
 
 def main() -> None:
-    out_dir = Path(__file__).resolve().parent / "cases"
+    out_dir = Path(__file__).resolve().parents[2] / "VFtest/cce/benchmarks/single_op"
     out_dir.mkdir(parents=True, exist_ok=True)
     gen_count = 0
     for dtype in ("fp32", "fp16"):
         dtype_dir = out_dir / dtype
         dtype_dir.mkdir(parents=True, exist_ok=True)
         for op in OPS:
-            path = dtype_dir / f"singleop_{op['name']}.dsl"
+            path = dtype_dir / f"singleop_{op['name']}.cce"
             path.write_text(render_case(op, dtype), encoding="utf-8")
             gen_count += 1
     print(f"Generated {gen_count} DSL files in {out_dir}")

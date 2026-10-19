@@ -23,7 +23,7 @@ class CoreArchitectureTest(unittest.TestCase):
     def test_model_fallback_dtype_and_default_canonical_schedule(self):
         self.assertEqual(CoreVfCostModel().fallback_dtype, 'fp32')
         self.assertEqual(CoreVfCostModel(fallback_dtype='fp16').fallback_dtype, 'fp16')
-        fixture = Path(__file__).parent / 'fixtures/canonical_vf_info/v1_valid_loop.json'
+        fixture = Path(__file__).resolve().parents[1] / 'VFtest/canonical/fixtures/v1_valid_loop.json'
         vf = InputAPI.load_json(fixture)
         result = CoreVfCostModel(out_dir=None).run_vf_info(vf)
         self.assertEqual((result['cycles_executed'], result['vf_end_cycle']), (35, 47))
@@ -90,7 +90,7 @@ class CoreArchitectureTest(unittest.TestCase):
         self.assertEqual(schedules[0], schedules[1])
 
     def test_internal_storage_identity_cannot_shadow_a_canonical_register(self):
-        fixture = Path(__file__).parent / "fixtures/canonical_vf_info/v1_valid_loop.json"
+        fixture = Path(__file__).resolve().parents[1] / "VFtest/canonical/fixtures/v1_valid_loop.json"
         payload = json.loads(fixture.read_text())
         original = InputAPI.from_canonical(canonical_vf_info_from_dict(payload))
         register_id = "__canonical_ub__ub.input"

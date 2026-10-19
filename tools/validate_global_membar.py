@@ -30,7 +30,7 @@ def main():
     for case in summary['cases']:
         folder = args.out_dir / case['name']
         folder.mkdir(parents=True, exist_ok=True)
-        source = ROOT/'tests/fixtures/membar_timing'/case['fixture']
+        source = ROOT/'VFtest/cce/membar_timing'/case['fixture']
         vf = InputAPI.load_cce(source)
         py_dir = folder/'python'
         result = CoreVfCostModel(base_dir=ROOT, out_dir=py_dir).run_vf_info(vf)

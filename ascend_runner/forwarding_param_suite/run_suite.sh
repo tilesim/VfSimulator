@@ -28,7 +28,7 @@ run_one() {
   fi
 }
 
-for dsl in "${SCRIPT_DIR}"/cases/fwd_*.dsl; do
+for dsl in "${REPO_ROOT}/VFtest/cce/benchmarks/forwarding"/fwd_*.cce; do
   run_one "${dsl}"
 done
 

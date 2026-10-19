@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 cd /mnt/d/VfSimulator
-for dsl in ascend_runner/forwarding_param_suite/cases/fwd_vadds_to_*.dsl; do
-  stem=$(basename "$dsl" .dsl)
+for dsl in VFtest/cce/benchmarks/forwarding/fwd_vadds_to_*.cce; do
+  stem=$(basename "$dsl" .cce)
   echo "[CASE] $stem"
   bash ascend_runner/current/build_native_simexec.sh "$dsl" "$stem"
   bash ascend_runner/current/run_native_simexec.sh \

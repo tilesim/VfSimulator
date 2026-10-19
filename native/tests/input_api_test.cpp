@@ -103,7 +103,7 @@ int main() {
 
   auto packed = decodeCanonicalVfInfoJson(json::parseFile(
       std::filesystem::path(VFSIM_SOURCE_ROOT) /
-      "tests/fixtures/canonical_vf_info/v2_plt_packed_fp16.json"));
+      "VFtest/canonical/fixtures/v2_plt_packed_fp16.json"));
   if (!validateCanonicalVfInfo(packed).ok())
     throw std::runtime_error("PLT/packed fp16 fixture rejected");
   if (instructionCatalog.lookupMemoryMode("VSTS", "PK_B32")->ubTransferBytes !=
@@ -116,7 +116,7 @@ int main() {
 
   const auto sharedFixtureJson =
       json::parseFile(std::filesystem::path(VFSIM_SOURCE_ROOT) /
-                      "tests/fixtures/canonical_vf_info/v1_valid_loop.json");
+                      "VFtest/canonical/fixtures/v1_valid_loop.json");
   CanonicalVfInfo canonicalContract =
       decodeCanonicalVfInfoJson(sharedFixtureJson);
   if (!validateCanonicalVfInfo(canonicalContract).ok())
@@ -150,7 +150,7 @@ int main() {
         "native validator accepted VSTAS without align-state attributes");
   const auto sharedCarriedJson = json::parseFile(
       std::filesystem::path(VFSIM_SOURCE_ROOT) /
-      "tests/fixtures/canonical_vf_info/v1_valid_loop_carried.json");
+      "VFtest/canonical/fixtures/v1_valid_loop_carried.json");
   CanonicalVfInfo canonicalCarriedContract =
       decodeCanonicalVfInfoJson(sharedCarriedJson);
   if (!validateCanonicalVfInfo(canonicalCarriedContract).ok())
@@ -213,7 +213,7 @@ int main() {
         ", end=" + std::to_string(canonicalCarriedResult.vfEndCycle));
   const auto topBlockJson = json::parseFile(
       std::filesystem::path(VFSIM_SOURCE_ROOT) /
-      "tests/fixtures/canonical_vf_info/v1_valid_top_blocks.json");
+      "VFtest/canonical/fixtures/v1_valid_top_blocks.json");
   const CanonicalVfInfo topBlockContract =
       decodeCanonicalVfInfoJson(topBlockJson);
   const PreparedProgram topBlockRuntime =
@@ -235,7 +235,7 @@ int main() {
         "native canonical loop-epilogue-membar-loop did not complete");
   const auto emptyTopBlockJson = json::parseFile(
       std::filesystem::path(VFSIM_SOURCE_ROOT) /
-      "tests/fixtures/canonical_vf_info/v1_valid_empty_top_block.json");
+      "VFtest/canonical/fixtures/v1_valid_empty_top_block.json");
   const CanonicalVfInfo emptyTopBlockContract =
       decodeCanonicalVfInfoJson(emptyTopBlockJson);
   const PreparedProgram emptyTopBlockRuntime =
@@ -442,7 +442,7 @@ int main() {
 
   const auto sharedInvalidJson = json::parseFile(
       std::filesystem::path(VFSIM_SOURCE_ROOT) /
-      "tests/fixtures/canonical_vf_info/v1_invalid_loop_scope.json");
+      "VFtest/canonical/fixtures/v1_invalid_loop_scope.json");
   const auto sharedInvalidResult =
       validateCanonicalVfInfo(decodeCanonicalVfInfoJson(sharedInvalidJson));
   if (sharedInvalidResult.ok() || sharedInvalidResult.diagnostics.size() != 1 ||

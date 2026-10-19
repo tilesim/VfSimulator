@@ -2,7 +2,7 @@
 set -euo pipefail
 
 if [[ $# -lt 1 ]]; then
-  echo "Usage: $0 <input.dsl|input.cce> [output-name]"
+  echo "Usage: $0 <input.cce> [output-name]"
   exit 1
 fi
 

@@ -1,0 +1,4 @@
+interface:
+  display_name: "VFSim 指令参数标定"
+  short_description: "通过 CCE/CAModel benchmark 标定 VFSim 指令时序、依赖间隔与端口参数"
+  default_prompt: "使用 $vfsim-instruction-benchmark 为指定指令设计并运行 CCE benchmark，提取重构版 VFSim 所需参数并保存测量证据。"

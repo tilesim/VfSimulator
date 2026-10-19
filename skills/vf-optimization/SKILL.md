@@ -31,13 +31,13 @@ python main.py --trace VFtest/canonical/GeLU_poly.json --out_dir results/tmp_mod
 Run model from a CCE/DSL file:
 
 ```bash
-python main.py --cce cce_code/GeLU_poly.dsl --out_dir results/tmp_model/gelu_poly_cce
+python main.py --cce VFtest/cce/GeLU_poly.cce --out_dir results/tmp_model/gelu_poly_cce
 ```
 
 Select a specific CCE VF kernel when one file has multiple `__VEC_SCOPE__` kernels:
 
 ```bash
-python main.py --cce cce_code/example.dsl --cce-kernel my_vf_kernel --out_dir results/tmp_model/example
+python main.py --cce VFtest/cce/example.cce --cce-kernel my_vf_kernel --out_dir results/tmp_model/example
 ```
 
 Run the two currently kept theoretical-limit candidates:
