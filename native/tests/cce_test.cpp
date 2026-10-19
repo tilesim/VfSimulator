@@ -255,11 +255,29 @@ json::Value normalizeSourcePaths(const json::Value &value) {
   return value;
 }
 
+void predicateMemoryAndMasks(Inputs &in) {
+  auto vf = in.parse("void vf(__ubuf__ uint32_t *spill){__VEC_SCOPE__{"
+                     "vector_bool p;__ubuf__ uint32_t *slot=spill+8;"
+                     "plds(p,slot,-32,NORM);psts(p,slot,32,NORM);}}");
+  const auto &load = inst(vf.context[0]);
+  const auto &store = inst(vf.context[1]);
+  require(load.inputs[0].memoryAccess->offset.constant == 0 &&
+              store.outputs[0].memoryAccess->offset.constant == 64 &&
+              load.inputs[0].memoryAccess->addressUnitBytes == 1 &&
+              load.inputs[0].memoryAccess->span == 32,
+          "Predicate spill pointer aliases and byte offsets must use distinct "
+          "units");
+  for (const auto *body :
+       {"movp_b32(a);", "plds(a,p,0,NORM);", "plds(mask,p,0,NORM,POST_UPDATE);",
+        "plds(mask,p,0,BRC_B32);"})
+    in.rejects(scope(body), "");
+}
+
 void canonicalContractFixtures() {
   const auto root =
       std::filesystem::path(VFSIM_SOURCE_ROOT) / "VFtest/cce/contracts";
-  for (const auto *name :
-       {"mixed", "alias", "packed", "post_update", "align", "conversion"}) {
+  for (const auto *name : {"mixed", "alias", "packed", "post_update", "align",
+                           "conversion", "movp", "predicate_spill"}) {
     const auto vf = InputAPI::loadCce(root / (std::string(name) + ".cce"));
     const auto expected = json::parseFile(
         std::filesystem::path(VFSIM_SOURCE_ROOT) /
@@ -280,5 +298,6 @@ int main() {
   predicateValues(inputs);
   alignState(inputs);
   packedAndConversions(inputs);
+  predicateMemoryAndMasks(inputs);
   canonicalContractFixtures();
 }

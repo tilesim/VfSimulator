@@ -569,6 +569,18 @@ class ScopeParser {
       allUpdated_.insert(state);
     }
     auto address = ref->second;
+    if (spec.memoryAddressUnitBytes) {
+      if (spec.memoryAddressUnitBytes != 1)
+        throw std::runtime_error(
+            "Only byte-addressed fixed-unit CCE memory operands are supported");
+      static const std::map<std::string, int> widths{
+          {"fp32", 4},  {"int32", 4},  {"uint32", 4}, {"fp16", 2}, {"bf16", 2},
+          {"int16", 2}, {"uint16", 2}, {"int8", 1},   {"uint8", 1}};
+      auto width = widths.find(scalarDtype(symbols_.ubDtypes.at(ref->first)));
+      if (width == widths.end())
+        throw std::runtime_error("Unknown pointer width for " + spec.opcode);
+      address = "(" + address + ")*" + std::to_string(width->second);
+    }
     if (!post && offset &&
         static_cast<size_t>(offset->argumentIndex) < args.size()) {
       auto raw = trim(args[offset->argumentIndex]);
@@ -592,7 +604,10 @@ class ScopeParser {
              spec.instructionClass == CatalogInstructionClass::Load
                  ? CanonicalAccessKind::Read
                  : CanonicalAccessKind::Write,
-             address, span, state, post ? "post_update" : "none", deltaBytes}};
+             address, span, state, post ? "post_update" : "none", deltaBytes,
+             spec.memoryAddressUnitBytes
+                 ? std::optional<int64_t>(spec.memoryAddressUnitBytes)
+                 : std::nullopt}};
   }
   std::vector<AdapterNode> statement(const std::string &stmt, int64_t line) {
     predicatePrefix_.clear();
@@ -642,9 +657,13 @@ class ScopeParser {
     if (std::regex_match(
             stmt, m,
             std::regex(
-                R"(([A-Za-z_]\w*)\s*=\s*(pset_b(?:8|16|32))\s*\(([\s\S]*)\)\s*;)")))
-      return statement(m[2].str() + "(" + m[1].str() + ", " + m[3].str() + ");",
-                       line);
+                R"(([A-Za-z_]\w*)\s*=\s*(pset_b(?:8|16|32)|movp_b(?:16|32))\s*\(([\s\S]*)\)\s*;)"))) {
+      auto args = splitArguments(m[3]);
+      std::string bound = m[1];
+      for (const auto &arg : args)
+        bound += ", " + arg;
+      return statement(m[2].str() + "(" + bound + ");", line);
+    }
     if (std::regex_match(stmt, m,
                          std::regex(R"(SMEM_BAR\s*\.\s*([A-Za-z_]\w*)\s*;)",
                                     std::regex::icase))) {

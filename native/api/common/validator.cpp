@@ -394,6 +394,12 @@ validateCanonicalVfInfo(const CanonicalVfInfo &vfInfo) {
                     inst->sourceLocation);
             else
               hasMemory = true;
+            if (memory.addressUnitBytes && *memory.addressUnitBytes != 1 &&
+                *memory.addressUnitBytes != 2 &&
+                *memory.addressUnitBytes != 4 && *memory.addressUnitBytes != 8)
+              error("invalid_address_unit",
+                    "Address unit must be 1, 2, 4 or 8 bytes", operandPath,
+                    inst->sourceLocation);
             if (memory.span && *memory.span <= 0)
               error("invalid_memory_span", "Memory span must be positive",
                     operandPath, inst->sourceLocation);

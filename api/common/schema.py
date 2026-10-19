@@ -74,6 +74,8 @@ class MemoryAccess:
     address_state_id: str | None = None
     update_mode: str = "none"
     post_update_delta_bytes: AffineExpression | None = None
+    # None uses memory elements; an explicit unit measures offsets and span in bytes per unit.
+    address_unit_bytes: int | None = None
 
 
 @dataclass(frozen=True)

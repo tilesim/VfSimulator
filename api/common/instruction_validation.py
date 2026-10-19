@@ -88,6 +88,8 @@ def validate_instruction_form(
                 error("catalog_implicit_update_mismatch", "Memory access must declare its Catalog implicit pointer update", path=node_path)
             if expected_span is not None and memory.span != expected_span:
                 error("catalog_memory_span_mismatch", "Memory span conflicts with Catalog form", path=node_path)
+            if memory.address_unit_bytes != catalog_spec.memory_address_unit_bytes:
+                error("catalog_memory_address_unit_mismatch", "Address unit conflicts with Catalog", path=node_path)
     return catalog_spec
 
 

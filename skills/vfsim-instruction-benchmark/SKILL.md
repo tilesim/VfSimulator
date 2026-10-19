@@ -42,7 +42,8 @@ LOAD/STORE 分别测量自身的 `latency`。LOAD→compute、compute→STORE �
 - [pressure.py](scripts/pressure.py)：谓词压力探针；[analyze_pressure.py](scripts/analyze_pressure.py) 分析资源和 spill 证据。
 - [host.cpp](assets/host.cpp)：探针的 CAModel host 程序。
 
-复用已有结论时，按目标读取 [谓词数值验证](references/predicate-validation.md)、[谓词压力实验](references/predicate-pressure.md) 或 [VAXPY FP32 测量](references/vaxpy-timing.md)。
+复用已有结论时，按目标读取 [谓词数值验证](references/predicate-validation.md)、[谓词压力实验](references/predicate-pressure.md)、[VAXPY FP32 测量](references/vaxpy-timing.md)、
+[谓词 spill](references/predicate-spill.md) 或 [MOVP 与 VMOV 转发](references/movp-timing.md)。
 
 ## 设计与执行实验
 

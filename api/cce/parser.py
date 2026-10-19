@@ -319,10 +319,11 @@ class _VFScopeParser:
                 source=self._typed_register(src),
                 source_location=self._source_location(line),
             )
-        assignment = re.fullmatch(r"([A-Za-z_]\w*)\s*=\s*(pset_b(?:8|16|32))\s*\((.*)\)\s*;", stmt, re.DOTALL)
+        assignment = re.fullmatch(r"([A-Za-z_]\w*)\s*=\s*(pset_b(?:8|16|32)|movp_b(?:16|32))\s*\((.*)\)\s*;", stmt, re.DOTALL)
         if assignment:
             name, call, arguments = assignment.groups()
-            return self._parse_statement(f"{call}({name}, {arguments});", induction_variables, line)
+            bound_arguments = ", ".join([name, *_split_args(arguments)])
+            return self._parse_statement(f"{call}({bound_arguments});", induction_variables, line)
         smem_bar = re.match(r"SMEM_BAR\s*\.\s*([A-Za-z_]\w*)\s*;", stmt, re.IGNORECASE)
         if smem_bar:
             return AdapterMembar(
@@ -720,6 +721,15 @@ class _VFScopeParser:
         if ub_reference is None:
             return ()
         base_name, alias_offset = ub_reference
+        if spec.memory_address_unit_bytes is not None:
+            dtype = _cce_scalar_dtype_to_form(self.ub_dtypes.get(base_name, ""))
+            width = {"fp32":4,"int32":4,"uint32":4,"fp16":2,"bf16":2,
+                     "int16":2,"uint16":2,"int8":1,"uint8":1}.get(dtype)
+            if width is None:
+                raise ValueError(f"Unknown pointer width for {spec.opcode}: {dtype}")
+            if spec.memory_address_unit_bytes != 1:
+                raise ValueError("Only byte-addressed fixed-unit CCE memory operands are supported")
+            alias_offset = f"({alias_offset}) * {width}"
         pointer_expression = args[memory_operand.argument_index]
         pointer_name = _strip_ub_reference_wrappers(pointer_expression).split("+", 1)[0].strip()
         state_id = self.pointer_states[pointer_name]
@@ -771,6 +781,7 @@ class _VFScopeParser:
                 ),
                 offset=offset,
                 span=span,
+                address_unit_bytes=spec.memory_address_unit_bytes,
                 mode=mode,
                 address_state_id=state_id,
                 update_mode="post_update" if post_update else "none",

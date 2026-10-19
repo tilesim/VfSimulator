@@ -21,7 +21,8 @@ STORE 使用 SHQ 共用信用，LOAD 使用 LSQ 容量。
 ## 内存描述和 POST_UPDATE
 
 Canonical `MemoryAccess` 提供 UB 对象、affine offset、span、访问方向、地址状态 ID
-和指针更新量。offset/span 使用内存元素单位，`post_update_delta_bytes` 使用字节单位。
+和指针更新量。`address_unit_bytes=None` 时 offset/span 使用内存元素单位；显式值指定每单位的字节数。
+`post_update_delta_bytes` 使用字节单位。
 CCE parser 根据指针 dtype 和 Catalog 的增量编码将更新量转换为字节。
 
 ```cpp
@@ -43,6 +44,14 @@ LSQ 的指令按 LSU 自身依赖和资源规则仲裁。
 
 普通 UB 访问顺序使用显式 Membar 描述。UB 区间冲突的自动分析超出当前执行能力范围。
 地址更新状态和对齐状态分别维护：前者控制指针使用，后者控制加载初始化或存储 flush。
+
+## 谓词保存与恢复
+
+`PSTS` 将 PredicateRegister 写入 UB，`PLDS` 从 UB 生成新的 PredicateRegister 定义。
+两者使用固定 `b8` form、字节地址和 32 B span，分别经过 STORE/LOAD 端口。
+PLDS 的目的值使用谓词物理资源池，PSTS 的源引用沿用消费者开始后的释放规则。
+两者的 latency 为 9，UB 调度预算各为 256 B；小事务预算属于模型近似。
+UB 写入与后续读取的顺序由 Membar 控制。
 
 ## 双结果和对齐访存
 

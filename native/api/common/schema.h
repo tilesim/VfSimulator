@@ -70,6 +70,7 @@ struct CanonicalMemoryAccess {
   std::optional<std::string> addressStateId;
   std::string updateMode = "none";
   std::optional<CanonicalAffineExpression> postUpdateDeltaBytes;
+  std::optional<int64_t> addressUnitBytes;
 };
 
 struct CanonicalStorageObject {

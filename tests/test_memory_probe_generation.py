@@ -51,6 +51,22 @@ class MemoryProbeGenerationTest(unittest.TestCase):
                              (b"\xff"*4 + b"\x00"*(packed_bytes-4))*3)
             self.assertEqual(golden[start+packed_bytes*3:], b"\xa5"*(256-start-packed_bytes*3))
 
+    def test_predicate_store_bitmap_and_guards(self):
+        for suffix, stride in (("", 1), ("16", 2), ("32", 4)):
+            source, data, golden = make_case("predicate_pset_store" + suffix, "fp32", 0, 1)
+            bitmap = sum(1 << bit for bit in range(0, 256, stride)).to_bytes(32, "little")
+            self.assertEqual(golden[:32], data[:32])
+            self.assertEqual(golden[32:64], bitmap)
+            self.assertEqual(golden[64:], data[64:256])
+            self.assertIn("psts(p,saved,32,NORM)", source)
+
+    def test_predicate_reload_uses_sparse_mask(self):
+        _, data, golden = make_case("predicate_load_select", "fp32", 0, 1)
+        values = struct.unpack("<256f", data)
+        selected = struct.unpack("<64f", golden)
+        self.assertEqual(selected, tuple(values[i] if i % 2 == 0 else values[64 + i] for i in range(64)))
+        self.assertEqual(data[768:800], sum(1 << (4 * i) for i in range(0, 64, 2)).to_bytes(32, "little"))
+
     def test_out_of_bounds_rejected(self):
         with self.assertRaises(ValueError):
             make_case("vldus", "fp32", 100, 3)

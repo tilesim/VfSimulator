@@ -13,7 +13,7 @@ python3 -m unittest tests.test_ooo_dispatch
 | 值版本化与执行准备 | `test_value_versioning`、`test_core_lowering`、`test_core_architecture` |
 | 组件及计算调度 | `test_component_lifecycle`、`test_ooo_dispatch`、`test_physical_register_bank`、`test_predicate_registers` |
 | 访存和控制 | `test_post_update_address_state`、`test_ub_shared_issue_slots`、`test_membar_timing` |
-| 指令和模式 | `test_vmov`、`test_interleave`、`test_pstu`、`test_vldas_vldus`、`test_vlds_deinterleave`、`test_packed_memory_modes` |
+| 指令和模式 | `test_vmov`、`test_movp`、`test_predicate_spill`、`test_interleave`、`test_pstu`、`test_vldas_vldus`、`test_vlds_deinterleave`、`test_packed_memory_modes` |
 | 参数与输出 | `test_parameter_loading`、`test_instruction_catalog`、`test_instruction_fallback`、`test_perfetto_trace` |
 
 `core_support.py` 提供测试环境、片段解析、动态展开、Engine 组装和日志读取。

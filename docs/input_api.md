@@ -71,7 +71,9 @@ JSON adapter 检查文件格式并直接反序列化 Canonical。Builder 和直�
 `AffineExpression` 以常量和 `AffineTerm(variable_id, coefficient)` 表示地址表达式。
 CCE 的 affine 解析位于 [affine.py](../api/cce/affine.py)。
 `(a+b)*64+d*64` 可以表示为三个系数均为 64 的项；变量乘变量超出 affine 范围。
-`MemoryAccess.offset` 和 `span` 使用内存元素单位，`post_update_delta_bytes` 使用字节单位。
+`MemoryAccess.address_unit_bytes=None` 时，offset/span 使用内存元素单位；显式值表示每个单位的字节数。
+`PLDS/PSTS` 使用 `address_unit_bytes=1`、`span=32`，第三个 CCE 参数按字节计。
+指针 alias 的元素偏移先按指针宽度转换，再与指令字节偏移相加。`post_update_delta_bytes` 使用字节单位。
 
 schema v1/v2 的读写由 [serialization.py](../api/json/serialization.py)处理；输出版本
 根据对象所需语义由 `emission_schema_version()` 选择。谓词和循环出口等语义使用 v2。

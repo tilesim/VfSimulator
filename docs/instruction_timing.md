@@ -31,6 +31,7 @@ self-II 使用同端口独立指令样本，并核对编译后动态指令数量
 | VCMP、VCMPS 的 EQ/NE/GT/GE/LT/LE.fp32 | 6 | ALU / EXU01 | 全有效 mask、有限 FP32 样本 |
 | VSEL.fp32 | 6 | ALU / EXU01 | 比较探针中的消费样本 |
 | PAND.b8、POR.b8 | 7 | ALU / EXU01 | 谓词逻辑样本，双端口为模型放置近似 |
+| MOVP_B16.b16、MOVP_B32.b32 | 6 | ALU / EXU01 | 外部 MASK 读取；self-II=1，两个端口均有样本 |
 | MOVVP.uint16 / uint32 / b16 / b32 | 16 | ALU / EXU01 | B16/B32 的 part=0、全零/全一样本 |
 | PSET_B32.b32 | 6 | ALU / EXU01 | B32 latency 和部分 consumer forwarding 已测 |
 | PSET_B16.b16、PSET_B8.b8 | 6 | ALU / EXU01 | 沿用 B32 时序近似 |
@@ -56,6 +57,12 @@ VINTLV/VDINTLV 的两个结果分别参与定义和资源分配，共享 Uop 的
 | VDUP.fp32 → VMOV.fp32 / b32 | 2 | 显式复制探针 |
 | VLDS.fp32 → VMOV.fp32 / b32 | 6 | 普通 NORM 加载探针 |
 | VMOV → VMOV / VSTS | 2 / 4 | 复制依赖链和末端 store |
+| VMOV.fp32 / b32 → VAXPY.fp32 | 2 | 旧目的和显式源两种依赖分别隔离 |
+| MOVP_B16/B32 → VDUP / VSEL | 2 | 分别覆盖 FP16/FP32 |
+| MOVP_B16/B32 → PSTS.b8 | 4 | 谓词保存样本 |
+| PSET_B8/B16/B32、VCMP_EQ.fp32 → PSTS.b8 | 4 | 完整谓词位图及 guard 校验 |
+| PLDS.b8 → VSEL.fp32 / VADDS.fp32 / PAND.b8 / VCMP_EQ.fp32 | 6 | 对应掩码消费者隔离样本 |
+| PLDS.b8 → PSTS.b8 / VSTS.fp32 | 8 | 保存与掩码 STORE 样本 |
 | VINTLV、VDINTLV → VSTS | 9 | 模型统一值；第二输出样本观测为 10 |
 | PSET_B* → `*` | 2 | B32→VDUP/VADD 已隔离，其他位宽和 consumer 使用近似 |
 | VLDAS → VLDUS | 1 | 加载侧内部等待的模型近似 |
@@ -89,6 +96,7 @@ SHQ ready 在 producer issue 后 1 cycle，EXQ 转移再占 1 cycle。
 
 | 样本 | 观测 | 模型表达及范围 |
 | --- | --- | --- |
+| PLDS/PSTS，完整谓词位图 | 独立样本 latency=9；有效载荷 32 B | 固定 b8 form，字节地址，256 B UB 预算近似 |
 | VLDS DINTLV_B32，FP32 offset=0/8 | 单条 RV_VLDI、两个结果、latency=9，VF=51 | 双结果 LOAD，span=128，512 B 预算 |
 | 普通 NORM 双加载 / DINTLV 双加载，8 轮 | VF=75/104；同周期双 LOAD 的周期数为 7/0 | DINTLV 使用 512 B 共享预算，IDU UOP-Split 配额未建模 |
 | VLDAS/VLDUS，FP32/FP16/S32 连续访问 | 各条 latency 常见 9，payload 连续性通过 | 状态初始化和捕获，latency 配置为 9 |
@@ -99,6 +107,11 @@ SHQ ready 在 producer issue 后 1 cycle，EXQ 转移再占 1 cycle。
 PSTU 在 B32/B16 下分别打包 8/16 B，探针对整个哨兵区执行字节校验。
 DINTLV 的双发实验观察到 IDU `UOP-Split number reached`；不同 workload 的总周期差
 同时包含字节数、计算和存储数量变化。混发规则及各模式的完整吞吐仍需独立探针验证。
+
+MOVP、谓词 spill 与 VMOV→VAXPY 的补测参数来源为 `vfinfo-core-api-unification` 的
+`4858c91`、`2bcefb1` 和 `792be98`。测量方法及覆盖范围见标定 skill 的
+[MOVP 记录](../skills/vfsim-instruction-benchmark/references/movp-timing.md)和
+[谓词 spill 记录](../skills/vfsim-instruction-benchmark/references/predicate-spill.md)。
 
 ## 探针和测试
 
@@ -120,4 +133,5 @@ python3 skills/vfsim-instruction-benchmark/scripts/memory_probe.py --kind unpack
 相关模型测试为 `test_ordinary_fp32_onboarding`、`test_ordinary_bf16_onboarding`、
 `test_ordinary_narrow_onboarding`、`test_ordinary_vor_vci_onboarding`、`test_predicate_logic`、
 `test_interleave`、`test_vmov`、`test_vldas_vldus`、`test_pstu` 和 `test_packed_memory_modes`。
+`test_movp`、`test_predicate_spill` 和 `test_vmov` 检查新增指令、字节地址、谓词依赖及输入位置。
 各测试分别核对语义、参数和周期，Native runner 可用于双实现对比。

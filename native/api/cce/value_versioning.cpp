@@ -144,6 +144,7 @@ class Versioner {
                                   program_.params, induction);
       if (access) {
         memory.span = access->span;
+        memory.addressUnitBytes = access->addressUnitBytes;
         memory.addressStateId = access->addressStateId;
         memory.updateMode = access->updateMode;
         if (access->postUpdateDeltaBytes)
