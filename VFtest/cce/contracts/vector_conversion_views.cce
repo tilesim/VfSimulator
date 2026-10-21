@@ -1,0 +1,17 @@
+void vector_conversion_views(__ubuf__ float *input) {
+    __VEC_SCOPE__ {
+        vector_f32 f, out;
+        vector_s32 i, j, narrow;
+        vector_s64 wide, wide_integer;
+        vector_bool p=pset_b8(PAT_ALL);
+        vlds(f,input,0,NORM);
+        vcvt(i,f,p,ROUND_R,RS_ENABLE);
+        vcvt(j,(vector_f32)i,p,ROUND_Z,RS_DISABLE);
+        vcvt(wide,f,p,ROUND_R,RS_ENABLE,PART_EVEN);
+        vcvt(wide_integer,j,p,PART_ODD);
+        vcvt(out,wide_integer,p,ROUND_F,PART_EVEN);
+        vcvt(narrow,wide,p,RS_ENABLE,PART_ODD);
+        vpack((vector_u16 &)j,(vector_u32)j,HIGHER,MODE_UNKNOWN);
+        vunpack((vector_u32 &)j,(vector_u16)j,LOWER);
+    }
+}

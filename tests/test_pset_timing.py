@@ -12,7 +12,7 @@ class PsetTimingTest(unittest.TestCase):
         self.assertEqual(db.get_forwarding_cycles("PSET_B32", "VSTS",
                          producer_form="b32", consumer_form="fp32"), 2)
 
-    def test_assumed_timing(self):
+    def test_measured_timing(self):
         db = ParamDB(base_dir=str(Path(__file__).resolve().parents[1]))
         for width in (8, 16, 32):
             op, form = f"PSET_B{width}", f"b{width}"
@@ -21,7 +21,7 @@ class PsetTimingTest(unittest.TestCase):
             self.assertEqual(db.get_forwarding_cycles(op, "VADD", producer_form=form, consumer_form="fp32"), 2)
             self.assertEqual(db.get_forwarding_cycles(op, "VSTS", producer_form=form, consumer_form="fp32"), 2)
             self.assertEqual(db.get_ii(op, op, prev_form=form, cur_form=form), 1)
-            self.assertEqual(db.get_ii("VADD", op, prev_form="fp32", cur_form=form), 2)
+            self.assertEqual(db.get_ii("VADD", op, prev_form="fp32", cur_form=form), 1)
             self.assertEqual(db.get_ii(op, "VADD", prev_form=form, cur_form="fp32"), 1)
 
 

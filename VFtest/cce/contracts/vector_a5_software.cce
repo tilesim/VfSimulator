@@ -1,0 +1,15 @@
+void vf(__ubuf__ uint64_t *input, __ubuf__ uint64_t *output) {
+    __VEC_SCOPE__ {
+        vector_bool p = pset_b32(PAT_ALL);
+        vector_2xvl_u64 a, b, result;
+        vlds(a, input, 0);
+        vlds(b, input, 64);
+        for (int i = 0; i < 2; ++i) {
+            vadd(result, a, b, p, MODE_ZEROING);
+            a = result;
+            vshls(result, a, 1, p, MODE_MERGING);
+            a = result;
+        }
+        vsts(result, output, 0, p);
+    }
+}

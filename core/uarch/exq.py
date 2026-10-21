@@ -44,12 +44,19 @@ class EXQ:
             previous = queue[-1]
             previous_prediction = int(getattr(previous, 'exq_pred_issue', recv_cycle))
             ii = self.db.get_ii_for_profiles(previous.profile, profile)
-            predicted = max(predicted, previous_prediction + ii)
+            predicted = max(predicted, previous_prediction + ii,
+                            self.exu.next_self_issue_cycle(profile, port))
+            for pending in reversed(queue):
+                if (pending.profile.op == profile.op and
+                        pending.profile.requested_form == profile.requested_form):
+                    predicted = max(predicted, int(pending.exq_pred_issue) +
+                                    self.db.get_ii_for_profiles(pending.profile, profile))
+                    break
         else:
             predicted = max(predicted, self.exu.next_issue_cycle(profile, port, fu_type=profile.fu_type))
         if self.predict_issue_with_cross_fu:
             predicted = max(predicted, self.exu.next_issue_cycle(profile, port))
-        return predicted
+        return self.exu.next_completion_issue_cycle(profile, port, predicted)
 
     def pop_ready(self, port: int, cycle: int):
         best = None

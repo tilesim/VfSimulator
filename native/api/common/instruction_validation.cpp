@@ -59,10 +59,13 @@ const NativeInstructionSpec *validateInstructionForm(
             inst.sourceLocation);
     else {
       catalogSpec = variant;
+      const auto span = variant->memorySpanByForm.find(inst.form);
+      const auto expected = span == variant->memorySpanByForm.end()
+                                ? variant->memorySpan
+                                : span->second;
       for (const auto *operands : {&inst.inputs, &inst.outputs})
         for (const auto &operand : *operands)
-          if (operand.memoryAccess &&
-              operand.memoryAccess->span != variant->memorySpan)
+          if (operand.memoryAccess && operand.memoryAccess->span != expected)
             error("catalog_memory_span_mismatch",
                   "Memory span conflicts with Catalog mode", nodePath,
                   inst.sourceLocation);
@@ -120,6 +123,10 @@ const NativeInstructionSpec *validateInstructionForm(
       error("catalog_instruction_class_mismatch",
             "Instruction class conflicts with Catalog semantics", nodePath,
             inst.sourceLocation);
+    if (catalogSpec->virtualOpcode)
+      error("catalog_lowering_required",
+            "Virtual instruction must be lowered before Canonical input",
+            nodePath, inst.sourceLocation);
     const bool validForm = catalogSpec->virtualOpcode ||
                            catalogSpec->forms.count(inst.form) ||
                            catalogSpec->specializations.count(inst.form);
@@ -214,8 +221,7 @@ void validateInstructionOperands(const CanonicalVfInfo &vfInfo,
                 "Operand dtype conflicts with Catalog signature", operandPath,
                 inst.sourceLocation);
         if (catalogSpec->memorySpan &&
-            (value->second.storage == CanonicalStorageKind::Register ||
-             value->second.storage == CanonicalStorageKind::UB) &&
+            value->second.storage == CanonicalStorageKind::Register &&
             !catalogSpec->forms.count(value->second.dtype))
           error("catalog_operand_dtype_mismatch",
                 "Operand dtype conflicts with Catalog memory mode", operandPath,

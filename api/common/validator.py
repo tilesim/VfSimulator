@@ -6,7 +6,8 @@ from typing import Any, Iterable
 
 from api.common.diagnostics import Diagnostic, DiagnosticSeverity, ValidationResult
 from api.common.instruction_validation import (
-    validate_instruction_form, validate_instruction_operands,
+    validate_instruction_form,
+    validate_instruction_operands,
 )
 from api.common.schema import (
     SUPPORTED_SCHEMA_VERSIONS,
@@ -56,9 +57,7 @@ def validate_canonical_vf_info(vf_info: CanonicalVfInfo) -> ValidationResult:
     current_node_location: SourceLocation | None = None
 
     def error(code: str, message: str, *, location=None, **context: Any) -> None:
-        effective_location = (
-            location if location is not None else current_node_location
-        )
+        effective_location = location if location is not None else current_node_location
         diagnostics.append(
             Diagnostic(
                 code,
@@ -202,16 +201,31 @@ def validate_canonical_vf_info(vf_info: CanonicalVfInfo) -> ValidationResult:
             error("missing_value_dtype", "Value must declare dtype", path=path)
         if value.storage == StorageKind.PREDICATE_REGISTER:
             if vf_info.schema_version != 2:
-                error("predicate_requires_schema_v2", "PredicateRegister requires schema version 2", path=path)
+                error(
+                    "predicate_requires_schema_v2",
+                    "PredicateRegister requires schema version 2",
+                    path=path,
+                )
             if value.dtype != "bool":
-                error("predicate_dtype_mismatch", "PredicateRegister requires bool dtype", path=path)
+                error(
+                    "predicate_dtype_mismatch",
+                    "PredicateRegister requires bool dtype",
+                    path=path,
+                )
             if value.producer_node_id is None:
-                error("predicate_live_in_not_supported", "Predicate values require an explicit producer", path=path)
+                error(
+                    "predicate_live_in_not_supported",
+                    "Predicate values require an explicit producer",
+                    path=path,
+                )
         for index, dim in enumerate(value.shape):
             validate_int64(dim, f"{path}.shape[{index}]", minimum=0)
         validate_location(value.source_location, f"{path}.source_location")
         if value.storage == StorageKind.UB:
-            if not value.storage_object_id or value.storage_object_id not in vf_info.storage_objects:
+            if (
+                not value.storage_object_id
+                or value.storage_object_id not in vf_info.storage_objects
+            ):
                 error(
                     "unknown_storage_object",
                     "UB value must reference a declared storage object",
@@ -286,15 +300,25 @@ def validate_canonical_vf_info(vf_info: CanonicalVfInfo) -> ValidationResult:
                     role=operand.role.value,
                 )
         if operand.dtype is not None and operand.dtype != value.dtype:
-            error("operand_dtype_mismatch", "Operand dtype differs from value", path=path)
+            error(
+                "operand_dtype_mismatch", "Operand dtype differs from value", path=path
+            )
         if direction == "input" and (
             (operand.role == OperandRole.PREDICATE)
             != (value.storage == StorageKind.PREDICATE_REGISTER)
         ):
-            error("predicate_operand_role_mismatch", "Predicate inputs require predicate storage and role", path=path)
+            error(
+                "predicate_operand_role_mismatch",
+                "Predicate inputs require predicate storage and role",
+                path=path,
+            )
         memory = operand.memory_access
         if value.storage == StorageKind.UB and memory is None:
-            error("missing_memory_access", "UB operand requires memory metadata", path=path)
+            error(
+                "missing_memory_access",
+                "UB operand requires memory metadata",
+                path=path,
+            )
             return
         if value.storage != StorageKind.UB and memory is not None:
             error(
@@ -306,7 +330,11 @@ def validate_canonical_vf_info(vf_info: CanonicalVfInfo) -> ValidationResult:
         if memory is None:
             return
         if operand.role != OperandRole.MEMORY:
-            error("memory_operand_role_mismatch", "Memory operand must use memory role", path=path)
+            error(
+                "memory_operand_role_mismatch",
+                "Memory operand must use memory role",
+                path=path,
+            )
         if memory.base_object_id != value.storage_object_id:
             error(
                 "memory_base_object_mismatch",
@@ -316,7 +344,11 @@ def validate_canonical_vf_info(vf_info: CanonicalVfInfo) -> ValidationResult:
                 storage_object_id=value.storage_object_id,
             )
         if memory.base_object_id not in vf_info.storage_objects:
-            error("unknown_memory_base_object", "Memory base object is not declared", path=path)
+            error(
+                "unknown_memory_base_object",
+                "Memory base object is not declared",
+                path=path,
+            )
         expected_kind = AccessKind.READ if direction == "input" else AccessKind.WRITE
         if not isinstance(memory.access_kind, AccessKind):
             error(
@@ -325,29 +357,61 @@ def validate_canonical_vf_info(vf_info: CanonicalVfInfo) -> ValidationResult:
                 path=path,
             )
         elif memory.access_kind != expected_kind:
-            error("memory_access_direction_mismatch", "Memory direction mismatch", path=path)
+            error(
+                "memory_access_direction_mismatch",
+                "Memory direction mismatch",
+                path=path,
+            )
         if memory.span is not None:
-            validate_int64(memory.span, f"{path}.memory_access.span", minimum=1,
-                           code="invalid_memory_span")
+            validate_int64(
+                memory.span,
+                f"{path}.memory_access.span",
+                minimum=1,
+                code="invalid_memory_span",
+            )
         if memory.address_unit_bytes is not None and (
-            type(memory.address_unit_bytes) is not int or memory.address_unit_bytes not in (1, 2, 4, 8)
+            type(memory.address_unit_bytes) is not int
+            or memory.address_unit_bytes not in (1, 2, 4, 8)
         ):
-            error("invalid_address_unit", "Address unit must be 1, 2, 4 or 8 bytes", path=path)
+            error(
+                "invalid_address_unit",
+                "Address unit must be 1, 2, 4 or 8 bytes",
+                path=path,
+            )
         if memory.address_state_id is not None and (
             not isinstance(memory.address_state_id, str) or not memory.address_state_id
         ):
-            error("invalid_address_state", "Address state must be a nonempty string", path=path)
+            error(
+                "invalid_address_state",
+                "Address state must be a nonempty string",
+                path=path,
+            )
         if memory.update_mode not in ("none", "post_update"):
-            error("invalid_address_update", "Unsupported address update mode", path=path)
+            error(
+                "invalid_address_update", "Unsupported address update mode", path=path
+            )
         if memory.update_mode == "post_update":
             if not memory.address_state_id or memory.post_update_delta_bytes is None:
-                error("invalid_address_update", "POST_UPDATE requires state and byte delta", path=path)
+                error(
+                    "invalid_address_update",
+                    "POST_UPDATE requires state and byte delta",
+                    path=path,
+                )
         elif memory.post_update_delta_bytes is not None:
-            error("invalid_address_update", "Only POST_UPDATE may specify a delta", path=path)
-        validate_affine(memory.offset, f"{path}.memory_access.offset", induction_variables)
+            error(
+                "invalid_address_update",
+                "Only POST_UPDATE may specify a delta",
+                path=path,
+            )
+        validate_affine(
+            memory.offset, f"{path}.memory_access.offset", induction_variables
+        )
         if memory.post_update_delta_bytes is not None:
-            validate_affine(memory.post_update_delta_bytes,
-                            f"{path}.memory_access.post_update_delta_bytes", induction_variables)
+            validate_affine(
+                memory.post_update_delta_bytes,
+                f"{path}.memory_access.post_update_delta_bytes",
+                induction_variables,
+            )
 
     def validate_affine(expression, path, induction_variables):
         if not isinstance(expression, AffineExpression):
@@ -358,7 +422,11 @@ def validate_canonical_vf_info(vf_info: CanonicalVfInfo) -> ValidationResult:
         for index, term in enumerate(expression.terms):
             term_path = f"{path}.terms[{index}]"
             if not term.variable_id or term.variable_id in seen_terms:
-                error("invalid_affine_term", "Affine variables must be unique", path=term_path)
+                error(
+                    "invalid_affine_term",
+                    "Affine variables must be unique",
+                    path=term_path,
+                )
             seen_terms.add(term.variable_id)
             validate_int64(term.coefficient, f"{term_path}.coefficient")
             if (
@@ -377,7 +445,10 @@ def validate_canonical_vf_info(vf_info: CanonicalVfInfo) -> ValidationResult:
         consumer = node_info.get(consumer_id)
         if not producer or not consumer:
             return False
-        if producer.order >= consumer.order or consumer.scope[: len(producer.scope)] != producer.scope:
+        if (
+            producer.order >= consumer.order
+            or consumer.scope[: len(producer.scope)] != producer.scope
+        ):
             return False
         if (
             producer.kind == "loop"
@@ -399,8 +470,7 @@ def validate_canonical_vf_info(vf_info: CanonicalVfInfo) -> ValidationResult:
             and not (
                 producer.kind == "loop"
                 and len(loop_info.scope) > len(producer.scope)
-                and loop_info.scope[len(producer.scope)]
-                == value.producer_node_id
+                and loop_info.scope[len(producer.scope)] == value.producer_node_id
             )
         )
 
@@ -414,12 +484,26 @@ def validate_canonical_vf_info(vf_info: CanonicalVfInfo) -> ValidationResult:
                 register_node_id(node.instruction_id, node_path, node.source_location)
                 validate_location(node.source_location, f"{node_path}.source_location")
                 if not node.opcode:
-                    error("missing_opcode", "Instruction must declare opcode", path=node_path)
+                    error(
+                        "missing_opcode",
+                        "Instruction must declare opcode",
+                        path=node_path,
+                    )
                 if not isinstance(node.instruction_class, InstructionClass):
-                    error("missing_instruction_class", "Instruction class is required", path=node_path)
+                    error(
+                        "missing_instruction_class",
+                        "Instruction class is required",
+                        path=node_path,
+                    )
                 if not node.form:
-                    error("missing_instruction_form", "Instruction form is required", path=node_path)
-                catalog_spec = validate_instruction_form(vf_info, node, node_path, error)
+                    error(
+                        "missing_instruction_form",
+                        "Instruction form is required",
+                        path=node_path,
+                    )
+                catalog_spec = validate_instruction_form(
+                    vf_info, node, node_path, error
+                )
                 validate_scalar_map(node.attributes, f"{node_path}.attributes")
                 for operand_index, operand in enumerate(node.inputs):
                     operand_path = f"{node_path}.inputs[{operand_index}]"
@@ -433,8 +517,14 @@ def validate_canonical_vf_info(vf_info: CanonicalVfInfo) -> ValidationResult:
                     value = vf_info.values.get(operand.value_id)
                     if value is not None and value.producer_node_id is not None:
                         if value.producer_node_id == node.instruction_id:
-                            error("self_produced_input", "Input references own output", path=operand_path)
-                        elif not producer_visible_to(value.producer_node_id, node.instruction_id):
+                            error(
+                                "self_produced_input",
+                                "Input references own output",
+                                path=operand_path,
+                            )
+                        elif not producer_visible_to(
+                            value.producer_node_id, node.instruction_id
+                        ):
                             error(
                                 "input_definition_not_visible",
                                 "Input definition producer is not visible before instruction",
@@ -450,7 +540,10 @@ def validate_canonical_vf_info(vf_info: CanonicalVfInfo) -> ValidationResult:
                         induction_variables=induction_variables,
                     )
                     value = vf_info.values.get(operand.value_id)
-                    if value is not None and value.producer_node_id != node.instruction_id:
+                    if (
+                        value is not None
+                        and value.producer_node_id != node.instruction_id
+                    ):
                         error(
                             "output_producer_mismatch",
                             "Output definition must name its producing instruction",
@@ -478,32 +571,47 @@ def validate_canonical_vf_info(vf_info: CanonicalVfInfo) -> ValidationResult:
                     operand.memory_access is not None for operand in node.outputs
                 )
                 if node.instruction_class == InstructionClass.LOAD and not has_read:
-                    error("load_without_memory_read", "Load requires memory read", path=node_path)
-                if node.instruction_class == InstructionClass.LOAD and has_output_memory:
+                    error(
+                        "load_without_memory_read",
+                        "Load requires memory read",
+                        path=node_path,
+                    )
+                if (
+                    node.instruction_class == InstructionClass.LOAD
+                    and has_output_memory
+                ):
                     error(
                         "instruction_class_memory_access_mismatch",
                         "Load instructions cannot write memory",
                         path=node_path,
                     )
                 if node.instruction_class == InstructionClass.STORE and not has_write:
-                    error("store_without_memory_write", "Store requires memory write", path=node_path)
-                if node.instruction_class == InstructionClass.STORE and has_input_memory:
+                    error(
+                        "store_without_memory_write",
+                        "Store requires memory write",
+                        path=node_path,
+                    )
+                if (
+                    node.instruction_class == InstructionClass.STORE
+                    and has_input_memory
+                ):
                     error(
                         "instruction_class_memory_access_mismatch",
                         "Store instructions cannot read memory",
                         path=node_path,
                     )
-                if (
-                    node.instruction_class
-                    in (InstructionClass.COMPUTE, InstructionClass.CONTROL)
-                    and (has_input_memory or has_output_memory)
-                ):
+                if node.instruction_class in (
+                    InstructionClass.COMPUTE,
+                    InstructionClass.CONTROL,
+                ) and (has_input_memory or has_output_memory):
                     error(
                         "instruction_class_memory_access_mismatch",
                         "Compute/control instructions cannot access memory",
                         path=node_path,
                     )
-                validate_instruction_operands(vf_info, node, catalog_spec, node_path, error)
+                validate_instruction_operands(
+                    vf_info, node, catalog_spec, node_path, error
+                )
                 current_node_location = previous_location
                 continue
 
@@ -515,51 +623,105 @@ def validate_canonical_vf_info(vf_info: CanonicalVfInfo) -> ValidationResult:
                 resolve_int(node.induction.start, f"{node_path}.induction.start")
                 step = resolve_int(node.induction.step, f"{node_path}.induction.step")
                 if count is not None and count < 0:
-                    error("invalid_loop_count", "Loop count must be non-negative", path=node_path)
+                    error(
+                        "invalid_loop_count",
+                        "Loop count must be non-negative",
+                        path=node_path,
+                    )
                 if unroll is not None and unroll <= 0:
-                    error("invalid_loop_unroll", "Loop unroll must be positive", path=node_path)
+                    error(
+                        "invalid_loop_unroll",
+                        "Loop unroll must be positive",
+                        path=node_path,
+                    )
                 if step is not None and step == 0:
-                    error("invalid_induction_step", "Induction step cannot be zero", path=node_path)
+                    error(
+                        "invalid_induction_step",
+                        "Induction step cannot be zero",
+                        path=node_path,
+                    )
                 variable_id = node.induction.variable_id
-                if not variable_id or variable_id in induction_variables or variable_id in vf_info.params:
-                    error("invalid_induction_variable", "Induction variable is invalid", path=node_path)
+                if (
+                    not variable_id
+                    or variable_id in induction_variables
+                    or variable_id in vf_info.params
+                ):
+                    error(
+                        "invalid_induction_variable",
+                        "Induction variable is invalid",
+                        path=node_path,
+                    )
                 loop_info = node_info.get(node.loop_id)
                 loop_scope = (loop_info.scope if loop_info else ()) + (node.loop_id,)
                 carried_logical_ids: set[str] = set()
                 for carried_index, carried in enumerate(node.carried_values):
                     carried_path = f"{node_path}.carried_values[{carried_index}]"
-                    if not carried.logical_id or carried.logical_id in carried_logical_ids:
-                        error("duplicate_loop_carried_value", "Loop-carried logical_id must be unique", path=carried_path)
+                    if (
+                        not carried.logical_id
+                        or carried.logical_id in carried_logical_ids
+                    ):
+                        error(
+                            "duplicate_loop_carried_value",
+                            "Loop-carried logical_id must be unique",
+                            path=carried_path,
+                        )
                     carried_logical_ids.add(carried.logical_id)
                     entry = vf_info.values.get(carried.entry_value_id)
                     back_edge = vf_info.values.get(carried.back_edge_value_id)
                     exit_value = vf_info.values.get(carried.exit_value_id)
                     exit_only = carried.entry_value_id is None
-                    if exit_only and (vf_info.schema_version < 2 or count is None or count <= 0):
-                        error("invalid_loop_exit_only", "Exit-only definitions require v2 and a proven positive loop count", path=carried_path)
-                    definitions = (back_edge, exit_value) if exit_only else (entry, back_edge, exit_value)
-                    if any(value is None for value in definitions):
-                        error("unknown_loop_carried_value", "Unknown loop-carried definition", path=carried_path)
-                        continue
-                    assert back_edge is not None and exit_value is not None
-                    if (
-                        (entry is not None and entry.logical_id != carried.logical_id)
-                        or exit_value.logical_id != carried.logical_id
+                    if exit_only and (
+                        vf_info.schema_version < 2 or count is None or count <= 0
                     ):
                         error(
+                            "invalid_loop_exit_only",
+                            "Exit-only definitions require v2 and a proven positive loop count",
+                            path=carried_path,
+                        )
+                    definitions = (
+                        (back_edge, exit_value)
+                        if exit_only
+                        else (entry, back_edge, exit_value)
+                    )
+                    if any(value is None for value in definitions):
+                        error(
+                            "unknown_loop_carried_value",
+                            "Unknown loop-carried definition",
+                            path=carried_path,
+                        )
+                        continue
+                    assert back_edge is not None and exit_value is not None
+                    if exit_value.logical_id != carried.logical_id:
+                        error(
                             "loop_carried_logical_id_mismatch",
-                            "Loop entry and exit logical IDs must match the carried state",
+                            "Loop exit logical ID must match the carried state",
                             path=carried_path,
                         )
                     metadata = {
-                        (value.storage, value.dtype, value.shape, value.storage_object_id)
+                        (
+                            value.storage,
+                            value.dtype.removeprefix("u")
+                            if value.storage == StorageKind.REGISTER
+                            and isinstance(value.dtype, str)
+                            else value.dtype,
+                            value.shape,
+                            value.storage_object_id,
+                        )
                         for value in definitions
                     }
                     if len(metadata) != 1:
-                        error("loop_carried_type_mismatch", "Loop-carried value metadata must match", path=carried_path)
+                        error(
+                            "loop_carried_type_mismatch",
+                            "Loop-carried value metadata must match",
+                            path=carried_path,
+                        )
                     if entry is not None and entry.producer_node_id is not None:
                         if not definition_visible_before_loop(entry, loop_info):
-                            error("loop_entry_not_visible", "Loop entry is not visible before loop", path=carried_path)
+                            error(
+                                "loop_entry_not_visible",
+                                "Loop entry is not visible before loop",
+                                path=carried_path,
+                            )
                     if carried.back_edge_value_id != carried.entry_value_id:
                         producer = node_info.get(back_edge.producer_node_id or "")
                         visible_at_loop_tail = bool(
@@ -573,11 +735,17 @@ def validate_canonical_vf_info(vf_info: CanonicalVfInfo) -> ValidationResult:
                                 path=carried_path,
                             )
                     if exit_value.producer_node_id != node.loop_id:
-                        error("loop_exit_producer_mismatch", "Loop exit must be produced by loop node", path=carried_path)
+                        error(
+                            "loop_exit_producer_mismatch",
+                            "Loop exit must be produced by loop node",
+                            path=carried_path,
+                        )
                     produced_definitions.setdefault(node.loop_id, []).append(
                         carried.exit_value_id
                     )
-                validate_nodes(node.body, f"{node_path}.body", induction_variables | {variable_id})
+                validate_nodes(
+                    node.body, f"{node_path}.body", induction_variables | {variable_id}
+                )
                 current_node_location = previous_location
                 continue
 
@@ -585,11 +753,17 @@ def validate_canonical_vf_info(vf_info: CanonicalVfInfo) -> ValidationResult:
                 register_node_id(node.instruction_id, node_path, node.source_location)
                 validate_location(node.source_location, f"{node_path}.source_location")
                 if not node.barrier:
-                    error("missing_membar_type", "Membar type is required", path=node_path)
+                    error(
+                        "missing_membar_type", "Membar type is required", path=node_path
+                    )
                 current_node_location = previous_location
                 continue
 
-            error("unsupported_canonical_node", "Unsupported canonical node", path=node_path)
+            error(
+                "unsupported_canonical_node",
+                "Unsupported canonical node",
+                path=node_path,
+            )
             current_node_location = previous_location
 
     validate_nodes(vf_info.context, "context", set())

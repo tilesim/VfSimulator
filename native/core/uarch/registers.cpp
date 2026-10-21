@@ -29,7 +29,7 @@ UopPtr Registers::rename(const DynamicInst &inst, int64_t cycle) {
   u.instId = inst.instId;
   u.op = inst.op;
   u.form = inst.form;
-  u.profile = &db_.inst(u.op, u.form, inst.opClass);
+  u.profile = &db_.inst(u.op, u.form, inst.opClass, inst.catalogMode);
   u.src = inst.src;
   u.dst = inst.dst;
   u.topBlockId = inst.topBlockId;
@@ -135,8 +135,8 @@ int64_t Registers::readyCycle(const Uop &u) const {
 }
 std::optional<int64_t> Registers::alignReady(const Uop &u) const {
   std::vector<std::shared_ptr<AlignProducerRecord>> producers;
-  if (u.alignLoadProducer)
-    producers.push_back(u.alignLoadProducer);
+  if (u.alignPreviousProducer)
+    producers.push_back(u.alignPreviousProducer);
   else if (u.alignStateOperation == "consume" && u.alignGeneration)
     producers = u.alignGeneration->producers;
   else
@@ -145,8 +145,8 @@ std::optional<int64_t> Registers::alignReady(const Uop &u) const {
   for (const auto &p : producers) {
     if (!p->startCycle)
       return 1000000000;
-    ready = std::max(ready, *p->startCycle + db_.forwardingCycles(
-                                                 p->op, p->form, u.op, u.form));
+    ready = std::max(ready, *p->startCycle +
+                                db_.inst(p->op, p->form).alignStateLatency);
   }
   return ready;
 }
@@ -273,7 +273,14 @@ void Registers::bindAlignState(Uop &u, const DynamicInst &inst) {
       if (found == alignLoadInitializers_.end())
         throw std::runtime_error("Uninitialized load align state: " +
                                  inst.alignStateId);
-      u.alignLoadProducer = found->second;
+      u.alignPreviousProducer = found->second;
+      auto record = std::make_shared<AlignProducerRecord>();
+      record->instId = u.instId;
+      record->streamSeq = u.streamSeq;
+      record->op = u.op;
+      record->form = u.form;
+      alignLoadInitializers_[inst.alignStateId] = record;
+      u.alignProducerRecord = record;
     }
     return;
   }
@@ -298,6 +305,8 @@ void Registers::bindAlignState(Uop &u, const DynamicInst &inst) {
   u.alignStateId = inst.alignStateId;
   u.alignGeneration = generation;
   if (inst.alignStateOperation == "append") {
+    if (!generation->producers.empty())
+      u.alignPreviousProducer = generation->producers.back();
     auto record = std::make_shared<AlignProducerRecord>();
     record->instId = u.instId;
     record->streamSeq = u.streamSeq;

@@ -1,0 +1,18 @@
+void common_instruction_pairs(__ubuf__ float *input,__ubuf__ float *output) {
+    __VEC_SCOPE__ {
+        vector_bool p=pset_b32(PAT_ALL),q;
+        vector_f32 a,b,c,d,e,f,g,h,i;
+        vlds(a,input,0,NORM);
+        vlds(b,input,64,NORM);
+        vlds(c,input,128,NORM);
+        vadds(d,a,1.25f,p);
+        vmul(e,d,b,p);
+        vrelu(i,e,p);
+        vmax(f,c,b,p);
+        vsub(g,f,b,p);
+        vcmp_gt(q,e,g,p);
+        vsel(h,e,g,q);
+        vsts(h,output,0,NORM_B32,p);
+        vsts(i,output,64,NORM_B32,p);
+    }
+}

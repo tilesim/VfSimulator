@@ -17,8 +17,8 @@ from core.trace.recorder import TraceRecorder
 from core.trace.writer import SimulationResult, dump_logs
 from api.common.instruction_catalog import DEFAULT_INSTRUCTION_CATALOG
 
-class Engine:
 
+class Engine:
     def __init__(self, program, uarch: UarchParameters, db, fallback_dtype="fp32"):
         self.program = program
         self.uarch = uarch
@@ -36,9 +36,15 @@ class Engine:
         self.exq = EXQ(uarch, db, self.registers, self.exu)
         self.trace = TraceRecorder(self.registers)
         startup = db.vf_timing.startup_cost
-        self.control = TimedMembarController(db, 'fp32', uarch.membar_timing, issue_floor=startup) if uarch.membar_timing is not None else MembarController(db, 'fp32')
+        self.control = (
+            TimedMembarController(db, "fp32", uarch.membar_timing, issue_floor=startup)
+            if uarch.membar_timing is not None
+            else MembarController(db, "fp32")
+        )
         self.lsu = LSU(uarch, db, self.registers, self.shq, self.trace, self.control)
-        self.loops = LoopControl(uarch, program.top_block_loop_bounds, program.empty_top_blocks)
+        self.loops = LoopControl(
+            uarch, program.top_block_loop_bounds, program.empty_top_blocks
+        )
         self.idu = IDU(uarch, db, self.loops, values)
         self.ooo = OoO(uarch, self.registers, self.shq, self.exq, self.exu, self.trace)
         self.ifu = IFU(program.instructions)
@@ -50,21 +56,26 @@ class Engine:
         self.pending_lsq = 0
 
     def admit(self, inst):
-        if not isinstance(inst, DynamicInstruction) or inst.type != 'inst':
-            raise TypeError('Engine admits only prepared Canonical instructions')
-        profile = self.db.resolve_inst(inst.op, inst.form, dtype=self.fallback_dtype,
-                                       instruction_class=inst.op_class)
+        if not isinstance(inst, DynamicInstruction) or inst.type != "inst":
+            raise TypeError("Engine admits only prepared Canonical instructions")
+        profile = self.db.resolve_inst(
+            inst.op,
+            inst.form,
+            dtype=self.fallback_dtype,
+            instruction_class=inst.op_class,
+            memory_mode=inst.attributes.get("catalog_mode"),
+        )
         u = self.registers.rename(inst, profile, self.cycle)
         u.admission_seq = self.next_admission
         self.next_admission += 1
         self.registers.bind_align_state(u, inst.attributes)
-        if profile.op_class in ('LOAD', 'STORE'):
+        if profile.op_class in ("LOAD", "STORE"):
             spec = DEFAULT_INSTRUCTION_CATALOG.lookup(u.op)
-            mode = inst.attributes.get('catalog_mode')
+            mode = inst.attributes.get("catalog_mode")
             if mode is not None:
                 spec = spec.memory_modes.get(mode) if spec else None
             if spec is None or spec.ub_transfer_bytes <= 0:
-                raise ValueError('Missing Catalog UB transfer semantics')
+                raise ValueError("Missing Catalog UB transfer semantics")
             u.ub_transfer_bytes = spec.ub_transfer_bytes
             self.lsu.enqueue(u, self.cycle, self.uarch.ooo_to_lsq_delay)
         else:
@@ -78,13 +89,17 @@ class Engine:
         return (
             sum((values.is_register(x) for x in inst.dst)),
             sum((values.is_predicate(x) for x in inst.dst)),
-            int(inst.op_class == 'COMPUTE'),
-            int(inst.op_class in ('LOAD', 'STORE')),
-            int(inst.op_class in ('COMPUTE', 'STORE'))
+            int(inst.op_class == "COMPUTE"),
+            int(inst.op_class in ("LOAD", "STORE")),
+            int(inst.op_class in ("COMPUTE", "STORE")),
         )
 
     def has_pending(self, seq, cls):
-        return any((i.stream_seq < seq and i.op_class == cls for i in self.idu.window)) or any((i.stream_seq < seq and i.op_class == cls for _, i in self.pipe)) or self.lsu.has_pending_before(seq, cls)
+        return (
+            any((i.stream_seq < seq and i.op_class == cls for i in self.idu.window))
+            or any((i.stream_seq < seq and i.op_class == cls for _, i in self.pipe))
+            or self.lsu.has_pending_before(seq, cls)
+        )
 
     def backend_step(self):
         c = self.cycle
@@ -92,9 +107,11 @@ class Engine:
             component.cycle = c
         self.shq.run_shq_release_events(c)
         self.registers.run_src_release_events(c)
-        completed = sorted([*self.exu.finish(c), *self.lsu.finish(c)], key=lambda u: u.admission_seq)
+        completed = sorted(
+            [*self.exu.finish(c), *self.lsu.finish(c)], key=lambda u: u.admission_seq
+        )
         for u in completed:
-            self.trace._log('done', u)
+            self.trace._log("done", u)
             self.trace._log_done_simple(u)
             self.last_done_cycle = max(self.last_done_cycle, u.done_cycle)
             self.registers.on_uop_done(u)
@@ -120,7 +137,7 @@ class Engine:
                 fu_type, u = selected
                 self.exu.start(u, port, fu_type, c, queued=True)
                 self.registers.on_uop_start(u)
-                self.trace._log('start', u)
+                self.trace._log("start", u)
                 self.trace._log_start_simple(u)
                 used[port] = True
         else:
@@ -130,7 +147,7 @@ class Engine:
 
     def run(self, out_dir):
         delay = self.uarch.idu_to_ooo_delay
-        max_cycles = self.program.params.get('max_cycles', 1000000)
+        max_cycles = self.program.params.get("max_cycles", 1000000)
         completed = False
         while self.cycle < max_cycles:
             c = self.cycle
@@ -139,8 +156,8 @@ class Engine:
             delta = self.registers.update_visibility(c)
             shq_delta = self.shq.update_visibility(c)
             if self.explicit:
-                self.vector_credit += delta['preg_free']
-                self.predicate_credit += delta['predicate_free']
+                self.vector_credit += delta["preg_free"]
+                self.predicate_credit += delta["predicate_free"]
                 self.shq_credit += shq_delta
             while self.pipe and self.pipe[0][0] <= c:
                 _, inst = self.pipe.popleft()
@@ -156,7 +173,7 @@ class Engine:
                         pending[index] += count
             while self.idu.can_accept() and (not self.ifu.done()):
                 inst = self.ifu.next_inst()
-                if inst.type == 'membar':
+                if inst.type == "membar":
                     self.control.accept_membar(inst, c)
                     continue
                 self.idu.accept(inst)
@@ -164,14 +181,31 @@ class Engine:
             self.control.update(
                 self.has_pending,
                 cycle=c,
-                has_pending_dispatch=lambda seq: any((i.stream_seq < seq for i in self.idu.window)) or any((i.stream_seq < seq for _, i in self.pipe))
+                has_pending_dispatch=lambda seq: any(
+                    (i.stream_seq < seq for i in self.idu.window)
+                )
+                or any((i.stream_seq < seq for _, i in self.pipe)),
             )
             budget = DispatchBudget(
-                self.vector_credit if self.explicit else max(0, self.registers.get_free_preg() - pending[0]),
-                self.predicate_credit if self.explicit else max(0, self.registers.get_free_predicate() - pending[1]),
-                max(0, self.shq.get_free_shq_queue() - (self.pending_shq if self.explicit else pending[2])),
-                max(0, self.lsu.get_free_lsq() - (self.pending_lsq if self.explicit else pending[3])),
-                self.shq_credit if self.explicit else max(0, self.shq.get_free_shq() - pending[4])
+                self.vector_credit
+                if self.explicit
+                else max(0, self.registers.get_free_preg() - pending[0]),
+                self.predicate_credit
+                if self.explicit
+                else max(0, self.registers.get_free_predicate() - pending[1]),
+                max(
+                    0,
+                    self.shq.get_free_shq_queue()
+                    - (self.pending_shq if self.explicit else pending[2]),
+                ),
+                max(
+                    0,
+                    self.lsu.get_free_lsq()
+                    - (self.pending_lsq if self.explicit else pending[3]),
+                ),
+                self.shq_credit
+                if self.explicit
+                else max(0, self.shq.get_free_shq() - pending[4]),
             )
             for inst in self.idu.dispatch(c, budget):
                 if self.explicit:
@@ -189,18 +223,28 @@ class Engine:
             self.backend_step()
             self.last_done_cycle = max(
                 self.last_done_cycle,
-                self.control.last_retire_cycle if hasattr(self.control, 'last_retire_cycle') else 0
+                self.control.last_retire_cycle
+                if hasattr(self.control, "last_retire_cycle")
+                else 0,
             )
-            if self.ifu.done() and self.idu.empty() and (not self.active_uops) and (not self.pipe) and self.control.empty():
+            if (
+                self.ifu.done()
+                and self.idu.empty()
+                and (not self.active_uops)
+                and (not self.pipe)
+                and self.control.empty()
+            ):
                 completed = True
                 break
             self.cycle += 1
         if not completed:
-            raise RuntimeError(f'Simulation did not complete before max_cycles: cycle={self.cycle}')
+            raise RuntimeError(
+                f"Simulation did not complete before max_cycles: cycle={self.cycle}"
+            )
         trace_path = dump_logs(self, out_dir) if out_dir is not None else None
         return SimulationResult(
             self.cycle,
             self.last_done_cycle + self.db.vf_timing.drain_cost,
             str(out_dir) if out_dir is not None else None,
-            trace_path
+            trace_path,
         )

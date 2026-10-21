@@ -127,12 +127,12 @@
           "memory_access": {
             "base_object_id": "ub.p",
             "offset": {
-              "constant": 4,
+              "constant": 16,
               "terms": []
             },
             "access_kind": "read",
-            "span": 1,
-            "address_unit_bytes": null,
+            "span": 2,
+            "address_unit_bytes": 1,
             "alias_group": null,
             "address_state_id": "vf:pointer:2:p0",
             "update_mode": "post_update",
@@ -151,7 +151,9 @@
           "memory_access": null
         }
       ],
-      "attributes": {},
+      "attributes": {
+        "catalog_mode": "BRC_B16"
+      },
       "source_location": {
         "source": "vf",
         "line": 1,

@@ -1,0 +1,1539 @@
+{
+  "parameters": {
+    "memory_mode_latency": {
+      "PLDI": {
+        "DS": 9,
+        "NORM": 9,
+        "US": 9
+      },
+      "PSTI": {
+        "NORM": 9,
+        "PK": 9
+      }
+    },
+    "forms": [
+      {
+        "op": "PLDI",
+        "mode": "DS",
+        "latency": 9,
+        "payload_bytes": 64,
+        "forms": [
+          "b8"
+        ],
+        "samples": 4,
+        "reference": "independent byte layout",
+        "runs": [
+          "vfsim-a5-completion-predicate-immediate/batch_000"
+        ]
+      },
+      {
+        "op": "PLDI",
+        "mode": "NORM",
+        "latency": 9,
+        "payload_bytes": 32,
+        "forms": [
+          "b8"
+        ],
+        "samples": 4,
+        "reference": "independent byte layout",
+        "runs": [
+          "vfsim-a5-completion-predicate-immediate/batch_000"
+        ]
+      },
+      {
+        "op": "PLDI",
+        "mode": "US",
+        "latency": 9,
+        "payload_bytes": 16,
+        "forms": [
+          "b8"
+        ],
+        "samples": 4,
+        "reference": "independent byte layout",
+        "runs": [
+          "vfsim-a5-completion-predicate-immediate/batch_000"
+        ]
+      },
+      {
+        "op": "PSTI",
+        "mode": "NORM",
+        "latency": 9,
+        "payload_bytes": 32,
+        "forms": [
+          "b8"
+        ],
+        "samples": 4,
+        "reference": "independent byte layout",
+        "runs": [
+          "vfsim-a5-completion-predicate-immediate/batch_000"
+        ]
+      },
+      {
+        "op": "PSTI",
+        "mode": "PK",
+        "latency": 9,
+        "payload_bytes": 16,
+        "forms": [
+          "b8"
+        ],
+        "samples": 4,
+        "reference": "independent byte layout",
+        "runs": [
+          "vfsim-a5-completion-predicate-immediate/batch_000"
+        ]
+      }
+    ]
+  },
+  "records": [
+    {
+      "api": "pldi",
+      "mode": "NORM",
+      "post": false,
+      "literal": true,
+      "form": "b8",
+      "dtype": "uint8",
+      "result_dtype": "bool",
+      "target_kind": "memory",
+      "payload_bytes": 32,
+      "target_count": 4,
+      "target_opcodes": [
+        "RV_PLDI"
+      ],
+      "output_offset": 0,
+      "output_bytes": 320,
+      "guard_offset": 320,
+      "guard_bytes": 3776,
+      "exact_bytes": true,
+      "passed": true,
+      "mismatch_offsets": [],
+      "guards_passed": true,
+      "vf_pc": [
+        "0x13b42200",
+        "0x13b42220"
+      ],
+      "vf_instruction_id_range": [
+        88,
+        105
+      ],
+      "target_count_actual": 4,
+      "latencies": [
+        9,
+        31,
+        32
+      ],
+      "ports": [
+        null
+      ],
+      "events": [
+        {
+          "cycle": 2932,
+          "pc": 330572304,
+          "id": 92,
+          "op": "RV_PLDI",
+          "operands": "  Pd[1], Sn[66]=0x80, #offset=2, dist:NORAML, #p=1, ",
+          "line": 84,
+          "binary": 51384380,
+          "done": 2941,
+          "latency": 9,
+          "perf_cycle": null,
+          "port": null,
+          "lsu_start": 2932,
+          "pipeline_latency": 9,
+          "dispatch_predicate_sources": []
+        },
+        {
+          "cycle": 2934,
+          "pc": 330572304,
+          "id": 95,
+          "op": "RV_PLDI",
+          "operands": "  Pd[1], Sn[66]=0xc0, #offset=2, dist:NORAML, #p=1, ",
+          "line": 86,
+          "binary": 51384380,
+          "done": 2965,
+          "latency": 31,
+          "perf_cycle": null,
+          "port": null,
+          "lsu_start": 2956,
+          "pipeline_latency": 9,
+          "dispatch_predicate_sources": []
+        },
+        {
+          "cycle": 2957,
+          "pc": 330572304,
+          "id": 98,
+          "op": "RV_PLDI",
+          "operands": "  Pd[1], Sn[66]=0x100, #offset=2, dist:NORAML, #p=1, ",
+          "line": 93,
+          "binary": 51384380,
+          "done": 2989,
+          "latency": 32,
+          "perf_cycle": null,
+          "port": null,
+          "lsu_start": 2980,
+          "pipeline_latency": 9,
+          "dispatch_predicate_sources": []
+        },
+        {
+          "cycle": 2981,
+          "pc": 330572304,
+          "id": 101,
+          "op": "RV_PLDI",
+          "operands": "  Pd[1], Sn[66]=0x140, #offset=2, dist:NORAML, #p=1, ",
+          "line": 97,
+          "binary": 51384380,
+          "done": 3013,
+          "latency": 32,
+          "perf_cycle": null,
+          "port": null,
+          "lsu_start": 3004,
+          "pipeline_latency": 9,
+          "dispatch_predicate_sources": []
+        }
+      ],
+      "port_pressure_events": [],
+      "memory_events": [
+        {
+          "cycle": 2932,
+          "pc": 330572304,
+          "id": 92,
+          "op": "RV_PLDI",
+          "operands": "  Pd[1], Sn[66]=0x80, #offset=2, dist:NORAML, #p=1, ",
+          "line": 84,
+          "binary": 51384380,
+          "done": 2941,
+          "latency": 9,
+          "operands_done_at_issue": true,
+          "lsu_start": 2932,
+          "pipeline_latency": 9
+        },
+        {
+          "cycle": 2934,
+          "pc": 330572304,
+          "id": 95,
+          "op": "RV_PLDI",
+          "operands": "  Pd[1], Sn[66]=0xc0, #offset=2, dist:NORAML, #p=1, ",
+          "line": 86,
+          "binary": 51384380,
+          "done": 2965,
+          "latency": 31,
+          "operands_done_at_issue": true,
+          "lsu_start": 2956,
+          "pipeline_latency": 9
+        },
+        {
+          "cycle": 2940,
+          "pc": 330572308,
+          "id": 93,
+          "op": "RV_PSTS",
+          "operands": "  Pd[1], Sn[67]=0x10040, Sm[64]=0x40, #p=1, dist:NORAML, ",
+          "line": 89,
+          "binary": 1125712065,
+          "done": 2949,
+          "latency": 9,
+          "operands_done_at_issue": false,
+          "lsu_start": 2940,
+          "pipeline_latency": 9
+        },
+        {
+          "cycle": 2957,
+          "pc": 330572304,
+          "id": 98,
+          "op": "RV_PLDI",
+          "operands": "  Pd[1], Sn[66]=0x100, #offset=2, dist:NORAML, #p=1, ",
+          "line": 93,
+          "binary": 51384380,
+          "done": 2989,
+          "latency": 32,
+          "operands_done_at_issue": true,
+          "lsu_start": 2980,
+          "pipeline_latency": 9
+        },
+        {
+          "cycle": 2964,
+          "pc": 330572308,
+          "id": 96,
+          "op": "RV_PSTS",
+          "operands": "  Pd[1], Sn[67]=0x10080, Sm[64]=0x40, #p=1, dist:NORAML, ",
+          "line": 94,
+          "binary": 1125712065,
+          "done": 2973,
+          "latency": 9,
+          "operands_done_at_issue": false,
+          "lsu_start": 2964,
+          "pipeline_latency": 9
+        },
+        {
+          "cycle": 2981,
+          "pc": 330572304,
+          "id": 101,
+          "op": "RV_PLDI",
+          "operands": "  Pd[1], Sn[66]=0x140, #offset=2, dist:NORAML, #p=1, ",
+          "line": 97,
+          "binary": 51384380,
+          "done": 3013,
+          "latency": 32,
+          "operands_done_at_issue": true,
+          "lsu_start": 3004,
+          "pipeline_latency": 9
+        },
+        {
+          "cycle": 2988,
+          "pc": 330572308,
+          "id": 99,
+          "op": "RV_PSTS",
+          "operands": "  Pd[1], Sn[67]=0x100c0, Sm[64]=0x40, #p=1, dist:NORAML, ",
+          "line": 98,
+          "binary": 1125712065,
+          "done": 2997,
+          "latency": 9,
+          "operands_done_at_issue": false,
+          "lsu_start": 2988,
+          "pipeline_latency": 9
+        },
+        {
+          "cycle": 3012,
+          "pc": 330572308,
+          "id": 102,
+          "op": "RV_PSTS",
+          "operands": "  Pd[1], Sn[67]=0x10100, Sm[64]=0x40, #p=1, dist:NORAML, ",
+          "line": 102,
+          "binary": 1125712065,
+          "done": 3021,
+          "latency": 9,
+          "operands_done_at_issue": false,
+          "lsu_start": 3012,
+          "pipeline_latency": 9
+        }
+      ],
+      "recipe_events": [],
+      "supporting_compute_events": [],
+      "all_opcodes": [
+        "RV_PLDI",
+        "RV_PSTS",
+        "RV_SMOV",
+        "RV_SMOVI",
+        "RV_VLOOPv2"
+      ],
+      "forwarding_observations": [
+        {
+          "producer_id": 92,
+          "consumer_id": 93,
+          "producer_op": "RV_PLDI",
+          "consumer_op": "RV_PSTS",
+          "producer_role": "Pd",
+          "role": "Pd",
+          "gap": 8,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": true,
+          "other_sources_ready_at_producer_issue": true
+        },
+        {
+          "producer_id": 95,
+          "consumer_id": 96,
+          "producer_op": "RV_PLDI",
+          "consumer_op": "RV_PSTS",
+          "producer_role": "Pd",
+          "role": "Pd",
+          "gap": 30,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": true,
+          "other_sources_ready_at_producer_issue": true
+        },
+        {
+          "producer_id": 98,
+          "consumer_id": 99,
+          "producer_op": "RV_PLDI",
+          "consumer_op": "RV_PSTS",
+          "producer_role": "Pd",
+          "role": "Pd",
+          "gap": 31,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": true,
+          "other_sources_ready_at_producer_issue": true
+        },
+        {
+          "producer_id": 101,
+          "consumer_id": 102,
+          "producer_op": "RV_PLDI",
+          "consumer_op": "RV_PSTS",
+          "producer_role": "Pd",
+          "role": "Pd",
+          "gap": 31,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": true,
+          "other_sources_ready_at_producer_issue": true
+        }
+      ],
+      "independent_same_port_gaps": [],
+      "single_op_sample": true,
+      "run": "vfsim-a5-completion-predicate-immediate/batch_000"
+    },
+    {
+      "api": "pldi",
+      "mode": "US",
+      "post": false,
+      "literal": true,
+      "form": "b8",
+      "dtype": "uint8",
+      "result_dtype": "bool",
+      "target_kind": "memory",
+      "payload_bytes": 16,
+      "target_count": 4,
+      "target_opcodes": [
+        "RV_PLDI"
+      ],
+      "output_offset": 4096,
+      "output_bytes": 320,
+      "guard_offset": 4416,
+      "guard_bytes": 3776,
+      "exact_bytes": true,
+      "passed": true,
+      "mismatch_offsets": [],
+      "guards_passed": true,
+      "vf_pc": [
+        "0x13b42300",
+        "0x13b42324"
+      ],
+      "vf_instruction_id_range": [
+        105,
+        227
+      ],
+      "target_count_actual": 4,
+      "latencies": [
+        9,
+        31,
+        32
+      ],
+      "ports": [
+        null
+      ],
+      "events": [
+        {
+          "cycle": 3061,
+          "pc": 330572564,
+          "id": 110,
+          "op": "RV_PLDI",
+          "operands": "  Pd[1], Sn[65]=0x1080, #offset=4, dist:US, #p=1, ",
+          "line": 111,
+          "binary": 50864252,
+          "done": 3070,
+          "latency": 9,
+          "perf_cycle": null,
+          "port": null,
+          "lsu_start": 3061,
+          "pipeline_latency": 9,
+          "dispatch_predicate_sources": []
+        },
+        {
+          "cycle": 3063,
+          "pc": 330572564,
+          "id": 113,
+          "op": "RV_PLDI",
+          "operands": "  Pd[1], Sn[65]=0x10c0, #offset=4, dist:US, #p=1, ",
+          "line": 115,
+          "binary": 50864252,
+          "done": 3094,
+          "latency": 31,
+          "perf_cycle": null,
+          "port": null,
+          "lsu_start": 3085,
+          "pipeline_latency": 9,
+          "dispatch_predicate_sources": []
+        },
+        {
+          "cycle": 3086,
+          "pc": 330572564,
+          "id": 116,
+          "op": "RV_PLDI",
+          "operands": "  Pd[1], Sn[65]=0x1100, #offset=4, dist:US, #p=1, ",
+          "line": 120,
+          "binary": 50864252,
+          "done": 3118,
+          "latency": 32,
+          "perf_cycle": null,
+          "port": null,
+          "lsu_start": 3109,
+          "pipeline_latency": 9,
+          "dispatch_predicate_sources": []
+        },
+        {
+          "cycle": 3110,
+          "pc": 330572564,
+          "id": 219,
+          "op": "RV_PLDI",
+          "operands": "  Pd[1], Sn[65]=0x1140, #offset=4, dist:US, #p=1, ",
+          "line": 124,
+          "binary": 50864252,
+          "done": 3142,
+          "latency": 32,
+          "perf_cycle": null,
+          "port": null,
+          "lsu_start": 3133,
+          "pipeline_latency": 9,
+          "dispatch_predicate_sources": []
+        }
+      ],
+      "port_pressure_events": [],
+      "memory_events": [
+        {
+          "cycle": 3061,
+          "pc": 330572564,
+          "id": 110,
+          "op": "RV_PLDI",
+          "operands": "  Pd[1], Sn[65]=0x1080, #offset=4, dist:US, #p=1, ",
+          "line": 111,
+          "binary": 50864252,
+          "done": 3070,
+          "latency": 9,
+          "operands_done_at_issue": true,
+          "lsu_start": 3061,
+          "pipeline_latency": 9
+        },
+        {
+          "cycle": 3063,
+          "pc": 330572564,
+          "id": 113,
+          "op": "RV_PLDI",
+          "operands": "  Pd[1], Sn[65]=0x10c0, #offset=4, dist:US, #p=1, ",
+          "line": 115,
+          "binary": 50864252,
+          "done": 3094,
+          "latency": 31,
+          "operands_done_at_issue": true,
+          "lsu_start": 3085,
+          "pipeline_latency": 9
+        },
+        {
+          "cycle": 3069,
+          "pc": 330572568,
+          "id": 111,
+          "op": "RV_PSTS",
+          "operands": "  Pd[1], Sn[64]=0x11040, Sm[66]=0x40, #p=1, dist:NORAML, ",
+          "line": 116,
+          "binary": 1124143297,
+          "done": 3078,
+          "latency": 9,
+          "operands_done_at_issue": false,
+          "lsu_start": 3069,
+          "pipeline_latency": 9
+        },
+        {
+          "cycle": 3086,
+          "pc": 330572564,
+          "id": 116,
+          "op": "RV_PLDI",
+          "operands": "  Pd[1], Sn[65]=0x1100, #offset=4, dist:US, #p=1, ",
+          "line": 120,
+          "binary": 50864252,
+          "done": 3118,
+          "latency": 32,
+          "operands_done_at_issue": true,
+          "lsu_start": 3109,
+          "pipeline_latency": 9
+        },
+        {
+          "cycle": 3093,
+          "pc": 330572568,
+          "id": 114,
+          "op": "RV_PSTS",
+          "operands": "  Pd[1], Sn[64]=0x11080, Sm[66]=0x40, #p=1, dist:NORAML, ",
+          "line": 121,
+          "binary": 1124143297,
+          "done": 3102,
+          "latency": 9,
+          "operands_done_at_issue": false,
+          "lsu_start": 3093,
+          "pipeline_latency": 9
+        },
+        {
+          "cycle": 3110,
+          "pc": 330572564,
+          "id": 219,
+          "op": "RV_PLDI",
+          "operands": "  Pd[1], Sn[65]=0x1140, #offset=4, dist:US, #p=1, ",
+          "line": 124,
+          "binary": 50864252,
+          "done": 3142,
+          "latency": 32,
+          "operands_done_at_issue": true,
+          "lsu_start": 3133,
+          "pipeline_latency": 9
+        },
+        {
+          "cycle": 3117,
+          "pc": 330572568,
+          "id": 117,
+          "op": "RV_PSTS",
+          "operands": "  Pd[1], Sn[64]=0x110c0, Sm[66]=0x40, #p=1, dist:NORAML, ",
+          "line": 125,
+          "binary": 1124143297,
+          "done": 3126,
+          "latency": 9,
+          "operands_done_at_issue": false,
+          "lsu_start": 3117,
+          "pipeline_latency": 9
+        },
+        {
+          "cycle": 3141,
+          "pc": 330572568,
+          "id": 223,
+          "op": "RV_PSTS",
+          "operands": "  Pd[1], Sn[64]=0x11100, Sm[66]=0x40, #p=1, dist:NORAML, ",
+          "line": 129,
+          "binary": 1124143297,
+          "done": 3150,
+          "latency": 9,
+          "operands_done_at_issue": false,
+          "lsu_start": 3141,
+          "pipeline_latency": 9
+        }
+      ],
+      "recipe_events": [],
+      "supporting_compute_events": [],
+      "all_opcodes": [
+        "RV_PLDI",
+        "RV_PSTS",
+        "RV_SADD",
+        "RV_SMOVI",
+        "RV_VLOOPv2"
+      ],
+      "forwarding_observations": [
+        {
+          "producer_id": 110,
+          "consumer_id": 111,
+          "producer_op": "RV_PLDI",
+          "consumer_op": "RV_PSTS",
+          "producer_role": "Pd",
+          "role": "Pd",
+          "gap": 8,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": true,
+          "other_sources_ready_at_producer_issue": true
+        },
+        {
+          "producer_id": 113,
+          "consumer_id": 114,
+          "producer_op": "RV_PLDI",
+          "consumer_op": "RV_PSTS",
+          "producer_role": "Pd",
+          "role": "Pd",
+          "gap": 30,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": true,
+          "other_sources_ready_at_producer_issue": true
+        },
+        {
+          "producer_id": 116,
+          "consumer_id": 117,
+          "producer_op": "RV_PLDI",
+          "consumer_op": "RV_PSTS",
+          "producer_role": "Pd",
+          "role": "Pd",
+          "gap": 31,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": true,
+          "other_sources_ready_at_producer_issue": true
+        },
+        {
+          "producer_id": 219,
+          "consumer_id": 223,
+          "producer_op": "RV_PLDI",
+          "consumer_op": "RV_PSTS",
+          "producer_role": "Pd",
+          "role": "Pd",
+          "gap": 31,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": true,
+          "other_sources_ready_at_producer_issue": true
+        }
+      ],
+      "independent_same_port_gaps": [],
+      "single_op_sample": true,
+      "run": "vfsim-a5-completion-predicate-immediate/batch_000"
+    },
+    {
+      "api": "pldi",
+      "mode": "DS",
+      "post": false,
+      "literal": true,
+      "form": "b8",
+      "dtype": "uint8",
+      "result_dtype": "bool",
+      "target_kind": "memory",
+      "payload_bytes": 64,
+      "target_count": 4,
+      "target_opcodes": [
+        "RV_PLDI"
+      ],
+      "output_offset": 8192,
+      "output_bytes": 320,
+      "guard_offset": 8512,
+      "guard_bytes": 3776,
+      "exact_bytes": true,
+      "passed": true,
+      "mismatch_offsets": [],
+      "guards_passed": true,
+      "vf_pc": [
+        "0x13b42400",
+        "0x13b42424"
+      ],
+      "vf_instruction_id_range": [
+        227,
+        350
+      ],
+      "target_count_actual": 4,
+      "latencies": [
+        9,
+        31,
+        32
+      ],
+      "ports": [
+        null
+      ],
+      "events": [
+        {
+          "cycle": 3190,
+          "pc": 330572820,
+          "id": 232,
+          "op": "RV_PLDI",
+          "operands": "  Pd[1], Sn[65]=0x2080, #offset=2, dist:DS, #p=1, ",
+          "line": 138,
+          "binary": 50860220,
+          "done": 3199,
+          "latency": 9,
+          "perf_cycle": null,
+          "port": null,
+          "lsu_start": 3190,
+          "pipeline_latency": 9,
+          "dispatch_predicate_sources": []
+        },
+        {
+          "cycle": 3192,
+          "pc": 330572820,
+          "id": 235,
+          "op": "RV_PLDI",
+          "operands": "  Pd[1], Sn[65]=0x20c0, #offset=2, dist:DS, #p=1, ",
+          "line": 142,
+          "binary": 50860220,
+          "done": 3223,
+          "latency": 31,
+          "perf_cycle": null,
+          "port": null,
+          "lsu_start": 3214,
+          "pipeline_latency": 9,
+          "dispatch_predicate_sources": []
+        },
+        {
+          "cycle": 3215,
+          "pc": 330572820,
+          "id": 238,
+          "op": "RV_PLDI",
+          "operands": "  Pd[1], Sn[65]=0x2100, #offset=2, dist:DS, #p=1, ",
+          "line": 147,
+          "binary": 50860220,
+          "done": 3247,
+          "latency": 32,
+          "perf_cycle": null,
+          "port": null,
+          "lsu_start": 3238,
+          "pipeline_latency": 9,
+          "dispatch_predicate_sources": []
+        },
+        {
+          "cycle": 3239,
+          "pc": 330572820,
+          "id": 342,
+          "op": "RV_PLDI",
+          "operands": "  Pd[1], Sn[65]=0x2140, #offset=2, dist:DS, #p=1, ",
+          "line": 151,
+          "binary": 50860220,
+          "done": 3271,
+          "latency": 32,
+          "perf_cycle": null,
+          "port": null,
+          "lsu_start": 3262,
+          "pipeline_latency": 9,
+          "dispatch_predicate_sources": []
+        }
+      ],
+      "port_pressure_events": [],
+      "memory_events": [
+        {
+          "cycle": 3190,
+          "pc": 330572820,
+          "id": 232,
+          "op": "RV_PLDI",
+          "operands": "  Pd[1], Sn[65]=0x2080, #offset=2, dist:DS, #p=1, ",
+          "line": 138,
+          "binary": 50860220,
+          "done": 3199,
+          "latency": 9,
+          "operands_done_at_issue": true,
+          "lsu_start": 3190,
+          "pipeline_latency": 9
+        },
+        {
+          "cycle": 3192,
+          "pc": 330572820,
+          "id": 235,
+          "op": "RV_PLDI",
+          "operands": "  Pd[1], Sn[65]=0x20c0, #offset=2, dist:DS, #p=1, ",
+          "line": 142,
+          "binary": 50860220,
+          "done": 3223,
+          "latency": 31,
+          "operands_done_at_issue": true,
+          "lsu_start": 3214,
+          "pipeline_latency": 9
+        },
+        {
+          "cycle": 3198,
+          "pc": 330572824,
+          "id": 233,
+          "op": "RV_PSTS",
+          "operands": "  Pd[1], Sn[64]=0x12040, Sm[66]=0x40, #p=1, dist:NORAML, ",
+          "line": 143,
+          "binary": 1124143297,
+          "done": 3207,
+          "latency": 9,
+          "operands_done_at_issue": false,
+          "lsu_start": 3198,
+          "pipeline_latency": 9
+        },
+        {
+          "cycle": 3215,
+          "pc": 330572820,
+          "id": 238,
+          "op": "RV_PLDI",
+          "operands": "  Pd[1], Sn[65]=0x2100, #offset=2, dist:DS, #p=1, ",
+          "line": 147,
+          "binary": 50860220,
+          "done": 3247,
+          "latency": 32,
+          "operands_done_at_issue": true,
+          "lsu_start": 3238,
+          "pipeline_latency": 9
+        },
+        {
+          "cycle": 3222,
+          "pc": 330572824,
+          "id": 236,
+          "op": "RV_PSTS",
+          "operands": "  Pd[1], Sn[64]=0x12080, Sm[66]=0x40, #p=1, dist:NORAML, ",
+          "line": 148,
+          "binary": 1124143297,
+          "done": 3231,
+          "latency": 9,
+          "operands_done_at_issue": false,
+          "lsu_start": 3222,
+          "pipeline_latency": 9
+        },
+        {
+          "cycle": 3239,
+          "pc": 330572820,
+          "id": 342,
+          "op": "RV_PLDI",
+          "operands": "  Pd[1], Sn[65]=0x2140, #offset=2, dist:DS, #p=1, ",
+          "line": 151,
+          "binary": 50860220,
+          "done": 3271,
+          "latency": 32,
+          "operands_done_at_issue": true,
+          "lsu_start": 3262,
+          "pipeline_latency": 9
+        },
+        {
+          "cycle": 3246,
+          "pc": 330572824,
+          "id": 239,
+          "op": "RV_PSTS",
+          "operands": "  Pd[1], Sn[64]=0x120c0, Sm[66]=0x40, #p=1, dist:NORAML, ",
+          "line": 152,
+          "binary": 1124143297,
+          "done": 3255,
+          "latency": 9,
+          "operands_done_at_issue": false,
+          "lsu_start": 3246,
+          "pipeline_latency": 9
+        },
+        {
+          "cycle": 3270,
+          "pc": 330572824,
+          "id": 346,
+          "op": "RV_PSTS",
+          "operands": "  Pd[1], Sn[64]=0x12100, Sm[66]=0x40, #p=1, dist:NORAML, ",
+          "line": 156,
+          "binary": 1124143297,
+          "done": 3279,
+          "latency": 9,
+          "operands_done_at_issue": false,
+          "lsu_start": 3270,
+          "pipeline_latency": 9
+        }
+      ],
+      "recipe_events": [],
+      "supporting_compute_events": [],
+      "all_opcodes": [
+        "RV_PLDI",
+        "RV_PSTS",
+        "RV_SADD",
+        "RV_SMOVI",
+        "RV_VLOOPv2"
+      ],
+      "forwarding_observations": [
+        {
+          "producer_id": 232,
+          "consumer_id": 233,
+          "producer_op": "RV_PLDI",
+          "consumer_op": "RV_PSTS",
+          "producer_role": "Pd",
+          "role": "Pd",
+          "gap": 8,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": true,
+          "other_sources_ready_at_producer_issue": true
+        },
+        {
+          "producer_id": 235,
+          "consumer_id": 236,
+          "producer_op": "RV_PLDI",
+          "consumer_op": "RV_PSTS",
+          "producer_role": "Pd",
+          "role": "Pd",
+          "gap": 30,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": true,
+          "other_sources_ready_at_producer_issue": true
+        },
+        {
+          "producer_id": 238,
+          "consumer_id": 239,
+          "producer_op": "RV_PLDI",
+          "consumer_op": "RV_PSTS",
+          "producer_role": "Pd",
+          "role": "Pd",
+          "gap": 31,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": true,
+          "other_sources_ready_at_producer_issue": true
+        },
+        {
+          "producer_id": 342,
+          "consumer_id": 346,
+          "producer_op": "RV_PLDI",
+          "consumer_op": "RV_PSTS",
+          "producer_role": "Pd",
+          "role": "Pd",
+          "gap": 31,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": true,
+          "other_sources_ready_at_producer_issue": true
+        }
+      ],
+      "independent_same_port_gaps": [],
+      "single_op_sample": true,
+      "run": "vfsim-a5-completion-predicate-immediate/batch_000"
+    },
+    {
+      "api": "psti",
+      "mode": "NORM",
+      "post": false,
+      "literal": true,
+      "form": "b8",
+      "dtype": "uint8",
+      "result_dtype": "bool",
+      "target_kind": "memory",
+      "payload_bytes": 32,
+      "target_count": 4,
+      "target_opcodes": [
+        "RV_PSTI"
+      ],
+      "output_offset": 12288,
+      "output_bytes": 320,
+      "guard_offset": 12608,
+      "guard_bytes": 3776,
+      "exact_bytes": true,
+      "passed": true,
+      "mismatch_offsets": [],
+      "guards_passed": true,
+      "vf_pc": [
+        "0x13b42500",
+        "0x13b42528"
+      ],
+      "vf_instruction_id_range": [
+        350,
+        476
+      ],
+      "target_count_actual": 4,
+      "latencies": [
+        9
+      ],
+      "ports": [
+        null
+      ],
+      "events": [
+        {
+          "cycle": 3329,
+          "pc": 330573084,
+          "id": 357,
+          "op": "RV_PSTI",
+          "operands": "  Pd[1], Sn[65]=0x13080, #offset=2, #p=1, dist:NORAML, ",
+          "line": 171,
+          "binary": 1124602050,
+          "done": 3338,
+          "latency": 9,
+          "perf_cycle": null,
+          "port": null,
+          "lsu_start": 3329,
+          "pipeline_latency": 9,
+          "dispatch_predicate_sources": [
+            1
+          ]
+        },
+        {
+          "cycle": 3353,
+          "pc": 330573084,
+          "id": 360,
+          "op": "RV_PSTI",
+          "operands": "  Pd[1], Sn[65]=0x130c0, #offset=2, #p=1, dist:NORAML, ",
+          "line": 176,
+          "binary": 1124602050,
+          "done": 3362,
+          "latency": 9,
+          "perf_cycle": null,
+          "port": null,
+          "lsu_start": 3353,
+          "pipeline_latency": 9,
+          "dispatch_predicate_sources": [
+            1
+          ]
+        },
+        {
+          "cycle": 3377,
+          "pc": 330573084,
+          "id": 463,
+          "op": "RV_PSTI",
+          "operands": "  Pd[1], Sn[65]=0x13100, #offset=2, #p=1, dist:NORAML, ",
+          "line": 180,
+          "binary": 1124602050,
+          "done": 3386,
+          "latency": 9,
+          "perf_cycle": null,
+          "port": null,
+          "lsu_start": 3377,
+          "pipeline_latency": 9,
+          "dispatch_predicate_sources": [
+            1
+          ]
+        },
+        {
+          "cycle": 3401,
+          "pc": 330573084,
+          "id": 471,
+          "op": "RV_PSTI",
+          "operands": "  Pd[1], Sn[65]=0x13140, #offset=2, #p=1, dist:NORAML, ",
+          "line": 184,
+          "binary": 1124602050,
+          "done": 3410,
+          "latency": 9,
+          "perf_cycle": null,
+          "port": null,
+          "lsu_start": 3401,
+          "pipeline_latency": 9,
+          "dispatch_predicate_sources": [
+            1
+          ]
+        }
+      ],
+      "port_pressure_events": [],
+      "memory_events": [
+        {
+          "cycle": 3321,
+          "pc": 330573080,
+          "id": 356,
+          "op": "RV_PLDS",
+          "operands": "  Pd[1], Sn[64]=0x3040, Sm[66]=0x40, dist:NORAML, #p=1, ",
+          "line": 166,
+          "binary": 50401332,
+          "done": 3330,
+          "latency": 9,
+          "operands_done_at_issue": true,
+          "lsu_start": 3321,
+          "pipeline_latency": 9
+        },
+        {
+          "cycle": 3323,
+          "pc": 330573080,
+          "id": 359,
+          "op": "RV_PLDS",
+          "operands": "  Pd[1], Sn[64]=0x3080, Sm[66]=0x40, dist:NORAML, #p=1, ",
+          "line": 170,
+          "binary": 50401332,
+          "done": 3354,
+          "latency": 31,
+          "operands_done_at_issue": true,
+          "lsu_start": 3345,
+          "pipeline_latency": 9
+        },
+        {
+          "cycle": 3329,
+          "pc": 330573084,
+          "id": 357,
+          "op": "RV_PSTI",
+          "operands": "  Pd[1], Sn[65]=0x13080, #offset=2, #p=1, dist:NORAML, ",
+          "line": 171,
+          "binary": 1124602050,
+          "done": 3338,
+          "latency": 9,
+          "operands_done_at_issue": false,
+          "lsu_start": 3329,
+          "pipeline_latency": 9
+        },
+        {
+          "cycle": 3346,
+          "pc": 330573080,
+          "id": 362,
+          "op": "RV_PLDS",
+          "operands": "  Pd[1], Sn[64]=0x30c0, Sm[66]=0x40, dist:NORAML, #p=1, ",
+          "line": 175,
+          "binary": 50401332,
+          "done": 3378,
+          "latency": 32,
+          "operands_done_at_issue": true,
+          "lsu_start": 3369,
+          "pipeline_latency": 9
+        },
+        {
+          "cycle": 3353,
+          "pc": 330573084,
+          "id": 360,
+          "op": "RV_PSTI",
+          "operands": "  Pd[1], Sn[65]=0x130c0, #offset=2, #p=1, dist:NORAML, ",
+          "line": 176,
+          "binary": 1124602050,
+          "done": 3362,
+          "latency": 9,
+          "operands_done_at_issue": false,
+          "lsu_start": 3353,
+          "pipeline_latency": 9
+        },
+        {
+          "cycle": 3370,
+          "pc": 330573080,
+          "id": 469,
+          "op": "RV_PLDS",
+          "operands": "  Pd[1], Sn[64]=0x3100, Sm[66]=0x40, dist:NORAML, #p=1, ",
+          "line": 179,
+          "binary": 50401332,
+          "done": 3402,
+          "latency": 32,
+          "operands_done_at_issue": true,
+          "lsu_start": 3393,
+          "pipeline_latency": 9
+        },
+        {
+          "cycle": 3377,
+          "pc": 330573084,
+          "id": 463,
+          "op": "RV_PSTI",
+          "operands": "  Pd[1], Sn[65]=0x13100, #offset=2, #p=1, dist:NORAML, ",
+          "line": 180,
+          "binary": 1124602050,
+          "done": 3386,
+          "latency": 9,
+          "operands_done_at_issue": false,
+          "lsu_start": 3377,
+          "pipeline_latency": 9
+        },
+        {
+          "cycle": 3401,
+          "pc": 330573084,
+          "id": 471,
+          "op": "RV_PSTI",
+          "operands": "  Pd[1], Sn[65]=0x13140, #offset=2, #p=1, dist:NORAML, ",
+          "line": 184,
+          "binary": 1124602050,
+          "done": 3410,
+          "latency": 9,
+          "operands_done_at_issue": false,
+          "lsu_start": 3401,
+          "pipeline_latency": 9
+        }
+      ],
+      "recipe_events": [],
+      "supporting_compute_events": [],
+      "all_opcodes": [
+        "RV_PLDS",
+        "RV_PSTI",
+        "RV_SADD",
+        "RV_SMOVI",
+        "RV_SMOVK",
+        "RV_VLOOPv2"
+      ],
+      "forwarding_observations": [
+        {
+          "producer_id": 356,
+          "consumer_id": 357,
+          "producer_op": "RV_PLDS",
+          "consumer_op": "RV_PSTI",
+          "producer_role": "Pd",
+          "role": "Pd",
+          "gap": 8,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": true,
+          "other_sources_ready_at_producer_issue": true
+        },
+        {
+          "producer_id": 359,
+          "consumer_id": 360,
+          "producer_op": "RV_PLDS",
+          "consumer_op": "RV_PSTI",
+          "producer_role": "Pd",
+          "role": "Pd",
+          "gap": 30,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": true,
+          "other_sources_ready_at_producer_issue": true
+        },
+        {
+          "producer_id": 362,
+          "consumer_id": 463,
+          "producer_op": "RV_PLDS",
+          "consumer_op": "RV_PSTI",
+          "producer_role": "Pd",
+          "role": "Pd",
+          "gap": 31,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": true,
+          "other_sources_ready_at_producer_issue": true
+        },
+        {
+          "producer_id": 469,
+          "consumer_id": 471,
+          "producer_op": "RV_PLDS",
+          "consumer_op": "RV_PSTI",
+          "producer_role": "Pd",
+          "role": "Pd",
+          "gap": 31,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": true,
+          "other_sources_ready_at_producer_issue": true
+        }
+      ],
+      "independent_same_port_gaps": [],
+      "single_op_sample": true,
+      "run": "vfsim-a5-completion-predicate-immediate/batch_000"
+    },
+    {
+      "api": "psti",
+      "mode": "PK",
+      "post": false,
+      "literal": true,
+      "form": "b8",
+      "dtype": "uint8",
+      "result_dtype": "bool",
+      "target_kind": "memory",
+      "payload_bytes": 16,
+      "target_count": 4,
+      "target_opcodes": [
+        "RV_PSTI"
+      ],
+      "output_offset": 16384,
+      "output_bytes": 320,
+      "guard_offset": 16704,
+      "guard_bytes": 3776,
+      "exact_bytes": true,
+      "passed": true,
+      "mismatch_offsets": [],
+      "guards_passed": true,
+      "vf_pc": [
+        "0x13b42600",
+        "0x13b42628"
+      ],
+      "vf_instruction_id_range": [
+        476,
+        null
+      ],
+      "target_count_actual": 4,
+      "latencies": [
+        9
+      ],
+      "ports": [
+        null
+      ],
+      "events": [
+        {
+          "cycle": 3460,
+          "pc": 330573340,
+          "id": 483,
+          "op": "RV_PSTI",
+          "operands": "  Pd[1], Sn[65]=0x14080, #offset=4, #p=1, dist:PK, ",
+          "line": 198,
+          "binary": 1124606150,
+          "done": 3469,
+          "latency": 9,
+          "perf_cycle": null,
+          "port": null,
+          "lsu_start": 3460,
+          "pipeline_latency": 9,
+          "dispatch_predicate_sources": [
+            1
+          ]
+        },
+        {
+          "cycle": 3484,
+          "pc": 330573340,
+          "id": 486,
+          "op": "RV_PSTI",
+          "operands": "  Pd[1], Sn[65]=0x140c0, #offset=4, #p=1, dist:PK, ",
+          "line": 202,
+          "binary": 1124606150,
+          "done": 3493,
+          "latency": 9,
+          "perf_cycle": null,
+          "port": null,
+          "lsu_start": 3484,
+          "pipeline_latency": 9,
+          "dispatch_predicate_sources": [
+            1
+          ]
+        },
+        {
+          "cycle": 3508,
+          "pc": 330573340,
+          "id": 589,
+          "op": "RV_PSTI",
+          "operands": "  Pd[1], Sn[65]=0x14100, #offset=4, #p=1, dist:PK, ",
+          "line": 206,
+          "binary": 1124606150,
+          "done": 3517,
+          "latency": 9,
+          "perf_cycle": null,
+          "port": null,
+          "lsu_start": 3508,
+          "pipeline_latency": 9,
+          "dispatch_predicate_sources": [
+            1
+          ]
+        },
+        {
+          "cycle": 3532,
+          "pc": 330573340,
+          "id": 597,
+          "op": "RV_PSTI",
+          "operands": "  Pd[1], Sn[65]=0x14140, #offset=4, #p=1, dist:PK, ",
+          "line": 210,
+          "binary": 1124606150,
+          "done": 3541,
+          "latency": 9,
+          "perf_cycle": null,
+          "port": null,
+          "lsu_start": 3532,
+          "pipeline_latency": 9,
+          "dispatch_predicate_sources": [
+            1
+          ]
+        }
+      ],
+      "port_pressure_events": [],
+      "memory_events": [
+        {
+          "cycle": 3452,
+          "pc": 330573336,
+          "id": 482,
+          "op": "RV_PLDS",
+          "operands": "  Pd[1], Sn[64]=0x4040, Sm[66]=0x40, dist:NORAML, #p=1, ",
+          "line": 194,
+          "binary": 50401332,
+          "done": 3461,
+          "latency": 9,
+          "operands_done_at_issue": true,
+          "lsu_start": 3452,
+          "pipeline_latency": 9
+        },
+        {
+          "cycle": 3454,
+          "pc": 330573336,
+          "id": 485,
+          "op": "RV_PLDS",
+          "operands": "  Pd[1], Sn[64]=0x4080, Sm[66]=0x40, dist:NORAML, #p=1, ",
+          "line": 197,
+          "binary": 50401332,
+          "done": 3485,
+          "latency": 31,
+          "operands_done_at_issue": true,
+          "lsu_start": 3476,
+          "pipeline_latency": 9
+        },
+        {
+          "cycle": 3460,
+          "pc": 330573340,
+          "id": 483,
+          "op": "RV_PSTI",
+          "operands": "  Pd[1], Sn[65]=0x14080, #offset=4, #p=1, dist:PK, ",
+          "line": 198,
+          "binary": 1124606150,
+          "done": 3469,
+          "latency": 9,
+          "operands_done_at_issue": false,
+          "lsu_start": 3460,
+          "pipeline_latency": 9
+        },
+        {
+          "cycle": 3477,
+          "pc": 330573336,
+          "id": 488,
+          "op": "RV_PLDS",
+          "operands": "  Pd[1], Sn[64]=0x40c0, Sm[66]=0x40, dist:NORAML, #p=1, ",
+          "line": 201,
+          "binary": 50401332,
+          "done": 3509,
+          "latency": 32,
+          "operands_done_at_issue": true,
+          "lsu_start": 3500,
+          "pipeline_latency": 9
+        },
+        {
+          "cycle": 3484,
+          "pc": 330573340,
+          "id": 486,
+          "op": "RV_PSTI",
+          "operands": "  Pd[1], Sn[65]=0x140c0, #offset=4, #p=1, dist:PK, ",
+          "line": 202,
+          "binary": 1124606150,
+          "done": 3493,
+          "latency": 9,
+          "operands_done_at_issue": false,
+          "lsu_start": 3484,
+          "pipeline_latency": 9
+        },
+        {
+          "cycle": 3501,
+          "pc": 330573336,
+          "id": 595,
+          "op": "RV_PLDS",
+          "operands": "  Pd[1], Sn[64]=0x4100, Sm[66]=0x40, dist:NORAML, #p=1, ",
+          "line": 205,
+          "binary": 50401332,
+          "done": 3533,
+          "latency": 32,
+          "operands_done_at_issue": true,
+          "lsu_start": 3524,
+          "pipeline_latency": 9
+        },
+        {
+          "cycle": 3508,
+          "pc": 330573340,
+          "id": 589,
+          "op": "RV_PSTI",
+          "operands": "  Pd[1], Sn[65]=0x14100, #offset=4, #p=1, dist:PK, ",
+          "line": 206,
+          "binary": 1124606150,
+          "done": 3517,
+          "latency": 9,
+          "operands_done_at_issue": false,
+          "lsu_start": 3508,
+          "pipeline_latency": 9
+        },
+        {
+          "cycle": 3532,
+          "pc": 330573340,
+          "id": 597,
+          "op": "RV_PSTI",
+          "operands": "  Pd[1], Sn[65]=0x14140, #offset=4, #p=1, dist:PK, ",
+          "line": 210,
+          "binary": 1124606150,
+          "done": 3541,
+          "latency": 9,
+          "operands_done_at_issue": false,
+          "lsu_start": 3532,
+          "pipeline_latency": 9
+        }
+      ],
+      "recipe_events": [],
+      "supporting_compute_events": [],
+      "all_opcodes": [
+        "RV_PLDS",
+        "RV_PSTI",
+        "RV_SADD",
+        "RV_SMOVI",
+        "RV_SMOVK",
+        "RV_VLOOPv2"
+      ],
+      "forwarding_observations": [
+        {
+          "producer_id": 482,
+          "consumer_id": 483,
+          "producer_op": "RV_PLDS",
+          "consumer_op": "RV_PSTI",
+          "producer_role": "Pd",
+          "role": "Pd",
+          "gap": 8,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": true,
+          "other_sources_ready_at_producer_issue": true
+        },
+        {
+          "producer_id": 485,
+          "consumer_id": 486,
+          "producer_op": "RV_PLDS",
+          "consumer_op": "RV_PSTI",
+          "producer_role": "Pd",
+          "role": "Pd",
+          "gap": 30,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": true,
+          "other_sources_ready_at_producer_issue": true
+        },
+        {
+          "producer_id": 488,
+          "consumer_id": 589,
+          "producer_op": "RV_PLDS",
+          "consumer_op": "RV_PSTI",
+          "producer_role": "Pd",
+          "role": "Pd",
+          "gap": 31,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": true,
+          "other_sources_ready_at_producer_issue": true
+        },
+        {
+          "producer_id": 595,
+          "consumer_id": 597,
+          "producer_op": "RV_PLDS",
+          "consumer_op": "RV_PSTI",
+          "producer_role": "Pd",
+          "role": "Pd",
+          "gap": 31,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": true,
+          "other_sources_ready_at_producer_issue": true
+        }
+      ],
+      "independent_same_port_gaps": [],
+      "single_op_sample": true,
+      "run": "vfsim-a5-completion-predicate-immediate/batch_000"
+    }
+  ],
+  "runs": [
+    {
+      "run": "vfsim-a5-completion-predicate-immediate/batch_000",
+      "source_directory": "results/a5_instruction_completion_20261020/vfsim-a5-completion-predicate-immediate/batch_000",
+      "sha256": {
+        "kernel.cce": "f5bc5094385069c8990111a89acc03b1d0402410490b77cdca029bf240b14fcb",
+        "input.bin": "2f652fb4c072787c18156be721a51acac310c08127dcf50353c0eb456c0fea7c",
+        "golden.bin": "5a6972c9edbf0272423a17f25c7580c27df33ccb10c982a251448883ae9bbf26",
+        "output.bin": "97dfa0fb4e101e756db6747b675ab0a4c70f7bbd4537124db3f5eacc78daa749",
+        "commands.json": "5c011fbdab80d16cf979d4f41614625c1f2a44b524b21c8d24d7645a7ae000ca",
+        "core0.veccore0.instr_popped_log.dump": "98ec6e033c93f2c437b298e4aabf4f8269ec75ebb7572602551cdc5a4d0f3b31",
+        "core0.veccore0.instr_log.dump": "71b423a2471419c59cfc04c2afe8ded18cde2593804e29b289884827276183bd",
+        "core0.veccore0.rvec.EXU.dump": "b039c07248fe00996d76d975daa328ed513ad90e2946384e2a0761475ab3e707",
+        "core0.veccore0.rvec.LSU.dump": "5afa3b931babdc4daf116ec0f516719ff98e4ade8fe87f64a3e04920a20da2cd",
+        "core0.veccore0.rvec.GSU.dump": "28590a237eac8ffa103b9ec5a483cbfe13fcf71046df336d8601b2c3921486ba",
+        "core0.veccore0.rvec.simd.IDU.DISP.dump": "72a50a7b78052b528054e970ec17eb17f570c69c5ad8fdda9e434f6e0b1ab880"
+      }
+    }
+  ],
+  "changes": [],
+  "conflicts": []
+}

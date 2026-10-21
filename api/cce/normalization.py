@@ -1,17 +1,25 @@
 """Normalize declared CCE values and instruction spellings before versioning."""
+
 from api.common.symbols import (
-    compact_dtype, normalize_dtype, normalize_form, normalize_membar_type,
+    compact_dtype,
+    normalize_dtype,
+    normalize_form,
+    normalize_membar_type,
     normalize_opcode,
 )
 from .ir import (
-    AdapterAlias, AdapterInstruction, AdapterLoop, AdapterMembar,
-    AdapterNode, AdapterProgram, AdapterValue, AdapterValueRef,
+    AdapterAlias,
+    AdapterInstruction,
+    AdapterLoop,
+    AdapterMembar,
+    AdapterNode,
+    AdapterProgram,
+    AdapterValue,
+    AdapterValueRef,
 )
 
 
-def _merge_value(
-    existing: AdapterValue | None, incoming: AdapterValue
-) -> AdapterValue:
+def _merge_value(existing: AdapterValue | None, incoming: AdapterValue) -> AdapterValue:
     if existing is None:
         return incoming
     if existing.storage != incoming.storage:
@@ -44,8 +52,12 @@ def _infer_form(
 ) -> str:
     if inst.form:
         return str(normalize_form(inst.form))
-    src_dtypes = [values[str(item)].dtype for item in inst.src if values[str(item)].dtype]
-    dst_dtypes = [values[str(item)].dtype for item in inst.dst if values[str(item)].dtype]
+    src_dtypes = [
+        values[str(item)].dtype for item in inst.src if values[str(item)].dtype
+    ]
+    dst_dtypes = [
+        values[str(item)].dtype for item in inst.dst if values[str(item)].dtype
+    ]
     if src_dtypes and dst_dtypes and src_dtypes[0] != dst_dtypes[0]:
         return f"{compact_dtype(src_dtypes[0])}_to_{compact_dtype(dst_dtypes[0])}"
     return str(normalize_dtype((dst_dtypes or src_dtypes or [default_dtype])[0]))
@@ -62,7 +74,9 @@ def normalize_adapter_program(program: AdapterProgram) -> AdapterProgram:
             return ref.value_id
         value_id = str(ref)
         if value_id not in values:
-            raise ValueError(f"Adapter operand {value_id!r} has no declared storage and dtype")
+            raise ValueError(
+                f"Adapter operand {value_id!r} has no declared storage and dtype"
+            )
         return value_id
 
     def visit(nodes: list[AdapterNode]) -> list[AdapterNode]:
@@ -102,11 +116,14 @@ def normalize_adapter_program(program: AdapterProgram) -> AdapterProgram:
                         register(node.destination),
                         register(node.source),
                         node.source_location,
+                        node.allow_bitcast,
                     )
                 )
             elif isinstance(node, AdapterMembar):
                 normalized.append(
-                    AdapterMembar(normalize_membar_type(node.type), node.source_location)
+                    AdapterMembar(
+                        normalize_membar_type(node.type), node.source_location
+                    )
                 )
             else:
                 raise TypeError(f"Unsupported adapter node: {type(node).__name__}")

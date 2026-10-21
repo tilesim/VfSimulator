@@ -1,0 +1,412 @@
+{
+  "target": {
+    "cann": "9.0.0-beta.1",
+    "soc": "Ascend950PR_9599",
+    "compiler_target": "dav-c310-vec",
+    "__NPU_ARCH__": 3101
+  },
+  "runs": [
+    {
+      "run": "vfsim-a5-completion-e8m0-register-load/batch_000",
+      "source_directory": "results/a5_instruction_completion_20261020/vfsim-a5-completion-e8m0-register-load/batch_000",
+      "sha256": {
+        "kernel.cce": "f267afff721d6a660adb0c5247289829f9260831fe421732f03e82dc9300d701",
+        "input.bin": "47b4bf4f2b2d1c2283c158d8c0e566beec2fff90fc7d4311cd71bf5a236cd9d2",
+        "golden.bin": "47b4bf4f2b2d1c2283c158d8c0e566beec2fff90fc7d4311cd71bf5a236cd9d2",
+        "output.bin": "47b4bf4f2b2d1c2283c158d8c0e566beec2fff90fc7d4311cd71bf5a236cd9d2",
+        "commands.json": "17b483e489100b5c784feeaaa1be63435473f65102529c1c49176393983c9361",
+        "core0.veccore0.instr_popped_log.dump": "fb7f120d610fa5c27388a261f22d8e2bd870f914261f5919f07e087e4e661ebd",
+        "core0.veccore0.instr_log.dump": "cb9cf4d5a0d6884bf83925cff637c518e30c1b1bfe946d951c001922d290345d",
+        "core0.veccore0.rvec.EXU.dump": "ff919f58a5d59700a464df828fe5f568e2c1eefdefd8825edc123579b701aba8",
+        "core0.veccore0.rvec.LSU.dump": "9d618313230ff6fa95d5a0db79d78b3dea7b5586d5658845a65d28525a24958c",
+        "core0.veccore0.rvec.GSU.dump": "03649e275c236ddb2ad1a01893f76057c62b6f1f1df116b50a5be46130ededad",
+        "core0.veccore0.rvec.simd.IDU.DISP.dump": "0865b2fdef78aa01551893294bd131f43c0612bba3aee4f5f3f93b688d7e4a4f"
+      }
+    },
+    {
+      "run": "vfsim-a5-completion-e8m0-no-update/batch_000",
+      "source_directory": "results/a5_instruction_completion_20261020/vfsim-a5-completion-e8m0-no-update/batch_000",
+      "sha256": {
+        "kernel.cce": "a93f3b1fb36c54914282bda92ab0d4165f3ef7921ac44969b55ab1d0fa346cdc",
+        "input.bin": "47b4bf4f2b2d1c2283c158d8c0e566beec2fff90fc7d4311cd71bf5a236cd9d2",
+        "golden.bin": "47b4bf4f2b2d1c2283c158d8c0e566beec2fff90fc7d4311cd71bf5a236cd9d2",
+        "output.bin": "47b4bf4f2b2d1c2283c158d8c0e566beec2fff90fc7d4311cd71bf5a236cd9d2",
+        "commands.json": "5f45a7df62e5bff7a7727b39044897c1817e87a9cfab95915bd7967905dd02e8",
+        "core0.veccore0.instr_popped_log.dump": "09b7fface761971e7b282cb867b4aa52afe226237ab6e9e272dac398577c430b",
+        "core0.veccore0.instr_log.dump": "5c35206a2fdd56aa3e88aced51de6174d29b4ce24d2c82e9402f3023dd4cac47",
+        "core0.veccore0.rvec.EXU.dump": "9413e8f23f17e6d9b94462094411274af90459eb4446c54772fc112335007baa",
+        "core0.veccore0.rvec.LSU.dump": "d3c861b1e087e1ae77777733f753159efa5085a9097735d13f54f82b7c744c8e",
+        "core0.veccore0.rvec.GSU.dump": "0beff5ac63413e15f7eaeec94f1a95bfef32da47b096150a30892ba160b9081f",
+        "core0.veccore0.rvec.simd.IDU.DISP.dump": "b2bf510d96ca8a62a5fccf520d886795dc2f44ee75a6b62ee804f3d2c2b9d5ef"
+      }
+    }
+  ],
+  "parameters": {
+    "forms": [
+      {
+        "key": "VLDAS.f8e8m0",
+        "samples": 2,
+        "runs": [
+          "vfsim-a5-completion-e8m0-no-update/batch_000",
+          "vfsim-a5-completion-e8m0-register-load/batch_000"
+        ],
+        "latency_counts": {
+          "9": 2
+        },
+        "pipeline_latency": 9,
+        "lsu_issue_interval": null,
+        "index_pattern_dependent": false,
+        "block_stride_pattern_dependent": false,
+        "qualification": "same-ID LSU stage and completion events"
+      },
+      {
+        "key": "VLDUI.f8e8m0",
+        "samples": 1,
+        "runs": [
+          "vfsim-a5-completion-e8m0-no-update/batch_000"
+        ],
+        "latency_counts": {
+          "9": 1
+        },
+        "pipeline_latency": 9,
+        "lsu_issue_interval": null,
+        "index_pattern_dependent": false,
+        "block_stride_pattern_dependent": false,
+        "qualification": "same-ID LSU stage and completion events"
+      },
+      {
+        "key": "VLDUS.f8e8m0",
+        "samples": 1,
+        "runs": [
+          "vfsim-a5-completion-e8m0-register-load/batch_000"
+        ],
+        "latency_counts": {
+          "9": 1
+        },
+        "pipeline_latency": 9,
+        "lsu_issue_interval": null,
+        "index_pattern_dependent": false,
+        "block_stride_pattern_dependent": false,
+        "qualification": "same-ID LSU stage and completion events"
+      }
+    ],
+    "isa": {
+      "VLDAS.f8e8m0": {
+        "latency": 9,
+        "dtype": "f8e8m0",
+        "op_class": "LOAD"
+      },
+      "VLDUI.f8e8m0": {
+        "latency": 9,
+        "dtype": "f8e8m0",
+        "op_class": "LOAD"
+      },
+      "VLDUS.f8e8m0": {
+        "latency": 9,
+        "dtype": "f8e8m0",
+        "op_class": "LOAD"
+      }
+    },
+    "forwarding": {},
+    "ii": {}
+  },
+  "changes": [
+    {
+      "path": "isa.VLDAS.f8e8m0.latency",
+      "value": 9
+    },
+    {
+      "path": "isa.VLDAS.f8e8m0.dtype",
+      "value": "f8e8m0"
+    },
+    {
+      "path": "isa.VLDAS.f8e8m0.op_class",
+      "value": "LOAD"
+    }
+  ],
+  "conflicts": [],
+  "records": [
+    {
+      "api": "vldus",
+      "dtype": "uint8",
+      "unmasked": false,
+      "isolated": false,
+      "variable": true,
+      "single": true,
+      "form": "f8e8m0",
+      "result_dtype": "f8e8m0",
+      "target_kind": "memory",
+      "target_count": 1,
+      "target_opcodes": [
+        "RV_VLDUS",
+        "RV_VLDUI"
+      ],
+      "output_offset": 0,
+      "output_bytes": 1024,
+      "guard_offset": 1024,
+      "guard_bytes": 3072,
+      "exact_bytes": true,
+      "warm_operands": true,
+      "passed": true,
+      "mismatch_offsets": [],
+      "guards_passed": true,
+      "vf_pc": [
+        "0x13b30100",
+        "0x13b30118"
+      ],
+      "vf_instruction_id_range": [
+        62,
+        null
+      ],
+      "target_count_actual": 1,
+      "latencies": [
+        9
+      ],
+      "ports": [
+        null
+      ],
+      "events": [
+        {
+          "cycle": 2258,
+          "pc": 330498316,
+          "id": 65,
+          "op": "RV_VLDUS",
+          "operands": "  Vd[0], Uld[0], Sn[64]=0x0, St[4]=0x100, St2[5]=0x0, ",
+          "line": 65,
+          "binary": 16781362,
+          "done": 2267,
+          "latency": 9,
+          "perf_cycle": null,
+          "port": null,
+          "lsu_start": 2258,
+          "pipeline_latency": 9,
+          "dispatch_predicate_sources": []
+        }
+      ],
+      "port_pressure_events": [],
+      "memory_events": [
+        {
+          "cycle": 2257,
+          "pc": 330498308,
+          "id": 63,
+          "op": "RV_VLDAS",
+          "operands": "  Uld[0], Sn[2]=0x0, Sn2[3]=0x0, ",
+          "line": 64,
+          "binary": 524313,
+          "done": 2266,
+          "latency": 9,
+          "operands_done_at_issue": true,
+          "lsu_start": 2257,
+          "pipeline_latency": 9
+        },
+        {
+          "cycle": 2258,
+          "pc": 330498316,
+          "id": 65,
+          "op": "RV_VLDUS",
+          "operands": "  Vd[0], Uld[0], Sn[64]=0x0, St[4]=0x100, St2[5]=0x0, ",
+          "line": 65,
+          "binary": 16781362,
+          "done": 2267,
+          "latency": 9,
+          "operands_done_at_issue": true,
+          "lsu_start": 2258,
+          "pipeline_latency": 9
+        },
+        {
+          "cycle": 2266,
+          "pc": 330498320,
+          "id": 66,
+          "op": "RV_VSTI",
+          "operands": "  Vd[0], Sn[6]=0x0, Sn2[7]=0x1, #offset=0, Pg[0], #p=0, dist:NORM_B8, ",
+          "line": 68,
+          "binary": 1075314690,
+          "done": 2275,
+          "latency": 9,
+          "operands_done_at_issue": false,
+          "lsu_start": 2266,
+          "pipeline_latency": 9
+        }
+      ],
+      "recipe_events": [],
+      "supporting_compute_events": [],
+      "all_opcodes": [
+        "RV_PSET",
+        "RV_SMOV",
+        "RV_VLDAS",
+        "RV_VLDUS",
+        "RV_VSTI"
+      ],
+      "forwarding_observations": [
+        {
+          "producer_id": 65,
+          "consumer_id": 66,
+          "producer_op": "RV_VLDUS",
+          "consumer_op": "RV_VSTI",
+          "producer_role": "Vd",
+          "role": "Vd",
+          "gap": 8,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": false,
+          "other_sources_ready_at_producer_issue": false
+        },
+        {
+          "producer_id": 62,
+          "consumer_id": 66,
+          "producer_op": "RV_PSET",
+          "consumer_op": "RV_VSTI",
+          "producer_role": "Pd",
+          "role": "Pg",
+          "gap": 8,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": false,
+          "other_sources_ready_at_producer_issue": false
+        }
+      ],
+      "independent_same_port_gaps": [],
+      "single_op_sample": true,
+      "run": "vfsim-a5-completion-e8m0-register-load/batch_000"
+    },
+    {
+      "api": "vldus",
+      "dtype": "uint8",
+      "unmasked": false,
+      "isolated": false,
+      "variable": false,
+      "single": true,
+      "form": "f8e8m0",
+      "result_dtype": "f8e8m0",
+      "target_kind": "memory",
+      "target_count": 1,
+      "target_opcodes": [
+        "RV_VLDUS",
+        "RV_VLDUI"
+      ],
+      "output_offset": 0,
+      "output_bytes": 1024,
+      "guard_offset": 1024,
+      "guard_bytes": 3072,
+      "exact_bytes": true,
+      "warm_operands": true,
+      "passed": true,
+      "mismatch_offsets": [],
+      "guards_passed": true,
+      "vf_pc": [
+        "0x13b30100",
+        "0x13b30118"
+      ],
+      "vf_instruction_id_range": [
+        50,
+        null
+      ],
+      "target_count_actual": 1,
+      "latencies": [
+        9
+      ],
+      "ports": [
+        null
+      ],
+      "events": [
+        {
+          "cycle": 2232,
+          "pc": 330498316,
+          "id": 53,
+          "op": "RV_VLDUI",
+          "operands": "  Vd[0], Uld[0], Sn[64]=0x0, #offset=0, ",
+          "line": 53,
+          "binary": 16777274,
+          "done": 2241,
+          "latency": 9,
+          "perf_cycle": null,
+          "port": null,
+          "lsu_start": 2232,
+          "pipeline_latency": 9,
+          "dispatch_predicate_sources": []
+        }
+      ],
+      "port_pressure_events": [],
+      "memory_events": [
+        {
+          "cycle": 2231,
+          "pc": 330498308,
+          "id": 51,
+          "op": "RV_VLDAS",
+          "operands": "  Uld[0], Sn[2]=0x0, Sn2[3]=0x0, ",
+          "line": 52,
+          "binary": 524313,
+          "done": 2240,
+          "latency": 9,
+          "operands_done_at_issue": true,
+          "lsu_start": 2231,
+          "pipeline_latency": 9
+        },
+        {
+          "cycle": 2232,
+          "pc": 330498316,
+          "id": 53,
+          "op": "RV_VLDUI",
+          "operands": "  Vd[0], Uld[0], Sn[64]=0x0, #offset=0, ",
+          "line": 53,
+          "binary": 16777274,
+          "done": 2241,
+          "latency": 9,
+          "operands_done_at_issue": true,
+          "lsu_start": 2232,
+          "pipeline_latency": 9
+        },
+        {
+          "cycle": 2240,
+          "pc": 330498320,
+          "id": 54,
+          "op": "RV_VSTI",
+          "operands": "  Vd[0], Sn[4]=0x0, Sn2[5]=0x1, #offset=0, Pg[0], #p=0, dist:NORM_B8, ",
+          "line": 56,
+          "binary": 1074790402,
+          "done": 2249,
+          "latency": 9,
+          "operands_done_at_issue": false,
+          "lsu_start": 2240,
+          "pipeline_latency": 9
+        }
+      ],
+      "recipe_events": [],
+      "supporting_compute_events": [],
+      "all_opcodes": [
+        "RV_PSET",
+        "RV_SMOV",
+        "RV_VLDAS",
+        "RV_VLDUI",
+        "RV_VSTI"
+      ],
+      "forwarding_observations": [
+        {
+          "producer_id": 53,
+          "consumer_id": 54,
+          "producer_op": "RV_VLDUI",
+          "consumer_op": "RV_VSTI",
+          "producer_role": "Vd",
+          "role": "Vd",
+          "gap": 8,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": false,
+          "other_sources_ready_at_producer_issue": false
+        },
+        {
+          "producer_id": 50,
+          "consumer_id": 54,
+          "producer_op": "RV_PSET",
+          "consumer_op": "RV_VSTI",
+          "producer_role": "Pd",
+          "role": "Pg",
+          "gap": 8,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": false,
+          "other_sources_ready_at_producer_issue": false
+        }
+      ],
+      "independent_same_port_gaps": [],
+      "single_op_sample": true,
+      "run": "vfsim-a5-completion-e8m0-no-update/batch_000"
+    }
+  ]
+}

@@ -30,11 +30,20 @@ int64_t EXQ::predictIssueCycle(int port, const Uop &u, int64_t recv) const {
         predicted,
         previous.exqPredIssue +
             db_.initiationInterval(previous.op, previous.form, u.op, u.form));
+    predicted = std::max(predicted, exu_.nextSelfIssueCycle(u, port));
+    for (auto pending = q.rbegin(); pending != q.rend(); ++pending) {
+      if ((*pending)->op == u.op && (*pending)->form == u.form) {
+        predicted = std::max(
+            predicted, (*pending)->exqPredIssue +
+                           db_.initiationInterval(u.op, u.form, u.op, u.form));
+        break;
+      }
+    }
   } else
     predicted = std::max(predicted, exu_.nextIssueCycle(u, port, true));
   if (cfg_.predictExqIssueWithCrossFu)
     predicted = std::max(predicted, exu_.nextIssueCycle(u, port));
-  return predicted;
+  return exu_.nextCompletionIssueCycle(u, port, predicted);
 }
 void EXQ::enqueue(const UopPtr &u, int port, int64_t recv, int64_t predicted) {
   u->exuPort = port;

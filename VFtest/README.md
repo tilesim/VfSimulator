@@ -13,6 +13,10 @@ Python 与 C++ 实现共享本目录中的固定输入，自动化测试代码�
 
 `canonical/fixtures/` 保存固定行为测试，包含明确标注的非法输入；`canonical/cce_expected/` 的
 JSON 与 `cce/contracts/` 中同名 CCE 配对，用于检查完整的 Canonical 输出。
+`common_instruction_pairs_fp32/fp16/bf16.cce` 由跨指令时序测试加载，
+检查混合计算、比较与选择链及 Python/C++ 发射周期。
+`cce/contracts/vector_conversions.cce` 与 `vector_conversion_views.cce` 覆盖转换签名、
+64-bit 类型、打包与显式视图，配对 Canonical 文件固定其依赖合同。
 `cce/membar_timing/` 和 `cce/ordinary_instructions/` 分别保存屏障及指令覆盖案例。
 
 在仓库根目录运行：

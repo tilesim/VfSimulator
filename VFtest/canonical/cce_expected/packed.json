@@ -38,12 +38,12 @@
           "memory_access": {
             "base_object_id": "ub.p",
             "offset": {
-              "constant": 8,
+              "constant": 32,
               "terms": []
             },
             "access_kind": "read",
-            "span": 128,
-            "address_unit_bytes": null,
+            "span": 512,
+            "address_unit_bytes": 1,
             "alias_group": null,
             "address_state_id": "vf:pointer:0:p",
             "update_mode": "none",

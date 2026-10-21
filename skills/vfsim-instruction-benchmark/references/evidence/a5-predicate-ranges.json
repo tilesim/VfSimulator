@@ -1,0 +1,5347 @@
+{
+  "target": {
+    "cann": "9.0.0-beta.1",
+    "soc": "Ascend950PR_9599",
+    "compiler_target": "dav-c310-vec",
+    "__NPU_ARCH__": 3101
+  },
+  "runs": [
+    {
+      "run": "vfsim-a5-completion-predicate-range-synchronized/batch_000",
+      "source_directory": "results/a5_instruction_completion_20261020/vfsim-a5-completion-predicate-range-synchronized/batch_000",
+      "sha256": {
+        "kernel.cce": "d67b2e84eeafe82b04c0d289076ba5daa29cfe23383dd48ae7935d6141c2e2d3",
+        "input.bin": "5644e3860e3d79d4cf2ba22501dbc4c24f55ee9168ff98546fbeace926b5e235",
+        "golden.bin": "f86919f6c85059d528fb14d824b9ab58e01cce595d74a9d2e6805b2a69caa500",
+        "output.bin": "56fdc929cd2e6c88e579534f65cfbc986be82cee9af6a88ad6cc137078c230e0",
+        "commands.json": "984c28a2bd8626759b9709d43d22bf3b45bd5e21e3fd328fe0c9c296b8b76260",
+        "core0.veccore0.rvec.LSU.dump": "61c2ca0fa2fbd6cc6f2b0530db2bd2301da3b48f8e57c237ae6d6ae109d90b62",
+        "core0.veccore0.rvec.GSU.dump": "1e05feb8640336a972a7f3c2e67dff549cf07703e4f49b4cefad773e64940b7a"
+      }
+    },
+    {
+      "run": "vfsim-a5-completion-predicate-plt-verified/batch_000",
+      "source_directory": "results/a5_instruction_completion_20261020/vfsim-a5-completion-predicate-plt-verified/batch_000",
+      "sha256": {
+        "kernel.cce": "3c612ac82e704ef0d5681453c1ce7bee604910ed14f9ceaaa50b7a3c3587c55a",
+        "input.bin": "c18525dec1ceb2da843104a910940e683ae5ff2773034910d622b670ef159d98",
+        "golden.bin": "deb707a5264f34f2bf2a07b8ff2fbc95cb1ed446f6c735dd807f9c8ad5d3163e",
+        "output.bin": "deb707a5264f34f2bf2a07b8ff2fbc95cb1ed446f6c735dd807f9c8ad5d3163e",
+        "commands.json": "bc8994c1c1310c325a0c42453ba97a5b32f2afc3a732ff94a159da3c1e783537",
+        "core0.veccore0.rvec.LSU.dump": "adb7ad16d4060e6b9fe514137a553fc2a8fa2fb63932e220aa87fceb64c7f6a7",
+        "core0.veccore0.rvec.GSU.dump": "f239462724eb861be64b85630ac77fc98e5376f32401822dcfd827a4c39795a7"
+      }
+    }
+  ],
+  "parameters": {
+    "forms": [
+      {
+        "key": "PLT.b16",
+        "passed_runs": [
+          "vfsim-a5-completion-predicate-plt-verified/batch_000"
+        ],
+        "sample_count": 7,
+        "latency_counts": {
+          "6": 7
+        },
+        "ports": [
+          0,
+          1
+        ],
+        "port_competition_runs": [],
+        "port_qualified": true,
+        "required_result_source_paths": [],
+        "self_forwarding_path_minima": {},
+        "self_forwarding_complete": false,
+        "self_forwarding_applicable": false,
+        "self_ii": 2,
+        "ready_ii_gap_counts": {
+          "2": 5
+        }
+      },
+      {
+        "key": "PLT.b32",
+        "passed_runs": [
+          "vfsim-a5-completion-predicate-plt-verified/batch_000"
+        ],
+        "sample_count": 7,
+        "latency_counts": {
+          "6": 7
+        },
+        "ports": [
+          0,
+          1
+        ],
+        "port_competition_runs": [],
+        "port_qualified": true,
+        "required_result_source_paths": [],
+        "self_forwarding_path_minima": {},
+        "self_forwarding_complete": false,
+        "self_forwarding_applicable": false,
+        "self_ii": 2,
+        "ready_ii_gap_counts": {
+          "2": 5
+        }
+      },
+      {
+        "key": "PLT.b8",
+        "passed_runs": [
+          "vfsim-a5-completion-predicate-plt-verified/batch_000"
+        ],
+        "sample_count": 7,
+        "latency_counts": {
+          "6": 7
+        },
+        "ports": [
+          0,
+          1
+        ],
+        "port_competition_runs": [],
+        "port_qualified": true,
+        "required_result_source_paths": [],
+        "self_forwarding_path_minima": {},
+        "self_forwarding_complete": false,
+        "self_forwarding_applicable": false,
+        "self_ii": 2,
+        "ready_ii_gap_counts": {
+          "2": 5
+        }
+      },
+      {
+        "key": "PLTM.b16",
+        "passed_runs": [
+          "vfsim-a5-completion-predicate-range-synchronized/batch_000"
+        ],
+        "sample_count": 7,
+        "latency_counts": {
+          "6": 7
+        },
+        "ports": [
+          0,
+          1
+        ],
+        "port_competition_runs": [],
+        "port_qualified": true,
+        "required_result_source_paths": [],
+        "self_forwarding_path_minima": {},
+        "self_forwarding_complete": false,
+        "self_forwarding_applicable": false,
+        "self_ii": 2,
+        "ready_ii_gap_counts": {
+          "2": 5
+        }
+      },
+      {
+        "key": "PLTM.b32",
+        "passed_runs": [
+          "vfsim-a5-completion-predicate-range-synchronized/batch_000"
+        ],
+        "sample_count": 7,
+        "latency_counts": {
+          "6": 7
+        },
+        "ports": [
+          0,
+          1
+        ],
+        "port_competition_runs": [],
+        "port_qualified": true,
+        "required_result_source_paths": [],
+        "self_forwarding_path_minima": {},
+        "self_forwarding_complete": false,
+        "self_forwarding_applicable": false,
+        "self_ii": 2,
+        "ready_ii_gap_counts": {
+          "2": 5
+        }
+      },
+      {
+        "key": "PLTM.b8",
+        "passed_runs": [
+          "vfsim-a5-completion-predicate-range-synchronized/batch_000"
+        ],
+        "sample_count": 7,
+        "latency_counts": {
+          "6": 7
+        },
+        "ports": [
+          0,
+          1
+        ],
+        "port_competition_runs": [],
+        "port_qualified": true,
+        "required_result_source_paths": [],
+        "self_forwarding_path_minima": {},
+        "self_forwarding_complete": false,
+        "self_forwarding_applicable": false,
+        "self_ii": 2,
+        "ready_ii_gap_counts": {
+          "2": 5
+        }
+      },
+      {
+        "key": "PSET_B16.b16",
+        "passed_runs": [
+          "vfsim-a5-completion-predicate-range-synchronized/batch_000",
+          "vfsim-a5-completion-predicate-range-synchronized/batch_000"
+        ],
+        "sample_count": 14,
+        "latency_counts": {
+          "6": 14
+        },
+        "ports": [
+          0,
+          1
+        ],
+        "port_competition_runs": [],
+        "port_qualified": true,
+        "required_result_source_paths": [],
+        "self_forwarding_path_minima": {},
+        "self_forwarding_complete": false,
+        "self_forwarding_applicable": false,
+        "self_ii": 1,
+        "ready_ii_gap_counts": {
+          "1": 10
+        }
+      },
+      {
+        "key": "PSET_B32.b32",
+        "passed_runs": [
+          "vfsim-a5-completion-predicate-range-synchronized/batch_000",
+          "vfsim-a5-completion-predicate-range-synchronized/batch_000"
+        ],
+        "sample_count": 14,
+        "latency_counts": {
+          "6": 14
+        },
+        "ports": [
+          0,
+          1
+        ],
+        "port_competition_runs": [],
+        "port_qualified": true,
+        "required_result_source_paths": [],
+        "self_forwarding_path_minima": {},
+        "self_forwarding_complete": false,
+        "self_forwarding_applicable": false,
+        "self_ii": 1,
+        "ready_ii_gap_counts": {
+          "1": 10
+        }
+      },
+      {
+        "key": "PSET_B8.b8",
+        "passed_runs": [
+          "vfsim-a5-completion-predicate-range-synchronized/batch_000",
+          "vfsim-a5-completion-predicate-range-synchronized/batch_000"
+        ],
+        "sample_count": 14,
+        "latency_counts": {
+          "6": 14
+        },
+        "ports": [
+          0,
+          1
+        ],
+        "port_competition_runs": [],
+        "port_qualified": true,
+        "required_result_source_paths": [],
+        "self_forwarding_path_minima": {},
+        "self_forwarding_complete": false,
+        "self_forwarding_applicable": false,
+        "self_ii": 1,
+        "ready_ii_gap_counts": {
+          "1": 10
+        }
+      }
+    ],
+    "isa": {
+      "PLT.b16": {
+        "latency": 6,
+        "dtype": "bool",
+        "EXU": "ALU",
+        "dispatch_exu": "EXU01"
+      },
+      "PLT.b32": {
+        "latency": 6,
+        "dtype": "bool",
+        "EXU": "ALU",
+        "dispatch_exu": "EXU01"
+      },
+      "PLT.b8": {
+        "latency": 6,
+        "dtype": "bool",
+        "EXU": "ALU",
+        "dispatch_exu": "EXU01"
+      },
+      "PLTM.b16": {
+        "latency": 6,
+        "dtype": "bool",
+        "EXU": "ALU",
+        "dispatch_exu": "EXU01"
+      },
+      "PLTM.b32": {
+        "latency": 6,
+        "dtype": "bool",
+        "EXU": "ALU",
+        "dispatch_exu": "EXU01"
+      },
+      "PLTM.b8": {
+        "latency": 6,
+        "dtype": "bool",
+        "EXU": "ALU",
+        "dispatch_exu": "EXU01"
+      },
+      "PSET_B16.b16": {
+        "latency": 6,
+        "dtype": "bool",
+        "EXU": "ALU",
+        "dispatch_exu": "EXU01"
+      },
+      "PSET_B32.b32": {
+        "latency": 6,
+        "dtype": "bool",
+        "EXU": "ALU",
+        "dispatch_exu": "EXU01"
+      },
+      "PSET_B8.b8": {
+        "latency": 6,
+        "dtype": "bool",
+        "EXU": "ALU",
+        "dispatch_exu": "EXU01"
+      }
+    },
+    "forwarding": {},
+    "ii": {
+      "PLT.b16": {
+        "PLT.b16": 2
+      },
+      "PLT.b32": {
+        "PLT.b32": 2
+      },
+      "PLT.b8": {
+        "PLT.b8": 2
+      },
+      "PLTM.b16": {
+        "PLTM.b16": 2
+      },
+      "PLTM.b32": {
+        "PLTM.b32": 2
+      },
+      "PLTM.b8": {
+        "PLTM.b8": 2
+      },
+      "PSET_B16.b16": {
+        "PSET_B16.b16": 1
+      },
+      "PSET_B32.b32": {
+        "PSET_B32.b32": 1
+      },
+      "PSET_B8.b8": {
+        "PSET_B8.b8": 1
+      }
+    }
+  },
+  "changes": [
+    {
+      "path": "isa.PLT.b16.latency",
+      "value": 6
+    },
+    {
+      "path": "isa.PLT.b16.dtype",
+      "value": "bool"
+    },
+    {
+      "path": "isa.PLT.b16.EXU",
+      "value": "ALU"
+    },
+    {
+      "path": "isa.PLT.b16.dispatch_exu",
+      "value": "EXU01"
+    },
+    {
+      "path": "isa.PLT.b8.latency",
+      "value": 6
+    },
+    {
+      "path": "isa.PLT.b8.dtype",
+      "value": "bool"
+    },
+    {
+      "path": "isa.PLT.b8.EXU",
+      "value": "ALU"
+    },
+    {
+      "path": "isa.PLT.b8.dispatch_exu",
+      "value": "EXU01"
+    },
+    {
+      "path": "isa.PLTM.b16.latency",
+      "value": 6
+    },
+    {
+      "path": "isa.PLTM.b16.dtype",
+      "value": "bool"
+    },
+    {
+      "path": "isa.PLTM.b16.EXU",
+      "value": "ALU"
+    },
+    {
+      "path": "isa.PLTM.b16.dispatch_exu",
+      "value": "EXU01"
+    },
+    {
+      "path": "isa.PLTM.b32.latency",
+      "value": 6
+    },
+    {
+      "path": "isa.PLTM.b32.dtype",
+      "value": "bool"
+    },
+    {
+      "path": "isa.PLTM.b32.EXU",
+      "value": "ALU"
+    },
+    {
+      "path": "isa.PLTM.b32.dispatch_exu",
+      "value": "EXU01"
+    },
+    {
+      "path": "isa.PLTM.b8.latency",
+      "value": 6
+    },
+    {
+      "path": "isa.PLTM.b8.dtype",
+      "value": "bool"
+    },
+    {
+      "path": "isa.PLTM.b8.EXU",
+      "value": "ALU"
+    },
+    {
+      "path": "isa.PLTM.b8.dispatch_exu",
+      "value": "EXU01"
+    },
+    {
+      "path": "ii.PLT.b16->PLT.b16",
+      "value": 2
+    },
+    {
+      "path": "ii.PLT.b32->PLT.b32",
+      "value": 2
+    },
+    {
+      "path": "ii.PLT.b8->PLT.b8",
+      "value": 2
+    },
+    {
+      "path": "ii.PLTM.b16->PLTM.b16",
+      "value": 2
+    },
+    {
+      "path": "ii.PLTM.b32->PLTM.b32",
+      "value": 2
+    },
+    {
+      "path": "ii.PLTM.b8->PLTM.b8",
+      "value": 2
+    },
+    {
+      "path": "ii.PSET_B16.b16->PSET_B16.b16",
+      "value": 1
+    },
+    {
+      "path": "ii.PSET_B32.b32->PSET_B32.b32",
+      "value": 1
+    },
+    {
+      "path": "ii.PSET_B8.b8->PSET_B8.b8",
+      "value": 1
+    }
+  ],
+  "conflicts": [],
+  "records": [
+    {
+      "family": "pset",
+      "width": 1,
+      "api": "pset_b8",
+      "form": "b8",
+      "dtype": "uint8",
+      "result_dtype": "bool",
+      "target_count": 7,
+      "target_opcodes": [
+        "RV_PSET"
+      ],
+      "output_offset": 0,
+      "output_bytes": 1024,
+      "guard_offset": 1024,
+      "guard_bytes": 3072,
+      "exact_bytes": true,
+      "warm_operands": true,
+      "patterns": [
+        "PAT_ALL",
+        "PAT_H",
+        "PAT_Q",
+        "PAT_M3",
+        "PAT_M4",
+        "PAT_VL3",
+        "PAT_ALLF"
+      ],
+      "counts": [
+        0,
+        1,
+        255,
+        256,
+        261,
+        785,
+        1795
+      ],
+      "starts": [
+        0,
+        0,
+        0,
+        1,
+        1,
+        2,
+        7
+      ],
+      "passed": true,
+      "mismatch_offsets": [],
+      "guards_passed": true,
+      "vf_pc": [
+        "0x13b46a00",
+        "0x13b46a3c"
+      ],
+      "vf_instruction_id_range": [
+        512,
+        527
+      ],
+      "target_count_actual": 7,
+      "latencies": [
+        6
+      ],
+      "ports": [
+        0,
+        1
+      ],
+      "events": [
+        {
+          "cycle": 5125,
+          "pc": 330590728,
+          "id": 514,
+          "op": "RV_PSET",
+          "operands": " Dtype: B8  Pd[1], #pattern=12, ",
+          "line": 494,
+          "done": 5131,
+          "latency": 6,
+          "perf_cycle": 5126,
+          "port": 0,
+          "dispatch_predicate_sources": []
+        },
+        {
+          "cycle": 5125,
+          "pc": 330590720,
+          "id": 512,
+          "op": "RV_PSET",
+          "operands": " Dtype: B8  Pd[0], #pattern=0, ",
+          "line": 495,
+          "done": 5131,
+          "latency": 6,
+          "perf_cycle": 5126,
+          "port": 1,
+          "dispatch_predicate_sources": []
+        },
+        {
+          "cycle": 5126,
+          "pc": 330590744,
+          "id": 518,
+          "op": "RV_PSET",
+          "operands": " Dtype: B8  Pd[1], #pattern=10, ",
+          "line": 498,
+          "done": 5132,
+          "latency": 6,
+          "perf_cycle": 5127,
+          "port": 0,
+          "dispatch_predicate_sources": []
+        },
+        {
+          "cycle": 5126,
+          "pc": 330590736,
+          "id": 516,
+          "op": "RV_PSET",
+          "operands": " Dtype: B8  Pd[1], #pattern=13, ",
+          "line": 499,
+          "done": 5132,
+          "latency": 6,
+          "perf_cycle": 5127,
+          "port": 1,
+          "dispatch_predicate_sources": []
+        },
+        {
+          "cycle": 5127,
+          "pc": 330590760,
+          "id": 522,
+          "op": "RV_PSET",
+          "operands": " Dtype: B8  Pd[1], #pattern=3, ",
+          "line": 501,
+          "done": 5133,
+          "latency": 6,
+          "perf_cycle": 5128,
+          "port": 0,
+          "dispatch_predicate_sources": []
+        },
+        {
+          "cycle": 5127,
+          "pc": 330590752,
+          "id": 520,
+          "op": "RV_PSET",
+          "operands": " Dtype: B8  Pd[1], #pattern=11, ",
+          "line": 502,
+          "done": 5133,
+          "latency": 6,
+          "perf_cycle": 5128,
+          "port": 1,
+          "dispatch_predicate_sources": []
+        },
+        {
+          "cycle": 5128,
+          "pc": 330590768,
+          "id": 524,
+          "op": "RV_PSET",
+          "operands": " Dtype: B8  Pd[1], #pattern=15, ",
+          "line": 503,
+          "done": 5134,
+          "latency": 6,
+          "perf_cycle": 5129,
+          "port": 1,
+          "dispatch_predicate_sources": []
+        }
+      ],
+      "port_pressure_events": [],
+      "recipe_events": [],
+      "supporting_compute_events": [],
+      "all_opcodes": [
+        "RV_PSET",
+        "RV_PSTI"
+      ],
+      "forwarding_observations": [
+        {
+          "producer_id": 512,
+          "consumer_id": 513,
+          "producer_op": "RV_PSET",
+          "consumer_op": "RV_PSTI",
+          "producer_role": "Pd",
+          "role": "Pd",
+          "gap": 4,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": true,
+          "other_sources_ready_at_producer_issue": true
+        },
+        {
+          "producer_id": 514,
+          "consumer_id": 515,
+          "producer_op": "RV_PSET",
+          "consumer_op": "RV_PSTI",
+          "producer_role": "Pd",
+          "role": "Pd",
+          "gap": 5,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": true,
+          "other_sources_ready_at_producer_issue": true
+        },
+        {
+          "producer_id": 516,
+          "consumer_id": 517,
+          "producer_op": "RV_PSET",
+          "consumer_op": "RV_PSTI",
+          "producer_role": "Pd",
+          "role": "Pd",
+          "gap": 5,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": true,
+          "other_sources_ready_at_producer_issue": true
+        },
+        {
+          "producer_id": 518,
+          "consumer_id": 519,
+          "producer_op": "RV_PSET",
+          "consumer_op": "RV_PSTI",
+          "producer_role": "Pd",
+          "role": "Pd",
+          "gap": 6,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": true,
+          "other_sources_ready_at_producer_issue": true
+        },
+        {
+          "producer_id": 520,
+          "consumer_id": 521,
+          "producer_op": "RV_PSET",
+          "consumer_op": "RV_PSTI",
+          "producer_role": "Pd",
+          "role": "Pd",
+          "gap": 6,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": true,
+          "other_sources_ready_at_producer_issue": true
+        },
+        {
+          "producer_id": 522,
+          "consumer_id": 523,
+          "producer_op": "RV_PSET",
+          "consumer_op": "RV_PSTI",
+          "producer_role": "Pd",
+          "role": "Pd",
+          "gap": 7,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": true,
+          "other_sources_ready_at_producer_issue": true
+        },
+        {
+          "producer_id": 524,
+          "consumer_id": 525,
+          "producer_op": "RV_PSET",
+          "consumer_op": "RV_PSTI",
+          "producer_role": "Pd",
+          "role": "Pd",
+          "gap": 7,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": true,
+          "other_sources_ready_at_producer_issue": true
+        }
+      ],
+      "independent_same_port_gaps": [
+        {
+          "previous_id": 514,
+          "current_id": 518,
+          "port": 0,
+          "gap": 1,
+          "sources_done_before_previous": true,
+          "sources_ready_before_previous": true
+        },
+        {
+          "previous_id": 518,
+          "current_id": 522,
+          "port": 0,
+          "gap": 1,
+          "sources_done_before_previous": true,
+          "sources_ready_before_previous": true
+        },
+        {
+          "previous_id": 512,
+          "current_id": 516,
+          "port": 1,
+          "gap": 1,
+          "sources_done_before_previous": true,
+          "sources_ready_before_previous": true
+        },
+        {
+          "previous_id": 516,
+          "current_id": 520,
+          "port": 1,
+          "gap": 1,
+          "sources_done_before_previous": true,
+          "sources_ready_before_previous": true
+        },
+        {
+          "previous_id": 520,
+          "current_id": 524,
+          "port": 1,
+          "gap": 1,
+          "sources_done_before_previous": true,
+          "sources_ready_before_previous": true
+        }
+      ],
+      "single_op_sample": true,
+      "run": "vfsim-a5-completion-predicate-range-synchronized/batch_000"
+    },
+    {
+      "family": "pset",
+      "width": 2,
+      "api": "pset_b16",
+      "form": "b16",
+      "dtype": "uint8",
+      "result_dtype": "bool",
+      "target_count": 7,
+      "target_opcodes": [
+        "RV_PSET"
+      ],
+      "output_offset": 4096,
+      "output_bytes": 1024,
+      "guard_offset": 5120,
+      "guard_bytes": 3072,
+      "exact_bytes": true,
+      "warm_operands": true,
+      "patterns": [
+        "PAT_ALL",
+        "PAT_H",
+        "PAT_Q",
+        "PAT_M3",
+        "PAT_M4",
+        "PAT_VL3",
+        "PAT_ALLF"
+      ],
+      "counts": [
+        0,
+        1,
+        127,
+        128,
+        133,
+        401,
+        899
+      ],
+      "starts": [
+        0,
+        0,
+        0,
+        1,
+        1,
+        2,
+        7
+      ],
+      "passed": true,
+      "mismatch_offsets": [],
+      "guards_passed": true,
+      "vf_pc": [
+        "0x13b46b00",
+        "0x13b46b3c"
+      ],
+      "vf_instruction_id_range": [
+        527,
+        542
+      ],
+      "target_count_actual": 7,
+      "latencies": [
+        6
+      ],
+      "ports": [
+        0,
+        1
+      ],
+      "events": [
+        {
+          "cycle": 5180,
+          "pc": 330590976,
+          "id": 527,
+          "op": "RV_PSET",
+          "operands": " Dtype: B16  Pd[1], #pattern=0, ",
+          "line": 514,
+          "done": 5186,
+          "latency": 6,
+          "perf_cycle": 5181,
+          "port": 0,
+          "dispatch_predicate_sources": []
+        },
+        {
+          "cycle": 5180,
+          "pc": 330590984,
+          "id": 529,
+          "op": "RV_PSET",
+          "operands": " Dtype: B16  Pd[1], #pattern=12, ",
+          "line": 515,
+          "done": 5186,
+          "latency": 6,
+          "perf_cycle": 5181,
+          "port": 1,
+          "dispatch_predicate_sources": []
+        },
+        {
+          "cycle": 5181,
+          "pc": 330590992,
+          "id": 531,
+          "op": "RV_PSET",
+          "operands": " Dtype: B16  Pd[1], #pattern=13, ",
+          "line": 519,
+          "done": 5187,
+          "latency": 6,
+          "perf_cycle": 5182,
+          "port": 0,
+          "dispatch_predicate_sources": []
+        },
+        {
+          "cycle": 5181,
+          "pc": 330591000,
+          "id": 533,
+          "op": "RV_PSET",
+          "operands": " Dtype: B16  Pd[1], #pattern=10, ",
+          "line": 520,
+          "done": 5187,
+          "latency": 6,
+          "perf_cycle": 5182,
+          "port": 1,
+          "dispatch_predicate_sources": []
+        },
+        {
+          "cycle": 5182,
+          "pc": 330591008,
+          "id": 535,
+          "op": "RV_PSET",
+          "operands": " Dtype: B16  Pd[1], #pattern=11, ",
+          "line": 521,
+          "done": 5188,
+          "latency": 6,
+          "perf_cycle": 5183,
+          "port": 0,
+          "dispatch_predicate_sources": []
+        },
+        {
+          "cycle": 5182,
+          "pc": 330591016,
+          "id": 537,
+          "op": "RV_PSET",
+          "operands": " Dtype: B16  Pd[1], #pattern=3, ",
+          "line": 522,
+          "done": 5188,
+          "latency": 6,
+          "perf_cycle": 5183,
+          "port": 1,
+          "dispatch_predicate_sources": []
+        },
+        {
+          "cycle": 5183,
+          "pc": 330591024,
+          "id": 539,
+          "op": "RV_PSET",
+          "operands": " Dtype: B16  Pd[1], #pattern=15, ",
+          "line": 523,
+          "done": 5189,
+          "latency": 6,
+          "perf_cycle": 5184,
+          "port": 0,
+          "dispatch_predicate_sources": []
+        }
+      ],
+      "port_pressure_events": [],
+      "recipe_events": [],
+      "supporting_compute_events": [],
+      "all_opcodes": [
+        "RV_PSET",
+        "RV_PSTS"
+      ],
+      "forwarding_observations": [
+        {
+          "producer_id": 527,
+          "consumer_id": 528,
+          "producer_op": "RV_PSET",
+          "consumer_op": "RV_PSTS",
+          "producer_role": "Pd",
+          "role": "Pd",
+          "gap": 4,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": true,
+          "other_sources_ready_at_producer_issue": true
+        },
+        {
+          "producer_id": 529,
+          "consumer_id": 530,
+          "producer_op": "RV_PSET",
+          "consumer_op": "RV_PSTS",
+          "producer_role": "Pd",
+          "role": "Pd",
+          "gap": 5,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": true,
+          "other_sources_ready_at_producer_issue": true
+        },
+        {
+          "producer_id": 531,
+          "consumer_id": 532,
+          "producer_op": "RV_PSET",
+          "consumer_op": "RV_PSTS",
+          "producer_role": "Pd",
+          "role": "Pd",
+          "gap": 5,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": true,
+          "other_sources_ready_at_producer_issue": true
+        },
+        {
+          "producer_id": 533,
+          "consumer_id": 534,
+          "producer_op": "RV_PSET",
+          "consumer_op": "RV_PSTS",
+          "producer_role": "Pd",
+          "role": "Pd",
+          "gap": 6,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": true,
+          "other_sources_ready_at_producer_issue": true
+        },
+        {
+          "producer_id": 535,
+          "consumer_id": 536,
+          "producer_op": "RV_PSET",
+          "consumer_op": "RV_PSTS",
+          "producer_role": "Pd",
+          "role": "Pd",
+          "gap": 6,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": true,
+          "other_sources_ready_at_producer_issue": true
+        },
+        {
+          "producer_id": 537,
+          "consumer_id": 538,
+          "producer_op": "RV_PSET",
+          "consumer_op": "RV_PSTS",
+          "producer_role": "Pd",
+          "role": "Pd",
+          "gap": 7,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": true,
+          "other_sources_ready_at_producer_issue": true
+        },
+        {
+          "producer_id": 539,
+          "consumer_id": 540,
+          "producer_op": "RV_PSET",
+          "consumer_op": "RV_PSTS",
+          "producer_role": "Pd",
+          "role": "Pd",
+          "gap": 7,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": true,
+          "other_sources_ready_at_producer_issue": true
+        }
+      ],
+      "independent_same_port_gaps": [
+        {
+          "previous_id": 527,
+          "current_id": 531,
+          "port": 0,
+          "gap": 1,
+          "sources_done_before_previous": true,
+          "sources_ready_before_previous": true
+        },
+        {
+          "previous_id": 531,
+          "current_id": 535,
+          "port": 0,
+          "gap": 1,
+          "sources_done_before_previous": true,
+          "sources_ready_before_previous": true
+        },
+        {
+          "previous_id": 535,
+          "current_id": 539,
+          "port": 0,
+          "gap": 1,
+          "sources_done_before_previous": true,
+          "sources_ready_before_previous": true
+        },
+        {
+          "previous_id": 529,
+          "current_id": 533,
+          "port": 1,
+          "gap": 1,
+          "sources_done_before_previous": true,
+          "sources_ready_before_previous": true
+        },
+        {
+          "previous_id": 533,
+          "current_id": 537,
+          "port": 1,
+          "gap": 1,
+          "sources_done_before_previous": true,
+          "sources_ready_before_previous": true
+        }
+      ],
+      "single_op_sample": true,
+      "run": "vfsim-a5-completion-predicate-range-synchronized/batch_000"
+    },
+    {
+      "family": "pset",
+      "width": 4,
+      "api": "pset_b32",
+      "form": "b32",
+      "dtype": "uint8",
+      "result_dtype": "bool",
+      "target_count": 7,
+      "target_opcodes": [
+        "RV_PSET"
+      ],
+      "output_offset": 8192,
+      "output_bytes": 1024,
+      "guard_offset": 9216,
+      "guard_bytes": 3072,
+      "exact_bytes": true,
+      "warm_operands": true,
+      "patterns": [
+        "PAT_ALL",
+        "PAT_H",
+        "PAT_Q",
+        "PAT_M3",
+        "PAT_M4",
+        "PAT_VL3",
+        "PAT_ALLF"
+      ],
+      "counts": [
+        0,
+        1,
+        63,
+        64,
+        69,
+        209,
+        451
+      ],
+      "starts": [
+        0,
+        0,
+        0,
+        1,
+        1,
+        2,
+        7
+      ],
+      "passed": true,
+      "mismatch_offsets": [],
+      "guards_passed": true,
+      "vf_pc": [
+        "0x13b46c00",
+        "0x13b46c3c"
+      ],
+      "vf_instruction_id_range": [
+        542,
+        568
+      ],
+      "target_count_actual": 7,
+      "latencies": [
+        6
+      ],
+      "ports": [
+        0,
+        1
+      ],
+      "events": [
+        {
+          "cycle": 5214,
+          "pc": 330591240,
+          "id": 544,
+          "op": "RV_PSET",
+          "operands": " Dtype: B32  Pd[1], #pattern=12, ",
+          "line": 534,
+          "done": 5220,
+          "latency": 6,
+          "perf_cycle": 5215,
+          "port": 0,
+          "dispatch_predicate_sources": []
+        },
+        {
+          "cycle": 5214,
+          "pc": 330591232,
+          "id": 542,
+          "op": "RV_PSET",
+          "operands": " Dtype: B32  Pd[1], #pattern=0, ",
+          "line": 535,
+          "done": 5220,
+          "latency": 6,
+          "perf_cycle": 5215,
+          "port": 1,
+          "dispatch_predicate_sources": []
+        },
+        {
+          "cycle": 5215,
+          "pc": 330591256,
+          "id": 548,
+          "op": "RV_PSET",
+          "operands": " Dtype: B32  Pd[1], #pattern=10, ",
+          "line": 539,
+          "done": 5221,
+          "latency": 6,
+          "perf_cycle": 5216,
+          "port": 0,
+          "dispatch_predicate_sources": []
+        },
+        {
+          "cycle": 5215,
+          "pc": 330591248,
+          "id": 546,
+          "op": "RV_PSET",
+          "operands": " Dtype: B32  Pd[1], #pattern=13, ",
+          "line": 540,
+          "done": 5221,
+          "latency": 6,
+          "perf_cycle": 5216,
+          "port": 1,
+          "dispatch_predicate_sources": []
+        },
+        {
+          "cycle": 5216,
+          "pc": 330591272,
+          "id": 552,
+          "op": "RV_PSET",
+          "operands": " Dtype: B32  Pd[1], #pattern=3, ",
+          "line": 541,
+          "done": 5222,
+          "latency": 6,
+          "perf_cycle": 5217,
+          "port": 0,
+          "dispatch_predicate_sources": []
+        },
+        {
+          "cycle": 5216,
+          "pc": 330591264,
+          "id": 550,
+          "op": "RV_PSET",
+          "operands": " Dtype: B32  Pd[1], #pattern=11, ",
+          "line": 542,
+          "done": 5222,
+          "latency": 6,
+          "perf_cycle": 5217,
+          "port": 1,
+          "dispatch_predicate_sources": []
+        },
+        {
+          "cycle": 5217,
+          "pc": 330591280,
+          "id": 565,
+          "op": "RV_PSET",
+          "operands": " Dtype: B32  Pd[1], #pattern=15, ",
+          "line": 543,
+          "done": 5223,
+          "latency": 6,
+          "perf_cycle": 5218,
+          "port": 1,
+          "dispatch_predicate_sources": []
+        }
+      ],
+      "port_pressure_events": [],
+      "recipe_events": [],
+      "supporting_compute_events": [],
+      "all_opcodes": [
+        "RV_PSET",
+        "RV_PSTS"
+      ],
+      "forwarding_observations": [
+        {
+          "producer_id": 542,
+          "consumer_id": 543,
+          "producer_op": "RV_PSET",
+          "consumer_op": "RV_PSTS",
+          "producer_role": "Pd",
+          "role": "Pd",
+          "gap": 4,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": true,
+          "other_sources_ready_at_producer_issue": true
+        },
+        {
+          "producer_id": 544,
+          "consumer_id": 545,
+          "producer_op": "RV_PSET",
+          "consumer_op": "RV_PSTS",
+          "producer_role": "Pd",
+          "role": "Pd",
+          "gap": 5,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": true,
+          "other_sources_ready_at_producer_issue": true
+        },
+        {
+          "producer_id": 546,
+          "consumer_id": 547,
+          "producer_op": "RV_PSET",
+          "consumer_op": "RV_PSTS",
+          "producer_role": "Pd",
+          "role": "Pd",
+          "gap": 5,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": true,
+          "other_sources_ready_at_producer_issue": true
+        },
+        {
+          "producer_id": 548,
+          "consumer_id": 549,
+          "producer_op": "RV_PSET",
+          "consumer_op": "RV_PSTS",
+          "producer_role": "Pd",
+          "role": "Pd",
+          "gap": 6,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": true,
+          "other_sources_ready_at_producer_issue": true
+        },
+        {
+          "producer_id": 550,
+          "consumer_id": 551,
+          "producer_op": "RV_PSET",
+          "consumer_op": "RV_PSTS",
+          "producer_role": "Pd",
+          "role": "Pd",
+          "gap": 6,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": true,
+          "other_sources_ready_at_producer_issue": true
+        },
+        {
+          "producer_id": 552,
+          "consumer_id": 553,
+          "producer_op": "RV_PSET",
+          "consumer_op": "RV_PSTS",
+          "producer_role": "Pd",
+          "role": "Pd",
+          "gap": 7,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": true,
+          "other_sources_ready_at_producer_issue": true
+        },
+        {
+          "producer_id": 565,
+          "consumer_id": 566,
+          "producer_op": "RV_PSET",
+          "consumer_op": "RV_PSTS",
+          "producer_role": "Pd",
+          "role": "Pd",
+          "gap": 7,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": true,
+          "other_sources_ready_at_producer_issue": true
+        }
+      ],
+      "independent_same_port_gaps": [
+        {
+          "previous_id": 544,
+          "current_id": 548,
+          "port": 0,
+          "gap": 1,
+          "sources_done_before_previous": true,
+          "sources_ready_before_previous": true
+        },
+        {
+          "previous_id": 548,
+          "current_id": 552,
+          "port": 0,
+          "gap": 1,
+          "sources_done_before_previous": true,
+          "sources_ready_before_previous": true
+        },
+        {
+          "previous_id": 542,
+          "current_id": 546,
+          "port": 1,
+          "gap": 1,
+          "sources_done_before_previous": true,
+          "sources_ready_before_previous": true
+        },
+        {
+          "previous_id": 546,
+          "current_id": 550,
+          "port": 1,
+          "gap": 1,
+          "sources_done_before_previous": true,
+          "sources_ready_before_previous": true
+        },
+        {
+          "previous_id": 550,
+          "current_id": 565,
+          "port": 1,
+          "gap": 1,
+          "sources_done_before_previous": true,
+          "sources_ready_before_previous": true
+        }
+      ],
+      "single_op_sample": true,
+      "run": "vfsim-a5-completion-predicate-range-synchronized/batch_000"
+    },
+    {
+      "family": "pge",
+      "width": 1,
+      "api": "pge_b8",
+      "form": "b8",
+      "dtype": "uint8",
+      "result_dtype": "bool",
+      "target_count": 7,
+      "target_opcodes": [
+        "RV_PSET"
+      ],
+      "output_offset": 12288,
+      "output_bytes": 1024,
+      "guard_offset": 13312,
+      "guard_bytes": 3072,
+      "exact_bytes": true,
+      "warm_operands": true,
+      "patterns": [
+        "PAT_ALL",
+        "PAT_H",
+        "PAT_Q",
+        "PAT_M3",
+        "PAT_M4",
+        "PAT_VL3",
+        "PAT_ALLF"
+      ],
+      "counts": [
+        0,
+        1,
+        255,
+        256,
+        261,
+        785,
+        1795
+      ],
+      "starts": [
+        0,
+        0,
+        0,
+        1,
+        1,
+        2,
+        7
+      ],
+      "passed": true,
+      "mismatch_offsets": [],
+      "guards_passed": true,
+      "vf_pc": [
+        "0x13b46d00",
+        "0x13b46d3c"
+      ],
+      "vf_instruction_id_range": [
+        568,
+        583
+      ],
+      "target_count_actual": 7,
+      "latencies": [
+        6
+      ],
+      "ports": [
+        0,
+        1
+      ],
+      "events": [
+        {
+          "cycle": 5315,
+          "pc": 330591488,
+          "id": 568,
+          "op": "RV_PSET",
+          "operands": " Dtype: B8  Pd[0], #pattern=0, ",
+          "line": 554,
+          "done": 5321,
+          "latency": 6,
+          "perf_cycle": 5316,
+          "port": 0,
+          "dispatch_predicate_sources": []
+        },
+        {
+          "cycle": 5315,
+          "pc": 330591496,
+          "id": 570,
+          "op": "RV_PSET",
+          "operands": " Dtype: B8  Pd[1], #pattern=12, ",
+          "line": 555,
+          "done": 5321,
+          "latency": 6,
+          "perf_cycle": 5316,
+          "port": 1,
+          "dispatch_predicate_sources": []
+        },
+        {
+          "cycle": 5316,
+          "pc": 330591504,
+          "id": 572,
+          "op": "RV_PSET",
+          "operands": " Dtype: B8  Pd[1], #pattern=13, ",
+          "line": 559,
+          "done": 5322,
+          "latency": 6,
+          "perf_cycle": 5317,
+          "port": 0,
+          "dispatch_predicate_sources": []
+        },
+        {
+          "cycle": 5316,
+          "pc": 330591512,
+          "id": 574,
+          "op": "RV_PSET",
+          "operands": " Dtype: B8  Pd[1], #pattern=10, ",
+          "line": 560,
+          "done": 5322,
+          "latency": 6,
+          "perf_cycle": 5317,
+          "port": 1,
+          "dispatch_predicate_sources": []
+        },
+        {
+          "cycle": 5317,
+          "pc": 330591520,
+          "id": 576,
+          "op": "RV_PSET",
+          "operands": " Dtype: B8  Pd[1], #pattern=11, ",
+          "line": 561,
+          "done": 5323,
+          "latency": 6,
+          "perf_cycle": 5318,
+          "port": 0,
+          "dispatch_predicate_sources": []
+        },
+        {
+          "cycle": 5317,
+          "pc": 330591528,
+          "id": 578,
+          "op": "RV_PSET",
+          "operands": " Dtype: B8  Pd[1], #pattern=3, ",
+          "line": 562,
+          "done": 5323,
+          "latency": 6,
+          "perf_cycle": 5318,
+          "port": 1,
+          "dispatch_predicate_sources": []
+        },
+        {
+          "cycle": 5318,
+          "pc": 330591536,
+          "id": 580,
+          "op": "RV_PSET",
+          "operands": " Dtype: B8  Pd[1], #pattern=15, ",
+          "line": 563,
+          "done": 5324,
+          "latency": 6,
+          "perf_cycle": 5319,
+          "port": 0,
+          "dispatch_predicate_sources": []
+        }
+      ],
+      "port_pressure_events": [],
+      "recipe_events": [],
+      "supporting_compute_events": [],
+      "all_opcodes": [
+        "RV_PSET",
+        "RV_PSTS"
+      ],
+      "forwarding_observations": [
+        {
+          "producer_id": 568,
+          "consumer_id": 569,
+          "producer_op": "RV_PSET",
+          "consumer_op": "RV_PSTS",
+          "producer_role": "Pd",
+          "role": "Pd",
+          "gap": 4,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": true,
+          "other_sources_ready_at_producer_issue": true
+        },
+        {
+          "producer_id": 570,
+          "consumer_id": 571,
+          "producer_op": "RV_PSET",
+          "consumer_op": "RV_PSTS",
+          "producer_role": "Pd",
+          "role": "Pd",
+          "gap": 5,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": true,
+          "other_sources_ready_at_producer_issue": true
+        },
+        {
+          "producer_id": 572,
+          "consumer_id": 573,
+          "producer_op": "RV_PSET",
+          "consumer_op": "RV_PSTS",
+          "producer_role": "Pd",
+          "role": "Pd",
+          "gap": 5,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": true,
+          "other_sources_ready_at_producer_issue": true
+        },
+        {
+          "producer_id": 574,
+          "consumer_id": 575,
+          "producer_op": "RV_PSET",
+          "consumer_op": "RV_PSTS",
+          "producer_role": "Pd",
+          "role": "Pd",
+          "gap": 6,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": true,
+          "other_sources_ready_at_producer_issue": true
+        },
+        {
+          "producer_id": 576,
+          "consumer_id": 577,
+          "producer_op": "RV_PSET",
+          "consumer_op": "RV_PSTS",
+          "producer_role": "Pd",
+          "role": "Pd",
+          "gap": 6,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": true,
+          "other_sources_ready_at_producer_issue": true
+        },
+        {
+          "producer_id": 578,
+          "consumer_id": 579,
+          "producer_op": "RV_PSET",
+          "consumer_op": "RV_PSTS",
+          "producer_role": "Pd",
+          "role": "Pd",
+          "gap": 7,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": true,
+          "other_sources_ready_at_producer_issue": true
+        },
+        {
+          "producer_id": 580,
+          "consumer_id": 581,
+          "producer_op": "RV_PSET",
+          "consumer_op": "RV_PSTS",
+          "producer_role": "Pd",
+          "role": "Pd",
+          "gap": 7,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": true,
+          "other_sources_ready_at_producer_issue": true
+        }
+      ],
+      "independent_same_port_gaps": [
+        {
+          "previous_id": 568,
+          "current_id": 572,
+          "port": 0,
+          "gap": 1,
+          "sources_done_before_previous": true,
+          "sources_ready_before_previous": true
+        },
+        {
+          "previous_id": 572,
+          "current_id": 576,
+          "port": 0,
+          "gap": 1,
+          "sources_done_before_previous": true,
+          "sources_ready_before_previous": true
+        },
+        {
+          "previous_id": 576,
+          "current_id": 580,
+          "port": 0,
+          "gap": 1,
+          "sources_done_before_previous": true,
+          "sources_ready_before_previous": true
+        },
+        {
+          "previous_id": 570,
+          "current_id": 574,
+          "port": 1,
+          "gap": 1,
+          "sources_done_before_previous": true,
+          "sources_ready_before_previous": true
+        },
+        {
+          "previous_id": 574,
+          "current_id": 578,
+          "port": 1,
+          "gap": 1,
+          "sources_done_before_previous": true,
+          "sources_ready_before_previous": true
+        }
+      ],
+      "single_op_sample": true,
+      "run": "vfsim-a5-completion-predicate-range-synchronized/batch_000"
+    },
+    {
+      "family": "pge",
+      "width": 2,
+      "api": "pge_b16",
+      "form": "b16",
+      "dtype": "uint8",
+      "result_dtype": "bool",
+      "target_count": 7,
+      "target_opcodes": [
+        "RV_PSET"
+      ],
+      "output_offset": 16384,
+      "output_bytes": 1024,
+      "guard_offset": 17408,
+      "guard_bytes": 3072,
+      "exact_bytes": true,
+      "warm_operands": true,
+      "patterns": [
+        "PAT_ALL",
+        "PAT_H",
+        "PAT_Q",
+        "PAT_M3",
+        "PAT_M4",
+        "PAT_VL3",
+        "PAT_ALLF"
+      ],
+      "counts": [
+        0,
+        1,
+        127,
+        128,
+        133,
+        401,
+        899
+      ],
+      "starts": [
+        0,
+        0,
+        0,
+        1,
+        1,
+        2,
+        7
+      ],
+      "passed": true,
+      "mismatch_offsets": [],
+      "guards_passed": true,
+      "vf_pc": [
+        "0x13b46e00",
+        "0x13b46e3c"
+      ],
+      "vf_instruction_id_range": [
+        583,
+        609
+      ],
+      "target_count_actual": 7,
+      "latencies": [
+        6
+      ],
+      "ports": [
+        0,
+        1
+      ],
+      "events": [
+        {
+          "cycle": 5349,
+          "pc": 330591752,
+          "id": 585,
+          "op": "RV_PSET",
+          "operands": " Dtype: B16  Pd[1], #pattern=12, ",
+          "line": 574,
+          "done": 5355,
+          "latency": 6,
+          "perf_cycle": 5350,
+          "port": 0,
+          "dispatch_predicate_sources": []
+        },
+        {
+          "cycle": 5349,
+          "pc": 330591744,
+          "id": 583,
+          "op": "RV_PSET",
+          "operands": " Dtype: B16  Pd[1], #pattern=0, ",
+          "line": 575,
+          "done": 5355,
+          "latency": 6,
+          "perf_cycle": 5350,
+          "port": 1,
+          "dispatch_predicate_sources": []
+        },
+        {
+          "cycle": 5350,
+          "pc": 330591768,
+          "id": 589,
+          "op": "RV_PSET",
+          "operands": " Dtype: B16  Pd[1], #pattern=10, ",
+          "line": 579,
+          "done": 5356,
+          "latency": 6,
+          "perf_cycle": 5351,
+          "port": 0,
+          "dispatch_predicate_sources": []
+        },
+        {
+          "cycle": 5350,
+          "pc": 330591760,
+          "id": 587,
+          "op": "RV_PSET",
+          "operands": " Dtype: B16  Pd[1], #pattern=13, ",
+          "line": 580,
+          "done": 5356,
+          "latency": 6,
+          "perf_cycle": 5351,
+          "port": 1,
+          "dispatch_predicate_sources": []
+        },
+        {
+          "cycle": 5351,
+          "pc": 330591784,
+          "id": 593,
+          "op": "RV_PSET",
+          "operands": " Dtype: B16  Pd[1], #pattern=3, ",
+          "line": 581,
+          "done": 5357,
+          "latency": 6,
+          "perf_cycle": 5352,
+          "port": 0,
+          "dispatch_predicate_sources": []
+        },
+        {
+          "cycle": 5351,
+          "pc": 330591776,
+          "id": 591,
+          "op": "RV_PSET",
+          "operands": " Dtype: B16  Pd[1], #pattern=11, ",
+          "line": 582,
+          "done": 5357,
+          "latency": 6,
+          "perf_cycle": 5352,
+          "port": 1,
+          "dispatch_predicate_sources": []
+        },
+        {
+          "cycle": 5352,
+          "pc": 330591792,
+          "id": 606,
+          "op": "RV_PSET",
+          "operands": " Dtype: B16  Pd[1], #pattern=15, ",
+          "line": 583,
+          "done": 5358,
+          "latency": 6,
+          "perf_cycle": 5353,
+          "port": 1,
+          "dispatch_predicate_sources": []
+        }
+      ],
+      "port_pressure_events": [],
+      "recipe_events": [],
+      "supporting_compute_events": [],
+      "all_opcodes": [
+        "RV_PSET",
+        "RV_PSTS"
+      ],
+      "forwarding_observations": [
+        {
+          "producer_id": 583,
+          "consumer_id": 584,
+          "producer_op": "RV_PSET",
+          "consumer_op": "RV_PSTS",
+          "producer_role": "Pd",
+          "role": "Pd",
+          "gap": 4,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": true,
+          "other_sources_ready_at_producer_issue": true
+        },
+        {
+          "producer_id": 585,
+          "consumer_id": 586,
+          "producer_op": "RV_PSET",
+          "consumer_op": "RV_PSTS",
+          "producer_role": "Pd",
+          "role": "Pd",
+          "gap": 5,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": true,
+          "other_sources_ready_at_producer_issue": true
+        },
+        {
+          "producer_id": 587,
+          "consumer_id": 588,
+          "producer_op": "RV_PSET",
+          "consumer_op": "RV_PSTS",
+          "producer_role": "Pd",
+          "role": "Pd",
+          "gap": 5,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": true,
+          "other_sources_ready_at_producer_issue": true
+        },
+        {
+          "producer_id": 589,
+          "consumer_id": 590,
+          "producer_op": "RV_PSET",
+          "consumer_op": "RV_PSTS",
+          "producer_role": "Pd",
+          "role": "Pd",
+          "gap": 6,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": true,
+          "other_sources_ready_at_producer_issue": true
+        },
+        {
+          "producer_id": 591,
+          "consumer_id": 592,
+          "producer_op": "RV_PSET",
+          "consumer_op": "RV_PSTS",
+          "producer_role": "Pd",
+          "role": "Pd",
+          "gap": 6,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": true,
+          "other_sources_ready_at_producer_issue": true
+        },
+        {
+          "producer_id": 593,
+          "consumer_id": 594,
+          "producer_op": "RV_PSET",
+          "consumer_op": "RV_PSTS",
+          "producer_role": "Pd",
+          "role": "Pd",
+          "gap": 7,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": true,
+          "other_sources_ready_at_producer_issue": true
+        },
+        {
+          "producer_id": 606,
+          "consumer_id": 607,
+          "producer_op": "RV_PSET",
+          "consumer_op": "RV_PSTS",
+          "producer_role": "Pd",
+          "role": "Pd",
+          "gap": 7,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": true,
+          "other_sources_ready_at_producer_issue": true
+        }
+      ],
+      "independent_same_port_gaps": [
+        {
+          "previous_id": 585,
+          "current_id": 589,
+          "port": 0,
+          "gap": 1,
+          "sources_done_before_previous": true,
+          "sources_ready_before_previous": true
+        },
+        {
+          "previous_id": 589,
+          "current_id": 593,
+          "port": 0,
+          "gap": 1,
+          "sources_done_before_previous": true,
+          "sources_ready_before_previous": true
+        },
+        {
+          "previous_id": 583,
+          "current_id": 587,
+          "port": 1,
+          "gap": 1,
+          "sources_done_before_previous": true,
+          "sources_ready_before_previous": true
+        },
+        {
+          "previous_id": 587,
+          "current_id": 591,
+          "port": 1,
+          "gap": 1,
+          "sources_done_before_previous": true,
+          "sources_ready_before_previous": true
+        },
+        {
+          "previous_id": 591,
+          "current_id": 606,
+          "port": 1,
+          "gap": 1,
+          "sources_done_before_previous": true,
+          "sources_ready_before_previous": true
+        }
+      ],
+      "single_op_sample": true,
+      "run": "vfsim-a5-completion-predicate-range-synchronized/batch_000"
+    },
+    {
+      "family": "pge",
+      "width": 4,
+      "api": "pge_b32",
+      "form": "b32",
+      "dtype": "uint8",
+      "result_dtype": "bool",
+      "target_count": 7,
+      "target_opcodes": [
+        "RV_PSET"
+      ],
+      "output_offset": 20480,
+      "output_bytes": 1024,
+      "guard_offset": 21504,
+      "guard_bytes": 3072,
+      "exact_bytes": true,
+      "warm_operands": true,
+      "patterns": [
+        "PAT_ALL",
+        "PAT_H",
+        "PAT_Q",
+        "PAT_M3",
+        "PAT_M4",
+        "PAT_VL3",
+        "PAT_ALLF"
+      ],
+      "counts": [
+        0,
+        1,
+        63,
+        64,
+        69,
+        209,
+        451
+      ],
+      "starts": [
+        0,
+        0,
+        0,
+        1,
+        1,
+        2,
+        7
+      ],
+      "passed": true,
+      "mismatch_offsets": [],
+      "guards_passed": true,
+      "vf_pc": [
+        "0x13b46f00",
+        "0x13b46f3c"
+      ],
+      "vf_instruction_id_range": [
+        609,
+        635
+      ],
+      "target_count_actual": 7,
+      "latencies": [
+        6
+      ],
+      "ports": [
+        0,
+        1
+      ],
+      "events": [
+        {
+          "cycle": 5383,
+          "pc": 330592000,
+          "id": 609,
+          "op": "RV_PSET",
+          "operands": " Dtype: B32  Pd[1], #pattern=0, ",
+          "line": 594,
+          "done": 5389,
+          "latency": 6,
+          "perf_cycle": 5384,
+          "port": 0,
+          "dispatch_predicate_sources": []
+        },
+        {
+          "cycle": 5383,
+          "pc": 330592008,
+          "id": 611,
+          "op": "RV_PSET",
+          "operands": " Dtype: B32  Pd[1], #pattern=12, ",
+          "line": 595,
+          "done": 5389,
+          "latency": 6,
+          "perf_cycle": 5384,
+          "port": 1,
+          "dispatch_predicate_sources": []
+        },
+        {
+          "cycle": 5384,
+          "pc": 330592016,
+          "id": 613,
+          "op": "RV_PSET",
+          "operands": " Dtype: B32  Pd[1], #pattern=13, ",
+          "line": 599,
+          "done": 5390,
+          "latency": 6,
+          "perf_cycle": 5385,
+          "port": 0,
+          "dispatch_predicate_sources": []
+        },
+        {
+          "cycle": 5384,
+          "pc": 330592024,
+          "id": 615,
+          "op": "RV_PSET",
+          "operands": " Dtype: B32  Pd[1], #pattern=10, ",
+          "line": 600,
+          "done": 5390,
+          "latency": 6,
+          "perf_cycle": 5385,
+          "port": 1,
+          "dispatch_predicate_sources": []
+        },
+        {
+          "cycle": 5385,
+          "pc": 330592032,
+          "id": 617,
+          "op": "RV_PSET",
+          "operands": " Dtype: B32  Pd[1], #pattern=11, ",
+          "line": 601,
+          "done": 5391,
+          "latency": 6,
+          "perf_cycle": 5386,
+          "port": 0,
+          "dispatch_predicate_sources": []
+        },
+        {
+          "cycle": 5385,
+          "pc": 330592040,
+          "id": 619,
+          "op": "RV_PSET",
+          "operands": " Dtype: B32  Pd[1], #pattern=3, ",
+          "line": 602,
+          "done": 5391,
+          "latency": 6,
+          "perf_cycle": 5386,
+          "port": 1,
+          "dispatch_predicate_sources": []
+        },
+        {
+          "cycle": 5386,
+          "pc": 330592048,
+          "id": 632,
+          "op": "RV_PSET",
+          "operands": " Dtype: B32  Pd[1], #pattern=15, ",
+          "line": 603,
+          "done": 5392,
+          "latency": 6,
+          "perf_cycle": 5387,
+          "port": 0,
+          "dispatch_predicate_sources": []
+        }
+      ],
+      "port_pressure_events": [],
+      "recipe_events": [],
+      "supporting_compute_events": [],
+      "all_opcodes": [
+        "RV_PSET",
+        "RV_PSTS"
+      ],
+      "forwarding_observations": [
+        {
+          "producer_id": 609,
+          "consumer_id": 610,
+          "producer_op": "RV_PSET",
+          "consumer_op": "RV_PSTS",
+          "producer_role": "Pd",
+          "role": "Pd",
+          "gap": 4,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": true,
+          "other_sources_ready_at_producer_issue": true
+        },
+        {
+          "producer_id": 611,
+          "consumer_id": 612,
+          "producer_op": "RV_PSET",
+          "consumer_op": "RV_PSTS",
+          "producer_role": "Pd",
+          "role": "Pd",
+          "gap": 5,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": true,
+          "other_sources_ready_at_producer_issue": true
+        },
+        {
+          "producer_id": 613,
+          "consumer_id": 614,
+          "producer_op": "RV_PSET",
+          "consumer_op": "RV_PSTS",
+          "producer_role": "Pd",
+          "role": "Pd",
+          "gap": 5,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": true,
+          "other_sources_ready_at_producer_issue": true
+        },
+        {
+          "producer_id": 615,
+          "consumer_id": 616,
+          "producer_op": "RV_PSET",
+          "consumer_op": "RV_PSTS",
+          "producer_role": "Pd",
+          "role": "Pd",
+          "gap": 6,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": true,
+          "other_sources_ready_at_producer_issue": true
+        },
+        {
+          "producer_id": 617,
+          "consumer_id": 618,
+          "producer_op": "RV_PSET",
+          "consumer_op": "RV_PSTS",
+          "producer_role": "Pd",
+          "role": "Pd",
+          "gap": 6,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": true,
+          "other_sources_ready_at_producer_issue": true
+        },
+        {
+          "producer_id": 619,
+          "consumer_id": 620,
+          "producer_op": "RV_PSET",
+          "consumer_op": "RV_PSTS",
+          "producer_role": "Pd",
+          "role": "Pd",
+          "gap": 7,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": true,
+          "other_sources_ready_at_producer_issue": true
+        },
+        {
+          "producer_id": 632,
+          "consumer_id": 633,
+          "producer_op": "RV_PSET",
+          "consumer_op": "RV_PSTS",
+          "producer_role": "Pd",
+          "role": "Pd",
+          "gap": 7,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": true,
+          "other_sources_ready_at_producer_issue": true
+        }
+      ],
+      "independent_same_port_gaps": [
+        {
+          "previous_id": 609,
+          "current_id": 613,
+          "port": 0,
+          "gap": 1,
+          "sources_done_before_previous": true,
+          "sources_ready_before_previous": true
+        },
+        {
+          "previous_id": 613,
+          "current_id": 617,
+          "port": 0,
+          "gap": 1,
+          "sources_done_before_previous": true,
+          "sources_ready_before_previous": true
+        },
+        {
+          "previous_id": 617,
+          "current_id": 632,
+          "port": 0,
+          "gap": 1,
+          "sources_done_before_previous": true,
+          "sources_ready_before_previous": true
+        },
+        {
+          "previous_id": 611,
+          "current_id": 615,
+          "port": 1,
+          "gap": 1,
+          "sources_done_before_previous": true,
+          "sources_ready_before_previous": true
+        },
+        {
+          "previous_id": 615,
+          "current_id": 619,
+          "port": 1,
+          "gap": 1,
+          "sources_done_before_previous": true,
+          "sources_ready_before_previous": true
+        }
+      ],
+      "single_op_sample": true,
+      "run": "vfsim-a5-completion-predicate-range-synchronized/batch_000"
+    },
+    {
+      "family": "plt",
+      "width": 1,
+      "api": "plt_b8",
+      "form": "b8",
+      "dtype": "uint8",
+      "result_dtype": "bool",
+      "target_count": 7,
+      "target_opcodes": [
+        "RV_PLT"
+      ],
+      "output_offset": 24576,
+      "output_bytes": 1024,
+      "guard_offset": 25600,
+      "guard_bytes": 3072,
+      "exact_bytes": true,
+      "warm_operands": true,
+      "patterns": [],
+      "counts": [
+        0,
+        1,
+        255,
+        256,
+        261,
+        785,
+        1795
+      ],
+      "starts": [
+        0,
+        0,
+        0,
+        1,
+        1,
+        2,
+        7
+      ],
+      "passed": false,
+      "mismatch_offsets": [
+        516,
+        520,
+        525,
+        529,
+        533,
+        537
+      ],
+      "guards_passed": true,
+      "vf_pc": [
+        "0x13b47000",
+        "0x13b47058"
+      ],
+      "vf_instruction_id_range": [
+        635,
+        671
+      ],
+      "target_count_actual": 7,
+      "latencies": [
+        6
+      ],
+      "ports": [
+        0,
+        1
+      ],
+      "events": [
+        {
+          "cycle": 5418,
+          "pc": 330592260,
+          "id": 636,
+          "op": "RV_PLT",
+          "operands": " Dtype: B8  Pd[1], Sn[64]=0x0, ",
+          "line": 618,
+          "done": 5424,
+          "latency": 6,
+          "perf_cycle": 5419,
+          "port": 1,
+          "dispatch_predicate_sources": []
+        },
+        {
+          "cycle": 5419,
+          "pc": 330592272,
+          "id": 639,
+          "op": "RV_PLT",
+          "operands": " Dtype: B8  Pd[1], Sn[64]=0x0, ",
+          "line": 620,
+          "done": 5425,
+          "latency": 6,
+          "perf_cycle": 5420,
+          "port": 0,
+          "dispatch_predicate_sources": []
+        },
+        {
+          "cycle": 5420,
+          "pc": 330592284,
+          "id": 642,
+          "op": "RV_PLT",
+          "operands": " Dtype: B8  Pd[1], Sn[64]=0x0, ",
+          "line": 622,
+          "done": 5426,
+          "latency": 6,
+          "perf_cycle": 5421,
+          "port": 1,
+          "dispatch_predicate_sources": []
+        },
+        {
+          "cycle": 5421,
+          "pc": 330592296,
+          "id": 645,
+          "op": "RV_PLT",
+          "operands": " Dtype: B8  Pd[1], Sn[64]=0x0, ",
+          "line": 624,
+          "done": 5427,
+          "latency": 6,
+          "perf_cycle": 5422,
+          "port": 0,
+          "dispatch_predicate_sources": []
+        },
+        {
+          "cycle": 5422,
+          "pc": 330592308,
+          "id": 660,
+          "op": "RV_PLT",
+          "operands": " Dtype: B8  Pd[1], Sn[64]=0x5, ",
+          "line": 628,
+          "done": 5428,
+          "latency": 6,
+          "perf_cycle": 5423,
+          "port": 1,
+          "dispatch_predicate_sources": []
+        },
+        {
+          "cycle": 5423,
+          "pc": 330592320,
+          "id": 664,
+          "op": "RV_PLT",
+          "operands": " Dtype: B8  Pd[1], Sn[64]=0x211, ",
+          "line": 631,
+          "done": 5429,
+          "latency": 6,
+          "perf_cycle": 5424,
+          "port": 0,
+          "dispatch_predicate_sources": []
+        },
+        {
+          "cycle": 5424,
+          "pc": 330592332,
+          "id": 668,
+          "op": "RV_PLT",
+          "operands": " Dtype: B8  Pd[1], Sn[64]=0x603, ",
+          "line": 633,
+          "done": 5430,
+          "latency": 6,
+          "perf_cycle": 5425,
+          "port": 1,
+          "dispatch_predicate_sources": []
+        }
+      ],
+      "port_pressure_events": [],
+      "recipe_events": [],
+      "supporting_compute_events": [],
+      "all_opcodes": [
+        "RV_PLT",
+        "RV_PSTS",
+        "RV_SMOV"
+      ],
+      "forwarding_observations": [
+        {
+          "producer_id": 636,
+          "consumer_id": 637,
+          "producer_op": "RV_PLT",
+          "consumer_op": "RV_PSTS",
+          "producer_role": "Pd",
+          "role": "Pd",
+          "gap": 4,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": true,
+          "other_sources_ready_at_producer_issue": true
+        },
+        {
+          "producer_id": 639,
+          "consumer_id": 640,
+          "producer_op": "RV_PLT",
+          "consumer_op": "RV_PSTS",
+          "producer_role": "Pd",
+          "role": "Pd",
+          "gap": 4,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": true,
+          "other_sources_ready_at_producer_issue": true
+        },
+        {
+          "producer_id": 642,
+          "consumer_id": 643,
+          "producer_op": "RV_PLT",
+          "consumer_op": "RV_PSTS",
+          "producer_role": "Pd",
+          "role": "Pd",
+          "gap": 4,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": true,
+          "other_sources_ready_at_producer_issue": true
+        },
+        {
+          "producer_id": 645,
+          "consumer_id": 646,
+          "producer_op": "RV_PLT",
+          "consumer_op": "RV_PSTS",
+          "producer_role": "Pd",
+          "role": "Pd",
+          "gap": 4,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": true,
+          "other_sources_ready_at_producer_issue": true
+        },
+        {
+          "producer_id": 660,
+          "consumer_id": 661,
+          "producer_op": "RV_PLT",
+          "consumer_op": "RV_PSTS",
+          "producer_role": "Pd",
+          "role": "Pd",
+          "gap": 4,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": true,
+          "other_sources_ready_at_producer_issue": true
+        },
+        {
+          "producer_id": 664,
+          "consumer_id": 665,
+          "producer_op": "RV_PLT",
+          "consumer_op": "RV_PSTS",
+          "producer_role": "Pd",
+          "role": "Pd",
+          "gap": 4,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": true,
+          "other_sources_ready_at_producer_issue": true
+        },
+        {
+          "producer_id": 668,
+          "consumer_id": 669,
+          "producer_op": "RV_PLT",
+          "consumer_op": "RV_PSTS",
+          "producer_role": "Pd",
+          "role": "Pd",
+          "gap": 4,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": true,
+          "other_sources_ready_at_producer_issue": true
+        }
+      ],
+      "independent_same_port_gaps": [
+        {
+          "previous_id": 639,
+          "current_id": 645,
+          "port": 0,
+          "gap": 2,
+          "sources_done_before_previous": true,
+          "sources_ready_before_previous": true
+        },
+        {
+          "previous_id": 645,
+          "current_id": 664,
+          "port": 0,
+          "gap": 2,
+          "sources_done_before_previous": true,
+          "sources_ready_before_previous": true
+        },
+        {
+          "previous_id": 636,
+          "current_id": 642,
+          "port": 1,
+          "gap": 2,
+          "sources_done_before_previous": true,
+          "sources_ready_before_previous": true
+        },
+        {
+          "previous_id": 642,
+          "current_id": 660,
+          "port": 1,
+          "gap": 2,
+          "sources_done_before_previous": true,
+          "sources_ready_before_previous": true
+        },
+        {
+          "previous_id": 660,
+          "current_id": 668,
+          "port": 1,
+          "gap": 2,
+          "sources_done_before_previous": true,
+          "sources_ready_before_previous": true
+        }
+      ],
+      "single_op_sample": true,
+      "run": "vfsim-a5-completion-predicate-range-synchronized/batch_000"
+    },
+    {
+      "family": "plt",
+      "width": 2,
+      "api": "plt_b16",
+      "form": "b16",
+      "dtype": "uint8",
+      "result_dtype": "bool",
+      "target_count": 7,
+      "target_opcodes": [
+        "RV_PLT"
+      ],
+      "output_offset": 28672,
+      "output_bytes": 1024,
+      "guard_offset": 29696,
+      "guard_bytes": 3072,
+      "exact_bytes": true,
+      "warm_operands": true,
+      "patterns": [],
+      "counts": [
+        0,
+        1,
+        127,
+        128,
+        133,
+        401,
+        899
+      ],
+      "starts": [
+        0,
+        0,
+        0,
+        1,
+        1,
+        2,
+        7
+      ],
+      "passed": false,
+      "mismatch_offsets": [
+        516,
+        520,
+        524,
+        528,
+        532,
+        536
+      ],
+      "guards_passed": true,
+      "vf_pc": [
+        "0x13b47100",
+        "0x13b47158"
+      ],
+      "vf_instruction_id_range": [
+        671,
+        698
+      ],
+      "target_count_actual": 7,
+      "latencies": [
+        6
+      ],
+      "ports": [
+        0,
+        1
+      ],
+      "events": [
+        {
+          "cycle": 5453,
+          "pc": 330592516,
+          "id": 672,
+          "op": "RV_PLT",
+          "operands": " Dtype: B16  Pd[1], Sn[64]=0x0, ",
+          "line": 645,
+          "done": 5459,
+          "latency": 6,
+          "perf_cycle": 5454,
+          "port": 0,
+          "dispatch_predicate_sources": []
+        },
+        {
+          "cycle": 5454,
+          "pc": 330592528,
+          "id": 675,
+          "op": "RV_PLT",
+          "operands": " Dtype: B16  Pd[1], Sn[64]=0x0, ",
+          "line": 647,
+          "done": 5460,
+          "latency": 6,
+          "perf_cycle": 5455,
+          "port": 1,
+          "dispatch_predicate_sources": []
+        },
+        {
+          "cycle": 5455,
+          "pc": 330592540,
+          "id": 678,
+          "op": "RV_PLT",
+          "operands": " Dtype: B16  Pd[1], Sn[64]=0x0, ",
+          "line": 649,
+          "done": 5461,
+          "latency": 6,
+          "perf_cycle": 5456,
+          "port": 0,
+          "dispatch_predicate_sources": []
+        },
+        {
+          "cycle": 5456,
+          "pc": 330592552,
+          "id": 681,
+          "op": "RV_PLT",
+          "operands": " Dtype: B16  Pd[1], Sn[64]=0x0, ",
+          "line": 651,
+          "done": 5462,
+          "latency": 6,
+          "perf_cycle": 5457,
+          "port": 1,
+          "dispatch_predicate_sources": []
+        },
+        {
+          "cycle": 5457,
+          "pc": 330592564,
+          "id": 687,
+          "op": "RV_PLT",
+          "operands": " Dtype: B16  Pd[1], Sn[64]=0x5, ",
+          "line": 655,
+          "done": 5463,
+          "latency": 6,
+          "perf_cycle": 5458,
+          "port": 0,
+          "dispatch_predicate_sources": []
+        },
+        {
+          "cycle": 5458,
+          "pc": 330592576,
+          "id": 691,
+          "op": "RV_PLT",
+          "operands": " Dtype: B16  Pd[1], Sn[64]=0x111, ",
+          "line": 658,
+          "done": 5464,
+          "latency": 6,
+          "perf_cycle": 5459,
+          "port": 1,
+          "dispatch_predicate_sources": []
+        },
+        {
+          "cycle": 5459,
+          "pc": 330592588,
+          "id": 695,
+          "op": "RV_PLT",
+          "operands": " Dtype: B16  Pd[1], Sn[64]=0x303, ",
+          "line": 660,
+          "done": 5465,
+          "latency": 6,
+          "perf_cycle": 5460,
+          "port": 0,
+          "dispatch_predicate_sources": []
+        }
+      ],
+      "port_pressure_events": [],
+      "recipe_events": [],
+      "supporting_compute_events": [],
+      "all_opcodes": [
+        "RV_PLT",
+        "RV_PSTS",
+        "RV_SMOV"
+      ],
+      "forwarding_observations": [
+        {
+          "producer_id": 672,
+          "consumer_id": 673,
+          "producer_op": "RV_PLT",
+          "consumer_op": "RV_PSTS",
+          "producer_role": "Pd",
+          "role": "Pd",
+          "gap": 4,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": true,
+          "other_sources_ready_at_producer_issue": true
+        },
+        {
+          "producer_id": 675,
+          "consumer_id": 676,
+          "producer_op": "RV_PLT",
+          "consumer_op": "RV_PSTS",
+          "producer_role": "Pd",
+          "role": "Pd",
+          "gap": 4,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": true,
+          "other_sources_ready_at_producer_issue": true
+        },
+        {
+          "producer_id": 678,
+          "consumer_id": 679,
+          "producer_op": "RV_PLT",
+          "consumer_op": "RV_PSTS",
+          "producer_role": "Pd",
+          "role": "Pd",
+          "gap": 4,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": true,
+          "other_sources_ready_at_producer_issue": true
+        },
+        {
+          "producer_id": 681,
+          "consumer_id": 682,
+          "producer_op": "RV_PLT",
+          "consumer_op": "RV_PSTS",
+          "producer_role": "Pd",
+          "role": "Pd",
+          "gap": 4,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": true,
+          "other_sources_ready_at_producer_issue": true
+        },
+        {
+          "producer_id": 687,
+          "consumer_id": 688,
+          "producer_op": "RV_PLT",
+          "consumer_op": "RV_PSTS",
+          "producer_role": "Pd",
+          "role": "Pd",
+          "gap": 4,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": true,
+          "other_sources_ready_at_producer_issue": true
+        },
+        {
+          "producer_id": 691,
+          "consumer_id": 692,
+          "producer_op": "RV_PLT",
+          "consumer_op": "RV_PSTS",
+          "producer_role": "Pd",
+          "role": "Pd",
+          "gap": 4,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": true,
+          "other_sources_ready_at_producer_issue": true
+        },
+        {
+          "producer_id": 695,
+          "consumer_id": 696,
+          "producer_op": "RV_PLT",
+          "consumer_op": "RV_PSTS",
+          "producer_role": "Pd",
+          "role": "Pd",
+          "gap": 4,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": true,
+          "other_sources_ready_at_producer_issue": true
+        }
+      ],
+      "independent_same_port_gaps": [
+        {
+          "previous_id": 672,
+          "current_id": 678,
+          "port": 0,
+          "gap": 2,
+          "sources_done_before_previous": true,
+          "sources_ready_before_previous": true
+        },
+        {
+          "previous_id": 678,
+          "current_id": 687,
+          "port": 0,
+          "gap": 2,
+          "sources_done_before_previous": true,
+          "sources_ready_before_previous": true
+        },
+        {
+          "previous_id": 687,
+          "current_id": 695,
+          "port": 0,
+          "gap": 2,
+          "sources_done_before_previous": true,
+          "sources_ready_before_previous": true
+        },
+        {
+          "previous_id": 675,
+          "current_id": 681,
+          "port": 1,
+          "gap": 2,
+          "sources_done_before_previous": true,
+          "sources_ready_before_previous": true
+        },
+        {
+          "previous_id": 681,
+          "current_id": 691,
+          "port": 1,
+          "gap": 2,
+          "sources_done_before_previous": true,
+          "sources_ready_before_previous": true
+        }
+      ],
+      "single_op_sample": true,
+      "run": "vfsim-a5-completion-predicate-range-synchronized/batch_000"
+    },
+    {
+      "family": "plt",
+      "width": 4,
+      "api": "plt_b32",
+      "form": "b32",
+      "dtype": "uint8",
+      "result_dtype": "bool",
+      "target_count": 7,
+      "target_opcodes": [
+        "RV_PLT"
+      ],
+      "output_offset": 32768,
+      "output_bytes": 1024,
+      "guard_offset": 33792,
+      "guard_bytes": 3072,
+      "exact_bytes": true,
+      "warm_operands": true,
+      "patterns": [],
+      "counts": [
+        0,
+        1,
+        63,
+        64,
+        69,
+        209,
+        451
+      ],
+      "starts": [
+        0,
+        0,
+        0,
+        1,
+        1,
+        2,
+        7
+      ],
+      "passed": false,
+      "mismatch_offsets": [
+        516,
+        520,
+        524,
+        528,
+        532,
+        536
+      ],
+      "guards_passed": true,
+      "vf_pc": [
+        "0x13b47200",
+        "0x13b47258"
+      ],
+      "vf_instruction_id_range": [
+        698,
+        759
+      ],
+      "target_count_actual": 7,
+      "latencies": [
+        6
+      ],
+      "ports": [
+        0,
+        1
+      ],
+      "events": [
+        {
+          "cycle": 5488,
+          "pc": 330592772,
+          "id": 699,
+          "op": "RV_PLT",
+          "operands": " Dtype: B32  Pd[1], Sn[64]=0x0, ",
+          "line": 672,
+          "done": 5494,
+          "latency": 6,
+          "perf_cycle": 5489,
+          "port": 1,
+          "dispatch_predicate_sources": []
+        },
+        {
+          "cycle": 5489,
+          "pc": 330592784,
+          "id": 702,
+          "op": "RV_PLT",
+          "operands": " Dtype: B32  Pd[1], Sn[64]=0x0, ",
+          "line": 674,
+          "done": 5495,
+          "latency": 6,
+          "perf_cycle": 5490,
+          "port": 0,
+          "dispatch_predicate_sources": []
+        },
+        {
+          "cycle": 5490,
+          "pc": 330592796,
+          "id": 705,
+          "op": "RV_PLT",
+          "operands": " Dtype: B32  Pd[1], Sn[64]=0x0, ",
+          "line": 676,
+          "done": 5496,
+          "latency": 6,
+          "perf_cycle": 5491,
+          "port": 1,
+          "dispatch_predicate_sources": []
+        },
+        {
+          "cycle": 5491,
+          "pc": 330592808,
+          "id": 708,
+          "op": "RV_PLT",
+          "operands": " Dtype: B32  Pd[1], Sn[64]=0x0, ",
+          "line": 678,
+          "done": 5497,
+          "latency": 6,
+          "perf_cycle": 5492,
+          "port": 0,
+          "dispatch_predicate_sources": []
+        },
+        {
+          "cycle": 5492,
+          "pc": 330592820,
+          "id": 720,
+          "op": "RV_PLT",
+          "operands": " Dtype: B32  Pd[1], Sn[64]=0x5, ",
+          "line": 682,
+          "done": 5498,
+          "latency": 6,
+          "perf_cycle": 5493,
+          "port": 1,
+          "dispatch_predicate_sources": []
+        },
+        {
+          "cycle": 5493,
+          "pc": 330592832,
+          "id": 724,
+          "op": "RV_PLT",
+          "operands": " Dtype: B32  Pd[1], Sn[64]=0x91, ",
+          "line": 685,
+          "done": 5499,
+          "latency": 6,
+          "perf_cycle": 5494,
+          "port": 0,
+          "dispatch_predicate_sources": []
+        },
+        {
+          "cycle": 5494,
+          "pc": 330592844,
+          "id": 728,
+          "op": "RV_PLT",
+          "operands": " Dtype: B32  Pd[1], Sn[64]=0x183, ",
+          "line": 687,
+          "done": 5500,
+          "latency": 6,
+          "perf_cycle": 5495,
+          "port": 1,
+          "dispatch_predicate_sources": []
+        }
+      ],
+      "port_pressure_events": [],
+      "recipe_events": [],
+      "supporting_compute_events": [],
+      "all_opcodes": [
+        "RV_PLT",
+        "RV_PSTS",
+        "RV_SMOV"
+      ],
+      "forwarding_observations": [
+        {
+          "producer_id": 699,
+          "consumer_id": 700,
+          "producer_op": "RV_PLT",
+          "consumer_op": "RV_PSTS",
+          "producer_role": "Pd",
+          "role": "Pd",
+          "gap": 4,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": true,
+          "other_sources_ready_at_producer_issue": true
+        },
+        {
+          "producer_id": 702,
+          "consumer_id": 703,
+          "producer_op": "RV_PLT",
+          "consumer_op": "RV_PSTS",
+          "producer_role": "Pd",
+          "role": "Pd",
+          "gap": 4,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": true,
+          "other_sources_ready_at_producer_issue": true
+        },
+        {
+          "producer_id": 705,
+          "consumer_id": 706,
+          "producer_op": "RV_PLT",
+          "consumer_op": "RV_PSTS",
+          "producer_role": "Pd",
+          "role": "Pd",
+          "gap": 4,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": true,
+          "other_sources_ready_at_producer_issue": true
+        },
+        {
+          "producer_id": 708,
+          "consumer_id": 709,
+          "producer_op": "RV_PLT",
+          "consumer_op": "RV_PSTS",
+          "producer_role": "Pd",
+          "role": "Pd",
+          "gap": 4,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": true,
+          "other_sources_ready_at_producer_issue": true
+        },
+        {
+          "producer_id": 720,
+          "consumer_id": 721,
+          "producer_op": "RV_PLT",
+          "consumer_op": "RV_PSTS",
+          "producer_role": "Pd",
+          "role": "Pd",
+          "gap": 4,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": true,
+          "other_sources_ready_at_producer_issue": true
+        },
+        {
+          "producer_id": 724,
+          "consumer_id": 725,
+          "producer_op": "RV_PLT",
+          "consumer_op": "RV_PSTS",
+          "producer_role": "Pd",
+          "role": "Pd",
+          "gap": 4,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": true,
+          "other_sources_ready_at_producer_issue": true
+        },
+        {
+          "producer_id": 728,
+          "consumer_id": 729,
+          "producer_op": "RV_PLT",
+          "consumer_op": "RV_PSTS",
+          "producer_role": "Pd",
+          "role": "Pd",
+          "gap": 4,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": true,
+          "other_sources_ready_at_producer_issue": true
+        }
+      ],
+      "independent_same_port_gaps": [
+        {
+          "previous_id": 702,
+          "current_id": 708,
+          "port": 0,
+          "gap": 2,
+          "sources_done_before_previous": true,
+          "sources_ready_before_previous": true
+        },
+        {
+          "previous_id": 708,
+          "current_id": 724,
+          "port": 0,
+          "gap": 2,
+          "sources_done_before_previous": true,
+          "sources_ready_before_previous": true
+        },
+        {
+          "previous_id": 699,
+          "current_id": 705,
+          "port": 1,
+          "gap": 2,
+          "sources_done_before_previous": true,
+          "sources_ready_before_previous": true
+        },
+        {
+          "previous_id": 705,
+          "current_id": 720,
+          "port": 1,
+          "gap": 2,
+          "sources_done_before_previous": true,
+          "sources_ready_before_previous": true
+        },
+        {
+          "previous_id": 720,
+          "current_id": 728,
+          "port": 1,
+          "gap": 2,
+          "sources_done_before_previous": true,
+          "sources_ready_before_previous": true
+        }
+      ],
+      "single_op_sample": true,
+      "run": "vfsim-a5-completion-predicate-range-synchronized/batch_000"
+    },
+    {
+      "family": "pltm",
+      "width": 1,
+      "api": "pltm_b8",
+      "form": "b8",
+      "dtype": "uint8",
+      "result_dtype": "bool",
+      "target_count": 7,
+      "target_opcodes": [
+        "RV_PLTM"
+      ],
+      "output_offset": 36864,
+      "output_bytes": 1024,
+      "guard_offset": 37888,
+      "guard_bytes": 3072,
+      "exact_bytes": true,
+      "warm_operands": true,
+      "patterns": [],
+      "counts": [
+        0,
+        1,
+        255,
+        256,
+        261,
+        785,
+        1795
+      ],
+      "starts": [
+        0,
+        0,
+        0,
+        1,
+        1,
+        2,
+        7
+      ],
+      "passed": true,
+      "mismatch_offsets": [],
+      "guards_passed": true,
+      "vf_pc": [
+        "0x13b47300",
+        "0x13b47348"
+      ],
+      "vf_instruction_id_range": [
+        759,
+        838
+      ],
+      "target_count_actual": 7,
+      "latencies": [
+        6
+      ],
+      "ports": [
+        0,
+        1
+      ],
+      "events": [
+        {
+          "cycle": 5522,
+          "pc": 330593024,
+          "id": 759,
+          "op": "RV_PLTM",
+          "operands": " Dtype: B8  Pd[1], Sn[2]=0x0, Sn2[3]=0x0, Sm[0]=0x0, Sm2[1]=0x0, ",
+          "line": 718,
+          "done": 5528,
+          "latency": 6,
+          "perf_cycle": 5523,
+          "port": 0,
+          "dispatch_predicate_sources": []
+        },
+        {
+          "cycle": 5523,
+          "pc": 330593032,
+          "id": 761,
+          "op": "RV_PLTM",
+          "operands": " Dtype: B8  Pd[1], Sn[8]=0x1, Sn2[9]=0x0, Sm[0]=0x0, Sm2[1]=0x0, ",
+          "line": 721,
+          "done": 5529,
+          "latency": 6,
+          "perf_cycle": 5524,
+          "port": 1,
+          "dispatch_predicate_sources": []
+        },
+        {
+          "cycle": 5524,
+          "pc": 330593040,
+          "id": 763,
+          "op": "RV_PLTM",
+          "operands": " Dtype: B8  Pd[1], Sn[12]=0xff, Sn2[13]=0x0, Sm[0]=0x0, Sm2[1]=0x0, ",
+          "line": 725,
+          "done": 5530,
+          "latency": 6,
+          "perf_cycle": 5525,
+          "port": 0,
+          "dispatch_predicate_sources": []
+        },
+        {
+          "cycle": 5525,
+          "pc": 330593052,
+          "id": 770,
+          "op": "RV_PLTM",
+          "operands": " Dtype: B8  Pd[1], Sn[16]=0x100, Sn2[17]=0x0, Sm[64]=0x1, ",
+          "line": 728,
+          "done": 5531,
+          "latency": 6,
+          "perf_cycle": 5526,
+          "port": 1,
+          "dispatch_predicate_sources": []
+        },
+        {
+          "cycle": 5526,
+          "pc": 330593060,
+          "id": 772,
+          "op": "RV_PLTM",
+          "operands": " Dtype: B8  Pd[1], Sn[20]=0x105, Sn2[21]=0x0, Sm[64]=0x1, ",
+          "line": 733,
+          "done": 5532,
+          "latency": 6,
+          "perf_cycle": 5527,
+          "port": 0,
+          "dispatch_predicate_sources": []
+        },
+        {
+          "cycle": 5527,
+          "pc": 330593072,
+          "id": 819,
+          "op": "RV_PLTM",
+          "operands": " Dtype: B8  Pd[1], Sn[24]=0x311, Sn2[25]=0x0, Sm[64]=0x2, ",
+          "line": 736,
+          "done": 5533,
+          "latency": 6,
+          "perf_cycle": 5528,
+          "port": 1,
+          "dispatch_predicate_sources": []
+        },
+        {
+          "cycle": 5528,
+          "pc": 330593084,
+          "id": 823,
+          "op": "RV_PLTM",
+          "operands": " Dtype: B8  Pd[1], Sn[28]=0x703, Sn2[29]=0x0, Sm[64]=0x7, ",
+          "line": 738,
+          "done": 5534,
+          "latency": 6,
+          "perf_cycle": 5529,
+          "port": 0,
+          "dispatch_predicate_sources": []
+        }
+      ],
+      "port_pressure_events": [],
+      "recipe_events": [],
+      "supporting_compute_events": [],
+      "all_opcodes": [
+        "RV_PLTM",
+        "RV_PSTS",
+        "RV_SMOVI"
+      ],
+      "forwarding_observations": [
+        {
+          "producer_id": 759,
+          "consumer_id": 760,
+          "producer_op": "RV_PLTM",
+          "consumer_op": "RV_PSTS",
+          "producer_role": "Pd",
+          "role": "Pd",
+          "gap": 4,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": true,
+          "other_sources_ready_at_producer_issue": true
+        },
+        {
+          "producer_id": 761,
+          "consumer_id": 762,
+          "producer_op": "RV_PLTM",
+          "consumer_op": "RV_PSTS",
+          "producer_role": "Pd",
+          "role": "Pd",
+          "gap": 4,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": true,
+          "other_sources_ready_at_producer_issue": true
+        },
+        {
+          "producer_id": 763,
+          "consumer_id": 764,
+          "producer_op": "RV_PLTM",
+          "consumer_op": "RV_PSTS",
+          "producer_role": "Pd",
+          "role": "Pd",
+          "gap": 4,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": true,
+          "other_sources_ready_at_producer_issue": true
+        },
+        {
+          "producer_id": 770,
+          "consumer_id": 771,
+          "producer_op": "RV_PLTM",
+          "consumer_op": "RV_PSTS",
+          "producer_role": "Pd",
+          "role": "Pd",
+          "gap": 4,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": true,
+          "other_sources_ready_at_producer_issue": true
+        },
+        {
+          "producer_id": 772,
+          "consumer_id": 773,
+          "producer_op": "RV_PLTM",
+          "consumer_op": "RV_PSTS",
+          "producer_role": "Pd",
+          "role": "Pd",
+          "gap": 4,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": true,
+          "other_sources_ready_at_producer_issue": true
+        },
+        {
+          "producer_id": 819,
+          "consumer_id": 820,
+          "producer_op": "RV_PLTM",
+          "consumer_op": "RV_PSTS",
+          "producer_role": "Pd",
+          "role": "Pd",
+          "gap": 4,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": true,
+          "other_sources_ready_at_producer_issue": true
+        },
+        {
+          "producer_id": 823,
+          "consumer_id": 825,
+          "producer_op": "RV_PLTM",
+          "consumer_op": "RV_PSTS",
+          "producer_role": "Pd",
+          "role": "Pd",
+          "gap": 4,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": true,
+          "other_sources_ready_at_producer_issue": true
+        }
+      ],
+      "independent_same_port_gaps": [
+        {
+          "previous_id": 759,
+          "current_id": 763,
+          "port": 0,
+          "gap": 2,
+          "sources_done_before_previous": true,
+          "sources_ready_before_previous": true
+        },
+        {
+          "previous_id": 763,
+          "current_id": 772,
+          "port": 0,
+          "gap": 2,
+          "sources_done_before_previous": true,
+          "sources_ready_before_previous": true
+        },
+        {
+          "previous_id": 772,
+          "current_id": 823,
+          "port": 0,
+          "gap": 2,
+          "sources_done_before_previous": true,
+          "sources_ready_before_previous": true
+        },
+        {
+          "previous_id": 761,
+          "current_id": 770,
+          "port": 1,
+          "gap": 2,
+          "sources_done_before_previous": true,
+          "sources_ready_before_previous": true
+        },
+        {
+          "previous_id": 770,
+          "current_id": 819,
+          "port": 1,
+          "gap": 2,
+          "sources_done_before_previous": true,
+          "sources_ready_before_previous": true
+        }
+      ],
+      "single_op_sample": true,
+      "run": "vfsim-a5-completion-predicate-range-synchronized/batch_000"
+    },
+    {
+      "family": "pltm",
+      "width": 2,
+      "api": "pltm_b16",
+      "form": "b16",
+      "dtype": "uint8",
+      "result_dtype": "bool",
+      "target_count": 7,
+      "target_opcodes": [
+        "RV_PLTM"
+      ],
+      "output_offset": 40960,
+      "output_bytes": 1024,
+      "guard_offset": 41984,
+      "guard_bytes": 3072,
+      "exact_bytes": true,
+      "warm_operands": true,
+      "patterns": [],
+      "counts": [
+        0,
+        1,
+        127,
+        128,
+        133,
+        401,
+        899
+      ],
+      "starts": [
+        0,
+        0,
+        0,
+        1,
+        1,
+        2,
+        7
+      ],
+      "passed": true,
+      "mismatch_offsets": [],
+      "guards_passed": true,
+      "vf_pc": [
+        "0x13b47400",
+        "0x13b47448"
+      ],
+      "vf_instruction_id_range": [
+        838,
+        858
+      ],
+      "target_count_actual": 7,
+      "latencies": [
+        6
+      ],
+      "ports": [
+        0,
+        1
+      ],
+      "events": [
+        {
+          "cycle": 6000,
+          "pc": 330593280,
+          "id": 838,
+          "op": "RV_PLTM",
+          "operands": " Dtype: B16  Pd[1], Sn[2]=0x0, Sn2[3]=0x0, Sm[0]=0x0, Sm2[1]=0x0, ",
+          "line": 794,
+          "done": 6006,
+          "latency": 6,
+          "perf_cycle": 6001,
+          "port": 1,
+          "dispatch_predicate_sources": []
+        },
+        {
+          "cycle": 6001,
+          "pc": 330593288,
+          "id": 840,
+          "op": "RV_PLTM",
+          "operands": " Dtype: B16  Pd[1], Sn[8]=0x1, Sn2[9]=0x0, Sm[0]=0x0, Sm2[1]=0x0, ",
+          "line": 796,
+          "done": 6007,
+          "latency": 6,
+          "perf_cycle": 6002,
+          "port": 0,
+          "dispatch_predicate_sources": []
+        },
+        {
+          "cycle": 6002,
+          "pc": 330593296,
+          "id": 842,
+          "op": "RV_PLTM",
+          "operands": " Dtype: B16  Pd[1], Sn[12]=0x7f, Sn2[13]=0x0, Sm[0]=0x0, Sm2[1]=0x0, ",
+          "line": 798,
+          "done": 6008,
+          "latency": 6,
+          "perf_cycle": 6003,
+          "port": 1,
+          "dispatch_predicate_sources": []
+        },
+        {
+          "cycle": 6003,
+          "pc": 330593308,
+          "id": 845,
+          "op": "RV_PLTM",
+          "operands": " Dtype: B16  Pd[1], Sn[16]=0x80, Sn2[17]=0x0, Sm[64]=0x1, ",
+          "line": 799,
+          "done": 6009,
+          "latency": 6,
+          "perf_cycle": 6004,
+          "port": 0,
+          "dispatch_predicate_sources": []
+        },
+        {
+          "cycle": 6004,
+          "pc": 330593316,
+          "id": 847,
+          "op": "RV_PLTM",
+          "operands": " Dtype: B16  Pd[1], Sn[20]=0x85, Sn2[21]=0x0, Sm[64]=0x1, ",
+          "line": 803,
+          "done": 6010,
+          "latency": 6,
+          "perf_cycle": 6005,
+          "port": 1,
+          "dispatch_predicate_sources": []
+        },
+        {
+          "cycle": 6005,
+          "pc": 330593328,
+          "id": 850,
+          "op": "RV_PLTM",
+          "operands": " Dtype: B16  Pd[1], Sn[24]=0x191, Sn2[25]=0x0, Sm[64]=0x2, ",
+          "line": 806,
+          "done": 6011,
+          "latency": 6,
+          "perf_cycle": 6006,
+          "port": 0,
+          "dispatch_predicate_sources": []
+        },
+        {
+          "cycle": 6006,
+          "pc": 330593340,
+          "id": 854,
+          "op": "RV_PLTM",
+          "operands": " Dtype: B16  Pd[1], Sn[28]=0x383, Sn2[29]=0x0, Sm[64]=0x7, ",
+          "line": 808,
+          "done": 6012,
+          "latency": 6,
+          "perf_cycle": 6007,
+          "port": 1,
+          "dispatch_predicate_sources": []
+        }
+      ],
+      "port_pressure_events": [],
+      "recipe_events": [],
+      "supporting_compute_events": [],
+      "all_opcodes": [
+        "RV_PLTM",
+        "RV_PSTS",
+        "RV_SMOVI"
+      ],
+      "forwarding_observations": [
+        {
+          "producer_id": 838,
+          "consumer_id": 839,
+          "producer_op": "RV_PLTM",
+          "consumer_op": "RV_PSTS",
+          "producer_role": "Pd",
+          "role": "Pd",
+          "gap": 4,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": true,
+          "other_sources_ready_at_producer_issue": true
+        },
+        {
+          "producer_id": 840,
+          "consumer_id": 841,
+          "producer_op": "RV_PLTM",
+          "consumer_op": "RV_PSTS",
+          "producer_role": "Pd",
+          "role": "Pd",
+          "gap": 4,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": true,
+          "other_sources_ready_at_producer_issue": true
+        },
+        {
+          "producer_id": 842,
+          "consumer_id": 843,
+          "producer_op": "RV_PLTM",
+          "consumer_op": "RV_PSTS",
+          "producer_role": "Pd",
+          "role": "Pd",
+          "gap": 4,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": true,
+          "other_sources_ready_at_producer_issue": true
+        },
+        {
+          "producer_id": 845,
+          "consumer_id": 846,
+          "producer_op": "RV_PLTM",
+          "consumer_op": "RV_PSTS",
+          "producer_role": "Pd",
+          "role": "Pd",
+          "gap": 4,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": true,
+          "other_sources_ready_at_producer_issue": true
+        },
+        {
+          "producer_id": 847,
+          "consumer_id": 848,
+          "producer_op": "RV_PLTM",
+          "consumer_op": "RV_PSTS",
+          "producer_role": "Pd",
+          "role": "Pd",
+          "gap": 4,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": true,
+          "other_sources_ready_at_producer_issue": true
+        },
+        {
+          "producer_id": 850,
+          "consumer_id": 851,
+          "producer_op": "RV_PLTM",
+          "consumer_op": "RV_PSTS",
+          "producer_role": "Pd",
+          "role": "Pd",
+          "gap": 4,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": true,
+          "other_sources_ready_at_producer_issue": true
+        },
+        {
+          "producer_id": 854,
+          "consumer_id": 856,
+          "producer_op": "RV_PLTM",
+          "consumer_op": "RV_PSTS",
+          "producer_role": "Pd",
+          "role": "Pd",
+          "gap": 4,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": true,
+          "other_sources_ready_at_producer_issue": true
+        }
+      ],
+      "independent_same_port_gaps": [
+        {
+          "previous_id": 840,
+          "current_id": 845,
+          "port": 0,
+          "gap": 2,
+          "sources_done_before_previous": true,
+          "sources_ready_before_previous": true
+        },
+        {
+          "previous_id": 845,
+          "current_id": 850,
+          "port": 0,
+          "gap": 2,
+          "sources_done_before_previous": true,
+          "sources_ready_before_previous": true
+        },
+        {
+          "previous_id": 838,
+          "current_id": 842,
+          "port": 1,
+          "gap": 2,
+          "sources_done_before_previous": true,
+          "sources_ready_before_previous": true
+        },
+        {
+          "previous_id": 842,
+          "current_id": 847,
+          "port": 1,
+          "gap": 2,
+          "sources_done_before_previous": true,
+          "sources_ready_before_previous": true
+        },
+        {
+          "previous_id": 847,
+          "current_id": 854,
+          "port": 1,
+          "gap": 2,
+          "sources_done_before_previous": true,
+          "sources_ready_before_previous": true
+        }
+      ],
+      "single_op_sample": true,
+      "run": "vfsim-a5-completion-predicate-range-synchronized/batch_000"
+    },
+    {
+      "family": "pltm",
+      "width": 4,
+      "api": "pltm_b32",
+      "form": "b32",
+      "dtype": "uint8",
+      "result_dtype": "bool",
+      "target_count": 7,
+      "target_opcodes": [
+        "RV_PLTM"
+      ],
+      "output_offset": 45056,
+      "output_bytes": 1024,
+      "guard_offset": 46080,
+      "guard_bytes": 3072,
+      "exact_bytes": true,
+      "warm_operands": true,
+      "patterns": [],
+      "counts": [
+        0,
+        1,
+        63,
+        64,
+        69,
+        209,
+        451
+      ],
+      "starts": [
+        0,
+        0,
+        0,
+        1,
+        1,
+        2,
+        7
+      ],
+      "passed": true,
+      "mismatch_offsets": [],
+      "guards_passed": true,
+      "vf_pc": [
+        "0x13b47500",
+        "0x13b47548"
+      ],
+      "vf_instruction_id_range": [
+        858,
+        null
+      ],
+      "target_count_actual": 7,
+      "latencies": [
+        6
+      ],
+      "ports": [
+        0,
+        1
+      ],
+      "events": [
+        {
+          "cycle": 6034,
+          "pc": 330593536,
+          "id": 858,
+          "op": "RV_PLTM",
+          "operands": " Dtype: B32  Pd[1], Sn[2]=0x0, Sn2[3]=0x0, Sm[0]=0x0, Sm2[1]=0x0, ",
+          "line": 817,
+          "done": 6040,
+          "latency": 6,
+          "perf_cycle": 6035,
+          "port": 0,
+          "dispatch_predicate_sources": []
+        },
+        {
+          "cycle": 6035,
+          "pc": 330593544,
+          "id": 860,
+          "op": "RV_PLTM",
+          "operands": " Dtype: B32  Pd[1], Sn[8]=0x1, Sn2[9]=0x0, Sm[0]=0x0, Sm2[1]=0x0, ",
+          "line": 819,
+          "done": 6041,
+          "latency": 6,
+          "perf_cycle": 6036,
+          "port": 1,
+          "dispatch_predicate_sources": []
+        },
+        {
+          "cycle": 6036,
+          "pc": 330593552,
+          "id": 862,
+          "op": "RV_PLTM",
+          "operands": " Dtype: B32  Pd[1], Sn[12]=0x3f, Sn2[13]=0x0, Sm[0]=0x0, Sm2[1]=0x0, ",
+          "line": 821,
+          "done": 6042,
+          "latency": 6,
+          "perf_cycle": 6037,
+          "port": 0,
+          "dispatch_predicate_sources": []
+        },
+        {
+          "cycle": 6037,
+          "pc": 330593564,
+          "id": 865,
+          "op": "RV_PLTM",
+          "operands": " Dtype: B32  Pd[1], Sn[16]=0x40, Sn2[17]=0x0, Sm[64]=0x1, ",
+          "line": 822,
+          "done": 6043,
+          "latency": 6,
+          "perf_cycle": 6038,
+          "port": 1,
+          "dispatch_predicate_sources": []
+        },
+        {
+          "cycle": 6038,
+          "pc": 330593572,
+          "id": 867,
+          "op": "RV_PLTM",
+          "operands": " Dtype: B32  Pd[1], Sn[20]=0x45, Sn2[21]=0x0, Sm[64]=0x1, ",
+          "line": 825,
+          "done": 6044,
+          "latency": 6,
+          "perf_cycle": 6039,
+          "port": 0,
+          "dispatch_predicate_sources": []
+        },
+        {
+          "cycle": 6039,
+          "pc": 330593584,
+          "id": 878,
+          "op": "RV_PLTM",
+          "operands": " Dtype: B32  Pd[1], Sn[24]=0xd1, Sn2[25]=0x0, Sm[64]=0x2, ",
+          "line": 828,
+          "done": 6045,
+          "latency": 6,
+          "perf_cycle": 6040,
+          "port": 1,
+          "dispatch_predicate_sources": []
+        },
+        {
+          "cycle": 6040,
+          "pc": 330593596,
+          "id": 882,
+          "op": "RV_PLTM",
+          "operands": " Dtype: B32  Pd[1], Sn[28]=0x1c3, Sn2[29]=0x0, Sm[64]=0x7, ",
+          "line": 830,
+          "done": 6046,
+          "latency": 6,
+          "perf_cycle": 6041,
+          "port": 0,
+          "dispatch_predicate_sources": []
+        }
+      ],
+      "port_pressure_events": [],
+      "recipe_events": [],
+      "supporting_compute_events": [],
+      "all_opcodes": [
+        "RV_PLTM",
+        "RV_PSTS",
+        "RV_SMOVI"
+      ],
+      "forwarding_observations": [
+        {
+          "producer_id": 858,
+          "consumer_id": 859,
+          "producer_op": "RV_PLTM",
+          "consumer_op": "RV_PSTS",
+          "producer_role": "Pd",
+          "role": "Pd",
+          "gap": 4,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": true,
+          "other_sources_ready_at_producer_issue": true
+        },
+        {
+          "producer_id": 860,
+          "consumer_id": 861,
+          "producer_op": "RV_PLTM",
+          "consumer_op": "RV_PSTS",
+          "producer_role": "Pd",
+          "role": "Pd",
+          "gap": 4,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": true,
+          "other_sources_ready_at_producer_issue": true
+        },
+        {
+          "producer_id": 862,
+          "consumer_id": 863,
+          "producer_op": "RV_PLTM",
+          "consumer_op": "RV_PSTS",
+          "producer_role": "Pd",
+          "role": "Pd",
+          "gap": 4,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": true,
+          "other_sources_ready_at_producer_issue": true
+        },
+        {
+          "producer_id": 865,
+          "consumer_id": 866,
+          "producer_op": "RV_PLTM",
+          "consumer_op": "RV_PSTS",
+          "producer_role": "Pd",
+          "role": "Pd",
+          "gap": 4,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": true,
+          "other_sources_ready_at_producer_issue": true
+        },
+        {
+          "producer_id": 867,
+          "consumer_id": 868,
+          "producer_op": "RV_PLTM",
+          "consumer_op": "RV_PSTS",
+          "producer_role": "Pd",
+          "role": "Pd",
+          "gap": 4,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": true,
+          "other_sources_ready_at_producer_issue": true
+        },
+        {
+          "producer_id": 878,
+          "consumer_id": 879,
+          "producer_op": "RV_PLTM",
+          "consumer_op": "RV_PSTS",
+          "producer_role": "Pd",
+          "role": "Pd",
+          "gap": 4,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": true,
+          "other_sources_ready_at_producer_issue": true
+        },
+        {
+          "producer_id": 882,
+          "consumer_id": 884,
+          "producer_op": "RV_PLTM",
+          "consumer_op": "RV_PSTS",
+          "producer_role": "Pd",
+          "role": "Pd",
+          "gap": 4,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": true,
+          "other_sources_ready_at_producer_issue": true
+        }
+      ],
+      "independent_same_port_gaps": [
+        {
+          "previous_id": 858,
+          "current_id": 862,
+          "port": 0,
+          "gap": 2,
+          "sources_done_before_previous": true,
+          "sources_ready_before_previous": true
+        },
+        {
+          "previous_id": 862,
+          "current_id": 867,
+          "port": 0,
+          "gap": 2,
+          "sources_done_before_previous": true,
+          "sources_ready_before_previous": true
+        },
+        {
+          "previous_id": 867,
+          "current_id": 882,
+          "port": 0,
+          "gap": 2,
+          "sources_done_before_previous": true,
+          "sources_ready_before_previous": true
+        },
+        {
+          "previous_id": 860,
+          "current_id": 865,
+          "port": 1,
+          "gap": 2,
+          "sources_done_before_previous": true,
+          "sources_ready_before_previous": true
+        },
+        {
+          "previous_id": 865,
+          "current_id": 878,
+          "port": 1,
+          "gap": 2,
+          "sources_done_before_previous": true,
+          "sources_ready_before_previous": true
+        }
+      ],
+      "single_op_sample": true,
+      "run": "vfsim-a5-completion-predicate-range-synchronized/batch_000"
+    },
+    {
+      "family": "plt",
+      "width": 1,
+      "api": "plt_b8",
+      "form": "b8",
+      "dtype": "uint8",
+      "result_dtype": "bool",
+      "target_count": 7,
+      "target_opcodes": [
+        "RV_PLT"
+      ],
+      "output_offset": 0,
+      "output_bytes": 1024,
+      "guard_offset": 1024,
+      "guard_bytes": 3072,
+      "exact_bytes": true,
+      "warm_operands": true,
+      "patterns": [],
+      "counts": [
+        0,
+        1,
+        255,
+        256,
+        261,
+        785,
+        1795
+      ],
+      "starts": [
+        0,
+        0,
+        0,
+        1,
+        1,
+        2,
+        7
+      ],
+      "passed": true,
+      "mismatch_offsets": [],
+      "guards_passed": true,
+      "vf_pc": [
+        "0x13b34400",
+        "0x13b34494"
+      ],
+      "vf_instruction_id_range": [
+        128,
+        262
+      ],
+      "target_count_actual": 7,
+      "latencies": [
+        6
+      ],
+      "ports": [
+        0,
+        1
+      ],
+      "events": [
+        {
+          "cycle": 2783,
+          "pc": 330515460,
+          "id": 129,
+          "op": "RV_PLT",
+          "operands": " Dtype: B8  Pd[1], Sn[64]=0x0, ",
+          "line": 132,
+          "done": 2789,
+          "latency": 6,
+          "perf_cycle": 2784,
+          "port": 1,
+          "dispatch_predicate_sources": []
+        },
+        {
+          "cycle": 2784,
+          "pc": 330515472,
+          "id": 132,
+          "op": "RV_PLT",
+          "operands": " Dtype: B8  Pd[1], Sn[65]=0x0, ",
+          "line": 134,
+          "done": 2790,
+          "latency": 6,
+          "perf_cycle": 2785,
+          "port": 0,
+          "dispatch_predicate_sources": []
+        },
+        {
+          "cycle": 2785,
+          "pc": 330515484,
+          "id": 135,
+          "op": "RV_PLT",
+          "operands": " Dtype: B8  Pd[1], Sn[66]=0x0, ",
+          "line": 136,
+          "done": 2791,
+          "latency": 6,
+          "perf_cycle": 2786,
+          "port": 1,
+          "dispatch_predicate_sources": []
+        },
+        {
+          "cycle": 2786,
+          "pc": 330515496,
+          "id": 138,
+          "op": "RV_PLT",
+          "operands": " Dtype: B8  Pd[1], Sn[67]=0x0, ",
+          "line": 138,
+          "done": 2792,
+          "latency": 6,
+          "perf_cycle": 2787,
+          "port": 0,
+          "dispatch_predicate_sources": []
+        },
+        {
+          "cycle": 2787,
+          "pc": 330515508,
+          "id": 142,
+          "op": "RV_PLT",
+          "operands": " Dtype: B8  Pd[1], Sn[68]=0x5, ",
+          "line": 140,
+          "done": 2793,
+          "latency": 6,
+          "perf_cycle": 2788,
+          "port": 1,
+          "dispatch_predicate_sources": []
+        },
+        {
+          "cycle": 2788,
+          "pc": 330515520,
+          "id": 146,
+          "op": "RV_PLT",
+          "operands": " Dtype: B8  Pd[1], Sn[69]=0x211, ",
+          "line": 142,
+          "done": 2794,
+          "latency": 6,
+          "perf_cycle": 2789,
+          "port": 0,
+          "dispatch_predicate_sources": []
+        },
+        {
+          "cycle": 2789,
+          "pc": 330515532,
+          "id": 150,
+          "op": "RV_PLT",
+          "operands": " Dtype: B8  Pd[1], Sn[70]=0x603, ",
+          "line": 145,
+          "done": 2795,
+          "latency": 6,
+          "perf_cycle": 2790,
+          "port": 1,
+          "dispatch_predicate_sources": []
+        }
+      ],
+      "port_pressure_events": [],
+      "recipe_events": [],
+      "supporting_compute_events": [],
+      "all_opcodes": [
+        "RV_PLT",
+        "RV_PSET",
+        "RV_PSTI",
+        "RV_SMOV",
+        "RV_VBR",
+        "RV_VSTI"
+      ],
+      "forwarding_observations": [
+        {
+          "producer_id": 129,
+          "consumer_id": 130,
+          "producer_op": "RV_PLT",
+          "consumer_op": "RV_PSTI",
+          "producer_role": "Pd",
+          "role": "Pd",
+          "gap": 4,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": true,
+          "other_sources_ready_at_producer_issue": true
+        },
+        {
+          "producer_id": 132,
+          "consumer_id": 133,
+          "producer_op": "RV_PLT",
+          "consumer_op": "RV_PSTI",
+          "producer_role": "Pd",
+          "role": "Pd",
+          "gap": 4,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": true,
+          "other_sources_ready_at_producer_issue": true
+        },
+        {
+          "producer_id": 135,
+          "consumer_id": 136,
+          "producer_op": "RV_PLT",
+          "consumer_op": "RV_PSTI",
+          "producer_role": "Pd",
+          "role": "Pd",
+          "gap": 4,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": true,
+          "other_sources_ready_at_producer_issue": true
+        },
+        {
+          "producer_id": 138,
+          "consumer_id": 139,
+          "producer_op": "RV_PLT",
+          "consumer_op": "RV_PSTI",
+          "producer_role": "Pd",
+          "role": "Pd",
+          "gap": 4,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": true,
+          "other_sources_ready_at_producer_issue": true
+        },
+        {
+          "producer_id": 142,
+          "consumer_id": 143,
+          "producer_op": "RV_PLT",
+          "consumer_op": "RV_PSTI",
+          "producer_role": "Pd",
+          "role": "Pd",
+          "gap": 4,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": true,
+          "other_sources_ready_at_producer_issue": true
+        },
+        {
+          "producer_id": 146,
+          "consumer_id": 147,
+          "producer_op": "RV_PLT",
+          "consumer_op": "RV_PSTI",
+          "producer_role": "Pd",
+          "role": "Pd",
+          "gap": 4,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": true,
+          "other_sources_ready_at_producer_issue": true
+        },
+        {
+          "producer_id": 150,
+          "consumer_id": 151,
+          "producer_op": "RV_PLT",
+          "consumer_op": "RV_PSTI",
+          "producer_role": "Pd",
+          "role": "Pd",
+          "gap": 4,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": true,
+          "other_sources_ready_at_producer_issue": true
+        },
+        {
+          "producer_id": 154,
+          "consumer_id": 155,
+          "producer_op": "RV_VBR",
+          "consumer_op": "RV_VSTI",
+          "producer_role": "Vd",
+          "role": "Vd",
+          "gap": 4,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": false,
+          "other_sources_ready_at_producer_issue": false
+        },
+        {
+          "producer_id": 152,
+          "consumer_id": 155,
+          "producer_op": "RV_PSET",
+          "consumer_op": "RV_VSTI",
+          "producer_role": "Pd",
+          "role": "Pg",
+          "gap": 5,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": false,
+          "other_sources_ready_at_producer_issue": false
+        },
+        {
+          "producer_id": 156,
+          "consumer_id": 158,
+          "producer_op": "RV_VBR",
+          "consumer_op": "RV_VSTI",
+          "producer_role": "Vd",
+          "role": "Vd",
+          "gap": 5,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": false,
+          "other_sources_ready_at_producer_issue": false
+        },
+        {
+          "producer_id": 152,
+          "consumer_id": 158,
+          "producer_op": "RV_PSET",
+          "consumer_op": "RV_VSTI",
+          "producer_role": "Pd",
+          "role": "Pg",
+          "gap": 6,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": false,
+          "other_sources_ready_at_producer_issue": false
+        },
+        {
+          "producer_id": 159,
+          "consumer_id": 160,
+          "producer_op": "RV_VBR",
+          "consumer_op": "RV_VSTI",
+          "producer_role": "Vd",
+          "role": "Vd",
+          "gap": 5,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": false,
+          "other_sources_ready_at_producer_issue": false
+        },
+        {
+          "producer_id": 152,
+          "consumer_id": 160,
+          "producer_op": "RV_PSET",
+          "consumer_op": "RV_VSTI",
+          "producer_role": "Pd",
+          "role": "Pg",
+          "gap": 7,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": false,
+          "other_sources_ready_at_producer_issue": false
+        },
+        {
+          "producer_id": 162,
+          "consumer_id": 163,
+          "producer_op": "RV_VBR",
+          "consumer_op": "RV_VSTI",
+          "producer_role": "Vd",
+          "role": "Vd",
+          "gap": 6,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": false,
+          "other_sources_ready_at_producer_issue": false
+        },
+        {
+          "producer_id": 152,
+          "consumer_id": 163,
+          "producer_op": "RV_PSET",
+          "consumer_op": "RV_VSTI",
+          "producer_role": "Pd",
+          "role": "Pg",
+          "gap": 8,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": false,
+          "other_sources_ready_at_producer_issue": false
+        },
+        {
+          "producer_id": 164,
+          "consumer_id": 166,
+          "producer_op": "RV_VBR",
+          "consumer_op": "RV_VSTI",
+          "producer_role": "Vd",
+          "role": "Vd",
+          "gap": 6,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": false,
+          "other_sources_ready_at_producer_issue": false
+        },
+        {
+          "producer_id": 152,
+          "consumer_id": 166,
+          "producer_op": "RV_PSET",
+          "consumer_op": "RV_VSTI",
+          "producer_role": "Pd",
+          "role": "Pg",
+          "gap": 9,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": false,
+          "other_sources_ready_at_producer_issue": false
+        },
+        {
+          "producer_id": 167,
+          "consumer_id": 168,
+          "producer_op": "RV_VBR",
+          "consumer_op": "RV_VSTI",
+          "producer_role": "Vd",
+          "role": "Vd",
+          "gap": 4,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": true,
+          "other_sources_ready_at_producer_issue": true
+        },
+        {
+          "producer_id": 152,
+          "consumer_id": 168,
+          "producer_op": "RV_PSET",
+          "consumer_op": "RV_VSTI",
+          "producer_role": "Pd",
+          "role": "Pg",
+          "gap": 84,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": false,
+          "other_sources_ready_at_producer_issue": false
+        },
+        {
+          "producer_id": 169,
+          "consumer_id": 170,
+          "producer_op": "RV_VBR",
+          "consumer_op": "RV_VSTI",
+          "producer_role": "Vd",
+          "role": "Vd",
+          "gap": 5,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": true,
+          "other_sources_ready_at_producer_issue": true
+        },
+        {
+          "producer_id": 152,
+          "consumer_id": 170,
+          "producer_op": "RV_PSET",
+          "consumer_op": "RV_VSTI",
+          "producer_role": "Pd",
+          "role": "Pg",
+          "gap": 85,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": false,
+          "other_sources_ready_at_producer_issue": false
+        }
+      ],
+      "independent_same_port_gaps": [
+        {
+          "previous_id": 132,
+          "current_id": 138,
+          "port": 0,
+          "gap": 2,
+          "sources_done_before_previous": true,
+          "sources_ready_before_previous": true
+        },
+        {
+          "previous_id": 138,
+          "current_id": 146,
+          "port": 0,
+          "gap": 2,
+          "sources_done_before_previous": true,
+          "sources_ready_before_previous": true
+        },
+        {
+          "previous_id": 129,
+          "current_id": 135,
+          "port": 1,
+          "gap": 2,
+          "sources_done_before_previous": true,
+          "sources_ready_before_previous": true
+        },
+        {
+          "previous_id": 135,
+          "current_id": 142,
+          "port": 1,
+          "gap": 2,
+          "sources_done_before_previous": true,
+          "sources_ready_before_previous": true
+        },
+        {
+          "previous_id": 142,
+          "current_id": 150,
+          "port": 1,
+          "gap": 2,
+          "sources_done_before_previous": true,
+          "sources_ready_before_previous": true
+        }
+      ],
+      "single_op_sample": true,
+      "run": "vfsim-a5-completion-predicate-plt-verified/batch_000"
+    },
+    {
+      "family": "plt",
+      "width": 2,
+      "api": "plt_b16",
+      "form": "b16",
+      "dtype": "uint8",
+      "result_dtype": "bool",
+      "target_count": 7,
+      "target_opcodes": [
+        "RV_PLT"
+      ],
+      "output_offset": 4096,
+      "output_bytes": 1024,
+      "guard_offset": 5120,
+      "guard_bytes": 3072,
+      "exact_bytes": true,
+      "warm_operands": true,
+      "patterns": [],
+      "counts": [
+        0,
+        1,
+        127,
+        128,
+        133,
+        401,
+        899
+      ],
+      "starts": [
+        0,
+        0,
+        0,
+        1,
+        1,
+        2,
+        7
+      ],
+      "passed": true,
+      "mismatch_offsets": [],
+      "guards_passed": true,
+      "vf_pc": [
+        "0x13b34500",
+        "0x13b34594"
+      ],
+      "vf_instruction_id_range": [
+        262,
+        306
+      ],
+      "target_count_actual": 7,
+      "latencies": [
+        6
+      ],
+      "ports": [
+        0,
+        1
+      ],
+      "events": [
+        {
+          "cycle": 3399,
+          "pc": 330515716,
+          "id": 263,
+          "op": "RV_PLT",
+          "operands": " Dtype: B16  Pd[1], Sn[64]=0x0, ",
+          "line": 260,
+          "done": 3405,
+          "latency": 6,
+          "perf_cycle": 3400,
+          "port": 0,
+          "dispatch_predicate_sources": []
+        },
+        {
+          "cycle": 3400,
+          "pc": 330515728,
+          "id": 266,
+          "op": "RV_PLT",
+          "operands": " Dtype: B16  Pd[1], Sn[65]=0x0, ",
+          "line": 262,
+          "done": 3406,
+          "latency": 6,
+          "perf_cycle": 3401,
+          "port": 1,
+          "dispatch_predicate_sources": []
+        },
+        {
+          "cycle": 3401,
+          "pc": 330515740,
+          "id": 269,
+          "op": "RV_PLT",
+          "operands": " Dtype: B16  Pd[1], Sn[66]=0x0, ",
+          "line": 264,
+          "done": 3407,
+          "latency": 6,
+          "perf_cycle": 3402,
+          "port": 0,
+          "dispatch_predicate_sources": []
+        },
+        {
+          "cycle": 3402,
+          "pc": 330515752,
+          "id": 272,
+          "op": "RV_PLT",
+          "operands": " Dtype: B16  Pd[1], Sn[67]=0x0, ",
+          "line": 266,
+          "done": 3408,
+          "latency": 6,
+          "perf_cycle": 3403,
+          "port": 1,
+          "dispatch_predicate_sources": []
+        },
+        {
+          "cycle": 3403,
+          "pc": 330515764,
+          "id": 276,
+          "op": "RV_PLT",
+          "operands": " Dtype: B16  Pd[1], Sn[68]=0x5, ",
+          "line": 268,
+          "done": 3409,
+          "latency": 6,
+          "perf_cycle": 3404,
+          "port": 0,
+          "dispatch_predicate_sources": []
+        },
+        {
+          "cycle": 3404,
+          "pc": 330515776,
+          "id": 280,
+          "op": "RV_PLT",
+          "operands": " Dtype: B16  Pd[1], Sn[69]=0x111, ",
+          "line": 270,
+          "done": 3410,
+          "latency": 6,
+          "perf_cycle": 3405,
+          "port": 1,
+          "dispatch_predicate_sources": []
+        },
+        {
+          "cycle": 3405,
+          "pc": 330515788,
+          "id": 284,
+          "op": "RV_PLT",
+          "operands": " Dtype: B16  Pd[1], Sn[70]=0x303, ",
+          "line": 272,
+          "done": 3411,
+          "latency": 6,
+          "perf_cycle": 3406,
+          "port": 0,
+          "dispatch_predicate_sources": []
+        }
+      ],
+      "port_pressure_events": [],
+      "recipe_events": [],
+      "supporting_compute_events": [],
+      "all_opcodes": [
+        "RV_PLT",
+        "RV_PSET",
+        "RV_PSTS",
+        "RV_SMOV",
+        "RV_VBR",
+        "RV_VSTS"
+      ],
+      "forwarding_observations": [
+        {
+          "producer_id": 263,
+          "consumer_id": 264,
+          "producer_op": "RV_PLT",
+          "consumer_op": "RV_PSTS",
+          "producer_role": "Pd",
+          "role": "Pd",
+          "gap": 4,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": true,
+          "other_sources_ready_at_producer_issue": true
+        },
+        {
+          "producer_id": 266,
+          "consumer_id": 267,
+          "producer_op": "RV_PLT",
+          "consumer_op": "RV_PSTS",
+          "producer_role": "Pd",
+          "role": "Pd",
+          "gap": 4,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": true,
+          "other_sources_ready_at_producer_issue": true
+        },
+        {
+          "producer_id": 269,
+          "consumer_id": 270,
+          "producer_op": "RV_PLT",
+          "consumer_op": "RV_PSTS",
+          "producer_role": "Pd",
+          "role": "Pd",
+          "gap": 4,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": true,
+          "other_sources_ready_at_producer_issue": true
+        },
+        {
+          "producer_id": 272,
+          "consumer_id": 273,
+          "producer_op": "RV_PLT",
+          "consumer_op": "RV_PSTS",
+          "producer_role": "Pd",
+          "role": "Pd",
+          "gap": 4,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": true,
+          "other_sources_ready_at_producer_issue": true
+        },
+        {
+          "producer_id": 276,
+          "consumer_id": 277,
+          "producer_op": "RV_PLT",
+          "consumer_op": "RV_PSTS",
+          "producer_role": "Pd",
+          "role": "Pd",
+          "gap": 4,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": true,
+          "other_sources_ready_at_producer_issue": true
+        },
+        {
+          "producer_id": 280,
+          "consumer_id": 281,
+          "producer_op": "RV_PLT",
+          "consumer_op": "RV_PSTS",
+          "producer_role": "Pd",
+          "role": "Pd",
+          "gap": 4,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": true,
+          "other_sources_ready_at_producer_issue": true
+        },
+        {
+          "producer_id": 284,
+          "consumer_id": 285,
+          "producer_op": "RV_PLT",
+          "consumer_op": "RV_PSTS",
+          "producer_role": "Pd",
+          "role": "Pd",
+          "gap": 4,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": true,
+          "other_sources_ready_at_producer_issue": true
+        },
+        {
+          "producer_id": 288,
+          "consumer_id": 289,
+          "producer_op": "RV_VBR",
+          "consumer_op": "RV_VSTS",
+          "producer_role": "Vd",
+          "role": "Vd",
+          "gap": 4,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": false,
+          "other_sources_ready_at_producer_issue": false
+        },
+        {
+          "producer_id": 286,
+          "consumer_id": 289,
+          "producer_op": "RV_PSET",
+          "consumer_op": "RV_VSTS",
+          "producer_role": "Pd",
+          "role": "Pg",
+          "gap": 5,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": false,
+          "other_sources_ready_at_producer_issue": false
+        },
+        {
+          "producer_id": 290,
+          "consumer_id": 292,
+          "producer_op": "RV_VBR",
+          "consumer_op": "RV_VSTS",
+          "producer_role": "Vd",
+          "role": "Vd",
+          "gap": 5,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": false,
+          "other_sources_ready_at_producer_issue": false
+        },
+        {
+          "producer_id": 286,
+          "consumer_id": 292,
+          "producer_op": "RV_PSET",
+          "consumer_op": "RV_VSTS",
+          "producer_role": "Pd",
+          "role": "Pg",
+          "gap": 6,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": false,
+          "other_sources_ready_at_producer_issue": false
+        },
+        {
+          "producer_id": 293,
+          "consumer_id": 294,
+          "producer_op": "RV_VBR",
+          "consumer_op": "RV_VSTS",
+          "producer_role": "Vd",
+          "role": "Vd",
+          "gap": 5,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": false,
+          "other_sources_ready_at_producer_issue": false
+        },
+        {
+          "producer_id": 286,
+          "consumer_id": 294,
+          "producer_op": "RV_PSET",
+          "consumer_op": "RV_VSTS",
+          "producer_role": "Pd",
+          "role": "Pg",
+          "gap": 7,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": false,
+          "other_sources_ready_at_producer_issue": false
+        },
+        {
+          "producer_id": 296,
+          "consumer_id": 297,
+          "producer_op": "RV_VBR",
+          "consumer_op": "RV_VSTS",
+          "producer_role": "Vd",
+          "role": "Vd",
+          "gap": 6,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": false,
+          "other_sources_ready_at_producer_issue": false
+        },
+        {
+          "producer_id": 286,
+          "consumer_id": 297,
+          "producer_op": "RV_PSET",
+          "consumer_op": "RV_VSTS",
+          "producer_role": "Pd",
+          "role": "Pg",
+          "gap": 8,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": false,
+          "other_sources_ready_at_producer_issue": false
+        },
+        {
+          "producer_id": 298,
+          "consumer_id": 300,
+          "producer_op": "RV_VBR",
+          "consumer_op": "RV_VSTS",
+          "producer_role": "Vd",
+          "role": "Vd",
+          "gap": 6,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": false,
+          "other_sources_ready_at_producer_issue": false
+        },
+        {
+          "producer_id": 286,
+          "consumer_id": 300,
+          "producer_op": "RV_PSET",
+          "consumer_op": "RV_VSTS",
+          "producer_role": "Pd",
+          "role": "Pg",
+          "gap": 9,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": false,
+          "other_sources_ready_at_producer_issue": false
+        },
+        {
+          "producer_id": 301,
+          "consumer_id": 302,
+          "producer_op": "RV_VBR",
+          "consumer_op": "RV_VSTS",
+          "producer_role": "Vd",
+          "role": "Vd",
+          "gap": 4,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": true,
+          "other_sources_ready_at_producer_issue": true
+        },
+        {
+          "producer_id": 286,
+          "consumer_id": 302,
+          "producer_op": "RV_PSET",
+          "consumer_op": "RV_VSTS",
+          "producer_role": "Pd",
+          "role": "Pg",
+          "gap": 42,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": false,
+          "other_sources_ready_at_producer_issue": false
+        },
+        {
+          "producer_id": 303,
+          "consumer_id": 304,
+          "producer_op": "RV_VBR",
+          "consumer_op": "RV_VSTS",
+          "producer_role": "Vd",
+          "role": "Vd",
+          "gap": 5,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": true,
+          "other_sources_ready_at_producer_issue": true
+        },
+        {
+          "producer_id": 286,
+          "consumer_id": 304,
+          "producer_op": "RV_PSET",
+          "consumer_op": "RV_VSTS",
+          "producer_role": "Pd",
+          "role": "Pg",
+          "gap": 43,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": false,
+          "other_sources_ready_at_producer_issue": false
+        }
+      ],
+      "independent_same_port_gaps": [
+        {
+          "previous_id": 263,
+          "current_id": 269,
+          "port": 0,
+          "gap": 2,
+          "sources_done_before_previous": true,
+          "sources_ready_before_previous": true
+        },
+        {
+          "previous_id": 269,
+          "current_id": 276,
+          "port": 0,
+          "gap": 2,
+          "sources_done_before_previous": true,
+          "sources_ready_before_previous": true
+        },
+        {
+          "previous_id": 276,
+          "current_id": 284,
+          "port": 0,
+          "gap": 2,
+          "sources_done_before_previous": true,
+          "sources_ready_before_previous": true
+        },
+        {
+          "previous_id": 266,
+          "current_id": 272,
+          "port": 1,
+          "gap": 2,
+          "sources_done_before_previous": true,
+          "sources_ready_before_previous": true
+        },
+        {
+          "previous_id": 272,
+          "current_id": 280,
+          "port": 1,
+          "gap": 2,
+          "sources_done_before_previous": true,
+          "sources_ready_before_previous": true
+        }
+      ],
+      "single_op_sample": true,
+      "run": "vfsim-a5-completion-predicate-plt-verified/batch_000"
+    },
+    {
+      "family": "plt",
+      "width": 4,
+      "api": "plt_b32",
+      "form": "b32",
+      "dtype": "uint8",
+      "result_dtype": "bool",
+      "target_count": 7,
+      "target_opcodes": [
+        "RV_PLT"
+      ],
+      "output_offset": 8192,
+      "output_bytes": 1024,
+      "guard_offset": 9216,
+      "guard_bytes": 3072,
+      "exact_bytes": true,
+      "warm_operands": true,
+      "patterns": [],
+      "counts": [
+        0,
+        1,
+        63,
+        64,
+        69,
+        209,
+        451
+      ],
+      "starts": [
+        0,
+        0,
+        0,
+        1,
+        1,
+        2,
+        7
+      ],
+      "passed": true,
+      "mismatch_offsets": [],
+      "guards_passed": true,
+      "vf_pc": [
+        "0x13b34600",
+        "0x13b34694"
+      ],
+      "vf_instruction_id_range": [
+        306,
+        null
+      ],
+      "target_count_actual": 7,
+      "latencies": [
+        6
+      ],
+      "ports": [
+        0,
+        1
+      ],
+      "events": [
+        {
+          "cycle": 3495,
+          "pc": 330515972,
+          "id": 307,
+          "op": "RV_PLT",
+          "operands": " Dtype: B32  Pd[1], Sn[64]=0x0, ",
+          "line": 302,
+          "done": 3501,
+          "latency": 6,
+          "perf_cycle": 3496,
+          "port": 1,
+          "dispatch_predicate_sources": []
+        },
+        {
+          "cycle": 3496,
+          "pc": 330515984,
+          "id": 310,
+          "op": "RV_PLT",
+          "operands": " Dtype: B32  Pd[1], Sn[65]=0x0, ",
+          "line": 304,
+          "done": 3502,
+          "latency": 6,
+          "perf_cycle": 3497,
+          "port": 0,
+          "dispatch_predicate_sources": []
+        },
+        {
+          "cycle": 3497,
+          "pc": 330515996,
+          "id": 313,
+          "op": "RV_PLT",
+          "operands": " Dtype: B32  Pd[1], Sn[66]=0x0, ",
+          "line": 306,
+          "done": 3503,
+          "latency": 6,
+          "perf_cycle": 3498,
+          "port": 1,
+          "dispatch_predicate_sources": []
+        },
+        {
+          "cycle": 3498,
+          "pc": 330516008,
+          "id": 316,
+          "op": "RV_PLT",
+          "operands": " Dtype: B32  Pd[1], Sn[67]=0x0, ",
+          "line": 308,
+          "done": 3504,
+          "latency": 6,
+          "perf_cycle": 3499,
+          "port": 0,
+          "dispatch_predicate_sources": []
+        },
+        {
+          "cycle": 3499,
+          "pc": 330516020,
+          "id": 320,
+          "op": "RV_PLT",
+          "operands": " Dtype: B32  Pd[1], Sn[68]=0x5, ",
+          "line": 310,
+          "done": 3505,
+          "latency": 6,
+          "perf_cycle": 3500,
+          "port": 1,
+          "dispatch_predicate_sources": []
+        },
+        {
+          "cycle": 3500,
+          "pc": 330516032,
+          "id": 324,
+          "op": "RV_PLT",
+          "operands": " Dtype: B32  Pd[1], Sn[69]=0x91, ",
+          "line": 312,
+          "done": 3506,
+          "latency": 6,
+          "perf_cycle": 3501,
+          "port": 0,
+          "dispatch_predicate_sources": []
+        },
+        {
+          "cycle": 3501,
+          "pc": 330516044,
+          "id": 328,
+          "op": "RV_PLT",
+          "operands": " Dtype: B32  Pd[1], Sn[70]=0x183, ",
+          "line": 315,
+          "done": 3507,
+          "latency": 6,
+          "perf_cycle": 3502,
+          "port": 1,
+          "dispatch_predicate_sources": []
+        }
+      ],
+      "port_pressure_events": [],
+      "recipe_events": [],
+      "supporting_compute_events": [],
+      "all_opcodes": [
+        "RV_PLT",
+        "RV_PSET",
+        "RV_PSTS",
+        "RV_SMOV",
+        "RV_VBR",
+        "RV_VSTS"
+      ],
+      "forwarding_observations": [
+        {
+          "producer_id": 307,
+          "consumer_id": 308,
+          "producer_op": "RV_PLT",
+          "consumer_op": "RV_PSTS",
+          "producer_role": "Pd",
+          "role": "Pd",
+          "gap": 4,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": true,
+          "other_sources_ready_at_producer_issue": true
+        },
+        {
+          "producer_id": 310,
+          "consumer_id": 311,
+          "producer_op": "RV_PLT",
+          "consumer_op": "RV_PSTS",
+          "producer_role": "Pd",
+          "role": "Pd",
+          "gap": 4,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": true,
+          "other_sources_ready_at_producer_issue": true
+        },
+        {
+          "producer_id": 313,
+          "consumer_id": 314,
+          "producer_op": "RV_PLT",
+          "consumer_op": "RV_PSTS",
+          "producer_role": "Pd",
+          "role": "Pd",
+          "gap": 4,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": true,
+          "other_sources_ready_at_producer_issue": true
+        },
+        {
+          "producer_id": 316,
+          "consumer_id": 317,
+          "producer_op": "RV_PLT",
+          "consumer_op": "RV_PSTS",
+          "producer_role": "Pd",
+          "role": "Pd",
+          "gap": 4,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": true,
+          "other_sources_ready_at_producer_issue": true
+        },
+        {
+          "producer_id": 320,
+          "consumer_id": 321,
+          "producer_op": "RV_PLT",
+          "consumer_op": "RV_PSTS",
+          "producer_role": "Pd",
+          "role": "Pd",
+          "gap": 4,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": true,
+          "other_sources_ready_at_producer_issue": true
+        },
+        {
+          "producer_id": 324,
+          "consumer_id": 325,
+          "producer_op": "RV_PLT",
+          "consumer_op": "RV_PSTS",
+          "producer_role": "Pd",
+          "role": "Pd",
+          "gap": 4,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": true,
+          "other_sources_ready_at_producer_issue": true
+        },
+        {
+          "producer_id": 328,
+          "consumer_id": 329,
+          "producer_op": "RV_PLT",
+          "consumer_op": "RV_PSTS",
+          "producer_role": "Pd",
+          "role": "Pd",
+          "gap": 4,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": true,
+          "other_sources_ready_at_producer_issue": true
+        },
+        {
+          "producer_id": 332,
+          "consumer_id": 333,
+          "producer_op": "RV_VBR",
+          "consumer_op": "RV_VSTS",
+          "producer_role": "Vd",
+          "role": "Vd",
+          "gap": 4,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": false,
+          "other_sources_ready_at_producer_issue": false
+        },
+        {
+          "producer_id": 330,
+          "consumer_id": 333,
+          "producer_op": "RV_PSET",
+          "consumer_op": "RV_VSTS",
+          "producer_role": "Pd",
+          "role": "Pg",
+          "gap": 5,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": false,
+          "other_sources_ready_at_producer_issue": false
+        },
+        {
+          "producer_id": 334,
+          "consumer_id": 336,
+          "producer_op": "RV_VBR",
+          "consumer_op": "RV_VSTS",
+          "producer_role": "Vd",
+          "role": "Vd",
+          "gap": 5,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": false,
+          "other_sources_ready_at_producer_issue": false
+        },
+        {
+          "producer_id": 330,
+          "consumer_id": 336,
+          "producer_op": "RV_PSET",
+          "consumer_op": "RV_VSTS",
+          "producer_role": "Pd",
+          "role": "Pg",
+          "gap": 6,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": false,
+          "other_sources_ready_at_producer_issue": false
+        },
+        {
+          "producer_id": 337,
+          "consumer_id": 338,
+          "producer_op": "RV_VBR",
+          "consumer_op": "RV_VSTS",
+          "producer_role": "Vd",
+          "role": "Vd",
+          "gap": 5,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": false,
+          "other_sources_ready_at_producer_issue": false
+        },
+        {
+          "producer_id": 330,
+          "consumer_id": 338,
+          "producer_op": "RV_PSET",
+          "consumer_op": "RV_VSTS",
+          "producer_role": "Pd",
+          "role": "Pg",
+          "gap": 7,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": false,
+          "other_sources_ready_at_producer_issue": false
+        },
+        {
+          "producer_id": 340,
+          "consumer_id": 341,
+          "producer_op": "RV_VBR",
+          "consumer_op": "RV_VSTS",
+          "producer_role": "Vd",
+          "role": "Vd",
+          "gap": 6,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": false,
+          "other_sources_ready_at_producer_issue": false
+        },
+        {
+          "producer_id": 330,
+          "consumer_id": 341,
+          "producer_op": "RV_PSET",
+          "consumer_op": "RV_VSTS",
+          "producer_role": "Pd",
+          "role": "Pg",
+          "gap": 8,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": false,
+          "other_sources_ready_at_producer_issue": false
+        },
+        {
+          "producer_id": 342,
+          "consumer_id": 344,
+          "producer_op": "RV_VBR",
+          "consumer_op": "RV_VSTS",
+          "producer_role": "Vd",
+          "role": "Vd",
+          "gap": 6,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": false,
+          "other_sources_ready_at_producer_issue": false
+        },
+        {
+          "producer_id": 330,
+          "consumer_id": 344,
+          "producer_op": "RV_PSET",
+          "consumer_op": "RV_VSTS",
+          "producer_role": "Pd",
+          "role": "Pg",
+          "gap": 9,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": false,
+          "other_sources_ready_at_producer_issue": false
+        },
+        {
+          "producer_id": 345,
+          "consumer_id": 346,
+          "producer_op": "RV_VBR",
+          "consumer_op": "RV_VSTS",
+          "producer_role": "Vd",
+          "role": "Vd",
+          "gap": 7,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": false,
+          "other_sources_ready_at_producer_issue": false
+        },
+        {
+          "producer_id": 330,
+          "consumer_id": 346,
+          "producer_op": "RV_PSET",
+          "consumer_op": "RV_VSTS",
+          "producer_role": "Pd",
+          "role": "Pg",
+          "gap": 10,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": false,
+          "other_sources_ready_at_producer_issue": false
+        },
+        {
+          "producer_id": 347,
+          "consumer_id": 348,
+          "producer_op": "RV_VBR",
+          "consumer_op": "RV_VSTS",
+          "producer_role": "Vd",
+          "role": "Vd",
+          "gap": 7,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": false,
+          "other_sources_ready_at_producer_issue": false
+        },
+        {
+          "producer_id": 330,
+          "consumer_id": 348,
+          "producer_op": "RV_PSET",
+          "consumer_op": "RV_VSTS",
+          "producer_role": "Pd",
+          "role": "Pg",
+          "gap": 11,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": false,
+          "other_sources_ready_at_producer_issue": false
+        }
+      ],
+      "independent_same_port_gaps": [
+        {
+          "previous_id": 310,
+          "current_id": 316,
+          "port": 0,
+          "gap": 2,
+          "sources_done_before_previous": true,
+          "sources_ready_before_previous": true
+        },
+        {
+          "previous_id": 316,
+          "current_id": 324,
+          "port": 0,
+          "gap": 2,
+          "sources_done_before_previous": true,
+          "sources_ready_before_previous": true
+        },
+        {
+          "previous_id": 307,
+          "current_id": 313,
+          "port": 1,
+          "gap": 2,
+          "sources_done_before_previous": true,
+          "sources_ready_before_previous": true
+        },
+        {
+          "previous_id": 313,
+          "current_id": 320,
+          "port": 1,
+          "gap": 2,
+          "sources_done_before_previous": true,
+          "sources_ready_before_previous": true
+        },
+        {
+          "previous_id": 320,
+          "current_id": 328,
+          "port": 1,
+          "gap": 2,
+          "sources_done_before_previous": true,
+          "sources_ready_before_previous": true
+        }
+      ],
+      "single_op_sample": true,
+      "run": "vfsim-a5-completion-predicate-plt-verified/batch_000"
+    }
+  ]
+}

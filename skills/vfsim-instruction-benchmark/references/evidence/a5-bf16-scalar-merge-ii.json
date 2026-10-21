@@ -1,0 +1,729 @@
+{
+  "target": {
+    "cann": "9.0.0-beta.1",
+    "soc": "Ascend950PR_9599",
+    "compiler_target": "dav-c310-vec",
+    "__NPU_ARCH__": 3101
+  },
+  "runs": [
+    {
+      "run": "vfsim-a5-completion-bf16-merge-ii/batch_000",
+      "source_directory": "results/a5_instruction_completion_20261020/vfsim-a5-completion-bf16-merge-ii/batch_000",
+      "sha256": {
+        "kernel.cce": "f5b5f0b312064ebea544f98d21b8b6e8dbdb8c776f2754b4da678594d3317d28",
+        "input.bin": "35d6c4e14de23013960e7d77ebdf0ef7680a8a4b15b6d89012abac07d8c12006",
+        "golden.bin": "f80fadffbf39bb28a2ce30b5796549c6eacecbb5af51a7fdfd86d08e37e66c1f",
+        "output.bin": "f80fadffbf39bb28a2ce30b5796549c6eacecbb5af51a7fdfd86d08e37e66c1f",
+        "commands.json": "7a28c42eec6e8bbb038d768410e9d0e1019579fc6e7bcc470c72a107c60b1417",
+        "core0.veccore0.instr_popped_log.dump": "92d7e547320eae5b49b0002a2e77312e5806ffad79df39dffbca7f037bf446eb",
+        "core0.veccore0.instr_log.dump": "00cd92a0b560a431594fc351dd0fca9e22d76fc28f3b80fcd2d1b14f2235eb1d",
+        "core0.veccore0.rvec.EXU.dump": "1c9bca3249c63ae02c6b979501841f6ce58d02c45d5d840161c4b5470dbe0f12",
+        "core0.veccore0.rvec.LSU.dump": "decb76feb70f1a1a1b6db1d534256792d3a5dbf5b953cc0a3a3c2f281e952a96",
+        "core0.veccore0.rvec.GSU.dump": "d0fa69e44e2b9992486d86fcd4d24ebda25e5de923a192744d4d647dd7907fae",
+        "core0.veccore0.rvec.simd.IDU.DISP.dump": "9295f84b10b6b2f905bc9d6fa69687b058c50ac5392e2a49f8345dd7711183c1"
+      }
+    }
+  ],
+  "parameters": {
+    "forms": [
+      {
+        "key": "VDUPS_MERGE.bf16",
+        "passed_runs": [
+          "vfsim-a5-completion-bf16-merge-ii/batch_000"
+        ],
+        "sample_count": 7,
+        "latency_counts": {
+          "6": 7
+        },
+        "ports": [
+          0,
+          1
+        ],
+        "port_competition_runs": [],
+        "port_qualified": true,
+        "required_result_source_paths": [],
+        "self_forwarding_path_minima": {},
+        "self_forwarding_complete": false,
+        "self_forwarding_applicable": false,
+        "self_ii": 1,
+        "ready_ii_gap_counts": {
+          "1": 5
+        }
+      }
+    ],
+    "isa": {
+      "VDUPS_MERGE.bf16": {
+        "latency": 6,
+        "dtype": "bf16",
+        "EXU": "ALU",
+        "dispatch_exu": "EXU01"
+      }
+    },
+    "forwarding": {},
+    "ii": {
+      "VDUPS_MERGE.bf16": {
+        "VDUPS_MERGE.bf16": 1
+      }
+    }
+  },
+  "changes": [
+    {
+      "path": "ii.VDUPS_MERGE.bf16->VDUPS_MERGE.bf16",
+      "value": 1
+    }
+  ],
+  "conflicts": [],
+  "records": [
+    {
+      "api": "vdups_merge",
+      "dtype": "uint8",
+      "position": "POS_LOWEST",
+      "mode": "MODE_MERGING",
+      "chain_source": "src",
+      "bin": 0,
+      "order": "INC_ORDER",
+      "port_pressure": false,
+      "immediate_base": 7,
+      "defer_stores": true,
+      "public_api": "vdups",
+      "form": "bf16",
+      "result_dtype": "bf16",
+      "target_count": 7,
+      "target_opcodes": [
+        "RV_VDUPS"
+      ],
+      "output_offset": 0,
+      "output_bytes": 1792,
+      "guard_offset": 1792,
+      "guard_bytes": 2304,
+      "exact_bytes": true,
+      "warm_operands": true,
+      "reads_old_destination": true,
+      "pressure_opcode": "RV_VINTLV",
+      "passed": true,
+      "mismatch_offsets": [],
+      "guards_passed": true,
+      "vf_pc": [
+        "0x13b30200",
+        "0x13b3026c"
+      ],
+      "vf_instruction_id_range": [
+        81,
+        null
+      ],
+      "target_count_actual": 7,
+      "latencies": [
+        6
+      ],
+      "ports": [
+        0,
+        1
+      ],
+      "events": [
+        {
+          "cycle": 2299,
+          "pc": 330498608,
+          "id": 93,
+          "op": "RV_VDUPS",
+          "operands": " Dtype: B16  Vd[0], Sn[3]=0x4040, Sn2[4]=0x4080, #pm=0, Pg[1], ",
+          "line": 96,
+          "binary": 2148205776,
+          "done": 2305,
+          "latency": 6,
+          "perf_cycle": 2300,
+          "port": 1,
+          "lsu_start": null,
+          "pipeline_latency": null,
+          "dispatch_predicate_sources": [
+            1
+          ]
+        },
+        {
+          "cycle": 2300,
+          "pc": 330498612,
+          "id": 94,
+          "op": "RV_VDUPS",
+          "operands": " Dtype: B16  Vd[1], Sn[4]=0x4080, Sn2[5]=0x40a0, #pm=0, Pg[1], ",
+          "line": 97,
+          "binary": 2182612176,
+          "done": 2306,
+          "latency": 6,
+          "perf_cycle": 2301,
+          "port": 0,
+          "lsu_start": null,
+          "pipeline_latency": null,
+          "dispatch_predicate_sources": [
+            1
+          ]
+        },
+        {
+          "cycle": 2300,
+          "pc": 330498616,
+          "id": 95,
+          "op": "RV_VDUPS",
+          "operands": " Dtype: B16  Vd[2], Sn[5]=0x40a0, Sn2[6]=0x40c0, #pm=0, Pg[1], ",
+          "line": 98,
+          "binary": 2216232144,
+          "done": 2306,
+          "latency": 6,
+          "perf_cycle": 2301,
+          "port": 1,
+          "lsu_start": null,
+          "pipeline_latency": null,
+          "dispatch_predicate_sources": [
+            1
+          ]
+        },
+        {
+          "cycle": 2301,
+          "pc": 330498620,
+          "id": 96,
+          "op": "RV_VDUPS",
+          "operands": " Dtype: B16  Vd[3], Sn[6]=0x40c0, Sn2[7]=0x40e0, #pm=0, Pg[1], ",
+          "line": 99,
+          "binary": 2249852112,
+          "done": 2307,
+          "latency": 6,
+          "perf_cycle": 2302,
+          "port": 0,
+          "lsu_start": null,
+          "pipeline_latency": null,
+          "dispatch_predicate_sources": [
+            1
+          ]
+        },
+        {
+          "cycle": 2301,
+          "pc": 330498624,
+          "id": 97,
+          "op": "RV_VDUPS",
+          "operands": " Dtype: B16  Vd[4], Sn[7]=0x40e0, Sn2[8]=0x4100, #pm=0, Pg[1], ",
+          "line": 100,
+          "binary": 2283472080,
+          "done": 2307,
+          "latency": 6,
+          "perf_cycle": 2302,
+          "port": 1,
+          "lsu_start": null,
+          "pipeline_latency": null,
+          "dispatch_predicate_sources": [
+            1
+          ]
+        },
+        {
+          "cycle": 2302,
+          "pc": 330498628,
+          "id": 99,
+          "op": "RV_VDUPS",
+          "operands": " Dtype: B16  Vd[5], Sn[8]=0x4100, Sn2[9]=0x4110, #pm=0, Pg[1], ",
+          "line": 101,
+          "binary": 2317878480,
+          "done": 2308,
+          "latency": 6,
+          "perf_cycle": 2303,
+          "port": 0,
+          "lsu_start": null,
+          "pipeline_latency": null,
+          "dispatch_predicate_sources": [
+            1
+          ]
+        },
+        {
+          "cycle": 2302,
+          "pc": 330498632,
+          "id": 100,
+          "op": "RV_VDUPS",
+          "operands": " Dtype: B16  Vd[6], Sn[9]=0x4110, Sn2[10]=0x0, #pm=0, Pg[2], ",
+          "line": 102,
+          "binary": 2351499472,
+          "done": 2308,
+          "latency": 6,
+          "perf_cycle": 2303,
+          "port": 1,
+          "lsu_start": null,
+          "pipeline_latency": null,
+          "dispatch_predicate_sources": [
+            2
+          ]
+        }
+      ],
+      "port_pressure_events": [],
+      "recipe_events": [],
+      "supporting_compute_events": [],
+      "all_opcodes": [
+        "RV_PLDI",
+        "RV_PNOT",
+        "RV_PSET",
+        "RV_VDUPS",
+        "RV_VLDI",
+        "RV_VSTI"
+      ],
+      "forwarding_observations": [
+        {
+          "producer_id": 82,
+          "consumer_id": 86,
+          "producer_op": "RV_VLDI",
+          "consumer_op": "RV_VSTI",
+          "producer_role": "Vd",
+          "role": "Vd",
+          "gap": 8,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": false,
+          "other_sources_ready_at_producer_issue": false
+        },
+        {
+          "producer_id": 81,
+          "consumer_id": 86,
+          "producer_op": "RV_PSET",
+          "consumer_op": "RV_VSTI",
+          "producer_role": "Pd",
+          "role": "Pg",
+          "gap": 7,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": false,
+          "other_sources_ready_at_producer_issue": false
+        },
+        {
+          "producer_id": 83,
+          "consumer_id": 87,
+          "producer_op": "RV_VLDI",
+          "consumer_op": "RV_VSTI",
+          "producer_role": "Vd",
+          "role": "Vd",
+          "gap": 9,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": false,
+          "other_sources_ready_at_producer_issue": false
+        },
+        {
+          "producer_id": 81,
+          "consumer_id": 87,
+          "producer_op": "RV_PSET",
+          "consumer_op": "RV_VSTI",
+          "producer_role": "Pd",
+          "role": "Pg",
+          "gap": 8,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": false,
+          "other_sources_ready_at_producer_issue": false
+        },
+        {
+          "producer_id": 84,
+          "consumer_id": 88,
+          "producer_op": "RV_VLDI",
+          "consumer_op": "RV_VSTI",
+          "producer_role": "Vd",
+          "role": "Vd",
+          "gap": 9,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": false,
+          "other_sources_ready_at_producer_issue": false
+        },
+        {
+          "producer_id": 81,
+          "consumer_id": 88,
+          "producer_op": "RV_PSET",
+          "consumer_op": "RV_VSTI",
+          "producer_role": "Pd",
+          "role": "Pg",
+          "gap": 9,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": false,
+          "other_sources_ready_at_producer_issue": false
+        },
+        {
+          "producer_id": 85,
+          "consumer_id": 89,
+          "producer_op": "RV_VLDI",
+          "consumer_op": "RV_VSTI",
+          "producer_role": "Vd",
+          "role": "Vd",
+          "gap": 10,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": false,
+          "other_sources_ready_at_producer_issue": false
+        },
+        {
+          "producer_id": 81,
+          "consumer_id": 89,
+          "producer_op": "RV_PSET",
+          "consumer_op": "RV_VSTI",
+          "producer_role": "Pd",
+          "role": "Pg",
+          "gap": 10,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": false,
+          "other_sources_ready_at_producer_issue": false
+        },
+        {
+          "producer_id": 91,
+          "consumer_id": 92,
+          "producer_op": "RV_PLDI",
+          "consumer_op": "RV_PNOT",
+          "producer_role": "Pd",
+          "role": "Pn",
+          "gap": 30,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": false,
+          "other_sources_ready_at_producer_issue": false
+        },
+        {
+          "producer_id": 81,
+          "consumer_id": 92,
+          "producer_op": "RV_PSET",
+          "consumer_op": "RV_PNOT",
+          "producer_role": "Pd",
+          "role": "Pg",
+          "gap": 32,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": false,
+          "other_sources_ready_at_producer_issue": false
+        },
+        {
+          "producer_id": 91,
+          "consumer_id": 93,
+          "producer_op": "RV_PLDI",
+          "consumer_op": "RV_VDUPS",
+          "producer_role": "Pd",
+          "role": "Pg",
+          "gap": 30,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": false,
+          "other_sources_ready_at_producer_issue": false
+        },
+        {
+          "producer_id": 82,
+          "consumer_id": 93,
+          "producer_op": "RV_VLDI",
+          "consumer_op": "RV_VDUPS",
+          "producer_role": "Vd",
+          "role": "Vd",
+          "gap": 33,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": false,
+          "other_sources_ready_at_producer_issue": false
+        },
+        {
+          "producer_id": 91,
+          "consumer_id": 94,
+          "producer_op": "RV_PLDI",
+          "consumer_op": "RV_VDUPS",
+          "producer_role": "Pd",
+          "role": "Pg",
+          "gap": 31,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": false,
+          "other_sources_ready_at_producer_issue": false
+        },
+        {
+          "producer_id": 83,
+          "consumer_id": 94,
+          "producer_op": "RV_VLDI",
+          "consumer_op": "RV_VDUPS",
+          "producer_role": "Vd",
+          "role": "Vd",
+          "gap": 34,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": false,
+          "other_sources_ready_at_producer_issue": false
+        },
+        {
+          "producer_id": 91,
+          "consumer_id": 95,
+          "producer_op": "RV_PLDI",
+          "consumer_op": "RV_VDUPS",
+          "producer_role": "Pd",
+          "role": "Pg",
+          "gap": 31,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": false,
+          "other_sources_ready_at_producer_issue": false
+        },
+        {
+          "producer_id": 84,
+          "consumer_id": 95,
+          "producer_op": "RV_VLDI",
+          "consumer_op": "RV_VDUPS",
+          "producer_role": "Vd",
+          "role": "Vd",
+          "gap": 33,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": false,
+          "other_sources_ready_at_producer_issue": false
+        },
+        {
+          "producer_id": 91,
+          "consumer_id": 96,
+          "producer_op": "RV_PLDI",
+          "consumer_op": "RV_VDUPS",
+          "producer_role": "Pd",
+          "role": "Pg",
+          "gap": 32,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": false,
+          "other_sources_ready_at_producer_issue": false
+        },
+        {
+          "producer_id": 85,
+          "consumer_id": 96,
+          "producer_op": "RV_VLDI",
+          "consumer_op": "RV_VDUPS",
+          "producer_role": "Vd",
+          "role": "Vd",
+          "gap": 34,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": false,
+          "other_sources_ready_at_producer_issue": false
+        },
+        {
+          "producer_id": 91,
+          "consumer_id": 97,
+          "producer_op": "RV_PLDI",
+          "consumer_op": "RV_VDUPS",
+          "producer_role": "Pd",
+          "role": "Pg",
+          "gap": 32,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": true,
+          "other_sources_ready_at_producer_issue": true
+        },
+        {
+          "producer_id": 91,
+          "consumer_id": 99,
+          "producer_op": "RV_PLDI",
+          "consumer_op": "RV_VDUPS",
+          "producer_role": "Pd",
+          "role": "Pg",
+          "gap": 33,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": true,
+          "other_sources_ready_at_producer_issue": true
+        },
+        {
+          "producer_id": 92,
+          "consumer_id": 100,
+          "producer_op": "RV_PNOT",
+          "consumer_op": "RV_VDUPS",
+          "producer_role": "Pd",
+          "role": "Pg",
+          "gap": 3,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": true,
+          "other_sources_ready_at_producer_issue": true
+        },
+        {
+          "producer_id": 93,
+          "consumer_id": 101,
+          "producer_op": "RV_VDUPS",
+          "consumer_op": "RV_VSTI",
+          "producer_role": "Vd",
+          "role": "Vd",
+          "gap": 4,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": false,
+          "other_sources_ready_at_producer_issue": false
+        },
+        {
+          "producer_id": 91,
+          "consumer_id": 101,
+          "producer_op": "RV_PLDI",
+          "consumer_op": "RV_VSTI",
+          "producer_role": "Pd",
+          "role": "Pg",
+          "gap": 34,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": false,
+          "other_sources_ready_at_producer_issue": false
+        },
+        {
+          "producer_id": 94,
+          "consumer_id": 102,
+          "producer_op": "RV_VDUPS",
+          "consumer_op": "RV_VSTI",
+          "producer_role": "Vd",
+          "role": "Vd",
+          "gap": 4,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": false,
+          "other_sources_ready_at_producer_issue": false
+        },
+        {
+          "producer_id": 91,
+          "consumer_id": 102,
+          "producer_op": "RV_PLDI",
+          "consumer_op": "RV_VSTI",
+          "producer_role": "Pd",
+          "role": "Pg",
+          "gap": 35,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": false,
+          "other_sources_ready_at_producer_issue": false
+        },
+        {
+          "producer_id": 95,
+          "consumer_id": 104,
+          "producer_op": "RV_VDUPS",
+          "consumer_op": "RV_VSTI",
+          "producer_role": "Vd",
+          "role": "Vd",
+          "gap": 5,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": false,
+          "other_sources_ready_at_producer_issue": false
+        },
+        {
+          "producer_id": 91,
+          "consumer_id": 104,
+          "producer_op": "RV_PLDI",
+          "consumer_op": "RV_VSTI",
+          "producer_role": "Pd",
+          "role": "Pg",
+          "gap": 36,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": false,
+          "other_sources_ready_at_producer_issue": false
+        },
+        {
+          "producer_id": 96,
+          "consumer_id": 105,
+          "producer_op": "RV_VDUPS",
+          "consumer_op": "RV_VSTI",
+          "producer_role": "Vd",
+          "role": "Vd",
+          "gap": 5,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": false,
+          "other_sources_ready_at_producer_issue": false
+        },
+        {
+          "producer_id": 91,
+          "consumer_id": 105,
+          "producer_op": "RV_PLDI",
+          "consumer_op": "RV_VSTI",
+          "producer_role": "Pd",
+          "role": "Pg",
+          "gap": 37,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": false,
+          "other_sources_ready_at_producer_issue": false
+        },
+        {
+          "producer_id": 97,
+          "consumer_id": 106,
+          "producer_op": "RV_VDUPS",
+          "consumer_op": "RV_VSTI",
+          "producer_role": "Vd",
+          "role": "Vd",
+          "gap": 6,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": false,
+          "other_sources_ready_at_producer_issue": false
+        },
+        {
+          "producer_id": 91,
+          "consumer_id": 106,
+          "producer_op": "RV_PLDI",
+          "consumer_op": "RV_VSTI",
+          "producer_role": "Pd",
+          "role": "Pg",
+          "gap": 38,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": false,
+          "other_sources_ready_at_producer_issue": false
+        },
+        {
+          "producer_id": 99,
+          "consumer_id": 107,
+          "producer_op": "RV_VDUPS",
+          "consumer_op": "RV_VSTI",
+          "producer_role": "Vd",
+          "role": "Vd",
+          "gap": 6,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": true,
+          "other_sources_ready_at_producer_issue": true
+        },
+        {
+          "producer_id": 91,
+          "consumer_id": 107,
+          "producer_op": "RV_PLDI",
+          "consumer_op": "RV_VSTI",
+          "producer_role": "Pd",
+          "role": "Pg",
+          "gap": 39,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": false,
+          "other_sources_ready_at_producer_issue": false
+        },
+        {
+          "producer_id": 100,
+          "consumer_id": 108,
+          "producer_op": "RV_VDUPS",
+          "consumer_op": "RV_VSTI",
+          "producer_role": "Vd",
+          "role": "Vd",
+          "gap": 7,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": false,
+          "other_sources_ready_at_producer_issue": false
+        },
+        {
+          "producer_id": 92,
+          "consumer_id": 108,
+          "producer_op": "RV_PNOT",
+          "consumer_op": "RV_VSTI",
+          "producer_role": "Pd",
+          "role": "Pg",
+          "gap": 10,
+          "dependency_reported_by_dispatch": true,
+          "other_sources_done_before_producer": false,
+          "other_sources_ready_at_producer_issue": false
+        }
+      ],
+      "independent_same_port_gaps": [
+        {
+          "previous_id": 94,
+          "current_id": 96,
+          "port": 0,
+          "gap": 1,
+          "sources_done_before_previous": false,
+          "sources_ready_before_previous": true
+        },
+        {
+          "previous_id": 96,
+          "current_id": 99,
+          "port": 0,
+          "gap": 1,
+          "sources_done_before_previous": false,
+          "sources_ready_before_previous": true
+        },
+        {
+          "previous_id": 93,
+          "current_id": 95,
+          "port": 1,
+          "gap": 1,
+          "sources_done_before_previous": false,
+          "sources_ready_before_previous": true
+        },
+        {
+          "previous_id": 95,
+          "current_id": 97,
+          "port": 1,
+          "gap": 1,
+          "sources_done_before_previous": false,
+          "sources_ready_before_previous": true
+        },
+        {
+          "previous_id": 97,
+          "current_id": 100,
+          "port": 1,
+          "gap": 1,
+          "sources_done_before_previous": false,
+          "sources_ready_before_previous": false
+        }
+      ],
+      "single_op_sample": true,
+      "run": "vfsim-a5-completion-bf16-merge-ii/batch_000"
+    }
+  ]
+}

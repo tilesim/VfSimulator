@@ -48,15 +48,16 @@
           "memory_access": {
             "base_object_id": "ub.input",
             "offset": {
-              "constant": 64,
+              "constant": 128,
               "terms": []
             },
             "access_kind": "read",
-            "span": 64,
+            "span": 128,
             "alias_group": null,
             "address_state_id": "vf:pointer:0:input",
             "update_mode": "none",
-            "post_update_delta_bytes": null
+            "post_update_delta_bytes": null,
+            "address_unit_bytes": 1
           }
         }
       ],
@@ -105,11 +106,12 @@
               "terms": []
             },
             "access_kind": "write",
-            "span": 64,
+            "span": 128,
             "alias_group": null,
             "address_state_id": "vf:pointer:1:out",
             "update_mode": "none",
-            "post_update_delta_bytes": null
+            "post_update_delta_bytes": null,
+            "address_unit_bytes": 1
           }
         }
       ],

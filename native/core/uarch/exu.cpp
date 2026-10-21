@@ -3,9 +3,11 @@
 
 #include "native/core/uarch/exu.h"
 #include <algorithm>
+#include <stdexcept>
 namespace vfsim {
 EXU::EXU(const UarchConfig &cfg, const ParamDB &db)
     : cfg_(cfg), db_(db), lastPort_(cfg.issuePorts), lastFu_(cfg.issuePorts),
+      selfIssueReady_(cfg.issuePorts), completionCycles_(cfg.issuePorts),
       inflight_(cfg.issuePorts) {
   for (auto &fu : lastFu_) {
     fu["ALU"] = {};
@@ -22,16 +24,28 @@ bool EXU::canAccept(int port, bool queued) const {
   return !queued || cfg_.exqIssueInflightCapPerPort <= 0 ||
          inflight_.at(port) < cfg_.exqIssueInflightCapPerPort;
 }
-int64_t EXU::nextIssueCycle(const Uop &u, int port, bool perFu) const {
+int64_t EXU::nextSelfIssueCycle(const Uop &u, int port) const {
+  const auto &ready = selfIssueReady_.at(port);
+  const auto found = ready.find({u.op, u.form});
+  return found == ready.end() ? -1000000000 : found->second;
+}
+int64_t EXU::nextCompletionIssueCycle(const Uop &u, int port, int64_t cycle) const {
+  const auto &reserved = completionCycles_.at(port);
+  while (reserved.find(cycle + u.profile->latency) != reserved.end())
+    ++cycle;
+  return cycle;
+}
+int64_t EXU::nextIssueCycle(const Uop &u, int port, bool perFu,
+                          int64_t notBefore) const {
   const auto &last = perFu ? lastFu_.at(port).at(u.profile->fuType) : lastPort_.at(port);
-  return last.cycle +
-         (last.op.empty()
-              ? 1
-              : db_.initiationInterval(last.op, last.form, u.op, u.form));
+  const auto adjacentReady = last.cycle +
+      (last.op.empty() ? 1 : db_.initiationInterval(last.op, last.form, u.op, u.form));
+  return nextCompletionIssueCycle(
+      u, port, std::max({notBefore, adjacentReady, nextSelfIssueCycle(u, port)}));
 }
 bool EXU::canIssue(const Uop &u, int port, int64_t cycle, bool queued) const {
   return legalPort(u, port) && canAccept(port, queued) &&
-         cycle >= nextIssueCycle(u, port, !queued && !cfg_.enableCrossFuIi);
+         cycle >= nextIssueCycle(u, port, !queued && !cfg_.enableCrossFuIi, cycle);
 }
 std::optional<int> EXU::pickPort(const Uop &u, int64_t cycle,
                                  const std::vector<bool> &used) {
@@ -58,12 +72,19 @@ std::optional<int> EXU::pickPort(const Uop &u, int64_t cycle,
   return candidates.front();
 }
 void EXU::start(const UopPtr &u, int port, int64_t cycle, bool queued) {
+  const auto doneCycle = cycle + u->profile->latency;
+  auto &reserved = completionCycles_.at(port);
+  if (reserved.find(doneCycle) != reserved.end())
+    throw std::runtime_error("EXU completion cycle is already reserved");
   u->startCycle = cycle;
-  u->doneCycle = cycle + u->profile->latency;
+  u->doneCycle = doneCycle;
   u->exuPort = port;
   u->state = "running";
   running_.emplace(u->instId, u);
+  reserved.insert(doneCycle);
   ++inflight_[port];
+  selfIssueReady_[port][{u->op, u->form}] =
+      cycle + db_.initiationInterval(u->op, u->form, u->op, u->form);
   if (queued || cfg_.enableCrossFuIi)
     lastPort_[port] = {cycle, u->op, u->form};
   if (queued || !cfg_.enableCrossFuIi)
@@ -74,6 +95,7 @@ std::vector<UopPtr> EXU::finish(int64_t cycle) {
   for (auto it = running_.begin(); it != running_.end();)
     if (cycle >= *it->second->doneCycle) {
       auto u = it->second;
+      completionCycles_[u->exuPort].erase(*u->doneCycle);
       --inflight_[u->exuPort];
       u->exuPort = -1;
       u->state = "done";

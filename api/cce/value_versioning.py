@@ -103,7 +103,9 @@ class ValueVersioningPass:
         if preferred:
             node_id = str(preferred)
             if node_id in self._node_ids:
-                raise ValueError(f"Duplicate node ID during value versioning: {node_id}")
+                raise ValueError(
+                    f"Duplicate node ID during value versioning: {node_id}"
+                )
             self._node_ids.add(node_id)
             return node_id
         while True:
@@ -149,7 +151,9 @@ class ValueVersioningPass:
 
     def _ensure_entry(self, logical_id: str, environment: dict[str, str | None]) -> str:
         if logical_id in environment and environment[logical_id] is None:
-            raise ValueError(f"Value {logical_id} is undefined after a possibly empty loop")
+            raise ValueError(
+                f"Value {logical_id} is undefined after a possibly empty loop"
+            )
         definition_id = environment.get(logical_id)
         if definition_id is None:
             definition_id = self._new_definition(logical_id, producer_node_id=None)
@@ -163,7 +167,9 @@ class ValueVersioningPass:
                 written.update(
                     str(value_id)
                     for value_id in node.dst
-                    if is_renameable_storage(self._logical_values[str(value_id)].storage)
+                    if is_renameable_storage(
+                        self._logical_values[str(value_id)].storage
+                    )
                 )
             elif isinstance(node, AdapterAlias):
                 destination_id = str(node.destination)
@@ -197,9 +203,20 @@ class ValueVersioningPass:
                 destination_id = str(node.destination)
                 source = self._logical_values[source_id]
                 destination = self._logical_values[destination_id]
-                if not is_renameable_storage(source.storage) or source.storage != destination.storage:
+                if (
+                    not is_renameable_storage(source.storage)
+                    or source.storage != destination.storage
+                ):
                     raise ValueError("VFAlias requires register source and destination")
-                if source.dtype != destination.dtype or source.shape != destination.shape:
+                bitcast = (
+                    node.allow_bitcast
+                    and source.storage == "Register"
+                    and str(source.dtype).removeprefix("u")
+                    == str(destination.dtype).removeprefix("u")
+                )
+                if (
+                    source.dtype != destination.dtype and not bitcast
+                ) or source.shape != destination.shape:
                     raise ValueError(
                         "VFAlias source and destination must have matching dtype and shape"
                     )
@@ -215,7 +232,6 @@ class ValueVersioningPass:
             else:
                 raise TypeError(f"Unsupported adapter node: {type(node).__name__}")
         return output, current
-
 
     def _version_instruction(
         self,
@@ -339,9 +355,13 @@ class ValueVersioningPass:
                     address_state_id=access.address_state_id if access else None,
                     update_mode=access.update_mode if access else "none",
                     post_update_delta_bytes=(
-                        parse_affine_expression(access.post_update_delta_bytes,
-                            params=self._params, induction_variables=induction_variables)
-                        if access and access.post_update_delta_bytes is not None else None
+                        parse_affine_expression(
+                            access.post_update_delta_bytes,
+                            params=self._params,
+                            induction_variables=induction_variables,
+                        )
+                        if access and access.post_update_delta_bytes is not None
+                        else None
                     ),
                 ),
             )
@@ -368,9 +388,11 @@ class ValueVersioningPass:
         first_reads = self._read_before_write(node.body)
         entry_environment = dict(environment)
         entries = {
-            logical_id: (self._ensure_entry(logical_id, entry_environment)
-                         if environment.get(logical_id) is not None or logical_id in first_reads
-                         else None)
+            logical_id: (
+                self._ensure_entry(logical_id, entry_environment)
+                if environment.get(logical_id) is not None or logical_id in first_reads
+                else None
+            )
             for logical_id in written
         }
         body, body_environment = self._version_nodes(
@@ -385,7 +407,9 @@ class ValueVersioningPass:
         count = self._resolved_count(node.count)
         for logical_id in written:
             back_edge_id = body_environment[logical_id]
-            if back_edge_id is None or (entries[logical_id] is None and (count is None or count <= 0)):
+            if back_edge_id is None or (
+                entries[logical_id] is None and (count is None or count <= 0)
+            ):
                 current[logical_id] = None
                 continue
             exit_id = self._new_definition(logical_id, producer_node_id=loop_id)
@@ -427,7 +451,9 @@ class ValueVersioningPass:
     def _resolved_count(self, count):
         if isinstance(count, int):
             return count
-        return self._params.get(count, int(count) if count.lstrip("+-").isdigit() else None)
+        return self._params.get(
+            count, int(count) if count.lstrip("+-").isdigit() else None
+        )
 
     def _read_before_write(self, nodes):
         defined, reads = set(), set()
@@ -444,8 +470,12 @@ class ValueVersioningPass:
                 sources, destinations = [node.source], [node.destination]
             else:
                 continue
-            reads.update(str(value) for value in sources if str(value) not in defined
-                         and is_renameable_storage(self._logical_values[str(value)].storage))
+            reads.update(
+                str(value)
+                for value in sources
+                if str(value) not in defined
+                and is_renameable_storage(self._logical_values[str(value)].storage)
+            )
             defined.update(str(value) for value in destinations)
         return reads
 

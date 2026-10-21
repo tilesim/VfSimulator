@@ -18,23 +18,20 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 class CCEParserTest(unittest.TestCase):
-
-
     def test_input_symbols_normalize_public_aliases(self):
         self.assertEqual(normalize_dtype("float32"), "fp32")
         self.assertEqual(normalize_dtype("fp64"), "fp64")
         self.assertEqual(normalize_form("fp32_to_s32"), "f32_to_s32")
         self.assertEqual(normalize_form("f16_to_s32"), "f16_to_s32")
-        self.assertEqual(normalize_opcode("vld"), "VLDS")
+        self.assertEqual(normalize_opcode("vld"), "VLD")
         self.assertEqual(normalize_opcode("vpack"), "VPACK")
         self.assertEqual(normalize_opcode("vsstb"), "VSSTB")
         self.assertEqual(normalize_opcode("vunknown"), "VUNKNOWN")
         self.assertEqual(specialize_opcode("vcvt", "fp32_to_s32"), "VCVT_F32_TO_S32")
         self.assertEqual(specialize_opcode("vcvt", "f32_to_bf16"), "VCVT_F32_TO_BF16")
-        self.assertEqual(specialize_opcode("vcvt", "f16_to_s32"), "VCVT")
+        self.assertEqual(specialize_opcode("vcvt", "f16_to_s32"), "VCVT_F16_TO_S32")
         self.assertEqual(normalize_membar_type("SMEM_BAR.VLD_VST"), "VLD_VST")
         self.assertEqual(normalize_membar_type("SMEM_BAR.VV_ALL"), "VV_ALL")
-
 
     def test_cce_adapter_parses_vpack_and_vsstb_cast_operands(self):
         source = """
@@ -53,8 +50,12 @@ class CCEParserTest(unittest.TestCase):
             path.write_text(source, encoding="utf-8")
             vf_info = _parse_cce_adapter_program(path, kernel_name="softmax_vf")
 
-            path.write_text(source.replace("NO_UPDATE", "POST_UPDATE"), encoding="utf-8")
-            post_update_info = _parse_cce_adapter_program(path, kernel_name="softmax_vf")
+            path.write_text(
+                source.replace("NO_UPDATE", "POST_UPDATE"), encoding="utf-8"
+            )
+            post_update_info = _parse_cce_adapter_program(
+                path, kernel_name="softmax_vf"
+            )
 
             path.write_text(
                 source.replace("| 1u", "| 2u").replace("NO_UPDATE", "POST_UPDATE"),
@@ -76,19 +77,17 @@ class CCEParserTest(unittest.TestCase):
         self.assertEqual(insts[0].name, "VPACK")
         self.assertEqual(insts[0].src, ["vreg_x_exp_even_f16"])
         self.assertEqual(insts[0].dst, ["vreg_x_exp_even_f16"])
-        self.assertEqual(insts[0].form, "b32")
+        self.assertEqual(insts[0].form, "u32_to_u16")
         self.assertEqual(insts[1].name, "VSSTB")
         self.assertEqual(insts[1].src, ["vreg_x_exp_even_f16", "preg_low_half"])
         self.assertEqual(insts[1].dst, ["nz_buffer_Ptr"])
-        self.assertEqual(insts[1].form, "b16")
+        self.assertEqual(insts[1].form, "fp16")
         self.assertEqual(vf_info.values["vreg_x_exp_even_f16"].dtype, "fp16")
         self.assertEqual(vf_info.values["nz_buffer_Ptr"].storage, "UB")
         no_update = vf_info.context[2].memory_accesses[0]
         one_block_update = post_update_info.context[2].memory_accesses[0]
         two_block_update = two_block_info.context[2].memory_accesses[0]
-        different_stride_update = (
-            different_stride_info.context[2].memory_accesses[0]
-        )
+        different_stride_update = different_stride_info.context[2].memory_accesses[0]
         self.assertEqual(no_update.update_mode, "none")
         self.assertIsNone(no_update.post_update_delta_bytes)
         self.assertEqual(one_block_update.update_mode, "post_update")
@@ -183,8 +182,12 @@ class CCEParserTest(unittest.TestCase):
             vf_info = _parse_cce_adapter_program(path, kernel_name="loop_decl_vf")
 
         loop = vf_info.context[1]
-        vmuls = next(inst for inst in loop.body if getattr(inst, "name", None) == "VMULS")
-        vexpdif = next(inst for inst in loop.body if getattr(inst, "name", None) == "VEXPDIF")
+        vmuls = next(
+            inst for inst in loop.body if getattr(inst, "name", None) == "VMULS"
+        )
+        vexpdif = next(
+            inst for inst in loop.body if getattr(inst, "name", None) == "VEXPDIF"
+        )
         self.assertEqual(vmuls.src, ["x0", "0.125f", "pred"])
         self.assertEqual(vmuls.dst, ["x0"])
         self.assertEqual(vexpdif.src, ["x0", "x0", "pred"])
@@ -378,7 +381,7 @@ class CCEParserTest(unittest.TestCase):
             vf_info = _parse_cce_adapter_program(path, kernel_name="valid")
         self.assertEqual(
             [node.name for node in vf_info.context],
-            ["PSET_B32", "VLDS", "VSTS", "VDUP", "VDUP"],
+            ["PSET_B32", "VLDS", "VSTS", "VDUPS", "VDUP"],
         )
 
     def test_cce_vector_align_stores_use_state_attributes(self):
@@ -435,7 +438,10 @@ class CCEParserTest(unittest.TestCase):
 
     def test_cce_offset_rejects_non_affine_products(self):
         for expression in ("i * j", "i * i"):
-            with self.subTest(expression=expression), tempfile.TemporaryDirectory() as tmpdir:
+            with (
+                self.subTest(expression=expression),
+                tempfile.TemporaryDirectory() as tmpdir,
+            ):
                 path = Path(tmpdir) / "non_affine.cce"
                 path.write_text(
                     f"""
@@ -658,9 +664,7 @@ class CCEParserTest(unittest.TestCase):
             path.write_text(source, encoding="utf-8")
             vf_info = _parse_cce_adapter_program(path, kernel_name="barrier_vf")
 
-        membars = [
-            node for node in vf_info.context if isinstance(node, AdapterMembar)
-        ]
+        membars = [node for node in vf_info.context if isinstance(node, AdapterMembar)]
         self.assertEqual(len(membars), 1)
         self.assertEqual(membars[0].type, "VST_VLD")
 

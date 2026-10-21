@@ -7,8 +7,8 @@ import tempfile
 import unittest
 
 from api.cce.adapter import parse_cce_canonical_vf_info
-from api.json.serialization import (canonical_vf_info_to_dict)
-from api.common import (validate_canonical_vf_info)
+from api.json.serialization import canonical_vf_info_to_dict
+from api.common import validate_canonical_vf_info
 from api.common.schema import CanonicalOperand, CanonicalValue, OperandRole, StorageKind
 from core.simulator import CoreVfCostModel
 
@@ -16,19 +16,28 @@ from core.simulator import CoreVfCostModel
 def packed_program():
     with tempfile.TemporaryDirectory() as tmp:
         path = Path(tmp) / "packed.cce"
-        path.write_text("void vf(__ubuf__ half *input, __ubuf__ half *out) {"
-                        "__VEC_SCOPE__ {vector_f16 x; vector_bool mask;"
-                        "mask=pset_b32(PAT_ALL);"
-                        "vlds(x,input,64,UNPK_B16);vsts(x,out,0,PK_B32,mask);}}")
+        path.write_text(
+            "void vf(__ubuf__ half *input, __ubuf__ half *out) {"
+            "__VEC_SCOPE__ {vector_f16 x; vector_bool mask;"
+            "mask=pset_b32(PAT_ALL);"
+            "vlds(x,input,64,UNPK_B16);vsts(x,out,0,PK_B32,mask);}}"
+        )
         vf = parse_cce_canonical_vf_info(path)
     # NPUIR PLT has a predicate result AND an updated scalar count result.
     first = vf.context[0]
     count = CanonicalValue("count.0", "count", StorageKind.SCALAR, "uint32")
-    remaining = replace(count, definition_id="count.1", producer_node_id=first.instruction_id)
-    plt = replace(first, opcode="PLT", form="b32",
-                  inputs=(CanonicalOperand(count.definition_id, OperandRole.SCALAR),),
-                  outputs=first.outputs + (CanonicalOperand(remaining.definition_id, OperandRole.DESTINATION),),
-                  attributes={"active_elements": 37})
+    remaining = replace(
+        count, definition_id="count.1", producer_node_id=first.instruction_id
+    )
+    plt = replace(
+        first,
+        opcode="PLT",
+        form="b32",
+        inputs=(CanonicalOperand(count.definition_id, OperandRole.SCALAR),),
+        outputs=first.outputs
+        + (CanonicalOperand(remaining.definition_id, OperandRole.DESTINATION),),
+        attributes={"active_elements": 37},
+    )
     values = dict(vf.values)
     values[count.definition_id] = count
     values[remaining.definition_id] = remaining
@@ -45,13 +54,16 @@ class PackedMemoryModeTest(unittest.TestCase):
         plt, load, store = vf.context
         self.assertEqual(load.attributes["catalog_mode"], "UNPK_B16")
         self.assertEqual(store.attributes["catalog_mode"], "PK_B32")
-        self.assertEqual(load.inputs[0].memory_access.span, 64)
-        self.assertEqual(load.inputs[0].memory_access.offset.constant, 64)
-        self.assertEqual(store.outputs[0].memory_access.span, 64)
+        self.assertEqual(load.inputs[0].memory_access.span, 128)
+        self.assertEqual(load.inputs[0].memory_access.offset.constant, 128)
+        self.assertEqual(store.outputs[0].memory_access.span, 128)
         self.assertEqual(store.inputs[-1].value_id, plt.outputs[0].value_id)
         with tempfile.TemporaryDirectory() as tmp:
             result = CoreVfCostModel(out_dir=tmp).run_vf_info(vf)
-            rows = [json.loads(line) for line in (Path(tmp)/"start_by_cycle.json").read_text().splitlines()]
+            rows = [
+                json.loads(line)
+                for line in (Path(tmp) / "start_by_cycle.json").read_text().splitlines()
+            ]
             by_op = {row["op"]: row for row in rows}
             self.assertEqual(len(by_op["PLT"]["preg_dst"]), 1)
             self.assertTrue(by_op["PLT"]["preg_dst"][0].startswith("pred"))
@@ -59,12 +71,21 @@ class PackedMemoryModeTest(unittest.TestCase):
             self.assertLess(result["vf_end_cycle"], 200)
             runner = os.environ.get("VFSIM_NATIVE_RUNNER")
             if runner:
-                path = Path(tmp)/"vf.json"
+                path = Path(tmp) / "vf.json"
                 path.write_text(json.dumps(canonical_vf_info_to_dict(vf)))
-                proc = subprocess.run([runner, "--trace", str(path), "--out-dir", tmp], capture_output=True, text=True)
+                proc = subprocess.run(
+                    [runner, "--trace", str(path), "--out-dir", tmp],
+                    capture_output=True,
+                    text=True,
+                )
                 self.assertEqual(proc.returncode, 0, proc.stdout + proc.stderr)
                 self.assertIn(f"vfEndCycle={result['vf_end_cycle']}", proc.stdout)
-                native = [json.loads(line) for line in (Path(tmp)/"start_by_cycle.json").read_text().splitlines()]
+                native = [
+                    json.loads(line)
+                    for line in (Path(tmp) / "start_by_cycle.json")
+                    .read_text()
+                    .splitlines()
+                ]
                 key = lambda events: sorted((r["inst_id"], r["cy"]) for r in events)
                 self.assertEqual(key(rows), key(native))
 
@@ -73,10 +94,17 @@ class PackedMemoryModeTest(unittest.TestCase):
         for index, direction in ((1, "inputs"), (2, "outputs")):
             node = vf.context[index]
             operands = getattr(node, direction)
-            bad = replace(operands[0], memory_access=replace(operands[0].memory_access, span=128))
+            bad = replace(
+                operands[0], memory_access=replace(operands[0].memory_access, span=256)
+            )
             context = list(vf.context)
             context[index] = replace(node, **{direction: (bad, *operands[1:])})
-            codes = {d.code for d in validate_canonical_vf_info(replace(vf, context=tuple(context))).errors}
+            codes = {
+                d.code
+                for d in validate_canonical_vf_info(
+                    replace(vf, context=tuple(context))
+                ).errors
+            }
             self.assertIn("catalog_memory_span_mismatch", codes)
         values = dict(vf.values)
         reg = vf.context[1].outputs[0].value_id
@@ -92,16 +120,23 @@ class PackedMemoryModeTest(unittest.TestCase):
 
     def test_checked_in_canonical_payload(self):
         from api.json.serialization import canonical_vf_info_from_dict
-        fixture = Path(__file__).resolve().parents[1]/"VFtest/canonical/fixtures/v2_plt_packed_fp16.json"
+
+        fixture = (
+            Path(__file__).resolve().parents[1]
+            / "VFtest/canonical/fixtures/v2_plt_packed_fp16.json"
+        )
         vf = canonical_vf_info_from_dict(json.loads(fixture.read_text()))
         self.assertTrue(validate_canonical_vf_info(vf).ok)
 
-    def test_payload_bytes_do_not_shrink_transaction_budget(self):
-        from api.common.instruction_catalog import DEFAULT_INSTRUCTION_CATALOG as catalog
+    def test_payload_bytes_drive_transaction_budget(self):
+        from api.common.instruction_catalog import (
+            DEFAULT_INSTRUCTION_CATALOG as catalog,
+        )
+
         for opcode, mode in (("VLDS", "UNPK_B16"), ("VSTS", "PK_B32")):
             spec = catalog.lookup(opcode).memory_modes[mode]
-            self.assertEqual(spec.memory_span * 2, 128)
-            self.assertEqual(spec.ub_transfer_bytes, 256)
+            self.assertEqual(spec.memory_span, 128)
+            self.assertEqual(spec.ub_transfer_bytes, 128)
 
 
 if __name__ == "__main__":

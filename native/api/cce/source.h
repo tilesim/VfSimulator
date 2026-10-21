@@ -18,6 +18,7 @@ std::string trim(const std::string &);
 std::string lower(std::string);
 std::string normalizeDtype(const std::string &);
 std::string scalarDtype(const std::string &);
+int dtypeElementBytes(const std::string &);
 std::string compactDtype(const std::string &);
 std::string normalizeForm(const std::string &);
 std::string normalizeMembar(const std::string &);

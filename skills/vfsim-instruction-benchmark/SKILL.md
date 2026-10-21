@@ -34,16 +34,38 @@ LOAD/STORE 分别测量自身的 `latency`。LOAD→compute、compute→STORE �
 
 ## 工具与测量记录
 
-`VFtest/cce/` 保存 VFSim 测试使用的 CCE/DSL 源码。本 skill 的 `scripts/` 提供实验工具，`assets/` 保存 host 程序；生成的源码、二进制和日志放入独立运行目录。
+`VFtest/cce/` 保存 VFSim 测试使用的 `.cce` 源码。本 skill 的 `scripts/` 提供实验工具，`assets/` 保存 host 程序；生成的源码、二进制和日志放入独立运行目录。
 
 - [run.py](scripts/run.py)：复制、谓词、比较、VAXPY 和交织探针的生成、运行与数值校验；[compute_sweep.py](scripts/compute_sweep.py) 批量运行计算探针。
 - [memory_probe.py](scripts/memory_probe.py)：特殊访存探针与 golden；[archive_memory.py](scripts/archive_memory.py) 归档运行证据。
 - [forwarding_source.py](scripts/forwarding_source.py)：PSET 间隔探针生成；[analyze_forwarding.py](scripts/analyze_forwarding.py) 分析并归档依赖间隔。
 - [pressure.py](scripts/pressure.py)：谓词压力探针；[analyze_pressure.py](scripts/analyze_pressure.py) 分析资源和 spill 证据。
+- [vector_conversion.py](scripts/vector_conversion.py)：混合 dtype 的转换和 pack/unpack 探针，检查分段、舍入、饱和边界、有效 lane 与 RAW 视图。
+- [analyze_vector_conversion.py](scripts/analyze_vector_conversion.py)：按类型对归并真实 RV 指令和参数，剔除校验失败及编译展开样本。
 - [host.cpp](assets/host.cpp)：探针的 CAModel host 程序。
+- [vector_compute.py](scripts/vector_compute.py)：普通向量计算和比较的批量 dtype 探针，提供独立流、RAW、源位置、部分 mask 和保护区校验。
+- [analyze_vector_compute.py](scripts/analyze_vector_compute.py)：按实际 RV 指令归并 latency、self-II 和各源位置的 self-forwarding，保存证据并按选项写入配置。
+- [vector_structural.py](scripts/vector_structural.py)：归约、分组归约、进位、长乘和双结果重排探针，提供宽化结果、索引、carry、输出位置及端口竞争校验。
+- [analyze_vector_structural.py](scripts/analyze_vector_structural.py)：核对隐式相邻目的寄存器、旧 Pd carry-in 和全部 result→source 路径，提取通过隔离条件的参数。
+- [instruction_pairs.py](scripts/instruction_pairs.py)：常用跨指令 RAW、独立同端口流和孤立 STORE 对照，分别生成 FP32、FP16、BF16 的数值探针。
+- [analyze_instruction_pairs.py](scripts/analyze_instruction_pairs.py)：逐源位置归并 forwarding；按端口、源就绪、分发和流水线约束确认 II，保存逐事件证据。
+- [operator_pair_inventory.py](scripts/operator_pair_inventory.py)：枚举完整算子和依赖探针，按动态 value 身份统计 RAW，按共同端口统计各输入的有向 II 矩阵。
+- [operator_pairs.py](scripts/operator_pairs.py)：为清单中缺少的混合 form II 生成独立流、成对交错顺序和分类型 golden。
+- [operator_forwarding.py](scripts/operator_forwarding.py)：为缺少的 RAW 路径生成逐源位置的孤立依赖探针，检查转换结果、归约有效 lane 和块 STORE 布局。
+- [analyze_operator_pairs.py](scripts/analyze_operator_pairs.py)：检查数值、实际 RV 数量、端口重复、源就绪、self-II、在途容量、完成冲突和 LOAD 排队，归并可录入的参数。
+- [membar_forwarding.py](scripts/membar_forwarding.py)：为归档算子的谓词、旧目的寄存器、转换、归约和 GSU 源路径生成独立输出与保护区探针。
+- [analyze_membar_pairs.py](scripts/analyze_membar_pairs.py)：归并按 form 测量的 II 和逐语义源路径 forwarding，检查实际物理 RAW、ISU 源就绪和 LSU/GSU 接收时刻。
+- [fu_contention.py](scripts/fu_contention.py)：FP32 归约、ALU、数学 SFU 的独立流、重复三连与单条穿插对照，精确检查归约值和索引。
+- [analyze_fu_contention.py](scripts/analyze_fu_contention.py)：关联 ISU 源就绪、资源阻塞及实际端口流，区分 self-II、跨指令间隔和共享资源等待。
 
 复用已有结论时，按目标读取 [谓词数值验证](references/predicate-validation.md)、[谓词压力实验](references/predicate-pressure.md)、[VAXPY FP32 测量](references/vaxpy-timing.md)、
 [谓词 spill](references/predicate-spill.md) 或 [MOVP 与 VMOV 转发](references/movp-timing.md)。
+PNOT、PXOR、PSEL 和 PMOV lowering 的测量见 [谓词逻辑](references/predicate-logic-timing.md)。
+普通计算的 dtype、共同谓词就绪门及参数录入口径见 [向量计算测量](references/vector-compute-timing.md)。
+跨指令对的选择、隔离条件与复现命令见 [常用指令对测量](references/common-instruction-pairs.md)；
+完整算子和依赖探针的混合 form 覆盖见 [VFtest 算子指令对](references/operator-pairs.md)。
+Membar 归档的谓词、RMW、归约和 GSU 指令对见 [归档算子指令对](references/membar-pairs.md)。
+VCMAX 与 VADD/VEXP 的 FP32 竞争、实际发射重排及 II 建模建议见 [FP32 执行资源实验](references/fp32-fu-contention.md)。
 
 ## 设计与执行实验
 
@@ -79,3 +101,16 @@ LOAD/STORE 分别测量自身的 `latency`。LOAD→compute、compute→STORE �
 - 配置文件精确键、原值与建议值、证据类型、回归结果及剩余测量缺口。
 
 把大体积运行产物放入独立实验目录，记录路径及复现命令；按仓库约定保存源码、结果摘要和确认的配置。提交、推送及跨分支同步按用户授权范围执行。
+
+## A5 完整覆盖工具
+
+- `tools/audit_a5_instruction_coverage.py` 提取 CANN 3101 声明并统计语义/参数覆盖。
+- `tools/validate_a5_cce_signatures.py` 为每条声明生成代表性调用，校验 adapter 合同。
+- `tools/extract_cce_software_recipes.py` 和 `generate_cce_software_lowering.py` 从编译器前端 IR 生成软件展开规则；`validate_cce_lowering.py` 核对 Python/C++ Canonical 与周期。
+- `vector_software.py` 校验配对向量和整数复合运算；`vector_conversion.py --native-unmasked` 校验原生无谓词转换。
+- `vector_misc.py`、`predicate_extra.py`、`predicate_ranges.py`、`vector_broadcast.py` 和 `vector_special.py` 覆盖重排、谓词、广播、MOVVP、指数差和块存储。
+- `memory_extended.py`、`memory_address.py`、`memory_distribution.py`、`predicate_memory.py` 和 `vector_memory_wrappers.py` 覆盖 dtype、VAG、分布、指针更新与组合访存。
+- `memory_address.py --operations vld_vst --dtypes uint16 --replicas 4` 测量 VAG LOAD→STORE 的 Vd RAW；隔离条件、精确参数和复现命令见 [访存转发测量](references/memory-forwarding.md)。
+- `analyze_extended_compute.py`、`analyze_memory_extended.py` 和 `analyze_memory_distributions.py` 对应提取模式参数。
+
+`references/a5-completion.md` 记录实验口径、数值定义域、工具链诊断与证据位置。

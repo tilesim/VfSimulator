@@ -81,7 +81,7 @@ struct Uop {
   std::string alignStateId;
   std::shared_ptr<AlignGeneration> alignGeneration;
   std::shared_ptr<AlignProducerRecord> alignProducerRecord;
-  std::shared_ptr<AlignProducerRecord> alignLoadProducer;
+  std::shared_ptr<AlignProducerRecord> alignPreviousProducer;
   int64_t topBlockId = 0;
   std::vector<int64_t> iterStack;
   bool isLastInTopBlock = false;

@@ -5,12 +5,14 @@ import re
 import subprocess
 import tempfile
 import unittest
+from dataclasses import replace
 
 from api.common import (DEFAULT_INSTRUCTION_CATALOG)
 from api.json.serialization import (canonical_vf_info_to_dict)
 from api.input_api import InputAPI
 from core.simulator import CoreVfCostModel
 from core.params.database import ParamDB
+from core.params.loader import load_parameters
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -22,7 +24,7 @@ class OrdinaryFp32OnboardingTest(unittest.TestCase):
         db = ParamDB(base_dir=str(ROOT))
         isa = json.loads((ROOT/'configs/isa.json').read_text())
         for op, (latency, _, _) in OPS.items():
-            self.assertEqual(set(isa['instructions'][op]['forms']), {'fp32'})
+            self.assertEqual(set(isa['instructions'][op]['forms']), {'fp16', 'fp32'})
             profile = db.resolve_inst(op, 'fp32', 'fp32')
             self.assertEqual(profile.latency, latency)
             self.assertEqual(profile.dispatch_exu, 'EXU01')
@@ -41,12 +43,16 @@ class OrdinaryFp32OnboardingTest(unittest.TestCase):
             self.assertEqual(db.get_forwarding_cycles(op, op, 'fp32'), own)
             self.assertEqual(db.get_forwarding_cycles(op, 'VSTS', 'fp32'), store)
             self.assertEqual(db.get_ii(op, op, 'fp32'), 4)
-            self.assertEqual(forwarding[op+'.fp32'], {op+'.fp32': own, 'VSTS.fp32': store})
-            self.assertEqual(ii[op+'.fp32'], {op+'.fp32': 4})
+            self.assertEqual(forwarding[op+'.fp32'][op+'.fp32'], own)
+            self.assertEqual(forwarding[op+'.fp32']['VSTS.fp32'], store)
+            self.assertEqual(ii[op+'.fp32'][op+'.fp32'], 4)
         self.assertEqual(db.get_warnings(), [])
 
     def test_unmeasured_pairs_keep_warnings(self):
-        db = ParamDB(base_dir=str(ROOT))
+        parameters = replace(load_parameters(ROOT),
+            forwarding={'schema_version': 2, 'defaults': 3, 'forwarding': {}},
+            initiation_interval={'schema_version': 2, 'defaults': 1, 'InitiationInterval': {}})
+        db = ParamDB(base_dir=str(ROOT), parameters=parameters)
         db.get_ii('VSQRT', 'VLN', 'fp32')
         db.get_ii('VLN', 'VSQRT', 'fp32')
         for op in OPS:
@@ -59,10 +65,10 @@ class OrdinaryFp32OnboardingTest(unittest.TestCase):
         for op in OPS:
             spec = DEFAULT_INSTRUCTION_CATALOG.lookup(op)
             self.assertEqual(spec.signature, 'unary')
-            self.assertEqual(set(spec.forms), {'fp32'})
+            self.assertEqual(set(spec.forms), {'fp16', 'fp32'})
             self.assertTrue(spec.timing_optional)
             with self.assertRaises(ValueError):
-                DEFAULT_INSTRUCTION_CATALOG.resolve_and_validate_form(op, 'fp16')
+                DEFAULT_INSTRUCTION_CATALOG.resolve_and_validate_form(op, 'int32')
         isa = json.loads((ROOT/'configs/isa.json').read_text())
         self.assertFalse(DEFAULT_INSTRUCTION_CATALOG.compare_timing_config(isa).has_semantic_conflicts)
 

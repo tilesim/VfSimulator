@@ -6,13 +6,15 @@ from core.params.types import InstructionProfile
 if TYPE_CHECKING:
     from core.uarch.registers import AlignGeneration, AlignProducerRecord
 
+
 @dataclass(frozen=True)
 class DynamicInstruction:
     """Prepared Canonical instruction with explicit dynamic identity and control metadata."""
+
     type: str
-    op: str = ''
-    form: str = ''
-    instruction_class: str = 'control'
+    op: str = ""
+    form: str = ""
+    instruction_class: str = "control"
     inst_id: int = -1
     pc: int = -1
     stream_seq: int = -1
@@ -39,16 +41,18 @@ class DynamicInstruction:
     unroll_group: int | None = None
     orig_iter_base: int | None = None
     lane: int | None = None
-    barrier: str = ''
+    barrier: str = ""
     source_location: dict | None = None
 
     @property
     def op_class(self):
         return self.instruction_class.upper()
 
+
 @dataclass
 class Uop:
     """Renamed instruction and its execution state, shared by queues and units."""
+
     inst_id: int
     op: str
     form: str
@@ -58,7 +62,7 @@ class Uop:
     preg_dst: List[str]
     profile: Optional[InstructionProfile] = None
     ub_transfer_bytes: int = 0
-    state: str = 'blocked'
+    state: str = "blocked"
     ready_cycle: int = 0
     start_cycle: Optional[int] = None
     done_cycle: Optional[int] = None
@@ -71,7 +75,7 @@ class Uop:
     align_state_id: Optional[str] = None
     align_generation: Optional[AlignGeneration] = None
     align_producer_record: Optional[AlignProducerRecord] = None
-    align_load_producer: Optional[AlignProducerRecord] = None
+    align_previous_producer: Optional[AlignProducerRecord] = None
     top_block_id: int = 0
     iter_stack: List[Any] = field(default_factory=list)
     is_last_in_top_block: bool = False

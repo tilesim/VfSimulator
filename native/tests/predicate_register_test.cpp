@@ -86,13 +86,13 @@ int main() {
   for (const auto &form : {"b8", "b16", "b32"}) {
     const std::string op =
         std::string("PSET_B") + (std::string(form).substr(1));
-    require(db.inst(op, form).latency == 6, "PSET assumed latency");
+    require(db.inst(op, form).latency == 6, "PSET measured latency");
     require(db.forwardingCycles(op, form, "VADD", "fp32") == 2,
             "PSET forwarding default");
     require(db.initiationInterval(op, form, op, form) == 1,
-            "PSET self II approximation");
-    require(db.initiationInterval("VADD", "fp32", op, form) == 2,
-            "Assumed vector/predicate writeback collision");
+            "PSET measured self II");
+    require(db.initiationInterval("VADD", "fp32", op, form) == 1,
+            "VADD to PSET measured transition II");
   }
   CanonicalVfInfo vf;
   vf.schemaVersion = 2;

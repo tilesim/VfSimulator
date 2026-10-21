@@ -1,0 +1,26 @@
+void vector_conversions(__ubuf__ half *half_input, __ubuf__ uint8_t *byte_input,
+                        __ubuf__ bfloat16_t *bf_input) {
+    __VEC_SCOPE__ {
+        vector_f16 h, hf, bh;
+        vector_f32 f;
+        vector_bf16 bf;
+        vector_s16 s;
+        vector_s32 i;
+        vector_u16 u, packed;
+        vector_u8 b;
+        vector_u32 wide, unpacked;
+        vector_bool p=pset_b8(PAT_ALL);
+        vlds(h,half_input,0,NORM);
+        vlds(b,byte_input,0,NORM);
+        vlds(bf,bf_input,0,NORM);
+        vcvt(s,h,p,ROUND_Z,RS_ENABLE);
+        vcvt(hf,s,p,ROUND_R,MODE_ZEROING);
+        vcvt(f,hf,p,PART_ODD);
+        vcvt(i,f,p,ROUND_F,RS_DISABLE);
+        vcvt(u,i,p,RS_ENABLE,PART_EVEN,MODE_ZEROING);
+        vcvt(wide,b,p,PART_P2);
+        vcvt(bh,bf,p,RS_DISABLE,ROUND_R);
+        vpack(packed,wide,HIGHER,MODE_ZEROING);
+        vunpack(unpacked,packed,LOWER);
+    }
+}

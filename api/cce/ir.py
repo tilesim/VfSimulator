@@ -61,6 +61,7 @@ class AdapterAlias:
     destination: AdapterValueRef
     source: AdapterValueRef
     source_location: SourceLocation | None = None
+    allow_bitcast: bool = False
 
 
 @dataclass
@@ -81,7 +82,9 @@ class AdapterLoop:
     source_location: SourceLocation | None = None
 
 
-AdapterNode: TypeAlias = "AdapterLoop | AdapterInstruction | AdapterAlias | AdapterMembar"
+AdapterNode: TypeAlias = (
+    "AdapterLoop | AdapterInstruction | AdapterAlias | AdapterMembar"
+)
 
 
 @dataclass

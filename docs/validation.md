@@ -72,6 +72,13 @@ python3 main.py --trace VFtest/canonical/fixtures/v1_valid_loop.json --out_dir r
 cycle 回归验证结果稳定性，CAModel 对比评估时序近似。
 测量 form、指令对、mask 模式、端口和编译器生成的动态流共同限定精度结论的适用范围。
 
+当前 EXU 的 self-II、inflight 和完成带宽实验分别记录于
+[II 发射规则验证](validation/issue_interval_regression_20261020.md)、
+[inflight 无上限对照](validation/inflight_unlimited_20261020.md) 和
+[完成带宽验证](validation/exu_completion_bandwidth_20261020.md)。
+Softmax 的四种指令组合和 U1/U2/U4 展开见
+[Softmax 完成带宽与 inflight 验证](validation/softmax_completion_20261020.md)。
+
 模型输入描述源码或 Canonical 数据流；数值执行、完整编译器寄存器分配、独立 IFU
 缓存、IDU UOP-Split 配额以及自动 UB 区间依赖分析超出当前执行能力。
 特殊访存的事务预算和部分指令的时序使用近似，具体范围见[指令时序](instruction_timing.md)。

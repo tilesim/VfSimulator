@@ -1,137 +1,133 @@
 # 指令时序与测量证据
 
-指令签名和形式由 Catalog 声明，latency、执行单元、forwarding 和 II 由参数表维护。
-本文汇总本仓库保存的测量结论和近似范围；实际数值以 `configs/` 为准。
+Catalog 声明签名、form 和地址语义，`isa.json`、`forwarding.json`、
+`InitiationInterval.json` 保存时序参数。目标为 CANN `9.0.0-beta.1`、
+`dav-c310-vec`、`Ascend950PR_9599`。完整类型清单见 [A5 覆盖清单](a5_instruction_coverage.md)，
+数值实验、参数来源与限制见 [覆盖进度](instruction_coverage/a5/progress.md)。
 
 ## 测量口径
 
-测量样本主要来自 CANN 9.0.0-beta.1、dav-c310-vec、Ascend950PR_9599 的 CAModel。
-latency 使用同一动态指令的 popped/EXQ issue 到完成的差值。
-EXU PERF 的执行起点可能比 popped 晚 1 cycle，分析时需统一起点。
-forwarding 使用 producer 到 consumer 的发射间隔，需排除其他源等待和端口竞争。
-self-II 使用同端口独立指令样本，并核对编译后动态指令数量。
+计算 latency 使用同一动态指令的 EXQ issue/popped 到完成的差值；
+普通访存使用同 ID 的 LSU I1 到完成差值，并保留 popped 到完成的排队观测。
+GSU 指令分别记录孤立请求和连续请求。EXU PERF 起点通常比 popped 晚一周期，
+II 分析统一周期口径，并核对同端口、源已就绪的独立指令。
 
-探针同时保存源码、编译命令、golden、输出和按动态 ID 关联的日志。
-数值正确性采用独立 golden 校验，时序使用对应指令事件。
-`results/` 和临时运行目录由 Git 忽略；探针源码、测试 fixture 和配置参与版本管理。
+forwarding 使用真实 producer→consumer 的最早发射间隔，核对具体结果、源位置、
+共同谓词及 IDU 源依赖。多结果指令分别检查每个结果，单值参数取所需间隔的最大值。
+同 opcode/form 没有合法 RAW 的指令不要求 self-forwarding。
 
-## 计算指令配置
+探针保存源码、输入、独立 golden、输出、完整命令及动态日志。
+数值失败、编译失败和运行超时的样本保留诊断，不用于写入实测参数。
+`references/evidence/` 下的机器证据保留逐事件数据和配置变化，原始运行产物放在 Git 忽略的 `results/`。
 
-| opcode/form | latency | FU / 端口 | 测量覆盖或近似 |
-| --- | ---: | --- | --- |
-| VSQRT.fp32 | 17 | SFU / EXU01 | FP32 样本，端口有日志依据 |
-| VLN.fp32 | 18 | SFU / EXU01 | FP32 样本，端口有日志依据 |
-| VOR.b32 | 6 | ALU / EXU01 | 通过校验的 B32 样本，ALU 为功能分类 |
-| VCI.int32 | 7 | ALU / EXU01 | S32 索引样本，ALU 为功能分类 |
-| VCVT_BF16_TO_F32.bf16_to_f32 | 7 | ALU / EXU01 | 对应转换形式的样本 |
-| VCVT_S32_TO_U8.s32_to_u8 | 7 | ALU / EXU01 | RS_ENABLE 等已测模式 |
-| VDUP.int8、VBR.int8 | 6 | ALU / EXU01 | 窄类型样本；其他时序对需单独验证 |
-| VMOV.fp32 / b32 | 6 | ALU / EXU01 | 显式寄存器复制，两个端口均有样本 |
-| VINTLV、VDINTLV.fp32 / b32 | 11 | ALU / EXU0_ONLY | 双输入、双输出；端口采用 EXU0 保守配置 |
-| VCMP、VCMPS 的 EQ/NE/GT/GE/LT/LE.fp32 | 6 | ALU / EXU01 | 全有效 mask、有限 FP32 样本 |
-| VSEL.fp32 | 6 | ALU / EXU01 | 比较探针中的消费样本 |
-| PAND.b8、POR.b8 | 7 | ALU / EXU01 | 谓词逻辑样本，双端口为模型放置近似 |
-| MOVP_B16.b16、MOVP_B32.b32 | 6 | ALU / EXU01 | 外部 MASK 读取；self-II=1，两个端口均有样本 |
-| MOVVP.uint16 / uint32 / b16 / b32 | 16 | ALU / EXU01 | B16/B32 的 part=0、全零/全一样本 |
-| PSET_B32.b32 | 6 | ALU / EXU01 | B32 latency 和部分 consumer forwarding 已测 |
-| PSET_B16.b16、PSET_B8.b8 | 6 | ALU / EXU01 | 沿用 B32 时序近似 |
-| PLT.b32 | 6 | ALU / EXU01 | 尾块样本，端口放置为谓词计算近似 |
+## 计算与谓词
 
-VOR 的 form 固定为 b32，值 dtype 为 uint32。VCI 的 CCE 参数为 destination、scalar
-index 和可选 INC_ORDER。VCVT 依据源/目的 dtype 选择 specialization 和签名。
-MOVVP 的 part 约束由 form 决定，B16 为 0..15，B32 为 0..31。
+| form / 类别 | latency | self-II | 说明 |
+| --- | ---: | ---: | --- |
+| VDUP，向量源广播 | 11 | 1 | EXU0_ONLY，self-forwarding 8 |
+| VDUPS，标量源广播 | 6 | 1 | 双端口，没有同形输出→标量 RAW |
+| VBR | 6 | 1 | 无谓词标量广播；双向量形式按软件规则展开 |
+| VCI | 7 | 2 | 原生 8/16/32-bit 类型；双向量形式展开 |
+| VMOV | 6 | 1 | 普通寄存器复制，self-forwarding 2 |
+| MOVVP.uint16 / uint32 | 16 | 4 | EXU0_ONLY；part 选择 16B/8B 源块，逐 bit 扩展至谓词 |
+| PSET_B8/B16/B32 | 6 | 1 | 独立发射样本；PGE 使用相同编码 |
+| PLT/PLTM.b8/b16/b32 | 6 | 2 | 标量计数产生谓词；64-bit 双向量接口使用 B32 分组 |
+| VEXPDIF.fp16 / fp32 | 19 / 18 | 4 | form 由源类型选择，结果 FP32；self-forwarding 16 / 15 |
+| DHISTV2/CHISTV2.uint16 | 15 | 4 | EXU0_ONLY，旧目的值与显式源 RAW 均为 12 |
+| VINTLV/VDINTLV，原生 dtype | 11 | 2 | EXU0_ONLY；两个结果的 forwarding 分别为 8 / 9 |
+| VSQRT.fp32 / VLN.fp32 | 17 / 18 | 4 | SFU，双端口 |
 
-VMOV 表达实际向量复制。CCE `dst=src` alias 通过值关系处理。
-VINTLV/VDINTLV 的两个结果分别参与定义和资源分配，共享 Uop 的执行时间。
+`VMULS.bf16` 展开为 VDUPS 和 VMUL。masked MODE_MERGING 操作显式保留旧目的依赖；
+需要时生成 VMOV_MERGE。16-bit VDUPI 生成低部和高部两条指令，二者的零间隔依赖
+表达值拼接顺序。该零值不作为硬件 RAW forwarding 的测量结论。
 
-## 已配置的 forwarding 和 II
+普通计算 295 个类型组合、归约和多结果 84 个组合、转换和 pack/unpack 的测量
+见 [覆盖进度](instruction_coverage/a5/progress.md)。转换以源/目的类型对查询物理 form，
+显式寄存器视图保留底层 value 身份。
 
-| producer → consumer | forwarding | 依据或范围 |
-| --- | ---: | --- |
-| VLDS.fp32 → VSQRT.fp32 / VLN.fp32 | 6 | 对应 FP32 样本 |
-| VSQRT.fp32 → VSQRT.fp32 / VSTS.fp32 | 14 / 15 | 对应 FP32 样本 |
-| VLN.fp32 → VLN.fp32 / VSTS.fp32 | 15 / 16 | 对应 FP32 样本 |
-| VLDS.uint32 → VOR.b32 | 6 | B32 数值通过的样本 |
-| VOR.b32 → VSTS.uint32 | 4 | 同样本的结果写回 |
-| VCI.int32 → VSTS.int32 | 5 | S32 索引样本 |
-| VDUP.fp32 → VMOV.fp32 / b32 | 2 | 显式复制探针 |
-| VLDS.fp32 → VMOV.fp32 / b32 | 6 | 普通 NORM 加载探针 |
-| VMOV → VMOV / VSTS | 2 / 4 | 复制依赖链和末端 store |
-| VMOV.fp32 / b32 → VAXPY.fp32 | 2 | 旧目的和显式源两种依赖分别隔离 |
-| MOVP_B16/B32 → VDUP / VSEL | 2 | 分别覆盖 FP16/FP32 |
-| MOVP_B16/B32 → PSTS.b8 | 4 | 谓词保存样本 |
-| PSET_B8/B16/B32、VCMP_EQ.fp32 → PSTS.b8 | 4 | 完整谓词位图及 guard 校验 |
-| PLDS.b8 → VSEL.fp32 / VADDS.fp32 / PAND.b8 / VCMP_EQ.fp32 | 6 | 对应掩码消费者隔离样本 |
-| PLDS.b8 → PSTS.b8 / VSTS.fp32 | 8 | 保存与掩码 STORE 样本 |
-| VINTLV、VDINTLV → VSTS | 9 | 模型统一值；第二输出样本观测为 10 |
-| PSET_B* → `*` | 2 | B32→VDUP/VADD 已隔离，其他位宽和 consumer 使用近似 |
-| VLDAS → VLDUS | 1 | 加载侧内部等待的模型近似 |
-| PSTU → VSTAS | 1 | 状态链与 flush 样本 |
+常用跨 opcode 组合分别测量 FP32、FP16、BF16：forwarding 覆盖计算 RAW、
+LOAD→计算、计算→STORE 和 compare→select；II 按独立同端口流测量两个方向。
+例如 VADD→VMUL 的 II 为 1，VMUL→VADD 为 2。来源、逐对数值及隔离条件见
+[常用指令对测量](../skills/vfsim-instruction-benchmark/references/common-instruction-pairs.md)。
+完整算子与依赖探针的需求按输入内 COMPUTE 矩阵和动态 RAW 统计，详见
+[VFtest 算子指令对](instruction_coverage/a5/operator_pairs.md)。
+Membar 归档的 A5 算子覆盖 992 组 II 和 325 组静态 RAW 查询，
+范围、同编码继承和逐版本输入状态见 [归档算子指令对](instruction_coverage/a5/membar_pairs.md)。
+完整跨 opcode/dtype 笛卡尔积尚未逐对测量，精确配置缺失时 ParamDB 保留回退及 warning。
 
-VSQRT.fp32、VLN.fp32 的 self-II 为 4；VCI.int32 为 2；VMOV 为 1。
-VOR 的独立 self-II 和窄类型指令的完整时序对仍缺少独立测量。
-PSET 的缺失 II 使用 ParamDB 的 latency 差值近似：前条比后条大 1 时取 2，其他情况取 1。
-该规则描述相邻发射冲突，任意在途指令的写回预约超出其建模范围。
+EXU 按端口和 opcode/form 保存 self-II 的最早允许发射周期。EXQ 实际发射同时检查
+该周期与同端口最近已发射指令的转换限制：
 
-## PSET 隔离样本
-
-向量源已经就绪的样本可用于检查 mask forwarding。
-
-| 探针 | 填充组数 G | PSET issue | consumer issue | 间隔 | VF cycles |
-| --- | ---: | ---: | ---: | ---: | ---: |
-| VDUP，无 VLDS | 0 | 22 | 24 | 2 | 49 |
-| VADD，PAT_VL32 | 0 | 22 | 27 | 5 | 53 |
-| VADD，PAT_VL32 | 4 | 24 | 29 | 5 | 57 |
-| VADD，PAT_VL32 | 8 | 25 | 31 | 6 | 61 |
-| VADD，PAT_VL32 | 12 | 33 | 35 | 2 | 65 |
-| VADD，PAT_VL32 | 16 | 55 | 57 | 2 | 83 |
-| VADD，PAT_ALL | 12 | 33 | 35 | 2 | 65 |
-
-G=0/4/8 的样本包含向量源等待或队列竞争；G=12/16 支持 2-cycle 的有效 mask 间隔。
-SHQ ready 在 producer issue 后 1 cycle，EXQ 转移再占 1 cycle。
-启动探针 `pset_vadd_i16` 的 CAModel VF 时间为 72，PSET issue/done 为相对 22/28，
-首条 VADD issue 为 31。该 workload 同时受加载和循环控制影响，适合检查整体阶段时序。
-
-## 搬运与打包样本
-
-| 样本 | 观测 | 模型表达及范围 |
-| --- | --- | --- |
-| PLDS/PSTS，完整谓词位图 | 独立样本 latency=9；有效载荷 32 B | 固定 b8 form，字节地址，256 B UB 预算近似 |
-| VLDS DINTLV_B32，FP32 offset=0/8 | 单条 RV_VLDI、两个结果、latency=9，VF=51 | 双结果 LOAD，span=128，512 B 预算 |
-| 普通 NORM 双加载 / DINTLV 双加载，8 轮 | VF=75/104；同周期双 LOAD 的周期数为 7/0 | DINTLV 使用 512 B 共享预算，IDU UOP-Split 配额未建模 |
-| VLDAS/VLDUS，FP32/FP16/S32 连续访问 | 各条 latency 常见 9，payload 连续性通过 | 状态初始化和捕获，latency 配置为 9 |
-| VLDAS/VLDUS 无指针更新 | 同周期发射，UB 请求相隔 1，VLDUS issue-to-done=10 | 状态 ready=start+1、latency=9 的内部等待近似 |
-| PSTU B32/B16 与 VSTAS | PSTU 出现 8/9，flush 可在末条 start 后 1 cycle 发射 | PSTU 固定 latency=8，状态 forwarding=1 |
-| FP16 UNPK_B16 + PLT + PK_B32，37/64 元素 | VF=50；37 元素写回 74 B，64 元素写回 128 B | span=64，部分 mask 保持 256 B 事务预算 |
-
-PSTU 在 B32/B16 下分别打包 8/16 B，探针对整个哨兵区执行字节校验。
-DINTLV 的双发实验观察到 IDU `UOP-Split number reached`；不同 workload 的总周期差
-同时包含字节数、计算和存储数量变化。混发规则及各模式的完整吞吐仍需独立探针验证。
-
-MOVP、谓词 spill 与 VMOV→VAXPY 的补测参数来源为 `vfinfo-core-api-unification` 的
-`4858c91`、`2bcefb1` 和 `792be98`。测量方法及覆盖范围见标定 skill 的
-[MOVP 记录](../skills/vfsim-instruction-benchmark/references/movp-timing.md)和
-[谓词 spill 记录](../skills/vfsim-instruction-benchmark/references/predicate-spill.md)。
-
-## 探针和测试
-
-完整检出中的 `skills/vfsim-instruction-benchmark/scripts/` 提供生成、运行、golden 校验和归档脚本，
-CCE 测试源码保存在 `VFtest/cce/`，host 程序位于该 skill 的 `assets/`。
-运行环境需要对应 CANN 编译器和 CAModel。
-
-```bash
-python3 skills/vfsim-instruction-benchmark/scripts/run.py --probe vmov_chain
-python3 skills/vfsim-instruction-benchmark/scripts/run.py --probe vmov_independent
-python3 skills/vfsim-instruction-benchmark/scripts/run.py --probe pset_vadd_gap --gap 12
-python3 skills/vfsim-instruction-benchmark/scripts/run.py --probe vintlv --reverse-stores
-python3 skills/vfsim-instruction-benchmark/scripts/compute_sweep.py --out /tmp/predicate-compute-probe
-python3 skills/vfsim-instruction-benchmark/scripts/memory_probe.py --kind vldus_no_update --dtype fp32 --offset 1 --iterations 1
-python3 skills/vfsim-instruction-benchmark/scripts/memory_probe.py --kind pstu --offset 0 --iterations 5
-python3 skills/vfsim-instruction-benchmark/scripts/memory_probe.py --kind unpack_pack_tail --dtype fp16 --offset 0 --iterations 1 --active-elements 37
+```text
+earliest(A) = max(last_issue(A) + II(A,A), last_issue(B) + II(B,A))
 ```
 
-相关模型测试为 `test_ordinary_fp32_onboarding`、`test_ordinary_bf16_onboarding`、
-`test_ordinary_narrow_onboarding`、`test_ordinary_vor_vci_onboarding`、`test_predicate_logic`、
-`test_interleave`、`test_vmov`、`test_vldas_vldus`、`test_pstu` 和 `test_packed_memory_modes`。
-`test_movp`、`test_predicate_spill` 和 `test_vmov` 检查新增指令、字节地址、谓词依赖及输入位置。
-各测试分别核对语义、参数和周期，Native runner 可用于双实现对比。
+其中 B 为同端口最近实际发射的指令。每项使用对应前序指令的发射时刻；
+其他 opcode 的发射保留 A 已有的 self-II 限制。操作数就绪、接收延迟、
+端口每周期接收一条及执行容量分别约束发射。直接发射模式遵循所选跨 FU 策略，
+并检查相同的 opcode/form self-II。
+
+EXQ 预测还检查已发射的 self-II 截止周期、队尾预测转换间隔和队列中最近同
+opcode/form 的预测发射间隔。预测用于端口选择，实际发射通过 EXU 再判断当前状态。
+回归范围与误差见
+[II 发射规则验证](validation/issue_interval_regression_20261020.md)。
+
+每个 EXU 每周期最多完成一条计算指令。EXU 发射时预留 `issue_cycle + latency`
+对应的完成周期；若该周期已被同一 EXU 的在途指令占用，候选指令推迟发射，
+直到找到空闲完成周期。连续冲突可以推迟多个周期，指令本身的 latency 保持不变。
+例如 latency=16 的指令在 100 发射并预留 116；latency=7 的后续指令在 109
+发射会发生冲突，因此最早在 110 发射、117 完成。
+
+完成带宽在同一 EXU 的 ALU、SFU 和谓词计算之间共享，两个 EXU 分别维护预留状态；
+LSU 继续维护独立的访存完成规则。EXQ 预测读取已发射指令的预留状态，实际发射
+再次检查并预留。该规则支持多条指令重叠执行，并与 self-II、转换 II、每周期
+发射带宽及 inflight 上限共同约束调度。默认 inflight 上限为每 EXU 7 条，输入覆盖
+值 0 表示无限制。四组对照与模型适用范围见
+[EXU 完成带宽验证](validation/exu_completion_bandwidth_20261020.md)。
+更复杂的共享资源占用仍需单独标定。
+
+FP32 VCMAX 的 self-II=1、仅使用 EXU0；它与 VEXP 的双向转换可达到 1，
+VCMAX→VADD 的转换观测为 3。VADD/VMUL 和 VEXP/VDIV 的交错实验表明，
+self-II、端口单周期发射限制和共享资源冲突需要分别考虑。
+[FP32 执行资源实验](../skills/vfsim-instruction-benchmark/references/fp32-fu-contention.md)
+记录源程序与实际发射流、方向间隔、ISU 阻塞原因和资源分组建议。
+
+## 访存与状态
+
+| 类别 | 配置与范围 |
+| --- | --- |
+| 普通对齐/非对齐访存 | 有效样本通常为 LSU latency 9，完整 dtype 列在机器清单 |
+| ONEPT_B8/B16 STORE | latency 13；ONEPT_B32 为 9 |
+| 双结果 INTLV_B8/B16/B32 STORE | latency 11，512B 传输 |
+| 分布模式 | VLDS/VLD 共 21 种，VSTS/VST 共 13 种；跨度及 UB 传输量按模式定义 |
+| 谓词 NORM / US / DS / PK | 分别传输 32 / 16 / 64 / 16B，地址单位为字节 |
+| PLDI/PSTI 的立即数 | NORM/DS 单位 32B，US/PK 单位 16B；PLDS/PSTS 参数单位为字节 |
+| GSU gather/scatter | latency 与服务间隔对应已测索引分布，运行时 bank 冲突需要另行校准 |
+| VSSTB | 原生类型 latency 10，已测块步幅 2 的服务间隔为 2；其他步幅保留适用范围 |
+| align state | 初始化、捕获、append、consume 显式串联，状态发布与向量数据完成独立建模 |
+
+分布模式使用 `memory_mode_latency` 选择时序，模式同时参与 Profile 缓存键。
+VAG 的一至四层步幅形成字节地址表达式。LOAD 等待其 index 向量和谓词；
+LSU 的共享 GSU 服务约束与普通 UB 带宽预算分别维护。
+
+字节辅助指令用于双向量 vload/vstore 和 gather/scatter 展开。
+VSTUS_BYTES/VSTAS_BYTES 使用完整向量 latency 9；部分或零计数尾块观察到 8，
+完整向量配置对这部分尾块可能多估一周期。
+
+## 同步
+
+VST_VLD、VLD_VST、VST_VST、VV_ALL 分别约束相应的先前与后续 LOAD/STORE。
+VV_ALL 只阻止对应访存跨越屏障，计算指令继续遵循普通 RAW。
+VST_VLD/VLD_VST 使用已校准时序；VST_VST/VV_ALL 当前按依赖等待工作，
+独立屏障开销未测时发出 `unmeasured_membar_timing`。
+
+## 工具链与模型边界
+
+41 个类型 form 缺少有效 latency：PSLIDE 的三个分组被目标编译器拒绝；
+VSELRV2 的四种类型及四种 FP16/BF16→FP8 转换缺少 CAModel VALU 条目；
+VSTUR/VSTAR 的 30 个类型 form 未取得可完成的 CAModel 运行。
+相应 COMPUTE form 的 11 项 self-II 保留未测状态。
+
+VADDCS/VSUBCS 的 S32/U32 旧 Pd carry-in 未出现在 CAModel IDU 源清单中，
+四条完整 self-forwarding 路径保留为未确认。VDUPI 高部的端口资格仍使用明确标注的近似。
+CANN wrapper 的定义域、数值差异与非有限低精度输入范围见覆盖进度。

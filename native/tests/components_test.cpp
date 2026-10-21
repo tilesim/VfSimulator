@@ -10,17 +10,178 @@ void require(bool condition, const char *message) {
   if (!condition)
     throw std::runtime_error(message);
 }
-UopPtr compute(int64_t id, const std::string &op, const ParamDB &db) {
+UopPtr compute(int64_t id, const std::string &op, const ParamDB &db,
+               const std::string &form = "fp32") {
   auto u = std::make_shared<Uop>();
   u->instId = id;
   u->op = op;
-  u->form = "fp32";
+  u->form = form;
   u->profile = &db.inst(op, u->form, "COMPUTE");
   return u;
+}
+void testIssueIntervals(const ParamDB &db) {
+  auto cfg = db.uarch();
+  cfg.enableCrossFuIi = true;
+  cfg.exqIssueInflightCapPerPort = 0;
+  for (bool queued : {false, true}) {
+    for (const auto &middleOp : {"VADD", "VCMAX"}) {
+      EXU exu(cfg, db);
+      exu.start(compute(0, "VEXP", db), 0, 100, queued);
+      exu.start(compute(1, middleOp, db), 0, 101, queued);
+      auto last = compute(2, "VEXP", db);
+      require(exu.nextIssueCycle(*last, 0) == 104,
+              "Interleaving preserves opcode/form self-II");
+      require(!exu.canIssue(*last, 0, 102, queued) &&
+                  exu.canIssue(*last, 0, 104, queued),
+              "Self-II remains active through different ALU/SFU instructions");
+      require(exu.canIssue(*last, 1, 102, queued),
+              "Self-II state belongs to one execution port");
+    }
+  }
+  EXU absolute(cfg, db);
+  absolute.start(compute(0, "VEXP", db), 0, 100, true);
+  absolute.start(compute(1, "VADD", db), 0, 103, true);
+  require(absolute.nextIssueCycle(*compute(2, "VEXP", db), 0) == 104,
+          "Each II constraint uses its own producer issue cycle");
+
+  EXU forms(cfg, db);
+  forms.start(compute(0, "VEXP", db), 0, 100, true);
+  forms.start(compute(1, "VEXP", db, "fp16"), 0, 101, true);
+  forms.start(compute(2, "VADD", db), 0, 102, true);
+  require(forms.nextIssueCycle(*compute(3, "VEXP", db), 0) == 104 &&
+              forms.nextIssueCycle(*compute(4, "VEXP", db, "fp16"), 0) == 109,
+          "Each opcode/form preserves its own self-II deadline");
+
+  std::unordered_map<std::string, ValueInfo> values;
+  Registers regs(cfg, db, values);
+  EXU exu(cfg, db);
+  exu.start(compute(0, "VEXP", db), 0, 100, true);
+  exu.start(compute(1, "VCMAX", db), 0, 101, true);
+  EXQ prediction(cfg, db, regs, exu);
+  prediction.enqueue(compute(2, "VCMAX", db), 0, 101, 101);
+  auto last = compute(3, "VEXP", db);
+  require(prediction.predictIssueCycle(0, *last, 102) == 104,
+          "EXQ prediction retains issued self-II through a different tail");
+  EXQ selection(cfg, db, regs, exu);
+  selection.enqueue(last, 0, 102, 102);
+  require(!selection.popReady(0, 102) && selection.popReady(0, 104) == last,
+          "EXQ selection waits for persistent self-II");
+
+  EXU empty(cfg, db);
+  EXQ pending(cfg, db, regs, empty);
+  pending.enqueue(compute(4, "VEXP", db), 0, 100, 100);
+  pending.enqueue(compute(5, "VCMAX", db), 0, 101, 101);
+  require(pending.predictIssueCycle(0, *compute(6, "VEXP", db), 102) == 104,
+          "EXQ prediction retains a pending same-form instruction");
+
+  for (const auto &firstOp : {"VEXP", "VDIV"}) {
+    const auto middleOp = std::string(firstOp) == "VEXP" ? "VDIV" : "VEXP";
+    const auto gap = std::string(firstOp) == "VEXP" ? 6 : 5;
+    EXU mixed(cfg, db);
+    mixed.start(compute(0, firstOp, db), 0, 100, true);
+    auto middle = compute(1, middleOp, db);
+    require(!mixed.canIssue(*middle, 0, 100 + gap - 1, true) &&
+                mixed.canIssue(*middle, 0, 100 + gap, true),
+            "VEXP/VDIV conversion intervals remain directional");
+    mixed.start(middle, 0, 100 + gap, true);
+    require(mixed.nextIssueCycle(*compute(2, firstOp, db), 0) == 111,
+            "Controlled VEXP/VDIV triples preserve both timing constraints");
+  }
+}
+void testCompletionBandwidth(const ParamDB &db) {
+  auto cfg = db.uarch();
+  cfg.exqIssueInflightCapPerPort = 0;
+  cfg.enableCrossFuIi = true;
+  for (bool queued : {false, true}) {
+    for (bool cross : {false, true}) {
+      cfg.enableCrossFuIi = cross;
+      EXU exu(cfg, db);
+      exu.start(compute(0, "VEXP", db), 0, 100, queued);
+      auto add = compute(1, "VADD", db);
+      require(!exu.canIssue(*add, 0, 109, queued) &&
+                  exu.canIssue(*add, 0, 110, queued),
+              "Future completion conflicts delay issue in every mode");
+      bool rejected = false;
+      try {
+        exu.start(add, 0, 109, queued);
+      } catch (const std::runtime_error &) {
+        rejected = true;
+      }
+      require(rejected && !add->startCycle,
+              "Rejected completion reservation leaves the candidate unchanged");
+      exu.start(add, 0, 110, queued);
+      require(*add->doneCycle == 117 && *add->doneCycle - *add->startCycle == 7,
+              "Delaying issue preserves the instruction latency");
+    }
+  }
+  cfg.enableCrossFuIi = true;
+  EXU consecutive(cfg, db);
+  consecutive.start(compute(0, "VEXP", db), 0, 100, true);
+  consecutive.start(compute(1, "VCMAX", db), 0, 101, true);
+  auto add = compute(2, "VADD", db);
+  require(!consecutive.canIssue(*add, 0, 109, true) &&
+              !consecutive.canIssue(*add, 0, 110, true) &&
+              consecutive.canIssue(*add, 0, 111, true),
+          "Consecutive occupied completion cycles are all skipped");
+  require(consecutive.nextIssueCycle(*add, 0, false, 109) == 111,
+          "Earliest issue includes the requested cycle and completion slots");
+
+  EXU older(cfg, db);
+  older.start(compute(0, "VEXP", db), 0, 100, true);
+  older.start(compute(1, "VADD", db), 0, 101, true);
+  auto mul = compute(2, "VMUL", db);
+  require(!older.canIssue(*mul, 0, 108, true) &&
+              older.canIssue(*mul, 0, 109, true),
+          "An older instruction retains its completion reservation");
+
+  EXU independent(cfg, db);
+  independent.start(compute(0, "VEXP", db), 0, 100, true);
+  independent.start(compute(1, "VADD", db), 1, 109, true);
+  require(independent.finish(116).size() == 2,
+          "Different execution ports can finish in the same cycle");
+  require(independent.inflight(0) == 0 && independent.inflight(1) == 0,
+          "Completion releases inflight and completion reservations");
+
+  for (bool greedy : {false, true}) {
+    cfg.enableExqGreedyBalance = greedy;
+    EXU ports(cfg, db);
+    ports.start(compute(0, "VEXP", db), 0, 100, true);
+    ports.start(compute(1, "VEXP", db), 1, 101, true);
+    require(ports.pickPort(*add, 109, {false, false}) == 1,
+            "Port selection checks completions at the candidate issue cycle");
+  }
+  std::unordered_map<std::string, ValueInfo> values;
+  Registers regs(cfg, db, values);
+  for (bool pending : {false, true}) {
+    EXU exu(cfg, db);
+    exu.start(compute(0, "VEXP", db), 0, 100, true);
+    EXQ queue(cfg, db, regs, exu);
+    if (pending)
+      queue.enqueue(compute(1, "VADD", db), 0, 107, 107);
+    require(queue.predictIssueCycle(0, *add, 109) == 110,
+            "EXQ prediction accounts for reserved completion cycles");
+  }
+  EXU selection(cfg, db);
+  selection.start(compute(0, "VEXP", db), 0, 100, true);
+  EXQ queue(cfg, db, regs, selection);
+  queue.enqueue(add, 0, 109, 109);
+  require(!queue.popReady(0, 109) && queue.popReady(0, 110) == add,
+          "EXQ actual issue waits for a free completion slot");
+
+  EXU pipeline(cfg, db);
+  for (int i = 0; i < 6; ++i) {
+    auto current = compute(i, "VADD", db);
+    require(pipeline.canIssue(*current, 0, 100 + i, true),
+            "Independent pipelined instructions keep unit issue bandwidth");
+    pipeline.start(current, 0, 100 + i, true);
+  }
+  require(pipeline.inflight(0) == 6, "Completion bandwidth preserves pipelined overlap");
 }
 } // namespace
 int main() {
   ParamDB db(VFSIM_SOURCE_ROOT);
+  testIssueIntervals(db);
+  testCompletionBandwidth(db);
   auto cfg = db.uarch();
   cfg.exqIssueInflightCapPerPort = 1;
   cfg.exqDepth = 1;

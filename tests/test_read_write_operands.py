@@ -6,8 +6,8 @@ import tempfile
 import unittest
 from dataclasses import replace
 
-from api.json.serialization import (canonical_vf_info_to_dict)
-from api.common import (validate_canonical_vf_info)
+from api.json.serialization import canonical_vf_info_to_dict
+from api.common import validate_canonical_vf_info
 from api.common.instruction_catalog import DEFAULT_INSTRUCTION_CATALOG, OperandDirection
 from api.common.schema import OperandRole
 from core.simulator import CoreVfCostModel
@@ -47,21 +47,31 @@ class ReadWriteOperandTest(unittest.TestCase):
         self.assertEqual(inst.inputs[0].value_id, inst.inputs[1].value_id)
         self.assertNotEqual(inst.inputs[0].value_id, inst.outputs[0].value_id)
 
-    def test_merging_remains_explicitly_unsupported(self):
-        with self.assertRaisesRegex(ValueError, "MODE_MERGING"):
-            parse(PREFIX + AXPY.replace("MODE_ZEROING", "MODE_MERGING"))
+    def test_merging_preserves_old_destination_and_arithmetic_sources(self):
+        vf = parse(PREFIX + AXPY.replace("MODE_ZEROING", "MODE_MERGING"))
+        old, compute, merge = vf.context[-3:]
+        self.assertEqual((compute.opcode, merge.opcode), ("VAXPY", "VMOV_MERGE"))
+        self.assertEqual(compute.inputs[0].value_id, old.outputs[0].value_id)
+        self.assertEqual(merge.inputs[0].value_id, old.outputs[0].value_id)
+        self.assertEqual(merge.inputs[1].value_id, compute.outputs[0].value_id)
+        self.assertEqual(merge.inputs[2].value_id, compute.inputs[-1].value_id)
+        self.assertTrue(validate_canonical_vf_info(vf).ok)
 
     def test_loop_dependency_and_native_parity(self):
         for count, unroll in ((0, 1), (1, 1), (8, 1), (8, 4)):
             with self.subTest(count=count, unroll=unroll):
-                vf = parse(PREFIX + f"\n#pragma unroll({unroll})\n"
-                           f"for(int i=0;i<{count};++i){{{AXPY}}}" + STORE)
+                vf = parse(
+                    PREFIX + f"\n#pragma unroll({unroll})\n"
+                    f"for(int i=0;i<{count};++i){{{AXPY}}}" + STORE
+                )
                 with tempfile.TemporaryDirectory() as tmp:
                     root = Path(tmp)
                     result = CoreVfCostModel(out_dir=root / "python").run_vf_info(vf)
                     starts = records(root / "python/start_by_cycle.json")
-                    chain = sorted((r for r in starts if r["op"] == "VAXPY"),
-                                   key=lambda r: r["inst_id"])
+                    chain = sorted(
+                        (r for r in starts if r["op"] == "VAXPY"),
+                        key=lambda r: r["inst_id"],
+                    )
                     self.assertEqual(len(chain), count)
                     for prev, cur in zip(chain, chain[1:]):
                         self.assertEqual(cur["preg_src"][0], prev["preg_dst"][0])
@@ -73,11 +83,28 @@ class ReadWriteOperandTest(unittest.TestCase):
                     if RUNNER:
                         path = root / "input.json"
                         path.write_text(json.dumps(canonical_vf_info_to_dict(vf)))
-                        proc = subprocess.run([RUNNER, "--trace", str(path),
-                                               "--out-dir", str(root / "native"),
-                                               "--max-cycles", "10000"],
-                                              capture_output=True, text=True, timeout=30)
+                        proc = subprocess.run(
+                            [
+                                RUNNER,
+                                "--trace",
+                                str(path),
+                                "--out-dir",
+                                str(root / "native"),
+                                "--max-cycles",
+                                "10000",
+                            ],
+                            capture_output=True,
+                            text=True,
+                            timeout=30,
+                        )
                         self.assertEqual(proc.returncode, 0, proc.stderr)
-                        self.assertIn(f"vfEndCycle={result['vf_end_cycle']}", proc.stdout)
-                        key = lambda rows: sorted((r["inst_id"], r["op"], r["cy"]) for r in rows)
-                        self.assertEqual(key(starts), key(records(root / "native/start_by_cycle.json")))
+                        self.assertIn(
+                            f"vfEndCycle={result['vf_end_cycle']}", proc.stdout
+                        )
+                        key = lambda rows: sorted(
+                            (r["inst_id"], r["op"], r["cy"]) for r in rows
+                        )
+                        self.assertEqual(
+                            key(starts),
+                            key(records(root / "native/start_by_cycle.json")),
+                        )

@@ -1,0 +1,6 @@
+void vf(__ubuf__ uint32_t *input,__ubuf__ uint32_t *output){
+__VEC_SCOPE__{
+ vector_bool p;pldi(p,input,2,NORM);pldi(p,input,4,US);pldi(p,input,2,DS);
+ pldi(p,input,2,NORM,POST_UPDATE);plds(p,input,64,NORM,POST_UPDATE);
+ psti(p,output,4,PK,POST_UPDATE);psts(p,output,64,NORM,POST_UPDATE);
+}}

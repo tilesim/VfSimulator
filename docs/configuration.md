@@ -119,3 +119,16 @@ python3 main.py --trace INPUT.json --theoretical-limit-vloop-only-legacy-forward
 `apply_theoretical_limit_overrides()` 放宽窗口和队列容量，设置理论场景的传输及控制延迟。
 `theoretical_limit_*` 字段覆盖对应场景参数。直接发射理论模式使用 SHQ→EXU 路径，
 放宽资源约束并使用指定的 forwarding 口径。该结果用于比较结构约束下的参考周期。
+
+## A5 模式与软件展开
+
+`configs/cce_lowering.json` 保存目标 CANN wrapper 的物理指令及 SSA 依赖。
+`isa.json.instructions.OP.memory_mode_latency` 可按 `catalog_mode` 覆盖访存 latency。
+Profile 查询同时使用 opcode、form、dtype、类别和 memory mode。
+`lsu_resource` 与正整数 `lsu_issue_interval` 声明共享 GSU 或块存储服务资源；
+`align_state_latency` 声明状态发布间隔，默认值为 1。
+
+forwarding 查询优先检查精确指令对，再检查明确的 opcode alias 和已有回退规则。
+VDUP 表达向量源广播，VDUPS 表达标量源广播；两者使用各自的时序键。
+A5 类型与实测覆盖见 [指令清单](a5_instruction_coverage.md) 和
+[覆盖进度](instruction_coverage/a5/progress.md)。

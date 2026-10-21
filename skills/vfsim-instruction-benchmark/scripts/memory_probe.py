@@ -20,7 +20,68 @@ def make_case(kind, dtype, offset, iterations, active_elements=37):
     values = [i % 251 - 125 for i in range(allocation // width)]
     data = struct.pack(f"<{len(values)}{fmt}", *values)
     init_output = ""
-    if kind.startswith("predicate_"):
+    if kind == "predicate_logic_matrix":
+        if dtype != "fp32" or iterations != 1:
+            raise ValueError("Predicate matrix requires fp32 storage, iterations=1")
+        data = bytes((i * 73 + 29) % 256 for i in range(4096))
+        golden = bytearray(data[:2560])
+        body = "__ubuf__ uint32_t *bits=(__ubuf__ uint32_t *)input;"
+        body += "__ubuf__ uint32_t *saved=(__ubuf__ uint32_t *)out;"
+        preamble = body
+        init_output = "copy_gm_to_ubuf_align_v2(out, inputGM, 0, 1, 2560, 0, 0, 0, 0, 0, 0);"
+        for phase, op in enumerate(("pnot", "pxor", "pmov", "psel")):
+            if phase:
+                # Separate VFs isolate self-II/RAW measurements from other
+                # opcode streams. Fusion is disabled by the build command.
+                body += "}\n__VEC_SCOPE__{\n" + preamble
+            body += "{vector_bool a0,a1,a2,a3,b,m;"
+            body += "".join(f"plds(a{i},bits,{32*i},NORM);" for i in range(4))
+            body += "plds(b,bits,128,NORM);plds(m,bits,160,NORM);"
+            body += "mem_bar(VV_ALL);"
+            def call(index, role="source"):
+                if role == "rhs":
+                    return f"{op}(a{index},b,a{index},m);"
+                if role == "mask":
+                    middle = ",m" if op in ("pxor", "psel") else ""
+                    return f"{op}(a{index},b{middle},a{index});"
+                middle = ",b" if op in ("pxor", "psel") else ""
+                return f"{op}(a{index},a{index}{middle},m);"
+            mask = int.from_bytes(data[160:192], "little")
+            rhs = int.from_bytes(data[128:160], "little")
+            full = (1 << 256) - 1
+            def compute(value, role="source"):
+                if role == "rhs":
+                    return ((rhs ^ value) & mask if op == "pxor" else
+                            (rhs & mask) | (value & (full ^ mask)))
+                if role == "mask":
+                    return {"pnot": (~rhs) & value, "pxor": (rhs ^ mask) & value,
+                            "pmov": rhs & value,
+                            "psel": (rhs & value) | (mask & (full ^ value))}[op]
+                if op == "pnot":
+                    return (~value) & mask
+                if op == "pxor":
+                    return (value ^ rhs) & mask
+                if op == "pmov":
+                    return value & mask
+                return (value & mask) | (rhs & (full ^ mask))
+            values = [compute(int.from_bytes(data[32*i:32*i+32], "little")) for i in range(4)]
+            body += "".join(call(i) for i in range(4))
+            base = phase * 640
+            for i, value in enumerate(values):
+                body += f"psts(a{i},saved,{base+32*i},NORM);"
+                golden[base+32*i:base+32*i+32] = value.to_bytes(32, "little")
+            value = values[0]
+            for role, slot in (("source",128), ("rhs",256), ("mask",384)):
+                if role == "rhs" and op in ("pnot", "pmov"):
+                    continue
+                for i in range(4):
+                    value = compute(value, role)
+                    offset_bytes = base + slot + 32*i
+                    body += call(0, role) + f"psts(a0,saved,{offset_bytes},NORM);"
+                    golden[offset_bytes:offset_bytes+32] = value.to_bytes(32, "little")
+            body += "}"
+        golden = bytes(golden)
+    elif kind.startswith("predicate_"):
         if dtype != "fp32" or iterations != 1:
             raise ValueError("Predicate spill probes require fp32, iterations=1")
         # A B32 predicate uses one bit per four byte lanes; preserve all 256 bits.
@@ -186,7 +247,7 @@ extern "C" __global__ __aicore__ void memory_probe(
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--kind", choices=["vldsx2", "vldus", "vldus_straight", "vldus_no_update", "pstu", "dual_pairs", "norm_pairs", "unpack_pack_tail", "predicate_compare_store", "predicate_pset_store", "predicate_pset_store16", "predicate_pset_store32", "predicate_load_store", "predicate_load_select", "predicate_load_compute", "predicate_load_logic", "predicate_load_compare", "predicate_load_masked_store"], required=True)
+    parser.add_argument("--kind", choices=["vldsx2", "vldus", "vldus_straight", "vldus_no_update", "pstu", "dual_pairs", "norm_pairs", "unpack_pack_tail", "predicate_compare_store", "predicate_pset_store", "predicate_pset_store16", "predicate_pset_store32", "predicate_load_store", "predicate_load_select", "predicate_load_compute", "predicate_load_logic", "predicate_load_compare", "predicate_load_masked_store", "predicate_logic_matrix"], required=True)
     parser.add_argument("--dtype", choices=["fp32", "fp16", "int32"], default="fp32")
     parser.add_argument("--offset", type=int, default=1)
     parser.add_argument("--iterations", type=int, default=3)

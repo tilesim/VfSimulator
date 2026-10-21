@@ -1,0 +1,1052 @@
+{
+  "validation": "passed; all bitmap bytes and guards match",
+  "artifacts": "/tmp/vfsim-memory-probe-6ogzbpuq",
+  "instructions": {
+    "PNOT.b8": {
+      "latencies": [
+        6
+      ],
+      "events": [
+        {
+          "id": 82,
+          "issue": 1777,
+          "done": 1783,
+          "latency": 6,
+          "port": 1,
+          "operands": " Dtype: B8  Pd[3], Pn[3], Pg[2], ",
+          "popped_line": 81,
+          "done_line": 74
+        },
+        {
+          "id": 83,
+          "issue": 1777,
+          "done": 1783,
+          "latency": 6,
+          "port": 0,
+          "operands": " Dtype: B8  Pd[4], Pn[4], Pg[2], ",
+          "popped_line": 80,
+          "done_line": 73
+        },
+        {
+          "id": 84,
+          "issue": 1778,
+          "done": 1784,
+          "latency": 6,
+          "port": 1,
+          "operands": " Dtype: B8  Pd[5], Pn[5], Pg[2], ",
+          "popped_line": 83,
+          "done_line": 77
+        },
+        {
+          "id": 85,
+          "issue": 1778,
+          "done": 1784,
+          "latency": 6,
+          "port": 0,
+          "operands": " Dtype: B8  Pd[6], Pn[6], Pg[2], ",
+          "popped_line": 82,
+          "done_line": 76
+        },
+        {
+          "id": 90,
+          "issue": 1779,
+          "done": 1785,
+          "latency": 6,
+          "port": 1,
+          "operands": " Dtype: B8  Pd[3], Pn[3], Pg[2], ",
+          "popped_line": 84,
+          "done_line": 78
+        },
+        {
+          "id": 93,
+          "issue": 1781,
+          "done": 1787,
+          "latency": 6,
+          "port": 0,
+          "operands": " Dtype: B8  Pd[3], Pn[3], Pg[2], ",
+          "popped_line": 85,
+          "done_line": 79
+        },
+        {
+          "id": 95,
+          "issue": 1783,
+          "done": 1789,
+          "latency": 6,
+          "port": 1,
+          "operands": " Dtype: B8  Pd[3], Pn[3], Pg[2], ",
+          "popped_line": 86,
+          "done_line": 80
+        },
+        {
+          "id": 97,
+          "issue": 1785,
+          "done": 1791,
+          "latency": 6,
+          "port": 0,
+          "operands": " Dtype: B8  Pd[2], Pn[3], Pg[2], ",
+          "popped_line": 87,
+          "done_line": 81
+        },
+        {
+          "id": 100,
+          "issue": 1787,
+          "done": 1793,
+          "latency": 6,
+          "port": 1,
+          "operands": " Dtype: B8  Pd[2], Pn[1], Pg[2], ",
+          "popped_line": 88,
+          "done_line": 82
+        },
+        {
+          "id": 102,
+          "issue": 1789,
+          "done": 1795,
+          "latency": 6,
+          "port": 0,
+          "operands": " Dtype: B8  Pd[2], Pn[1], Pg[2], ",
+          "popped_line": 89,
+          "done_line": 83
+        },
+        {
+          "id": 105,
+          "issue": 1791,
+          "done": 1797,
+          "latency": 6,
+          "port": 1,
+          "operands": " Dtype: B8  Pd[2], Pn[1], Pg[2], ",
+          "popped_line": 91,
+          "done_line": 84
+        },
+        {
+          "id": 107,
+          "issue": 1793,
+          "done": 1799,
+          "latency": 6,
+          "port": 0,
+          "operands": " Dtype: B8  Pd[1], Pn[1], Pg[2], ",
+          "popped_line": 94,
+          "done_line": 85
+        }
+      ],
+      "vf_pc_region": [
+        "0x13b2f200",
+        "0x13b2f280"
+      ],
+      "ports": [
+        0,
+        1
+      ],
+      "independent_ii_samples": [
+        {
+          "producer_id": 82,
+          "consumer_id": 84,
+          "port": 1,
+          "gap": 1,
+          "all_sources_done_before_stream": false
+        },
+        {
+          "producer_id": 83,
+          "consumer_id": 85,
+          "port": 0,
+          "gap": 1,
+          "all_sources_done_before_stream": false
+        }
+      ],
+      "observed_same_port_gap": 1,
+      "confirmed_self_ii": 1,
+      "self_ii_note": "One-cycle same-port minimum observed",
+      "self_forwarding_by_source": {
+        "source": {
+          "samples": [
+            {
+              "producer_id": 90,
+              "consumer_id": 93,
+              "roles": [
+                "Pn"
+              ],
+              "gap": 2,
+              "other_sources_done": true
+            },
+            {
+              "producer_id": 93,
+              "consumer_id": 95,
+              "roles": [
+                "Pn"
+              ],
+              "gap": 2,
+              "other_sources_done": true
+            },
+            {
+              "producer_id": 95,
+              "consumer_id": 97,
+              "roles": [
+                "Pn"
+              ],
+              "gap": 2,
+              "other_sources_done": true
+            }
+          ],
+          "minimum_ready_gap": 2
+        },
+        "mask": {
+          "samples": [
+            {
+              "producer_id": 100,
+              "consumer_id": 102,
+              "roles": [
+                "Pg"
+              ],
+              "gap": 2,
+              "other_sources_done": true
+            },
+            {
+              "producer_id": 102,
+              "consumer_id": 105,
+              "roles": [
+                "Pg"
+              ],
+              "gap": 2,
+              "other_sources_done": true
+            },
+            {
+              "producer_id": 105,
+              "consumer_id": 107,
+              "roles": [
+                "Pg"
+              ],
+              "gap": 2,
+              "other_sources_done": true
+            }
+          ],
+          "minimum_ready_gap": 2
+        }
+      },
+      "aggregate_self_forwarding": 2,
+      "forwarding_note": "Pair config uses the maximum of the ready-source role minima; smaller per-role gaps are retained here"
+    },
+    "PXOR.b8": {
+      "latencies": [
+        7
+      ],
+      "events": [
+        {
+          "id": 117,
+          "issue": 1833,
+          "done": 1840,
+          "latency": 7,
+          "port": 1,
+          "operands": " Dtype: B8  Pd[3], Pn[3], Pm[1], Pg[2], ",
+          "popped_line": 116,
+          "done_line": 109
+        },
+        {
+          "id": 118,
+          "issue": 1833,
+          "done": 1840,
+          "latency": 7,
+          "port": 0,
+          "operands": " Dtype: B8  Pd[4], Pn[4], Pm[1], Pg[2], ",
+          "popped_line": 115,
+          "done_line": 108
+        },
+        {
+          "id": 119,
+          "issue": 1835,
+          "done": 1842,
+          "latency": 7,
+          "port": 1,
+          "operands": " Dtype: B8  Pd[5], Pn[5], Pm[1], Pg[2], ",
+          "popped_line": 118,
+          "done_line": 111
+        },
+        {
+          "id": 120,
+          "issue": 1835,
+          "done": 1842,
+          "latency": 7,
+          "port": 0,
+          "operands": " Dtype: B8  Pd[6], Pn[6], Pm[1], Pg[2], ",
+          "popped_line": 117,
+          "done_line": 110
+        },
+        {
+          "id": 155,
+          "issue": 1837,
+          "done": 1844,
+          "latency": 7,
+          "port": 1,
+          "operands": " Dtype: B8  Pd[3], Pn[3], Pm[1], Pg[2], ",
+          "popped_line": 119,
+          "done_line": 113
+        },
+        {
+          "id": 158,
+          "issue": 1840,
+          "done": 1847,
+          "latency": 7,
+          "port": 0,
+          "operands": " Dtype: B8  Pd[3], Pn[3], Pm[1], Pg[2], ",
+          "popped_line": 120,
+          "done_line": 114
+        },
+        {
+          "id": 160,
+          "issue": 1843,
+          "done": 1850,
+          "latency": 7,
+          "port": 1,
+          "operands": " Dtype: B8  Pd[3], Pn[3], Pm[1], Pg[2], ",
+          "popped_line": 124,
+          "done_line": 115
+        },
+        {
+          "id": 164,
+          "issue": 1846,
+          "done": 1853,
+          "latency": 7,
+          "port": 0,
+          "operands": " Dtype: B8  Pd[3], Pn[3], Pm[1], Pg[2], ",
+          "popped_line": 125,
+          "done_line": 116
+        },
+        {
+          "id": 168,
+          "issue": 1849,
+          "done": 1856,
+          "latency": 7,
+          "port": 1,
+          "operands": " Dtype: B8  Pd[3], Pn[1], Pm[3], Pg[2], ",
+          "popped_line": 129,
+          "done_line": 117
+        },
+        {
+          "id": 170,
+          "issue": 1852,
+          "done": 1859,
+          "latency": 7,
+          "port": 0,
+          "operands": " Dtype: B8  Pd[3], Pn[1], Pm[3], Pg[2], ",
+          "popped_line": 133,
+          "done_line": 121
+        },
+        {
+          "id": 173,
+          "issue": 1855,
+          "done": 1862,
+          "latency": 7,
+          "port": 1,
+          "operands": " Dtype: B8  Pd[3], Pn[1], Pm[3], Pg[2], ",
+          "popped_line": 137,
+          "done_line": 125
+        },
+        {
+          "id": 176,
+          "issue": 1858,
+          "done": 1865,
+          "latency": 7,
+          "port": 0,
+          "operands": " Dtype: B8  Pd[3], Pn[1], Pm[3], Pg[2], ",
+          "popped_line": 139,
+          "done_line": 129
+        },
+        {
+          "id": 179,
+          "issue": 1860,
+          "done": 1867,
+          "latency": 7,
+          "port": 1,
+          "operands": " Dtype: B8  Pd[3], Pn[1], Pm[2], Pg[3], ",
+          "popped_line": 141,
+          "done_line": 131
+        },
+        {
+          "id": 182,
+          "issue": 1862,
+          "done": 1869,
+          "latency": 7,
+          "port": 0,
+          "operands": " Dtype: B8  Pd[3], Pn[1], Pm[2], Pg[3], ",
+          "popped_line": 142,
+          "done_line": 132
+        },
+        {
+          "id": 185,
+          "issue": 1864,
+          "done": 1871,
+          "latency": 7,
+          "port": 1,
+          "operands": " Dtype: B8  Pd[3], Pn[1], Pm[2], Pg[3], ",
+          "popped_line": 144,
+          "done_line": 134
+        },
+        {
+          "id": 188,
+          "issue": 1866,
+          "done": 1873,
+          "latency": 7,
+          "port": 0,
+          "operands": " Dtype: B8  Pd[1], Pn[1], Pm[2], Pg[3], ",
+          "popped_line": 146,
+          "done_line": 136
+        }
+      ],
+      "vf_pc_region": [
+        "0x13b2f300",
+        "0x13b2f3a0"
+      ],
+      "ports": [
+        0,
+        1
+      ],
+      "independent_ii_samples": [
+        {
+          "producer_id": 117,
+          "consumer_id": 119,
+          "port": 1,
+          "gap": 2,
+          "all_sources_done_before_stream": false
+        },
+        {
+          "producer_id": 118,
+          "consumer_id": 120,
+          "port": 0,
+          "gap": 2,
+          "all_sources_done_before_stream": false
+        }
+      ],
+      "observed_same_port_gap": 2,
+      "confirmed_self_ii": null,
+      "self_ii_note": "Further saturation experiments required; larger observed gaps remain bounds",
+      "self_forwarding_by_source": {
+        "source": {
+          "samples": [
+            {
+              "producer_id": 155,
+              "consumer_id": 158,
+              "roles": [
+                "Pn"
+              ],
+              "gap": 3,
+              "other_sources_done": true
+            },
+            {
+              "producer_id": 158,
+              "consumer_id": 160,
+              "roles": [
+                "Pn"
+              ],
+              "gap": 3,
+              "other_sources_done": true
+            },
+            {
+              "producer_id": 160,
+              "consumer_id": 164,
+              "roles": [
+                "Pn"
+              ],
+              "gap": 3,
+              "other_sources_done": true
+            }
+          ],
+          "minimum_ready_gap": 3
+        },
+        "rhs": {
+          "samples": [
+            {
+              "producer_id": 168,
+              "consumer_id": 170,
+              "roles": [
+                "Pm"
+              ],
+              "gap": 3,
+              "other_sources_done": true
+            },
+            {
+              "producer_id": 170,
+              "consumer_id": 173,
+              "roles": [
+                "Pm"
+              ],
+              "gap": 3,
+              "other_sources_done": true
+            },
+            {
+              "producer_id": 173,
+              "consumer_id": 176,
+              "roles": [
+                "Pm"
+              ],
+              "gap": 3,
+              "other_sources_done": true
+            }
+          ],
+          "minimum_ready_gap": 3
+        },
+        "mask": {
+          "samples": [
+            {
+              "producer_id": 179,
+              "consumer_id": 182,
+              "roles": [
+                "Pg"
+              ],
+              "gap": 2,
+              "other_sources_done": true
+            },
+            {
+              "producer_id": 182,
+              "consumer_id": 185,
+              "roles": [
+                "Pg"
+              ],
+              "gap": 2,
+              "other_sources_done": true
+            },
+            {
+              "producer_id": 185,
+              "consumer_id": 188,
+              "roles": [
+                "Pg"
+              ],
+              "gap": 2,
+              "other_sources_done": true
+            }
+          ],
+          "minimum_ready_gap": 2
+        }
+      },
+      "aggregate_self_forwarding": 3,
+      "forwarding_note": "Pair config uses the maximum of the ready-source role minima; smaller per-role gaps are retained here"
+    },
+    "PAND.b8": {
+      "latencies": [
+        7
+      ],
+      "events": [
+        {
+          "id": 199,
+          "issue": 1902,
+          "done": 1909,
+          "latency": 7,
+          "port": 1,
+          "operands": " Dtype: B8  Pd[3], Pn[3], Pm[3], Pg[2], ",
+          "popped_line": 162,
+          "done_line": 153
+        },
+        {
+          "id": 200,
+          "issue": 1902,
+          "done": 1909,
+          "latency": 7,
+          "port": 0,
+          "operands": " Dtype: B8  Pd[4], Pn[4], Pm[4], Pg[2], ",
+          "popped_line": 161,
+          "done_line": 152
+        },
+        {
+          "id": 201,
+          "issue": 1904,
+          "done": 1911,
+          "latency": 7,
+          "port": 1,
+          "operands": " Dtype: B8  Pd[5], Pn[5], Pm[5], Pg[2], ",
+          "popped_line": 164,
+          "done_line": 155
+        },
+        {
+          "id": 202,
+          "issue": 1904,
+          "done": 1911,
+          "latency": 7,
+          "port": 0,
+          "operands": " Dtype: B8  Pd[6], Pn[6], Pm[6], Pg[2], ",
+          "popped_line": 163,
+          "done_line": 154
+        },
+        {
+          "id": 238,
+          "issue": 1906,
+          "done": 1913,
+          "latency": 7,
+          "port": 1,
+          "operands": " Dtype: B8  Pd[3], Pn[3], Pm[3], Pg[2], ",
+          "popped_line": 165,
+          "done_line": 156
+        },
+        {
+          "id": 241,
+          "issue": 1909,
+          "done": 1916,
+          "latency": 7,
+          "port": 0,
+          "operands": " Dtype: B8  Pd[3], Pn[3], Pm[3], Pg[2], ",
+          "popped_line": 169,
+          "done_line": 157
+        },
+        {
+          "id": 243,
+          "issue": 1912,
+          "done": 1919,
+          "latency": 7,
+          "port": 1,
+          "operands": " Dtype: B8  Pd[3], Pn[3], Pm[3], Pg[2], ",
+          "popped_line": 170,
+          "done_line": 158
+        },
+        {
+          "id": 247,
+          "issue": 1915,
+          "done": 1922,
+          "latency": 7,
+          "port": 0,
+          "operands": " Dtype: B8  Pd[2], Pn[3], Pm[3], Pg[2], ",
+          "popped_line": 171,
+          "done_line": 159
+        },
+        {
+          "id": 251,
+          "issue": 1917,
+          "done": 1924,
+          "latency": 7,
+          "port": 1,
+          "operands": " Dtype: B8  Pd[2], Pn[1], Pm[1], Pg[2], ",
+          "popped_line": 174,
+          "done_line": 160
+        },
+        {
+          "id": 253,
+          "issue": 1919,
+          "done": 1926,
+          "latency": 7,
+          "port": 0,
+          "operands": " Dtype: B8  Pd[2], Pn[1], Pm[1], Pg[2], ",
+          "popped_line": 177,
+          "done_line": 162
+        },
+        {
+          "id": 256,
+          "issue": 1921,
+          "done": 1928,
+          "latency": 7,
+          "port": 1,
+          "operands": " Dtype: B8  Pd[2], Pn[1], Pm[1], Pg[2], ",
+          "popped_line": 180,
+          "done_line": 165
+        },
+        {
+          "id": 259,
+          "issue": 1923,
+          "done": 1930,
+          "latency": 7,
+          "port": 0,
+          "operands": " Dtype: B8  Pd[1], Pn[1], Pm[1], Pg[2], ",
+          "popped_line": 183,
+          "done_line": 168
+        }
+      ],
+      "vf_pc_region": [
+        "0x13b2f400",
+        "0x13b2f480"
+      ],
+      "ports": [
+        0,
+        1
+      ],
+      "independent_ii_samples": [
+        {
+          "producer_id": 199,
+          "consumer_id": 201,
+          "port": 1,
+          "gap": 2,
+          "all_sources_done_before_stream": false
+        },
+        {
+          "producer_id": 200,
+          "consumer_id": 202,
+          "port": 0,
+          "gap": 2,
+          "all_sources_done_before_stream": false
+        }
+      ],
+      "observed_same_port_gap": 2,
+      "confirmed_self_ii": null,
+      "self_ii_note": "Further saturation experiments required; larger observed gaps remain bounds",
+      "self_forwarding_by_source": {
+        "source": {
+          "samples": [
+            {
+              "producer_id": 238,
+              "consumer_id": 241,
+              "roles": [
+                "Pn",
+                "Pm"
+              ],
+              "gap": 3,
+              "other_sources_done": true
+            },
+            {
+              "producer_id": 241,
+              "consumer_id": 243,
+              "roles": [
+                "Pn",
+                "Pm"
+              ],
+              "gap": 3,
+              "other_sources_done": true
+            },
+            {
+              "producer_id": 243,
+              "consumer_id": 247,
+              "roles": [
+                "Pn",
+                "Pm"
+              ],
+              "gap": 3,
+              "other_sources_done": true
+            }
+          ],
+          "minimum_ready_gap": 3
+        },
+        "mask": {
+          "samples": [
+            {
+              "producer_id": 251,
+              "consumer_id": 253,
+              "roles": [
+                "Pg"
+              ],
+              "gap": 2,
+              "other_sources_done": true
+            },
+            {
+              "producer_id": 253,
+              "consumer_id": 256,
+              "roles": [
+                "Pg"
+              ],
+              "gap": 2,
+              "other_sources_done": true
+            },
+            {
+              "producer_id": 256,
+              "consumer_id": 259,
+              "roles": [
+                "Pg"
+              ],
+              "gap": 2,
+              "other_sources_done": true
+            }
+          ],
+          "minimum_ready_gap": 2
+        }
+      },
+      "aggregate_self_forwarding": 3,
+      "forwarding_note": "Pair config uses the maximum of the ready-source role minima; smaller per-role gaps are retained here"
+    },
+    "PSEL.b8": {
+      "latencies": [
+        7
+      ],
+      "events": [
+        {
+          "id": 270,
+          "issue": 1959,
+          "done": 1966,
+          "latency": 7,
+          "port": 1,
+          "operands": " Dtype: B8  Pd[3], Pn[3], Pm[1], Pg[2], ",
+          "popped_line": 200,
+          "done_line": 187
+        },
+        {
+          "id": 271,
+          "issue": 1959,
+          "done": 1966,
+          "latency": 7,
+          "port": 0,
+          "operands": " Dtype: B8  Pd[4], Pn[4], Pm[1], Pg[2], ",
+          "popped_line": 199,
+          "done_line": 186
+        },
+        {
+          "id": 272,
+          "issue": 1961,
+          "done": 1968,
+          "latency": 7,
+          "port": 1,
+          "operands": " Dtype: B8  Pd[5], Pn[5], Pm[1], Pg[2], ",
+          "popped_line": 202,
+          "done_line": 189
+        },
+        {
+          "id": 273,
+          "issue": 1961,
+          "done": 1968,
+          "latency": 7,
+          "port": 0,
+          "operands": " Dtype: B8  Pd[6], Pn[6], Pm[1], Pg[2], ",
+          "popped_line": 201,
+          "done_line": 188
+        },
+        {
+          "id": 301,
+          "issue": 1963,
+          "done": 1970,
+          "latency": 7,
+          "port": 1,
+          "operands": " Dtype: B8  Pd[3], Pn[3], Pm[1], Pg[2], ",
+          "popped_line": 203,
+          "done_line": 191
+        },
+        {
+          "id": 304,
+          "issue": 1966,
+          "done": 1973,
+          "latency": 7,
+          "port": 0,
+          "operands": " Dtype: B8  Pd[3], Pn[3], Pm[1], Pg[2], ",
+          "popped_line": 204,
+          "done_line": 192
+        },
+        {
+          "id": 306,
+          "issue": 1969,
+          "done": 1976,
+          "latency": 7,
+          "port": 1,
+          "operands": " Dtype: B8  Pd[3], Pn[3], Pm[1], Pg[2], ",
+          "popped_line": 207,
+          "done_line": 193
+        },
+        {
+          "id": 310,
+          "issue": 1972,
+          "done": 1979,
+          "latency": 7,
+          "port": 0,
+          "operands": " Dtype: B8  Pd[3], Pn[3], Pm[1], Pg[2], ",
+          "popped_line": 208,
+          "done_line": 194
+        },
+        {
+          "id": 314,
+          "issue": 1975,
+          "done": 1982,
+          "latency": 7,
+          "port": 1,
+          "operands": " Dtype: B8  Pd[3], Pn[1], Pm[3], Pg[2], ",
+          "popped_line": 212,
+          "done_line": 195
+        },
+        {
+          "id": 316,
+          "issue": 1978,
+          "done": 1985,
+          "latency": 7,
+          "port": 0,
+          "operands": " Dtype: B8  Pd[3], Pn[1], Pm[3], Pg[2], ",
+          "popped_line": 216,
+          "done_line": 199
+        },
+        {
+          "id": 319,
+          "issue": 1981,
+          "done": 1988,
+          "latency": 7,
+          "port": 1,
+          "operands": " Dtype: B8  Pd[3], Pn[1], Pm[3], Pg[2], ",
+          "popped_line": 220,
+          "done_line": 203
+        },
+        {
+          "id": 322,
+          "issue": 1984,
+          "done": 1991,
+          "latency": 7,
+          "port": 0,
+          "operands": " Dtype: B8  Pd[3], Pn[1], Pm[3], Pg[2], ",
+          "popped_line": 222,
+          "done_line": 207
+        },
+        {
+          "id": 325,
+          "issue": 1986,
+          "done": 1993,
+          "latency": 7,
+          "port": 1,
+          "operands": " Dtype: B8  Pd[3], Pn[1], Pm[2], Pg[3], ",
+          "popped_line": 224,
+          "done_line": 209
+        },
+        {
+          "id": 328,
+          "issue": 1988,
+          "done": 1995,
+          "latency": 7,
+          "port": 0,
+          "operands": " Dtype: B8  Pd[3], Pn[1], Pm[2], Pg[3], ",
+          "popped_line": 225,
+          "done_line": 210
+        },
+        {
+          "id": 331,
+          "issue": 1990,
+          "done": 1997,
+          "latency": 7,
+          "port": 1,
+          "operands": " Dtype: B8  Pd[3], Pn[1], Pm[2], Pg[3], ",
+          "popped_line": 227,
+          "done_line": 212
+        },
+        {
+          "id": 334,
+          "issue": 1992,
+          "done": 1999,
+          "latency": 7,
+          "port": 0,
+          "operands": " Dtype: B8  Pd[1], Pn[1], Pm[2], Pg[3], ",
+          "popped_line": 229,
+          "done_line": 214
+        }
+      ],
+      "vf_pc_region": [
+        "0x13b2f500",
+        "0x13b2f5a0"
+      ],
+      "ports": [
+        0,
+        1
+      ],
+      "independent_ii_samples": [
+        {
+          "producer_id": 270,
+          "consumer_id": 272,
+          "port": 1,
+          "gap": 2,
+          "all_sources_done_before_stream": false
+        },
+        {
+          "producer_id": 271,
+          "consumer_id": 273,
+          "port": 0,
+          "gap": 2,
+          "all_sources_done_before_stream": false
+        }
+      ],
+      "observed_same_port_gap": 2,
+      "confirmed_self_ii": null,
+      "self_ii_note": "Further saturation experiments required; larger observed gaps remain bounds",
+      "self_forwarding_by_source": {
+        "source": {
+          "samples": [
+            {
+              "producer_id": 301,
+              "consumer_id": 304,
+              "roles": [
+                "Pn"
+              ],
+              "gap": 3,
+              "other_sources_done": true
+            },
+            {
+              "producer_id": 304,
+              "consumer_id": 306,
+              "roles": [
+                "Pn"
+              ],
+              "gap": 3,
+              "other_sources_done": true
+            },
+            {
+              "producer_id": 306,
+              "consumer_id": 310,
+              "roles": [
+                "Pn"
+              ],
+              "gap": 3,
+              "other_sources_done": true
+            }
+          ],
+          "minimum_ready_gap": 3
+        },
+        "rhs": {
+          "samples": [
+            {
+              "producer_id": 314,
+              "consumer_id": 316,
+              "roles": [
+                "Pm"
+              ],
+              "gap": 3,
+              "other_sources_done": true
+            },
+            {
+              "producer_id": 316,
+              "consumer_id": 319,
+              "roles": [
+                "Pm"
+              ],
+              "gap": 3,
+              "other_sources_done": true
+            },
+            {
+              "producer_id": 319,
+              "consumer_id": 322,
+              "roles": [
+                "Pm"
+              ],
+              "gap": 3,
+              "other_sources_done": true
+            }
+          ],
+          "minimum_ready_gap": 3
+        },
+        "mask": {
+          "samples": [
+            {
+              "producer_id": 325,
+              "consumer_id": 328,
+              "roles": [
+                "Pg"
+              ],
+              "gap": 2,
+              "other_sources_done": true
+            },
+            {
+              "producer_id": 328,
+              "consumer_id": 331,
+              "roles": [
+                "Pg"
+              ],
+              "gap": 2,
+              "other_sources_done": true
+            },
+            {
+              "producer_id": 331,
+              "consumer_id": 334,
+              "roles": [
+                "Pg"
+              ],
+              "gap": 2,
+              "other_sources_done": true
+            }
+          ],
+          "minimum_ready_gap": 2
+        }
+      },
+      "aggregate_self_forwarding": 3,
+      "forwarding_note": "Pair config uses the maximum of the ready-source role minima; smaller per-role gaps are retained here"
+    }
+  },
+  "sha256": {
+    "kernel.cce": "6306369e9d7ae972d05a464a0054e2065b3e23d14d28a19f3aaa1483f95ddbdb",
+    "input.bin": "76d600e0d6d8aa8b09af343059f360a120a492d95b24b9f4f128cbdef6ea5c9f",
+    "golden.bin": "424eb4696992bfee8003b60805e2f96379d6ac3d3a6c56ff6e926e1f0ac96e63",
+    "output.bin": "424eb4696992bfee8003b60805e2f96379d6ac3d3a6c56ff6e926e1f0ac96e63",
+    "commands.json": "bae2f9a2e9294da7b266cab62ed992bbf3b3eaa1e26838c92b8b7768c931e21d",
+    "core0.veccore0.instr_popped_log.dump": "c6d5a5464c7748376e06c85d8f7c5f8f77413ebf54b7da415591725dd7b52b24",
+    "core0.veccore0.instr_log.dump": "0dd0df9a84d10edafe563927e3f69347afa3c89a4f2995162715855459386d37",
+    "core0.veccore0.rvec.EXU.dump": "698fc5e5553232d3066e8ec24e438cea847ea54e5c736b3a517cc3eeacc545dc"
+  },
+  "archived_artifacts": "results/a5_predicate_logic_20261019/matrix_barrier_control"
+}

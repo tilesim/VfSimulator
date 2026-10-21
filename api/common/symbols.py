@@ -16,6 +16,16 @@ class DType(_StrEnum):
     FP32 = "fp32"
     FP16 = "fp16"
     BF16 = "bf16"
+    INT16 = "int16"
+    INT64 = "int64"
+    UINT64 = "uint64"
+    FP8_E4M3 = "f8e4m3"
+    FP8_E5M2 = "f8e5m2"
+    FP8_E8M0 = "f8e8m0"
+    HIF8 = "hif8"
+    FP4_E1M2X2 = "f4e1m2x2"
+    FP4_E2M1X2 = "f4e2m1x2"
+    INT4X2 = "s4x2"
     INT32 = "int32"
     UINT32 = "uint32"
     UINT16 = "uint16"
@@ -24,11 +34,11 @@ class DType(_StrEnum):
     BOOL = "bool"
 
 
-
-
 class MembarType(_StrEnum):
     VST_VLD = "VST_VLD"
     VLD_VST = "VLD_VST"
+    VST_VST = "VST_VST"
+    VV_ALL = "VV_ALL"
 
 
 OpCode = _StrEnum(
@@ -39,6 +49,14 @@ OpCode = _StrEnum(
 
 
 DTYPE_ALIASES = {
+    "s16": DType.INT16,
+    "i16": DType.INT16,
+    "int16": DType.INT16,
+    "s64": DType.INT64,
+    "i64": DType.INT64,
+    "int64": DType.INT64,
+    "u64": DType.UINT64,
+    "uint64": DType.UINT64,
     "f32": DType.FP32,
     "float32": DType.FP32,
     "fp32": DType.FP32,
@@ -64,6 +82,10 @@ DTYPE_ALIASES = {
 }
 
 FORM_DTYPE_ALIASES = {
+    "s16": DType.INT16,
+    "i16": DType.INT16,
+    "s64": DType.INT64,
+    "u64": DType.UINT64,
     "u16": DType.UINT16,
     "f32": DType.FP32,
     "f16": DType.FP16,
@@ -76,6 +98,9 @@ FORM_DTYPE_ALIASES = {
 }
 
 DTYPE_TO_COMPACT = {
+    DType.INT16.value: "s16",
+    DType.INT64.value: "s64",
+    DType.UINT64.value: "u64",
     DType.UINT16.value: "u16",
     DType.FP32.value: "f32",
     DType.FP16.value: "f16",
@@ -86,6 +111,33 @@ DTYPE_TO_COMPACT = {
     DType.UINT8.value: "u8",
     DType.BOOL.value: "bool",
 }
+
+DTYPE_ELEMENT_BYTES = {
+    "fp32": 4,
+    "fp16": 2,
+    "bf16": 2,
+    "int8": 1,
+    "uint8": 1,
+    "int16": 2,
+    "uint16": 2,
+    "int32": 4,
+    "uint32": 4,
+    "int64": 8,
+    "uint64": 8,
+    "f8e4m3": 1,
+    "f8e5m2": 1,
+    "f8e8m0": 1,
+    "hif8": 1,
+    "f4e1m2x2": 1,
+    "f4e2m1x2": 1,
+    "s4x2": 1,
+}
+
+
+def dtype_element_bytes(dtype: str | None) -> int | None:
+    """Pointer element width; packed x2 types contain two values per byte."""
+    return DTYPE_ELEMENT_BYTES.get(normalize_dtype(dtype))
+
 
 STORAGE_ALIASES = {
     "predicateregister": StorageKind.PREDICATE_REGISTER,
@@ -103,6 +155,8 @@ STORAGE_ALIASES = {
 MEMBAR_ALIASES = {
     "vst_vld": MembarType.VST_VLD,
     "vld_vst": MembarType.VLD_VST,
+    "vst_vst": MembarType.VST_VST,
+    "vv_all": MembarType.VV_ALL,
 }
 
 

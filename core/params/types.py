@@ -1,7 +1,9 @@
 """Parameter records shared by configuration loading and execution."""
+
 from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any
+
 
 @dataclass(frozen=True, slots=True)
 class InstructionProfile:
@@ -15,16 +17,21 @@ class InstructionProfile:
     dispatch_exu: str
     latency: int
     allowed_exu_ports: tuple[int, ...]
+    lsu_resource: str = ""
+    lsu_issue_interval: int = 1
+    align_state_latency: int = 1
+
 
 @dataclass(frozen=True, slots=True)
 class VfTiming:
     startup_cost: int = 0
     drain_cost: int = 0
 
+
 @dataclass(frozen=True, slots=True)
 class UarchParameters:
     # Identity and resource capacities
-    name: str = ''
+    name: str = ""
     issue_ports: int = 2
     load_ports: int = 2
     store_ports: int = 1
@@ -62,7 +69,7 @@ class UarchParameters:
 
     # Scheduling and register policies
     lsu_store_priority_preg_threshold: int = 1
-    shq_exq_dispatch_policy: str = 'fu_round_robin_exu0_reserve'
+    shq_exq_dispatch_policy: str = "fu_round_robin_exu0_reserve"
     exu0_reserve_lookahead: int = 8
     exu0_reserve_min_count: int = 1
     enable_isu_queue_model: bool = True

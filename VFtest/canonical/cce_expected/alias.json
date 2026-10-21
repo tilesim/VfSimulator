@@ -27,7 +27,7 @@
     {
       "kind": "instruction",
       "instruction_id": "instruction.1",
-      "opcode": "VDUP",
+      "opcode": "VDUPS",
       "instruction_class": "compute",
       "form": "fp32",
       "inputs": [
@@ -63,7 +63,7 @@
     {
       "kind": "instruction",
       "instruction_id": "instruction.2",
-      "opcode": "VDUP",
+      "opcode": "VDUPS",
       "instruction_class": "compute",
       "form": "fp32",
       "inputs": [

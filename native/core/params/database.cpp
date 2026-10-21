@@ -41,15 +41,22 @@ ParamDB::ParamDB(std::shared_ptr<const ParamBundle> parameters)
   if (!bundle_)
     throw std::invalid_argument("ParamDB requires a parameter bundle");
 }
-const InstructionProfile &
-ParamDB::inst(const std::string &op, const std::string &form,
-              const std::string &instructionClass) const {
+const InstructionProfile &ParamDB::inst(const std::string &op,
+                                        const std::string &form,
+                                        const std::string &instructionClass,
+                                        const std::string &memoryMode) const {
   const std::string canonical = upper(op);
-  const std::string key = canonical + "\x1f" + form + "\x1f" + instructionClass;
+  const std::string key = canonical + "\x1f" + form + "\x1f" +
+                          instructionClass + "\x1f" + memoryMode;
   auto it = profileCache_.find(key);
   if (it != profileCache_.end())
     return it->second;
   auto profile = computeInst(canonical, form);
+  if (auto modes = bundle_->memoryModeLatency.find(canonical);
+      modes != bundle_->memoryModeLatency.end())
+    if (auto latency = modes->second.find(memoryMode);
+        latency != modes->second.end())
+      profile.latency = latency->second;
   if (!instructionClass.empty())
     profile.opClass = instructionClass;
   if (profile.fuType.empty())
@@ -163,8 +170,16 @@ int64_t ParamDB::computeForwardingCycles(const std::string &prod,
                                          const std::string &cons,
                                          const std::string &consForm) const {
   const auto *spec = defaultInstructionCatalog().lookup(prod);
-  if (spec && !spec->forwardingOpcode.empty())
+  if (spec && !spec->forwardingOpcode.empty()) {
+    const auto producer =
+        bundle_->forwardingByForm.find(qualifyOp(prod, prodForm));
+    if (producer != bundle_->forwardingByForm.end()) {
+      const auto consumer = producer->second.find(qualifyOp(cons, consForm));
+      if (consumer != producer->second.end())
+        return std::max<int64_t>(0, consumer->second);
+    }
     return forwardingCycles(spec->forwardingOpcode, prodForm, cons, consForm);
+  }
   const std::string requestedProd = qualifyOp(prod, prodForm);
   const std::string requestedCons = qualifyOp(cons, consForm);
   for (const auto &candidate :

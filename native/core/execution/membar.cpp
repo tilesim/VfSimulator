@@ -37,8 +37,7 @@ MembarController::MembarController(const ParamDB *db,
     for (const char *cls : {"LOAD", "STORE"})
       if (timing_->startFeedback.at(cls) < 0)
         throw std::invalid_argument("negative membar LSU feedback");
-    for (const char *name : {"VLD_VST", "VST_VLD"}) {
-      const auto &r = timing_->directions.at(name);
+    for (const auto &[name, r] : timing_->directions) {
       if (r.releaseLatency < 0 || r.retireLatency < r.releaseLatency ||
           r.consumerDelay < 0 || r.nextIssueDelay < 1)
         throw std::invalid_argument("invalid membar direction timing");
@@ -59,6 +58,10 @@ void MembarController::acceptMembar(const DynamicInst &inst, int64_t cycle) {
   } else if (barrier == "VLD_VST") {
     item.waitClass = "LOAD";
     item.blockClass = "STORE";
+  } else if (barrier == "VST_VST") {
+    item.waitClass = item.blockClass = "STORE";
+  } else if (barrier == "VV_ALL") {
+    item.waitClass = item.blockClass = "ALL";
   } else {
     if (db_ != nullptr) {
       db_->recordWarning("unsupported_membar_type",
@@ -69,13 +72,18 @@ void MembarController::acceptMembar(const DynamicInst &inst, int64_t cycle) {
     return;
   }
   if (timing_) {
+    if (!timing_->directions.count(barrier) && db_)
+      db_->recordWarning("unmeasured_membar_timing", {{"barrier", barrier}});
     item.availableCycle =
         std::max(issueFloor_, cycle + timing_->admissionDelay);
     item.previous = lastBarrier_;
     const auto cls = lastBarrier_ ? lastBarrier_->blockClass : "STORE";
     const auto it = segment_.find(cls);
-    if (it != segment_.end())
-      item.predecessors = it->second;
+    if (cls == "ALL") {
+      for (const auto &[kind, progress] : segment_)
+        item.predecessors.push_back(progress);
+    } else if (it != segment_.end())
+      item.predecessors.push_back(it->second);
     segment_.clear();
   }
   auto barrierPtr = std::make_shared<Barrier>(std::move(item));
@@ -117,10 +125,27 @@ void MembarController::update(
     const std::function<bool(int64_t, const std::string &)> &hasPendingBefore,
     int64_t cycle, const std::function<bool(int64_t)> &hasPendingDispatch) {
   cycle_ = cycle;
+  auto pending = [&](const Barrier &b) {
+    return b.waitClass == "ALL" ? hasPendingBefore(b.streamSeq, "LOAD") ||
+                                      hasPendingBefore(b.streamSeq, "STORE")
+                                : hasPendingBefore(b.streamSeq, b.waitClass);
+  };
   for (auto &ptr : barriers_) {
     auto &b = *ptr;
     if (!timing_) {
-      b.released = !hasPendingBefore(b.streamSeq, b.waitClass);
+      b.released = !pending(b);
+      continue;
+    }
+    if (!timing_->directions.count(b.barrier)) {
+      if ((!b.previous ||
+           (b.previous->retireCycle && cycle >= *b.previous->retireCycle)) &&
+          !pending(b) &&
+          !(hasPendingDispatch && hasPendingDispatch(b.streamSeq))) {
+        b.issueCycle = b.releaseCycle = b.retireCycle = cycle;
+        b.retired = b.released = true;
+        lastRetireCycle_ = std::max(lastRetireCycle_, cycle);
+        log("sync_release", b);
+      }
       continue;
     }
     const auto &rule = timing_->directions.at(b.barrier);
@@ -131,23 +156,28 @@ void MembarController::update(
           continue;
         ready = std::max(ready, *b.previous->retireCycle + rule.nextIssueDelay);
       }
-      if (b.predecessors) {
-        const auto &p = *b.predecessors;
-        if (p.pending || !p.startCycle)
-          continue;
+      bool predecessorPending = false;
+      for (const auto &progress : b.predecessors) {
+        const auto &p = *progress;
+        if (p.pending || !p.startCycle) {
+          predecessorPending = true;
+          break;
+        }
         ready = std::max(ready,
                          *p.startCycle + timing_->startFeedback.at(p.opClass));
       }
+      if (predecessorPending)
+        continue;
       if (cycle < ready ||
           (hasPendingDispatch && hasPendingDispatch(b.streamSeq)))
         continue;
       b.issueCycle = cycle;
       b.previous.reset();
-      b.predecessors.reset();
+      b.predecessors.clear();
       log("issue", b);
     }
     if (!b.releaseCycle && cycle >= *b.issueCycle + rule.releaseLatency &&
-        !hasPendingBefore(b.streamSeq, b.waitClass)) {
+        !pending(b)) {
       b.releaseCycle = cycle;
       b.retireCycle = cycle + rule.retireLatency - rule.releaseLatency;
       log("sync_release", b);
@@ -171,10 +201,15 @@ bool MembarController::blocks(int64_t streamSeq, const std::string &cls) const {
     const auto &barrier = *ptr;
     if (barrier.released)
       continue;
-    if (streamSeq > barrier.streamSeq && cls == barrier.blockClass) {
+    if (streamSeq > barrier.streamSeq &&
+        ((barrier.blockClass == "ALL" && (cls == "LOAD" || cls == "STORE")) ||
+         cls == barrier.blockClass)) {
+      const auto delay =
+          timing_ && timing_->directions.count(barrier.barrier)
+              ? timing_->directions.at(barrier.barrier).consumerDelay
+              : 0;
       if (!timing_ || !barrier.releaseCycle ||
-          cycle_ < *barrier.releaseCycle +
-                       timing_->directions.at(barrier.barrier).consumerDelay)
+          cycle_ < *barrier.releaseCycle + delay)
         return true;
     }
   }

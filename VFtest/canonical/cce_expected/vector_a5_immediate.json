@@ -1,0 +1,321 @@
+{
+  "schema_version": 2,
+  "context": [
+    {
+      "kind": "instruction",
+      "instruction_id": "instruction.0",
+      "opcode": "PSET_B16",
+      "instruction_class": "compute",
+      "form": "b16",
+      "inputs": [],
+      "outputs": [
+        {
+          "value_id": "p.def0",
+          "role": "destination",
+          "dtype": "bool",
+          "memory_access": null
+        }
+      ],
+      "attributes": {},
+      "source_location": {
+        "source": "vf",
+        "line": 6,
+        "column": null,
+        "path": "<cce>"
+      }
+    },
+    {
+      "kind": "instruction",
+      "instruction_id": "instruction.1",
+      "opcode": "VDUPI",
+      "instruction_class": "compute",
+      "form": "int8",
+      "inputs": [
+        {
+          "value_id": "249.def1",
+          "role": "scalar",
+          "dtype": "int8",
+          "memory_access": null
+        }
+      ],
+      "outputs": [
+        {
+          "value_id": "bytes.def2",
+          "role": "destination",
+          "dtype": "int8",
+          "memory_access": null
+        }
+      ],
+      "attributes": {},
+      "source_location": {
+        "source": "vf",
+        "line": 7,
+        "column": null,
+        "path": "<cce>"
+      }
+    },
+    {
+      "kind": "instruction",
+      "instruction_id": "instruction.2",
+      "opcode": "VDUPI",
+      "instruction_class": "compute",
+      "form": "int16",
+      "inputs": [
+        {
+          "value_id": "46.def3",
+          "role": "scalar",
+          "dtype": "int16",
+          "memory_access": null
+        }
+      ],
+      "outputs": [
+        {
+          "value_id": "halves.def4",
+          "role": "destination",
+          "dtype": "int16",
+          "memory_access": null
+        }
+      ],
+      "attributes": {},
+      "source_location": {
+        "source": "vf",
+        "line": 8,
+        "column": null,
+        "path": "<cce>"
+      }
+    },
+    {
+      "kind": "instruction",
+      "instruction_id": "instruction.3",
+      "opcode": "VDUPI_HI",
+      "instruction_class": "compute",
+      "form": "int16",
+      "inputs": [
+        {
+          "value_id": "halves.def4",
+          "role": "source",
+          "dtype": "int16",
+          "memory_access": null
+        },
+        {
+          "value_id": "251.def5",
+          "role": "scalar",
+          "dtype": "int16",
+          "memory_access": null
+        }
+      ],
+      "outputs": [
+        {
+          "value_id": "halves.def6",
+          "role": "destination",
+          "dtype": "int16",
+          "memory_access": null
+        }
+      ],
+      "attributes": {},
+      "source_location": {
+        "source": "vf",
+        "line": 8,
+        "column": null,
+        "path": "<cce>"
+      }
+    },
+    {
+      "kind": "instruction",
+      "instruction_id": "instruction.4",
+      "opcode": "VEXPDIF",
+      "instruction_class": "compute",
+      "form": "fp16",
+      "inputs": [
+        {
+          "value_id": "halves.def6",
+          "role": "source",
+          "dtype": "int16",
+          "memory_access": null
+        },
+        {
+          "value_id": "halves.def6",
+          "role": "source",
+          "dtype": "int16",
+          "memory_access": null
+        },
+        {
+          "value_id": "p.def0",
+          "role": "predicate",
+          "dtype": "bool",
+          "memory_access": null
+        }
+      ],
+      "outputs": [
+        {
+          "value_id": "result.def7",
+          "role": "destination",
+          "dtype": "fp32",
+          "memory_access": null
+        }
+      ],
+      "attributes": {},
+      "source_location": {
+        "source": "vf",
+        "line": 9,
+        "column": null,
+        "path": "<cce>"
+      }
+    },
+    {
+      "kind": "instruction",
+      "instruction_id": "instruction.5",
+      "opcode": "VSTS",
+      "instruction_class": "store",
+      "form": "fp32",
+      "inputs": [
+        {
+          "value_id": "result.def7",
+          "role": "source",
+          "dtype": "fp32",
+          "memory_access": null
+        },
+        {
+          "value_id": "p.def0",
+          "role": "predicate",
+          "dtype": "bool",
+          "memory_access": null
+        }
+      ],
+      "outputs": [
+        {
+          "value_id": "output.def8",
+          "role": "memory",
+          "dtype": "fp32",
+          "memory_access": {
+            "base_object_id": "ub.output",
+            "offset": {
+              "constant": 0,
+              "terms": []
+            },
+            "access_kind": "write",
+            "span": null,
+            "address_unit_bytes": null,
+            "alias_group": null,
+            "address_state_id": "vf:pointer:0:output",
+            "update_mode": "none",
+            "post_update_delta_bytes": null
+          }
+        }
+      ],
+      "attributes": {},
+      "source_location": {
+        "source": "vf",
+        "line": 10,
+        "column": null,
+        "path": "<cce>"
+      }
+    }
+  ],
+  "values": {
+    "p.def0": {
+      "definition_id": "p.def0",
+      "logical_id": "p",
+      "storage": "PredicateRegister",
+      "dtype": "bool",
+      "shape": [],
+      "producer_node_id": "instruction.0",
+      "storage_object_id": null,
+      "source_location": null
+    },
+    "249.def1": {
+      "definition_id": "249.def1",
+      "logical_id": "249",
+      "storage": "Scalar",
+      "dtype": "int8",
+      "shape": [],
+      "producer_node_id": null,
+      "storage_object_id": null,
+      "source_location": null
+    },
+    "bytes.def2": {
+      "definition_id": "bytes.def2",
+      "logical_id": "bytes",
+      "storage": "Register",
+      "dtype": "int8",
+      "shape": [],
+      "producer_node_id": "instruction.1",
+      "storage_object_id": null,
+      "source_location": null
+    },
+    "46.def3": {
+      "definition_id": "46.def3",
+      "logical_id": "46",
+      "storage": "Scalar",
+      "dtype": "int16",
+      "shape": [],
+      "producer_node_id": null,
+      "storage_object_id": null,
+      "source_location": null
+    },
+    "halves.def4": {
+      "definition_id": "halves.def4",
+      "logical_id": "halves",
+      "storage": "Register",
+      "dtype": "int16",
+      "shape": [],
+      "producer_node_id": "instruction.2",
+      "storage_object_id": null,
+      "source_location": null
+    },
+    "251.def5": {
+      "definition_id": "251.def5",
+      "logical_id": "251",
+      "storage": "Scalar",
+      "dtype": "int16",
+      "shape": [],
+      "producer_node_id": null,
+      "storage_object_id": null,
+      "source_location": null
+    },
+    "halves.def6": {
+      "definition_id": "halves.def6",
+      "logical_id": "halves",
+      "storage": "Register",
+      "dtype": "int16",
+      "shape": [],
+      "producer_node_id": "instruction.3",
+      "storage_object_id": null,
+      "source_location": null
+    },
+    "result.def7": {
+      "definition_id": "result.def7",
+      "logical_id": "result",
+      "storage": "Register",
+      "dtype": "fp32",
+      "shape": [],
+      "producer_node_id": "instruction.4",
+      "storage_object_id": null,
+      "source_location": null
+    },
+    "output.def8": {
+      "definition_id": "output.def8",
+      "logical_id": "output",
+      "storage": "UB",
+      "dtype": "fp32",
+      "shape": [],
+      "producer_node_id": "instruction.5",
+      "storage_object_id": "ub.output",
+      "source_location": null
+    }
+  },
+  "storage_objects": {
+    "ub.output": {
+      "object_id": "ub.output",
+      "storage": "UB",
+      "shape": [],
+      "source_location": null
+    }
+  },
+  "params": {},
+  "uarch": {},
+  "source": {
+    "adapter": "cce",
+    "path": "<cce>"
+  }
+}

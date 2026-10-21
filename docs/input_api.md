@@ -1,6 +1,6 @@
 # 输入 API 与 Canonical 数据
 
-`api/input_api.py::InputAPI` 接收 CCE/DSL 文件、Canonical JSON 文件和
+`api/input_api.py::InputAPI` 接收 CCE 文件、Canonical JSON 文件和
 `CanonicalVfInfo` 对象。所有正式输入出口执行一次通用语义校验。
 Core 接收通过 API 校验的 Canonical 对象，并检查模型执行能力。
 
@@ -36,6 +36,7 @@ print(result["vf_end_cycle"])
 | --- | --- | --- |
 | 源码和 scope 选择 | [source.py](../api/cce/source.py)、[parser.py](../api/cce/parser.py) 的 `_parse_cce_adapter_program` | 识别 VF 作用域和调用参数，确定所选函数 |
 | 语法与参数绑定 | `parser.py::_VFScopeParser` | 构造 CCE 私有 `AdapterProgram`，绑定 Catalog 签名、dtype、访存、状态及循环 |
+| CANN 软件展开 | [software.py](../api/cce/software.py) | 按类型与配置选择 `configs/cce_lowering.json` 规则，构造物理指令及 SSA 依赖 |
 | 规范化 | [normalization.py](../api/cce/normalization.py) 的 `normalize_adapter_program` | 合并 value 声明，统一 form 和 operand 引用 |
 | 值版本化 | [value_versioning.py](../api/cce/value_versioning.py) 的 `ValueVersioningPass.run` | 为静态写入建立 definition，构造 producer、alias 和循环 entry/back-edge/exit |
 | 语义校验 | [validator.py](../api/common/validator.py) 的 `require_valid_canonical_vf_info` | 检查定义、作用域、签名、循环、访存和配置，返回 Canonical |
@@ -83,9 +84,12 @@ schema v1/v2 的读写由 [serialization.py](../api/json/serialization.py)处理
 [InstructionCatalog](../api/common/instruction_catalog.py)从
 [instruction_catalog.json](../configs/instruction_catalog.json)创建每条指令的
 `InstructionSpec`，提供签名、operand、form、mode、访存预算和对齐操作声明。
-`FormRule` 决定 form 来自操作数类型、转换类型对或固定值；`OperandSpec` 声明参数位置、
+`FormRule` 决定 form 来自目的操作数类型、源操作数类型、转换类型对或固定值；`OperandSpec` 声明参数位置、
 方向、类型及允许值。`ArgumentKind.CONFIG` 表示模式和立即数配置，
 `REGISTER_OR_SCALAR` 支持两种数据来源，`ALIGN_STATE` 表示特殊对齐状态。
+
+`VCADD` 使用 `source_dtype` 规则。`vector_s16 → vector_s32` 的求和对应 `VCADD.int16`，
+`vector_s32 → vector_s32` 对应 `VCADD.int32`；源类型决定实际归约编码，目的类型接受宽化结果。
 
 [diagnostics.py](../api/common/diagnostics.py)定义结构化诊断、严重程度、校验结果和
 `VfInfoValidationError`。校验失败的正式输入入口抛出该异常；单独检查函数返回诊断结果。
@@ -103,3 +107,35 @@ Core 的执行能力检查位于 `CoreLoweringPass.ensure_current_core_compatibl
 `builder.loop(definition)` 返回作用域守卫，正常结束提交 body，异常展开回滚声明和节点。
 `encodeCanonicalVfInfoJson()` / `decodeCanonicalVfInfoJson()` 提供 JSON 编解码。
 C++ 前端和 Builder 使用统一 Catalog 及 Canonical 校验，不依赖 Python 运行时。
+
+## 转换与显式向量视图
+
+`VCVT` 按源/目标类型对选择物理 opcode 和对应签名。不同类型对分别声明舍入、
+饱和、`PART_EVEN/ODD` 或 `PART_P0..P3` 参数，以及可选的 `MODE_ZEROING`。
+例如 `FP32 → S32` 使用 `vcvt(dst,src,predicate,round,saturation)`，
+`FP16 → FP32` 使用 `vcvt(dst,src,predicate,part)`。
+
+转换和 pack/unpack 的 C 风格 `vector_*` 显式视图参与 form 选择。
+`vcvt(out,(vector_f32)value,...)` 从同一寄存器值读取 FP32 位表示；
+Canonical 保留底层 value 的身份、声明 dtype 和依赖，以转换 form 表达本次编码。
+这项视图识别适用于转换 form，其他指令的通用视图处理继续单独覆盖。
+
+`VPACK` 使用 `s16_to_u8/u16_to_u8/s32_to_u16/u32_to_u16`，
+`VUNPACK` 使用对应的 8→16、16→32 宽化 form；分段参数为 `LOWER/HIGHER`。
+`VPACK.b32` 仍可用于显式 Canonical 输入。CCE 入口按类型对选择 form。
+
+## A5 CCE 调用与展开
+
+CCE 支持的目标函数签名和 dtype 见 [A5 清单](a5_instruction_coverage.md)。
+`configs/cce_lowering.json` 定义 CANN 软件 wrapper 的 224 条类型/配置规则，
+Python 和 C++ 使用相同的数据；Native 由 `generate_cce_lowering_cpp.py` 生成内嵌表。
+配对向量使用两个普通寄存器值；vload/vstore 及配对索引访存由 parser 的专用 lowering 处理。
+
+VAG 的步幅按硬件循环层次建立字节偏移。访存分布模式声明真实跨度和传输量，
+PLDI/PSTI 的立即数偏移按块换算，PLDS/PSTS 使用字节偏移。
+Post-update 将字节增量和地址状态 ID 写入 Canonical。
+
+CCE 输入层支持受限的可静态解析语法。UB 参数声明、指针 alias、仿射偏移和显式
+寄存器视图需要满足 adapter 合同。跨元素宽度的 UB 指针 cast 与任意 C++ 指针表达式
+不在本次逐签名覆盖保证内；调用方可直接构造带字节地址的 Canonical。
+展开规则对应优化后的前端 LLVM IR，最终后端的删除、寄存器复制、spill 和调度可能改变指令流。

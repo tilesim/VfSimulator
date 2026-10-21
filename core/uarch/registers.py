@@ -5,22 +5,27 @@ from core.execution.instruction import Uop
 from core.params.types import InstructionProfile, UarchParameters
 from core.uarch.register_bank import PhysicalRegisterBank
 
+
 @dataclass
 class AlignProducerRecord:
     """Producer identity and timing for an alignment-state dependency."""
+
     inst_id: int
     stream_seq: int
     profile: InstructionProfile
     start_cycle: Optional[int] = None
     done_cycle: Optional[int] = None
 
+
 @dataclass
 class AlignGeneration:
     """Alignment producers grouped for one consuming instruction."""
+
     state_id: str
     generation_id: int
     producers: List[AlignProducerRecord] = field(default_factory=list)
     consumer_inst_id: Optional[int] = None
+
 
 @dataclass
 class SrcReleaseEvent:
@@ -28,24 +33,34 @@ class SrcReleaseEvent:
     preg: str
     gen: int
 
-class Registers:
 
-    def __init__(self, uarch: UarchParameters, pdb, value_storage=None, dtype='fp32'):
+class Registers:
+    def __init__(self, uarch: UarchParameters, pdb, value_storage=None, dtype="fp32"):
         self.preg_num = uarch.vreg_num
         self.fallback_dtype = dtype
         self.db = pdb
         self.theoretical_limit_mode = uarch.theoretical_limit_mode
         self.vf_startup_cost = pdb.vf_timing.startup_cost
         self.cycle: int = 0
-        self.theoretical_limit_legacy_forwarding = uarch.theoretical_limit_legacy_forwarding
+        self.theoretical_limit_legacy_forwarding = (
+            uarch.theoretical_limit_legacy_forwarding
+        )
         self.consumer_release_start_offset: int = uarch.consumer_release_start_offset
         self.assert_start_release_integrity: bool = uarch.assert_start_release_integrity
         self.enable_credit_visibility_delay: bool = uarch.enable_credit_visibility_delay
         self.idu_visible_preg_delay: int = uarch.idu_visible_preg_delay
         self.enable_isu_queue_model = uarch.enable_isu_queue_model
-        self.vector_bank = PhysicalRegisterBank(self.preg_num, name='vector', prefix='p')
-        self.predicate_bank = PhysicalRegisterBank(uarch.physical_predicate_registers, name='predicate', prefix='pred')
-        self.physical_banks = {physical_id: bank for bank in (self.vector_bank, self.predicate_bank) for physical_id in bank.physical_ids}
+        self.vector_bank = PhysicalRegisterBank(
+            self.preg_num, name="vector", prefix="p"
+        )
+        self.predicate_bank = PhysicalRegisterBank(
+            uarch.physical_predicate_registers, name="predicate", prefix="pred"
+        )
+        self.physical_banks = {
+            physical_id: bank
+            for bank in (self.vector_bank, self.predicate_bank)
+            for physical_id in bank.physical_ids
+        }
         self.freelist = self.vector_bank.freelist
         self.RAT = self.vector_bank.rat
         self.next_dynamic_preg_id: int = self.preg_num
@@ -58,14 +73,14 @@ class Registers:
         self.preg_generation = self.vector_bank.generation
         self.src_release_events: Dict[int, List[SrcReleaseEvent]] = {}
         for field in (
-            'rat',
-            'producer',
-            'producer_uop',
-            'producer_profile',
-            'pending',
-            'consumer_count',
-            'generation',
-            'release_eligible_cycle'
+            "rat",
+            "producer",
+            "producer_uop",
+            "producer_profile",
+            "pending",
+            "consumer_count",
+            "generation",
+            "release_eligible_cycle",
         ):
             setattr(self.predicate_bank, field, getattr(self.vector_bank, field))
         self.visible_predicate_free = self.predicate_bank.capacity
@@ -85,22 +100,25 @@ class Registers:
     def bind_align_state(self, u: Uop, attributes: Any) -> None:
         if not isinstance(attributes, dict):
             return
-        operation = str(attributes.get('align_state_operation', '')).lower()
-        state_id = str(attributes.get('align_state_id', ''))
-        if operation in {'load_init', 'load_use'}:
+        operation = str(attributes.get("align_state_operation", "")).lower()
+        state_id = str(attributes.get("align_state_id", ""))
+        if operation in {"load_init", "load_use"}:
             if not state_id:
-                raise ValueError('Load align state ID is required')
+                raise ValueError("Load align state ID is required")
             u.align_state_operation, u.align_state_id = (operation, state_id)
-            if operation == 'load_init':
+            if operation == "load_init":
                 record = AlignProducerRecord(u.inst_id, u.stream_seq, u.profile)
                 self.align_load_initializers[state_id] = record
                 u.align_producer_record = record
             else:
                 if state_id not in self.align_load_initializers:
-                    raise ValueError(f'Uninitialized load align state: {state_id}')
-                u.align_load_producer = self.align_load_initializers[state_id]
+                    raise ValueError(f"Uninitialized load align state: {state_id}")
+                u.align_previous_producer = self.align_load_initializers[state_id]
+                record = AlignProducerRecord(u.inst_id, u.stream_seq, u.profile)
+                self.align_load_initializers[state_id] = record
+                u.align_producer_record = record
             return
-        if operation not in {'append', 'consume'} or not state_id:
+        if operation not in {"append", "consume"} or not state_id:
             return
         generation = self.align_state_open.get(state_id)
         if generation is None:
@@ -111,31 +129,36 @@ class Registers:
         u.align_state_operation = operation
         u.align_state_id = state_id
         u.align_generation = generation
-        if operation == 'append':
-            record = AlignProducerRecord(inst_id=u.inst_id, stream_seq=u.stream_seq, profile=u.profile)
+        if operation == "append":
+            if generation.producers:
+                u.align_previous_producer = generation.producers[-1]
+            record = AlignProducerRecord(
+                inst_id=u.inst_id, stream_seq=u.stream_seq, profile=u.profile
+            )
             generation.producers.append(record)
             u.align_producer_record = record
             return
         generation.consumer_inst_id = u.inst_id
-        generation_id = self.align_state_next_generation.get(state_id, generation.generation_id + 1)
+        generation_id = self.align_state_next_generation.get(
+            state_id, generation.generation_id + 1
+        )
         self.align_state_open[state_id] = AlignGeneration(state_id, generation_id)
         self.align_state_next_generation[state_id] = generation_id + 1
 
     def align_ready_cycle(self, u: Uop) -> Optional[int]:
         """Return alignment readiness, or None when there is no alignment dependency."""
-        if u.align_load_producer is not None:
-            producers = [u.align_load_producer]
-        elif u.align_state_operation == 'consume' and u.align_generation is not None:
+        if u.align_previous_producer is not None:
+            producers = [u.align_previous_producer]
+        elif u.align_state_operation == "consume" and u.align_generation is not None:
             producers = u.align_generation.producers
         else:
             return None
         if any(record.start_cycle is None for record in producers):
-            return 10 ** 9
-        ready = int(getattr(u, 'lsq_ready_cycle', 0))
+            return 10**9
+        ready = int(getattr(u, "lsq_ready_cycle", 0))
         for record in producers:
             ready = max(
-                ready,
-                int(record.start_cycle) + self.db.get_forwarding_for_profiles(record.profile, u.profile)
+                ready, int(record.start_cycle) + record.profile.align_state_latency
             )
         return ready
 
@@ -143,12 +166,16 @@ class Registers:
         return self.value_storage.is_renameable(name)
 
     def bank_for_value(self, name: Any):
-        return self.predicate_bank if self.value_storage.is_predicate(name) else self.vector_bank
+        return (
+            self.predicate_bank
+            if self.value_storage.is_predicate(name)
+            else self.vector_bank
+        )
 
     def get_free_predicate(self) -> int:
         if self.theoretical_limit_mode:
-            return 10 ** 18
-        if getattr(self, 'enable_credit_visibility_delay', False):
+            return 10**18
+        if getattr(self, "enable_credit_visibility_delay", False):
             return self.visible_predicate_free
         return len(self.predicate_bank.freelist)
 
@@ -156,36 +183,49 @@ class Registers:
         self,
         producer_info: Tuple[str, str, int, str],
         consumer_op: str,
-        consumer_form: Optional[str]=None,
-        producer_profile: Optional[InstructionProfile]=None,
-        consumer_profile: Optional[InstructionProfile]=None
+        consumer_form: Optional[str] = None,
+        producer_profile: Optional[InstructionProfile] = None,
+        consumer_profile: Optional[InstructionProfile] = None,
     ) -> int:
         prod_op, prod_form, prod_start, _kind = producer_info
         if producer_profile is not None and consumer_profile is not None:
-            fwd = int(self.db.get_forwarding_for_profiles(producer_profile, consumer_profile))
+            fwd = int(
+                self.db.get_forwarding_for_profiles(producer_profile, consumer_profile)
+            )
         else:
-            fwd = int(self.db.get_forwarding_cycles(
-                prod_op,
-                consumer_op,
-                dtype=self.fallback_dtype,
-                producer_form=prod_form,
-                consumer_form=consumer_form
-            ))
-        if (consumer_profile is not None and consumer_profile.op_class == 'COMPUTE') and bool(getattr(self, 'enable_isu_queue_model', False)) and (not self.theoretical_limit_legacy_forwarding):
+            fwd = int(
+                self.db.get_forwarding_cycles(
+                    prod_op,
+                    consumer_op,
+                    dtype=self.fallback_dtype,
+                    producer_form=prod_form,
+                    consumer_form=consumer_form,
+                )
+            )
+        if (
+            (consumer_profile is not None and consumer_profile.op_class == "COMPUTE")
+            and bool(getattr(self, "enable_isu_queue_model", False))
+            and (not self.theoretical_limit_legacy_forwarding)
+        ):
             return prod_start + max(0, fwd - 1)
         return prod_start + fwd
 
     def ready_cycle(self, u: Uop) -> int:
-        t = max(self.vf_startup_cost, int(getattr(u, 'shq_ready_cycle', 0)))
+        t = max(self.vf_startup_cost, int(getattr(u, "shq_ready_cycle", 0)))
         for ps in u.preg_src:
             if ps is None:
                 continue
             info = self.preg_producer.get(ps)
             if info is None:
                 if ps in self.preg_pending:
-                    return 10 ** 9
+                    return 10**9
                 continue
-            t = max(t, self._ready_time_for_src(info, u.op, u.form, self.preg_producer_profile.get(ps), u.profile))
+            t = max(
+                t,
+                self._ready_time_for_src(
+                    info, u.op, u.form, self.preg_producer_profile.get(ps), u.profile
+                ),
+            )
         return t
 
     def is_current_mapping(self, preg: str) -> bool:
@@ -203,22 +243,32 @@ class Registers:
         if not bank.try_free(preg, self.cycle):
             return False
         if bank is self.predicate_bank:
-            delay = self.idu_visible_preg_delay if self.enable_credit_visibility_delay else 0
+            delay = (
+                self.idu_visible_preg_delay
+                if self.enable_credit_visibility_delay
+                else 0
+            )
             if delay <= 0:
                 self.visible_predicate_free += 1
                 self.idu_mailbox_predicate_release_delta += 1
             else:
                 time = self.cycle + delay
-                self.visible_predicate_free_events[time] = self.visible_predicate_free_events.get(time, 0) + 1
+                self.visible_predicate_free_events[time] = (
+                    self.visible_predicate_free_events.get(time, 0) + 1
+                )
             return True
         if self.enable_credit_visibility_delay:
             delay = int(self.idu_visible_preg_delay)
             if delay <= 0:
                 self.visible_preg_free = int(self.visible_preg_free) + 1
-                self.idu_mailbox_preg_release_delta = int(self.idu_mailbox_preg_release_delta) + 1
+                self.idu_mailbox_preg_release_delta = (
+                    int(self.idu_mailbox_preg_release_delta) + 1
+                )
             else:
                 t = int(self.cycle) + delay
-                self.visible_preg_free_events[t] = int(self.visible_preg_free_events.get(t, 0)) + 1
+                self.visible_preg_free_events[t] = (
+                    int(self.visible_preg_free_events.get(t, 0)) + 1
+                )
         return True
 
     def on_uop_done(self, u: Uop) -> None:
@@ -228,7 +278,9 @@ class Registers:
             exp = int(self.src_release_expected.get(u.inst_id, 0))
             seen = int(self.src_release_seen.get(u.inst_id, 0))
             if seen != exp:
-                raise AssertionError(f'start-release mismatch at done: inst_id={u.inst_id}, seen={seen}, expected={exp}')
+                raise AssertionError(
+                    f"start-release mismatch at done: inst_id={u.inst_id}, seen={seen}, expected={exp}"
+                )
         self.src_release_expected.pop(u.inst_id, None)
         self.src_release_seen.pop(u.inst_id, None)
 
@@ -239,7 +291,9 @@ class Registers:
         if u.start_cycle is None:
             return
         release_cycle = int(u.start_cycle) + self.consumer_release_start_offset
-        src_gens: List[Optional[int]] = list(getattr(u, 'preg_src_gen', [None] * len(u.preg_src)))
+        src_gens: List[Optional[int]] = list(
+            getattr(u, "preg_src_gen", [None] * len(u.preg_src))
+        )
         srcs: List[Tuple[str, int]] = []
         for idx, preg in enumerate(u.preg_src):
             if preg is None:
@@ -262,14 +316,20 @@ class Registers:
             return
         for ev in evs:
             preg, gen = (ev.preg, ev.gen)
-            self.src_release_seen[ev.inst_id] = int(self.src_release_seen.get(ev.inst_id, 0)) + 1
+            self.src_release_seen[ev.inst_id] = (
+                int(self.src_release_seen.get(ev.inst_id, 0)) + 1
+            )
             cur_gen = int(self.preg_generation.get(preg, 0))
             if cur_gen != int(gen):
                 if self.assert_start_release_integrity:
-                    raise AssertionError(f'stale start-release event: inst_id={ev.inst_id}, preg={preg}, event_gen={gen}, cur_gen={cur_gen}, cycle={cycle}')
+                    raise AssertionError(
+                        f"stale start-release event: inst_id={ev.inst_id}, preg={preg}, event_gen={gen}, cur_gen={cur_gen}, cycle={cycle}"
+                    )
                 continue
             if preg in self.preg_consumer_count:
-                self.preg_consumer_count[preg] = max(0, self.preg_consumer_count[preg] - 1)
+                self.preg_consumer_count[preg] = max(
+                    0, self.preg_consumer_count[preg] - 1
+                )
                 if self.preg_consumer_count[preg] == 0:
                     prev = self.preg_release_eligible_cycle.get(preg, -1)
                     self.preg_release_eligible_cycle[preg] = max(prev, cycle)
@@ -287,8 +347,12 @@ class Registers:
 
     def get_free_preg(self):
         if self.theoretical_limit_mode:
-            return 10 ** 18
-        return self.visible_preg_free if self.enable_credit_visibility_delay else len(self.vector_bank.freelist)
+            return 10**18
+        return (
+            self.visible_preg_free
+            if self.enable_credit_visibility_delay
+            else len(self.vector_bank.freelist)
+        )
 
     def update_visibility(self, cycle):
         self.cycle = cycle
@@ -301,7 +365,7 @@ class Registers:
         self.idu_mailbox_preg_release_delta = 0
         released = self.visible_preg_free_events.pop(cycle, 0)
         self.visible_preg_free += released
-        return {'preg_free': vec + released, 'predicate_free': pred}
+        return {"preg_free": vec + released, "predicate_free": pred}
 
     def rename(self, inst, profile, cycle):
         self.cycle = cycle
@@ -310,13 +374,18 @@ class Registers:
 
         def key(identity):
             return (
-                identity['definition_id'],
-                tuple(((i['loop_id'], i['iteration']) for i in identity['iteration_path']))
+                identity["definition_id"],
+                tuple(
+                    ((i["loop_id"], i["iteration"]) for i in identity["iteration_path"])
+                ),
             )
+
         for bank in (self.vector_bank, self.predicate_bank):
-            required = sum((self.is_renameable(d) and self.bank_for_value(d) is bank for d in dsts))
+            required = sum(
+                (self.is_renameable(d) and self.bank_for_value(d) is bank for d in dsts)
+            )
             if not self.theoretical_limit_mode and required > len(bank.freelist):
-                raise RuntimeError(f'Atomic rename precheck failed: {bank.name} credit')
+                raise RuntimeError(f"Atomic rename precheck failed: {bank.name} credit")
         preg_src = []
         gens = []
         released = []
@@ -326,7 +395,9 @@ class Registers:
                 source_key = key(inst.src_value_instances[index])
                 preg = self.RAT.get(source_key)
                 if preg is None and self.value_storage.is_predicate(source):
-                    raise RuntimeError(f'Predicate source has no renamed producer: {source}')
+                    raise RuntimeError(
+                        f"Predicate source has no renamed producer: {source}"
+                    )
                 if inst.src_value_instance_release[index]:
                     old = self.RAT.pop(source_key, None)
                     if old is not None:
@@ -335,7 +406,9 @@ class Registers:
             gens.append(self.preg_generation.get(preg, 0) if preg else None)
         for preg in preg_src:
             if preg is not None:
-                self.preg_consumer_count[preg] = self.preg_consumer_count.get(preg, 0) + 1
+                self.preg_consumer_count[preg] = (
+                    self.preg_consumer_count.get(preg, 0) + 1
+                )
                 self.preg_release_eligible_cycle.pop(preg, None)
         preg_dst = []
         vec_alloc = 0
@@ -344,7 +417,7 @@ class Registers:
                 continue
             bank = self.bank_for_value(destination)
             if self.theoretical_limit_mode:
-                physical = f'p{self.next_dynamic_preg_id}'
+                physical = f"p{self.next_dynamic_preg_id}"
                 self.next_dynamic_preg_id += 1
             else:
                 physical = bank.allocate()
@@ -353,7 +426,7 @@ class Registers:
                 self.visible_predicate_free -= 1
             destination_key = key(inst.dst_value_instances[index])
             if destination_key in self.RAT:
-                raise RuntimeError('Duplicate dynamic Canonical definition')
+                raise RuntimeError("Duplicate dynamic Canonical definition")
             if inst.dst_value_instance_keep[index]:
                 self.RAT[destination_key] = physical
             preg_dst.append(physical)
@@ -381,7 +454,7 @@ class Registers:
             static_instruction_id=inst.static_instruction_id,
             iteration_path=inst.iteration_path,
             src_value_instances=inst.src_value_instances,
-            dst_value_instances=inst.dst_value_instances
+            dst_value_instances=inst.dst_value_instances,
         )
         for preg in released:
             self.try_free_preg(preg)
@@ -391,9 +464,14 @@ class Registers:
         if uop.align_producer_record is not None:
             uop.align_producer_record.start_cycle = uop.start_cycle
         self.schedule_src_release_from_start(uop)
-        if uop.op_class in ('LOAD', 'COMPUTE'):
+        if uop.op_class in ("LOAD", "COMPUTE"):
             for physical_id in uop.preg_dst:
-                self.preg_producer[physical_id] = (uop.op, uop.form, uop.start_cycle, uop.op_class)
+                self.preg_producer[physical_id] = (
+                    uop.op,
+                    uop.form,
+                    uop.start_cycle,
+                    uop.op_class,
+                )
                 self.preg_producer_profile[physical_id] = uop.profile
                 self.preg_producer_uop[physical_id] = uop
                 self.preg_pending.discard(physical_id)

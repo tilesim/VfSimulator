@@ -1,4 +1,5 @@
 """CCE source scanning, VF scope extraction, and token helpers."""
+
 from __future__ import annotations
 
 import re
@@ -81,12 +82,16 @@ def _select_scope(scopes: Sequence[CCEVFScope], kernel_name: str | None) -> CCEV
         if len(scopes) == 1:
             return scopes[0]
         names = ", ".join(scope.kernel_name for scope in scopes)
-        raise ValueError(f"Multiple __VEC_SCOPE__ kernels found; select one of: {names}")
+        raise ValueError(
+            f"Multiple __VEC_SCOPE__ kernels found; select one of: {names}"
+        )
 
     matches = [scope for scope in scopes if scope.kernel_name == kernel_name]
     if not matches:
         names = ", ".join(scope.kernel_name for scope in scopes)
-        raise ValueError(f"Kernel '{kernel_name}' not found. Available kernels: {names}")
+        raise ValueError(
+            f"Kernel '{kernel_name}' not found. Available kernels: {names}"
+        )
     return matches[0]
 
 
@@ -113,7 +118,7 @@ def _parse_param_dtypes(params: str) -> Dict[str, str]:
     for raw in _split_args(params):
         cleaned = raw.strip()
         match = re.search(
-            r"__ubuf__\s+([A-Za-z_]\w*)\s*\*\s*([A-Za-z_]\w*)",
+            r"__ubuf__\s+([A-Za-z_]\w*)\s*\*\s*&?\s*([A-Za-z_]\w*)",
             cleaned,
         )
         if match is None:
@@ -137,8 +142,16 @@ def _cce_scalar_dtype_to_form(dtype: str) -> str:
         "unsigned int": "uint32",
         "float": "fp32",
         "half": "fp16",
+        "__cce_half": "fp16",
         "bfloat16": "bf16",
         "bfloat16_t": "bf16",
+        "float8_e4m3_t": "f8e4m3",
+        "float8_e5m2_t": "f8e5m2",
+        "float8_e8m0_t": "f8e8m0",
+        "hifloat8_t": "hif8",
+        "float4_e1m2x2_t": "f4e1m2x2",
+        "float4_e2m1x2_t": "f4e2m1x2",
+        "int4x2_t": "s4x2",
     }
     if re.fullmatch(r"u?int(?:8|16|32|64)_t", normalized):
         normalized = normalized[:-2]
@@ -241,7 +254,9 @@ def _base_identifier(arg: str) -> str:
 
 
 def _strip_comments(source: str) -> str:
-    source = re.sub(r"/\*.*?\*/", lambda m: "\n" * m.group(0).count("\n"), source, flags=re.DOTALL)
+    source = re.sub(
+        r"/\*.*?\*/", lambda m: "\n" * m.group(0).count("\n"), source, flags=re.DOTALL
+    )
     source = re.sub(r"//.*", "", source)
     return source
 

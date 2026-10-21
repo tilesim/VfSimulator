@@ -25,7 +25,8 @@ def main():
     parser.add_argument("--target-pattern", choices=["PAT_ALL", "PAT_VL32"], default="PAT_VL32")
     parser.add_argument("--operation", choices=[f"{family}_{condition}" for family in ("vcmp", "vcmps")
                                                 for condition in ("eq", "ne", "gt", "ge", "lt", "le")]
-                        + ["pand", "por", "movvp_ones", "movvp_zeros", "movvp_b16_ones", "movvp_b16_zeros"], default="vcmp_gt")
+                        + ["pand", "por", "pxor", "pnot", "pmov", "pmov_unmasked", "psel",
+                           "movvp_ones", "movvp_zeros", "movvp_b16_ones", "movvp_b16_zeros"], default="vcmp_gt")
     args = parser.parse_args()
     elements = 1024 if args.probe == "pset_vadd_i16" else 64
     rearrange = args.probe in ("vintlv", "vdintlv")
@@ -109,11 +110,19 @@ def main():
                            f"        vector_bool bits_all = pset_b{16 if b16 else 32}(PAT_ALL);\n"
                            f"        vdup(bits, {bits}, bits_all, MODE_ZEROING);\n"
                            "        movvp(greater, bits, 0);")
-        elif args.operation in ("pand", "por"):
+        elif args.operation in ("pand", "por", "pxor", "pnot", "pmov", "pmov_unmasked", "psel"):
             replacement = ("vector_bool left, right;\n"
                            "        vcmp_gt(left, va, vb, all);\n"
-                           "        vcmp_lt(right, va, vb, all);\n"
-                           f"        {args.operation}(greater, left, right, all);")
+                           "        vcmp_lt(right, va, vb, all);\n")
+            if args.operation in ("pnot", "pmov"):
+                replacement += f"        {args.operation}(greater, left, all);"
+            elif args.operation == "pmov_unmasked":
+                replacement += "        pmov(greater, left);"
+            elif args.operation == "psel":
+                replacement += ("        vector_bool low = pset_b32(PAT_VL32);\n"
+                                "        psel(greater, left, right, low);")
+            else:
+                replacement += f"        {args.operation}(greater, left, right, all);"
         else:
             rhs = "0.0f" if args.operation.startswith("vcmps_") else "vb"
             replacement = f"{args.operation}(greater, va, {rhs}, all);"
@@ -169,9 +178,15 @@ def main():
     if args.probe == "predicate_compute":
         if args.operation.startswith("movvp_"):
             selected = [args.operation.endswith("_ones")] * elements
-        elif args.operation in ("pand", "por"):
-            combine = operator.and_ if args.operation == "pand" else operator.or_
+        elif args.operation in ("pand", "por", "pxor"):
+            combine = {"pand": operator.and_, "por": operator.or_, "pxor": operator.xor}[args.operation]
             selected = [combine(x > y, x < y) for x, y in zip(a, b)]
+        elif args.operation == "pnot":
+            selected = [not (x > y) for x, y in zip(a, b)]
+        elif args.operation in ("pmov", "pmov_unmasked"):
+            selected = [x > y for x, y in zip(a, b)]
+        elif args.operation == "psel":
+            selected = [x > y if i < 32 else x < y for i, (x, y) in enumerate(zip(a, b))]
         else:
             compare = getattr(operator, args.operation.split("_")[1])
             selected = [compare(x, 0.0 if args.operation.startswith("vcmps_") else y)
