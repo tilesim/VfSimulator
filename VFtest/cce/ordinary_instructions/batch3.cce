@@ -1,0 +1,46 @@
+#define __aicore__ [aicore]
+__attribute__((always_inline)) inline [aicore] void dup_s8(__ubuf__ int8_t *out, int8_t x, int8_t z) {
+    __VEC_SCOPE__ {
+        vector_bool p = pset_b8(PAT_ALL);
+        vector_s8 a,b;
+        vdup(a,x,p,MODE_ZEROING); vdup(b,z,p,MODE_ZEROING);
+        vsts(a,out,0,NORM_B8,p); vsts(b,out,256,NORM_B8,p);
+    }
+}
+__attribute__((always_inline)) inline [aicore] void br_s8(__ubuf__ int8_t *out, int8_t x, int8_t z) {
+    __VEC_SCOPE__ {
+        vector_bool p = pset_b8(PAT_ALL);
+        vector_s8 a,b;
+        vbr(a,x); vbr(b,z);
+        vsts(a,out,0,NORM_B8,p); vsts(b,out,256,NORM_B8,p);
+    }
+}
+__attribute__((always_inline)) inline [aicore] void narrow_s32(__ubuf__ int32_t *in, __ubuf__ uint8_t *out) {
+    __VEC_SCOPE__ {
+        vector_bool p = pset_b8(PAT_ALL);
+        vector_s32 a;
+        vector_u8 y0,y1,y2,y3;
+        vlds(a,in,0,NORM);
+        vcvt(y0,a,p,RS_ENABLE,PART_P0,MODE_ZEROING);
+        vcvt(y1,a,p,RS_ENABLE,PART_P1,MODE_ZEROING);
+        vcvt(y2,a,p,RS_ENABLE,PART_P2,MODE_ZEROING);
+        vcvt(y3,a,p,RS_ENABLE,PART_P3,MODE_ZEROING);
+        vsts(y0,out,0,NORM_B8,p); vsts(y1,out,256,NORM_B8,p);
+        vsts(y2,out,512,NORM_B8,p); vsts(y3,out,768,NORM_B8,p);
+    }
+}
+extern "C" __global__ __aicore__ void ordinary_extra_batch3(__gm__ int32_t *input, __gm__ int32_t *output) {
+    __ubuf__ int32_t *in = (__ubuf__ int32_t *)get_imm(0);
+    __ubuf__ int8_t *out = (__ubuf__ int8_t *)get_imm(0x8000);
+    int8_t x = (int8_t)input[64];
+    int8_t z = (int8_t)input[65];
+    copy_gm_to_ubuf_align_v2(in, input, 0, 1, 256, 0, 0, 0, 0, 0, 0);
+    set_flag(PIPE_MTE2, PIPE_V, (event_t)0);
+    wait_flag(PIPE_MTE2, PIPE_V, (event_t)0);
+    dup_s8(out,x,z);
+    br_s8(out+512,x,z);
+    narrow_s32(in,(__ubuf__ uint8_t *)(out+1024));
+    set_flag(PIPE_V, PIPE_MTE3, (event_t)0);
+    wait_flag(PIPE_V, PIPE_MTE3, (event_t)0);
+    copy_ubuf_to_gm_align_v2((__gm__ int8_t *)output, out, 0, 1, 2048, 0, 0, 0);
+}

@@ -1,0 +1,296 @@
+{
+  "schema_version": 2,
+  "context": [
+    {
+      "kind": "instruction",
+      "instruction_id": "instruction.0",
+      "opcode": "PSET_B16",
+      "instruction_class": "compute",
+      "form": "b16",
+      "inputs": [],
+      "outputs": [
+        {
+          "value_id": "p.def0",
+          "role": "destination",
+          "dtype": "bool",
+          "memory_access": null
+        }
+      ],
+      "attributes": {},
+      "source_location": {
+        "source": "vf",
+        "line": 4,
+        "column": null,
+        "path": "<cce>"
+      }
+    },
+    {
+      "kind": "loop",
+      "loop_id": "loop.0",
+      "induction": {
+        "variable_id": "row",
+        "start": 0,
+        "step": 1
+      },
+      "count": 2,
+      "unroll": 1,
+      "carried_values": [
+        {
+          "logical_id": "data",
+          "entry_value_id": null,
+          "back_edge_value_id": "data.def4",
+          "exit_value_id": "data.def5"
+        }
+      ],
+      "body": [
+        {
+          "kind": "loop",
+          "loop_id": "loop.1",
+          "induction": {
+            "variable_id": "col",
+            "start": 0,
+            "step": 1
+          },
+          "count": 3,
+          "unroll": 1,
+          "carried_values": [
+            {
+              "logical_id": "data",
+              "entry_value_id": null,
+              "back_edge_value_id": "data.def2",
+              "exit_value_id": "data.def4"
+            }
+          ],
+          "body": [
+            {
+              "kind": "instruction",
+              "instruction_id": "instruction.1",
+              "opcode": "VLD",
+              "instruction_class": "load",
+              "form": "uint16",
+              "inputs": [
+                {
+                  "value_id": "input.def1",
+                  "role": "memory",
+                  "dtype": "uint16",
+                  "memory_access": {
+                    "base_object_id": "ub.input",
+                    "offset": {
+                      "constant": 0,
+                      "terms": [
+                        {
+                          "variable_id": "col",
+                          "coefficient": 256
+                        },
+                        {
+                          "variable_id": "row",
+                          "coefficient": 768
+                        }
+                      ]
+                    },
+                    "access_kind": "read",
+                    "span": 256,
+                    "address_unit_bytes": 1,
+                    "alias_group": null,
+                    "address_state_id": "vf:pointer:2:address:address",
+                    "update_mode": "none",
+                    "post_update_delta_bytes": null
+                  }
+                }
+              ],
+              "outputs": [
+                {
+                  "value_id": "data.def2",
+                  "role": "destination",
+                  "dtype": "uint16",
+                  "memory_access": null
+                }
+              ],
+              "attributes": {},
+              "source_location": {
+                "source": "vf",
+                "line": 8,
+                "column": null,
+                "path": "<cce>"
+              }
+            },
+            {
+              "kind": "instruction",
+              "instruction_id": "instruction.2",
+              "opcode": "VST",
+              "instruction_class": "store",
+              "form": "uint16",
+              "inputs": [
+                {
+                  "value_id": "data.def2",
+                  "role": "source",
+                  "dtype": "uint16",
+                  "memory_access": null
+                },
+                {
+                  "value_id": "p.def0",
+                  "role": "predicate",
+                  "dtype": "bool",
+                  "memory_access": null
+                }
+              ],
+              "outputs": [
+                {
+                  "value_id": "output.def3",
+                  "role": "memory",
+                  "dtype": "uint16",
+                  "memory_access": {
+                    "base_object_id": "ub.output",
+                    "offset": {
+                      "constant": 0,
+                      "terms": [
+                        {
+                          "variable_id": "col",
+                          "coefficient": 256
+                        },
+                        {
+                          "variable_id": "row",
+                          "coefficient": 768
+                        }
+                      ]
+                    },
+                    "access_kind": "write",
+                    "span": 256,
+                    "address_unit_bytes": 1,
+                    "alias_group": null,
+                    "address_state_id": "vf:pointer:2:address:address",
+                    "update_mode": "none",
+                    "post_update_delta_bytes": null
+                  }
+                }
+              ],
+              "attributes": {},
+              "source_location": {
+                "source": "vf",
+                "line": 9,
+                "column": null,
+                "path": "<cce>"
+              }
+            }
+          ],
+          "source_location": {
+            "source": "vf",
+            "line": 6,
+            "column": null,
+            "path": "<cce>"
+          }
+        }
+      ],
+      "source_location": {
+        "source": "vf",
+        "line": 5,
+        "column": null,
+        "path": "<cce>"
+      }
+    },
+    {
+      "kind": "membar",
+      "instruction_id": "membar.0",
+      "barrier": "VV_ALL",
+      "source_location": {
+        "source": "vf",
+        "line": 12,
+        "column": null,
+        "path": "<cce>"
+      }
+    },
+    {
+      "kind": "membar",
+      "instruction_id": "membar.1",
+      "barrier": "VST_VST",
+      "source_location": {
+        "source": "vf",
+        "line": 13,
+        "column": null,
+        "path": "<cce>"
+      }
+    }
+  ],
+  "values": {
+    "p.def0": {
+      "definition_id": "p.def0",
+      "logical_id": "p",
+      "storage": "PredicateRegister",
+      "dtype": "bool",
+      "shape": [],
+      "producer_node_id": "instruction.0",
+      "storage_object_id": null,
+      "source_location": null
+    },
+    "input.def1": {
+      "definition_id": "input.def1",
+      "logical_id": "input",
+      "storage": "UB",
+      "dtype": "uint16",
+      "shape": [],
+      "producer_node_id": null,
+      "storage_object_id": "ub.input",
+      "source_location": null
+    },
+    "data.def2": {
+      "definition_id": "data.def2",
+      "logical_id": "data",
+      "storage": "Register",
+      "dtype": "uint16",
+      "shape": [],
+      "producer_node_id": "instruction.1",
+      "storage_object_id": null,
+      "source_location": null
+    },
+    "output.def3": {
+      "definition_id": "output.def3",
+      "logical_id": "output",
+      "storage": "UB",
+      "dtype": "uint16",
+      "shape": [],
+      "producer_node_id": "instruction.2",
+      "storage_object_id": "ub.output",
+      "source_location": null
+    },
+    "data.def4": {
+      "definition_id": "data.def4",
+      "logical_id": "data",
+      "storage": "Register",
+      "dtype": "uint16",
+      "shape": [],
+      "producer_node_id": "loop.1",
+      "storage_object_id": null,
+      "source_location": null
+    },
+    "data.def5": {
+      "definition_id": "data.def5",
+      "logical_id": "data",
+      "storage": "Register",
+      "dtype": "uint16",
+      "shape": [],
+      "producer_node_id": "loop.0",
+      "storage_object_id": null,
+      "source_location": null
+    }
+  },
+  "storage_objects": {
+    "ub.input": {
+      "object_id": "ub.input",
+      "storage": "UB",
+      "shape": [],
+      "source_location": null
+    },
+    "ub.output": {
+      "object_id": "ub.output",
+      "storage": "UB",
+      "shape": [],
+      "source_location": null
+    }
+  },
+  "params": {},
+  "uarch": {},
+  "source": {
+    "adapter": "cce",
+    "path": "<cce>"
+  }
+}

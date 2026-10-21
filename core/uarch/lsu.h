@@ -38,6 +38,7 @@ private:
   TraceRecorder &trace_;
   std::deque<UopPtr> waiting_;
   std::map<int64_t, UopPtr> running_;
+  std::map<std::string, int64_t> resourceReady_;
   int64_t budgetCycle_ = -1, issuedBytes_ = 0;
 };
 } // namespace vfsim

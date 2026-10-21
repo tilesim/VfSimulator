@@ -14,7 +14,7 @@ void require(bool condition, const char *message) {
 void testBuilder() {
   const auto vf = vfsim::InputAPI::loadJson(
       std::filesystem::path(VFSIM_SOURCE_ROOT) /
-      "tests/fixtures/canonical_vf_info/v1_valid_loop.json");
+      "VFtest/canonical/fixtures/v1_valid_loop.json");
   auto builder = vfsim::InputAPI::newBuilder(vf.params, vf.uarch, vf.source);
   for (const auto &[id, value] : vf.storageObjects)
     builder.registerStorageObject(value);
@@ -90,7 +90,7 @@ void testBuilder() {
 }
 void testRoundTripAndFailure() {
   const auto fixtures = std::filesystem::path(VFSIM_SOURCE_ROOT) /
-                        "tests/fixtures/canonical_vf_info";
+                        "VFtest/canonical/fixtures";
   for (const auto &entry :
        std::filesystem::recursive_directory_iterator(fixtures)) {
     if (entry.path().extension() != ".json" ||

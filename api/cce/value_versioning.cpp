@@ -144,6 +144,7 @@ class Versioner {
                                   program_.params, induction);
       if (access) {
         memory.span = access->span;
+        memory.addressUnitBytes = access->addressUnitBytes;
         memory.addressStateId = access->addressStateId;
         memory.updateMode = access->updateMode;
         if (access->postUpdateDeltaBytes)
@@ -274,8 +275,19 @@ class Versioner {
       } else {
         const auto &s = program_.values.at(n.src.at(0).valueId),
                    &d = program_.values.at(n.dst.at(0).valueId);
+        auto signedness = [](std::string dtype) {
+          if (dtype.compare(0, 4, "uint") == 0)
+            dtype.erase(0, 1);
+          return dtype;
+        };
+        const auto flag = n.attributes.find("register_bitcast");
+        const bool bitcast = flag != n.attributes.end() &&
+                             std::get_if<bool>(&flag->second) &&
+                             std::get<bool>(flag->second) &&
+                             s.storage == CanonicalStorageKind::Register &&
+                             signedness(s.dtype) == signedness(d.dtype);
         if (!renameable(s.storage) || s.storage != d.storage ||
-            s.dtype != d.dtype || s.shape != d.shape)
+            (s.dtype != d.dtype && !bitcast) || s.shape != d.shape)
           throw std::runtime_error(
               "Register alias requires matching storage, dtype and shape");
         env[d.valueId] = entry(s.valueId, env);

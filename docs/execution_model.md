@@ -38,3 +38,21 @@ LOAD/STORE 进入 LSU，受依赖、屏障、端口和共享 UB 预算约束。S
 `execution/membar.*` 根据动态指令顺序管理屏障，向 LSU 提供访问门控。尾部屏障退休参与 VF 排空。
 
 `cyclesExecuted` 为执行排空周期，`vfEndCycle` 为最后完成或屏障退休周期加 ISA drain cost。达到周期上限仍未排空时抛出异常。
+
+## EXU 时序约束
+
+每个 EXU 按 opcode/form 保存 self-II 的下一次允许发射周期。
+候选指令 A 同时检查上一次 A 的 self-II，以及该端口最近已发射指令 B 的转换 II：
+
+```text
+earliest(A) = max(last_issue(A) + II(A,A), last_issue(B) + II(B,A))
+```
+
+中间插入其他指令后，A 的 self-II 截止周期继续有效。每端口每周期最多接收一条计算
+指令，默认最多 7 条在途指令。EXQ 预测考虑历史 self-II、队列内同 opcode/form
+指令和队尾转换间隔；EXU 实际发射再次检查状态。
+
+EXU 发射时预留 `issue_cycle + latency` 对应的完成周期。
+同一 EXU 每周期最多完成一条计算指令；冲突时推迟候选指令发射，直到完成周期空闲。
+ALU、SFU 和谓词计算共享所在 EXU 的完成带宽，两个 EXU 独立维护预留。
+LSU 使用独立的访存完成规则。指令 latency 和 forwarding 参数保持其配置值。

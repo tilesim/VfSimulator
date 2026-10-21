@@ -23,6 +23,9 @@ namespace vfsim {
 
 struct InstructionProfile {
   int64_t latency = 0;
+  std::string lsuResource;
+  int64_t lsuIssueInterval = 1;
+  int64_t alignStateLatency = 1;
   std::string fuType;
   std::string dispatchExu;
   std::string opClass;
@@ -126,6 +129,8 @@ struct ParamBundle {
   IsaDefaults isaDefaults;
   std::unordered_map<OpName, std::unordered_map<DTypeName, InstructionProfile>>
       isa;
+  std::unordered_map<OpName, std::unordered_map<std::string, int64_t>>
+      memoryModeLatency;
   std::unordered_map<std::string, std::unordered_map<std::string, int64_t>>
       forwardingByForm;
   std::unordered_map<std::string, std::unordered_map<std::string, int64_t>>

@@ -1,0 +1,864 @@
+{
+  "schema_version": 2,
+  "context": [
+    {
+      "kind": "instruction",
+      "instruction_id": "instruction.0",
+      "opcode": "PSET_B16",
+      "instruction_class": "compute",
+      "form": "b16",
+      "inputs": [],
+      "outputs": [
+        {
+          "value_id": "p16.def0",
+          "role": "destination",
+          "dtype": "bool",
+          "memory_access": null
+        }
+      ],
+      "attributes": {},
+      "source_location": {
+        "source": "vector_reductions",
+        "line": 8,
+        "column": null,
+        "path": "<cce>"
+      }
+    },
+    {
+      "kind": "instruction",
+      "instruction_id": "instruction.1",
+      "opcode": "PSET_B32",
+      "instruction_class": "compute",
+      "form": "b32",
+      "inputs": [],
+      "outputs": [
+        {
+          "value_id": "p32.def1",
+          "role": "destination",
+          "dtype": "bool",
+          "memory_access": null
+        }
+      ],
+      "attributes": {},
+      "source_location": {
+        "source": "vector_reductions",
+        "line": 9,
+        "column": null,
+        "path": "<cce>"
+      }
+    },
+    {
+      "kind": "instruction",
+      "instruction_id": "instruction.2",
+      "opcode": "VLDS",
+      "instruction_class": "load",
+      "form": "int16",
+      "inputs": [
+        {
+          "value_id": "signed_input.def2",
+          "role": "memory",
+          "dtype": "int16",
+          "memory_access": {
+            "base_object_id": "ub.signed_input",
+            "offset": {
+              "constant": 0,
+              "terms": []
+            },
+            "access_kind": "read",
+            "span": null,
+            "address_unit_bytes": null,
+            "alias_group": null,
+            "address_state_id": "vector_reductions:pointer:2:signed_input",
+            "update_mode": "none",
+            "post_update_delta_bytes": null
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "value_id": "s16.def3",
+          "role": "destination",
+          "dtype": "int16",
+          "memory_access": null
+        }
+      ],
+      "attributes": {},
+      "source_location": {
+        "source": "vector_reductions",
+        "line": 15,
+        "column": null,
+        "path": "<cce>"
+      }
+    },
+    {
+      "kind": "instruction",
+      "instruction_id": "instruction.3",
+      "opcode": "VLDS",
+      "instruction_class": "load",
+      "form": "uint16",
+      "inputs": [
+        {
+          "value_id": "unsigned_input.def4",
+          "role": "memory",
+          "dtype": "uint16",
+          "memory_access": {
+            "base_object_id": "ub.unsigned_input",
+            "offset": {
+              "constant": 0,
+              "terms": []
+            },
+            "access_kind": "read",
+            "span": null,
+            "address_unit_bytes": null,
+            "alias_group": null,
+            "address_state_id": "vector_reductions:pointer:4:unsigned_input",
+            "update_mode": "none",
+            "post_update_delta_bytes": null
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "value_id": "u16.def5",
+          "role": "destination",
+          "dtype": "uint16",
+          "memory_access": null
+        }
+      ],
+      "attributes": {},
+      "source_location": {
+        "source": "vector_reductions",
+        "line": 16,
+        "column": null,
+        "path": "<cce>"
+      }
+    },
+    {
+      "kind": "instruction",
+      "instruction_id": "instruction.4",
+      "opcode": "VLDS",
+      "instruction_class": "load",
+      "form": "fp32",
+      "inputs": [
+        {
+          "value_id": "float_input.def6",
+          "role": "memory",
+          "dtype": "fp32",
+          "memory_access": {
+            "base_object_id": "ub.float_input",
+            "offset": {
+              "constant": 0,
+              "terms": []
+            },
+            "access_kind": "read",
+            "span": null,
+            "address_unit_bytes": null,
+            "alias_group": null,
+            "address_state_id": "vector_reductions:pointer:0:float_input",
+            "update_mode": "none",
+            "post_update_delta_bytes": null
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "value_id": "f32.def7",
+          "role": "destination",
+          "dtype": "fp32",
+          "memory_access": null
+        }
+      ],
+      "attributes": {},
+      "source_location": {
+        "source": "vector_reductions",
+        "line": 17,
+        "column": null,
+        "path": "<cce>"
+      }
+    },
+    {
+      "kind": "instruction",
+      "instruction_id": "instruction.5",
+      "opcode": "VCADD",
+      "instruction_class": "compute",
+      "form": "int16",
+      "inputs": [
+        {
+          "value_id": "s16.def3",
+          "role": "source",
+          "dtype": "int16",
+          "memory_access": null
+        },
+        {
+          "value_id": "p16.def0",
+          "role": "predicate",
+          "dtype": "bool",
+          "memory_access": null
+        }
+      ],
+      "outputs": [
+        {
+          "value_id": "s32_sum.def8",
+          "role": "destination",
+          "dtype": "int32",
+          "memory_access": null
+        }
+      ],
+      "attributes": {},
+      "source_location": {
+        "source": "vector_reductions",
+        "line": 18,
+        "column": null,
+        "path": "<cce>"
+      }
+    },
+    {
+      "kind": "instruction",
+      "instruction_id": "instruction.6",
+      "opcode": "VCADD",
+      "instruction_class": "compute",
+      "form": "uint16",
+      "inputs": [
+        {
+          "value_id": "u16.def5",
+          "role": "source",
+          "dtype": "uint16",
+          "memory_access": null
+        },
+        {
+          "value_id": "p16.def0",
+          "role": "predicate",
+          "dtype": "bool",
+          "memory_access": null
+        }
+      ],
+      "outputs": [
+        {
+          "value_id": "u32_sum.def9",
+          "role": "destination",
+          "dtype": "uint32",
+          "memory_access": null
+        }
+      ],
+      "attributes": {},
+      "source_location": {
+        "source": "vector_reductions",
+        "line": 19,
+        "column": null,
+        "path": "<cce>"
+      }
+    },
+    {
+      "kind": "instruction",
+      "instruction_id": "instruction.7",
+      "opcode": "VCGADD",
+      "instruction_class": "compute",
+      "form": "int16",
+      "inputs": [
+        {
+          "value_id": "s16.def3",
+          "role": "source",
+          "dtype": "int16",
+          "memory_access": null
+        },
+        {
+          "value_id": "p16.def0",
+          "role": "predicate",
+          "dtype": "bool",
+          "memory_access": null
+        }
+      ],
+      "outputs": [
+        {
+          "value_id": "s16_group.def10",
+          "role": "destination",
+          "dtype": "int16",
+          "memory_access": null
+        }
+      ],
+      "attributes": {},
+      "source_location": {
+        "source": "vector_reductions",
+        "line": 20,
+        "column": null,
+        "path": "<cce>"
+      }
+    },
+    {
+      "kind": "instruction",
+      "instruction_id": "instruction.8",
+      "opcode": "VCGMIN",
+      "instruction_class": "compute",
+      "form": "uint16",
+      "inputs": [
+        {
+          "value_id": "u16.def5",
+          "role": "source",
+          "dtype": "uint16",
+          "memory_access": null
+        },
+        {
+          "value_id": "p16.def0",
+          "role": "predicate",
+          "dtype": "bool",
+          "memory_access": null
+        }
+      ],
+      "outputs": [
+        {
+          "value_id": "u16_group.def11",
+          "role": "destination",
+          "dtype": "uint16",
+          "memory_access": null
+        }
+      ],
+      "attributes": {},
+      "source_location": {
+        "source": "vector_reductions",
+        "line": 21,
+        "column": null,
+        "path": "<cce>"
+      }
+    },
+    {
+      "kind": "instruction",
+      "instruction_id": "instruction.9",
+      "opcode": "VCGMAX",
+      "instruction_class": "compute",
+      "form": "fp32",
+      "inputs": [
+        {
+          "value_id": "f32.def7",
+          "role": "source",
+          "dtype": "fp32",
+          "memory_access": null
+        },
+        {
+          "value_id": "p32.def1",
+          "role": "predicate",
+          "dtype": "bool",
+          "memory_access": null
+        }
+      ],
+      "outputs": [
+        {
+          "value_id": "f32_group.def12",
+          "role": "destination",
+          "dtype": "fp32",
+          "memory_access": null
+        }
+      ],
+      "attributes": {},
+      "source_location": {
+        "source": "vector_reductions",
+        "line": 22,
+        "column": null,
+        "path": "<cce>"
+      }
+    },
+    {
+      "kind": "instruction",
+      "instruction_id": "instruction.10",
+      "opcode": "VCPADD",
+      "instruction_class": "compute",
+      "form": "fp32",
+      "inputs": [
+        {
+          "value_id": "f32.def7",
+          "role": "source",
+          "dtype": "fp32",
+          "memory_access": null
+        },
+        {
+          "value_id": "p32.def1",
+          "role": "predicate",
+          "dtype": "bool",
+          "memory_access": null
+        }
+      ],
+      "outputs": [
+        {
+          "value_id": "f32_pair.def13",
+          "role": "destination",
+          "dtype": "fp32",
+          "memory_access": null
+        }
+      ],
+      "attributes": {},
+      "source_location": {
+        "source": "vector_reductions",
+        "line": 23,
+        "column": null,
+        "path": "<cce>"
+      }
+    },
+    {
+      "kind": "instruction",
+      "instruction_id": "instruction.11",
+      "opcode": "VCADD",
+      "instruction_class": "compute",
+      "form": "fp32",
+      "inputs": [
+        {
+          "value_id": "f32_pair.def13",
+          "role": "source",
+          "dtype": "fp32",
+          "memory_access": null
+        },
+        {
+          "value_id": "p32.def1",
+          "role": "predicate",
+          "dtype": "bool",
+          "memory_access": null
+        }
+      ],
+      "outputs": [
+        {
+          "value_id": "f32_sum.def14",
+          "role": "destination",
+          "dtype": "fp32",
+          "memory_access": null
+        }
+      ],
+      "attributes": {},
+      "source_location": {
+        "source": "vector_reductions",
+        "line": 24,
+        "column": null,
+        "path": "<cce>"
+      }
+    },
+    {
+      "kind": "instruction",
+      "instruction_id": "instruction.12",
+      "opcode": "VSTS",
+      "instruction_class": "store",
+      "form": "int32",
+      "inputs": [
+        {
+          "value_id": "s32_sum.def8",
+          "role": "source",
+          "dtype": "int32",
+          "memory_access": null
+        },
+        {
+          "value_id": "p32.def1",
+          "role": "predicate",
+          "dtype": "bool",
+          "memory_access": null
+        }
+      ],
+      "outputs": [
+        {
+          "value_id": "signed_output.def15",
+          "role": "memory",
+          "dtype": "int32",
+          "memory_access": {
+            "base_object_id": "ub.signed_output",
+            "offset": {
+              "constant": 0,
+              "terms": []
+            },
+            "access_kind": "write",
+            "span": null,
+            "address_unit_bytes": null,
+            "alias_group": null,
+            "address_state_id": "vector_reductions:pointer:3:signed_output",
+            "update_mode": "none",
+            "post_update_delta_bytes": null
+          }
+        }
+      ],
+      "attributes": {},
+      "source_location": {
+        "source": "vector_reductions",
+        "line": 25,
+        "column": null,
+        "path": "<cce>"
+      }
+    },
+    {
+      "kind": "instruction",
+      "instruction_id": "instruction.13",
+      "opcode": "VSTS",
+      "instruction_class": "store",
+      "form": "uint32",
+      "inputs": [
+        {
+          "value_id": "u32_sum.def9",
+          "role": "source",
+          "dtype": "uint32",
+          "memory_access": null
+        },
+        {
+          "value_id": "p32.def1",
+          "role": "predicate",
+          "dtype": "bool",
+          "memory_access": null
+        }
+      ],
+      "outputs": [
+        {
+          "value_id": "unsigned_output.def16",
+          "role": "memory",
+          "dtype": "uint32",
+          "memory_access": {
+            "base_object_id": "ub.unsigned_output",
+            "offset": {
+              "constant": 0,
+              "terms": []
+            },
+            "access_kind": "write",
+            "span": null,
+            "address_unit_bytes": null,
+            "alias_group": null,
+            "address_state_id": "vector_reductions:pointer:5:unsigned_output",
+            "update_mode": "none",
+            "post_update_delta_bytes": null
+          }
+        }
+      ],
+      "attributes": {},
+      "source_location": {
+        "source": "vector_reductions",
+        "line": 26,
+        "column": null,
+        "path": "<cce>"
+      }
+    },
+    {
+      "kind": "instruction",
+      "instruction_id": "instruction.14",
+      "opcode": "VSTS",
+      "instruction_class": "store",
+      "form": "fp32",
+      "inputs": [
+        {
+          "value_id": "f32_group.def12",
+          "role": "source",
+          "dtype": "fp32",
+          "memory_access": null
+        },
+        {
+          "value_id": "p32.def1",
+          "role": "predicate",
+          "dtype": "bool",
+          "memory_access": null
+        }
+      ],
+      "outputs": [
+        {
+          "value_id": "float_output.def17",
+          "role": "memory",
+          "dtype": "fp32",
+          "memory_access": {
+            "base_object_id": "ub.float_output",
+            "offset": {
+              "constant": 0,
+              "terms": []
+            },
+            "access_kind": "write",
+            "span": null,
+            "address_unit_bytes": null,
+            "alias_group": null,
+            "address_state_id": "vector_reductions:pointer:1:float_output",
+            "update_mode": "none",
+            "post_update_delta_bytes": null
+          }
+        }
+      ],
+      "attributes": {},
+      "source_location": {
+        "source": "vector_reductions",
+        "line": 27,
+        "column": null,
+        "path": "<cce>"
+      }
+    },
+    {
+      "kind": "instruction",
+      "instruction_id": "instruction.15",
+      "opcode": "VSTS",
+      "instruction_class": "store",
+      "form": "fp32",
+      "inputs": [
+        {
+          "value_id": "f32_sum.def14",
+          "role": "source",
+          "dtype": "fp32",
+          "memory_access": null
+        },
+        {
+          "value_id": "p32.def1",
+          "role": "predicate",
+          "dtype": "bool",
+          "memory_access": null
+        }
+      ],
+      "outputs": [
+        {
+          "value_id": "float_output.def18",
+          "role": "memory",
+          "dtype": "fp32",
+          "memory_access": {
+            "base_object_id": "ub.float_output",
+            "offset": {
+              "constant": 64,
+              "terms": []
+            },
+            "access_kind": "write",
+            "span": null,
+            "address_unit_bytes": null,
+            "alias_group": null,
+            "address_state_id": "vector_reductions:pointer:1:float_output",
+            "update_mode": "none",
+            "post_update_delta_bytes": null
+          }
+        }
+      ],
+      "attributes": {},
+      "source_location": {
+        "source": "vector_reductions",
+        "line": 28,
+        "column": null,
+        "path": "<cce>"
+      }
+    }
+  ],
+  "values": {
+    "p16.def0": {
+      "definition_id": "p16.def0",
+      "logical_id": "p16",
+      "storage": "PredicateRegister",
+      "dtype": "bool",
+      "shape": [],
+      "producer_node_id": "instruction.0",
+      "storage_object_id": null,
+      "source_location": null
+    },
+    "p32.def1": {
+      "definition_id": "p32.def1",
+      "logical_id": "p32",
+      "storage": "PredicateRegister",
+      "dtype": "bool",
+      "shape": [],
+      "producer_node_id": "instruction.1",
+      "storage_object_id": null,
+      "source_location": null
+    },
+    "signed_input.def2": {
+      "definition_id": "signed_input.def2",
+      "logical_id": "signed_input",
+      "storage": "UB",
+      "dtype": "int16",
+      "shape": [],
+      "producer_node_id": null,
+      "storage_object_id": "ub.signed_input",
+      "source_location": null
+    },
+    "s16.def3": {
+      "definition_id": "s16.def3",
+      "logical_id": "s16",
+      "storage": "Register",
+      "dtype": "int16",
+      "shape": [],
+      "producer_node_id": "instruction.2",
+      "storage_object_id": null,
+      "source_location": null
+    },
+    "unsigned_input.def4": {
+      "definition_id": "unsigned_input.def4",
+      "logical_id": "unsigned_input",
+      "storage": "UB",
+      "dtype": "uint16",
+      "shape": [],
+      "producer_node_id": null,
+      "storage_object_id": "ub.unsigned_input",
+      "source_location": null
+    },
+    "u16.def5": {
+      "definition_id": "u16.def5",
+      "logical_id": "u16",
+      "storage": "Register",
+      "dtype": "uint16",
+      "shape": [],
+      "producer_node_id": "instruction.3",
+      "storage_object_id": null,
+      "source_location": null
+    },
+    "float_input.def6": {
+      "definition_id": "float_input.def6",
+      "logical_id": "float_input",
+      "storage": "UB",
+      "dtype": "fp32",
+      "shape": [],
+      "producer_node_id": null,
+      "storage_object_id": "ub.float_input",
+      "source_location": null
+    },
+    "f32.def7": {
+      "definition_id": "f32.def7",
+      "logical_id": "f32",
+      "storage": "Register",
+      "dtype": "fp32",
+      "shape": [],
+      "producer_node_id": "instruction.4",
+      "storage_object_id": null,
+      "source_location": null
+    },
+    "s32_sum.def8": {
+      "definition_id": "s32_sum.def8",
+      "logical_id": "s32_sum",
+      "storage": "Register",
+      "dtype": "int32",
+      "shape": [],
+      "producer_node_id": "instruction.5",
+      "storage_object_id": null,
+      "source_location": null
+    },
+    "u32_sum.def9": {
+      "definition_id": "u32_sum.def9",
+      "logical_id": "u32_sum",
+      "storage": "Register",
+      "dtype": "uint32",
+      "shape": [],
+      "producer_node_id": "instruction.6",
+      "storage_object_id": null,
+      "source_location": null
+    },
+    "s16_group.def10": {
+      "definition_id": "s16_group.def10",
+      "logical_id": "s16_group",
+      "storage": "Register",
+      "dtype": "int16",
+      "shape": [],
+      "producer_node_id": "instruction.7",
+      "storage_object_id": null,
+      "source_location": null
+    },
+    "u16_group.def11": {
+      "definition_id": "u16_group.def11",
+      "logical_id": "u16_group",
+      "storage": "Register",
+      "dtype": "uint16",
+      "shape": [],
+      "producer_node_id": "instruction.8",
+      "storage_object_id": null,
+      "source_location": null
+    },
+    "f32_group.def12": {
+      "definition_id": "f32_group.def12",
+      "logical_id": "f32_group",
+      "storage": "Register",
+      "dtype": "fp32",
+      "shape": [],
+      "producer_node_id": "instruction.9",
+      "storage_object_id": null,
+      "source_location": null
+    },
+    "f32_pair.def13": {
+      "definition_id": "f32_pair.def13",
+      "logical_id": "f32_pair",
+      "storage": "Register",
+      "dtype": "fp32",
+      "shape": [],
+      "producer_node_id": "instruction.10",
+      "storage_object_id": null,
+      "source_location": null
+    },
+    "f32_sum.def14": {
+      "definition_id": "f32_sum.def14",
+      "logical_id": "f32_sum",
+      "storage": "Register",
+      "dtype": "fp32",
+      "shape": [],
+      "producer_node_id": "instruction.11",
+      "storage_object_id": null,
+      "source_location": null
+    },
+    "signed_output.def15": {
+      "definition_id": "signed_output.def15",
+      "logical_id": "signed_output",
+      "storage": "UB",
+      "dtype": "int32",
+      "shape": [],
+      "producer_node_id": "instruction.12",
+      "storage_object_id": "ub.signed_output",
+      "source_location": null
+    },
+    "unsigned_output.def16": {
+      "definition_id": "unsigned_output.def16",
+      "logical_id": "unsigned_output",
+      "storage": "UB",
+      "dtype": "uint32",
+      "shape": [],
+      "producer_node_id": "instruction.13",
+      "storage_object_id": "ub.unsigned_output",
+      "source_location": null
+    },
+    "float_output.def17": {
+      "definition_id": "float_output.def17",
+      "logical_id": "float_output",
+      "storage": "UB",
+      "dtype": "fp32",
+      "shape": [],
+      "producer_node_id": "instruction.14",
+      "storage_object_id": "ub.float_output",
+      "source_location": null
+    },
+    "float_output.def18": {
+      "definition_id": "float_output.def18",
+      "logical_id": "float_output",
+      "storage": "UB",
+      "dtype": "fp32",
+      "shape": [],
+      "producer_node_id": "instruction.15",
+      "storage_object_id": "ub.float_output",
+      "source_location": null
+    }
+  },
+  "storage_objects": {
+    "ub.signed_input": {
+      "object_id": "ub.signed_input",
+      "storage": "UB",
+      "shape": [],
+      "source_location": null
+    },
+    "ub.unsigned_input": {
+      "object_id": "ub.unsigned_input",
+      "storage": "UB",
+      "shape": [],
+      "source_location": null
+    },
+    "ub.float_input": {
+      "object_id": "ub.float_input",
+      "storage": "UB",
+      "shape": [],
+      "source_location": null
+    },
+    "ub.signed_output": {
+      "object_id": "ub.signed_output",
+      "storage": "UB",
+      "shape": [],
+      "source_location": null
+    },
+    "ub.unsigned_output": {
+      "object_id": "ub.unsigned_output",
+      "storage": "UB",
+      "shape": [],
+      "source_location": null
+    },
+    "ub.float_output": {
+      "object_id": "ub.float_output",
+      "storage": "UB",
+      "shape": [],
+      "source_location": null
+    }
+  },
+  "params": {},
+  "uarch": {},
+  "source": {
+    "adapter": "cce",
+    "path": "<cce>"
+  }
+}

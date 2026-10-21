@@ -175,7 +175,10 @@ UarchConfig parseUarch(const json::Value::Object &values, UarchConfig cfg) {
       for (const auto &kind : {"LOAD", "STORE"})
         timing.startFeedback[kind] = timingInt(feedback, kind);
       const auto &directions = objectField(obj, "directions");
-      for (const auto &kind : {"VLD_VST", "VST_VLD"}) {
+      for (const auto &kind : {"VLD_VST", "VST_VLD", "VST_VST", "VV_ALL"}) {
+        if (!directions.count(kind) &&
+            (std::string(kind) == "VV_ALL" || std::string(kind) == "VST_VST"))
+          continue;
         const auto &rule = objectField(directions, kind);
         MembarDirectionTiming t{timingInt(rule, "release_latency"),
                                 timingInt(rule, "retire_latency"),

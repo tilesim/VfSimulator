@@ -394,6 +394,12 @@ validateCanonicalVfInfo(const CanonicalVfInfo &vfInfo) {
                     inst->sourceLocation);
             else
               hasMemory = true;
+            if (memory.addressUnitBytes && *memory.addressUnitBytes != 1 &&
+                *memory.addressUnitBytes != 2 &&
+                *memory.addressUnitBytes != 4 && *memory.addressUnitBytes != 8)
+              error("invalid_address_unit",
+                    "Address unit must be 1, 2, 4 or 8 bytes", operandPath,
+                    inst->sourceLocation);
             if (memory.span && *memory.span <= 0)
               error("invalid_memory_span", "Memory span must be positive",
                     operandPath, inst->sourceLocation);
@@ -575,14 +581,20 @@ validateCanonicalVfInfo(const CanonicalVfInfo &vfInfo) {
           const CanonicalValue &entry = entryIt->second;
           const CanonicalValue &back = backIt->second;
           const CanonicalValue &exit = exitIt->second;
-          if ((!exitOnly && entry.logicalId != carried.logicalId) ||
-              exit.logicalId != carried.logicalId)
-            error(
-                "loop_carried_logical_id_mismatch",
-                "Loop entry and exit logical IDs must match the carried state",
-                carriedPath);
+          if (exit.logicalId != carried.logicalId)
+            error("loop_carried_logical_id_mismatch",
+                  "Loop exit logical ID must match the carried state",
+                  carriedPath);
+          auto carriedDtype = [](const CanonicalValue &value) {
+            auto dtype = value.dtype;
+            if (value.storage == CanonicalStorageKind::Register &&
+                dtype.compare(0, 4, "uint") == 0)
+              dtype.erase(0, 1);
+            return dtype;
+          };
           if (entry.storage != back.storage || entry.storage != exit.storage ||
-              entry.dtype != back.dtype || entry.dtype != exit.dtype ||
+              carriedDtype(entry) != carriedDtype(back) ||
+              carriedDtype(entry) != carriedDtype(exit) ||
               entry.shape != back.shape || entry.shape != exit.shape ||
               entry.storageObjectId != back.storageObjectId ||
               entry.storageObjectId != exit.storageObjectId)

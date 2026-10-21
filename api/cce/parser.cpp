@@ -3,6 +3,7 @@
 #include "api/cce/parser.h"
 #include "api/cce/affine.h"
 #include "api/cce/normalization.h"
+#include "api/cce/software.h"
 #include "api/common/instruction_catalog.h"
 #include <algorithm>
 #include <cctype>
@@ -81,19 +82,24 @@ std::string combine(const std::string &a, const std::string &b) {
 
 struct Symbols {
   std::map<std::string, std::string> registers, align, scalarDtypes,
-      initializers, ubDtypes, pointerStates;
+      initializers, ubDtypes, pointerStates, addresses, addressStates;
   std::set<std::string> scalars, offsetScalars, ubNames, induction;
   std::map<std::string, std::pair<std::string, std::string>> ubAliases;
+  std::map<std::string, std::vector<AdapterValue>> pairs;
 };
 class ScopeParser {
   const VFScope &scope_;
   IntegerParams params_;
   Symbols symbols_;
   const InstructionCatalog &catalog_ = defaultInstructionCatalog();
-  int64_t alignSerial_ = 0, pointerSerial_ = 0, predicateSerial_ = 0;
+  int64_t alignSerial_ = 0, pointerSerial_ = 0, predicateSerial_ = 0,
+          vectorSerial_ = 0, softwareScalarSerial_ = 0;
+  bool collectingDeclarations_ = true;
+  std::vector<std::tuple<std::string, int64_t, int64_t>> loopInductions_;
+  std::map<int, std::string> addressBindings_;
   std::set<std::string> updated_, allUpdated_, loopPointers_;
   std::map<std::string, std::string> loopPointerSources_;
-  std::vector<AdapterNode> predicatePrefix_;
+  std::vector<AdapterNode> instructionPrefix_;
   CanonicalSourceLocation location(int64_t line) const {
     CanonicalSourceLocation l;
     l.source = scope_.kernelName;
@@ -129,12 +135,22 @@ class ScopeParser {
       if (!std::regex_search(item, name, std::regex(R"(^\s*([A-Za-z_]\w*))")))
         continue;
       auto id = name[1].str();
-      if (dtype == "align") {
+      if (dtype == "address") {
+        symbols_.registers.erase(id);
+        auto equal = item.find('=');
+        if (!collectingDeclarations_)
+          symbols_.addressStates[id] = newPointer("address:" + id);
+        symbols_.addresses[id] =
+            equal == std::string::npos ? "" : trim(item.substr(equal + 1));
+      } else if (dtype == "align") {
         symbols_.registers.erase(id);
         symbols_.align[id] = newAlign(id);
       } else {
         symbols_.align.erase(id);
         symbols_.registers[id] = dtype;
+        if (!collectingDeclarations_ &&
+            (dtype == "2xvl_s64" || dtype == "2xvl_u64"))
+          declarePair(id, dtype);
       }
     }
   }
@@ -301,10 +317,566 @@ class ScopeParser {
     auto spec = catalog_.lookup(op);
     if (spec && spec->formRule == "fixed")
       return spec->fixedForm;
+    if (spec && spec->formRule == "source_dtype")
+      return source;
     if (spec && spec->formRule == "conversion" && !source.empty() &&
         !destination.empty())
       return compactDtype(source) + "_to_" + compactDtype(destination);
     return destination.empty() ? source : destination;
+  }
+  AdapterValue temporaryRegister(const std::string &dtype) {
+    const bool predicate = dtype == "bool";
+    std::string name;
+    do {
+      name = predicate
+                 ? "__vfsim_predicate_" + std::to_string(predicateSerial_++)
+                 : "__vfsim_vector_" + std::to_string(vectorSerial_++);
+    } while (symbols_.registers.count(name) || symbols_.scalars.count(name) ||
+             symbols_.ubNames.count(name));
+    symbols_.registers[name] = dtype;
+    return typedRegister(name);
+  }
+  void declarePair(const std::string &name, const std::string &dtype) {
+    const auto component = dtype == "2xvl_s64" ? "int32" : "uint32";
+    symbols_.pairs[name] = {temporaryRegister(component),
+                            temporaryRegister(component)};
+  }
+  AdapterValue temporaryScalar(const std::string &dtype) {
+    std::string name;
+    do {
+      name = "__vfsim_scalar_" + std::to_string(softwareScalarSerial_++);
+    } while (symbols_.registers.count(name) || symbols_.scalars.count(name) ||
+             symbols_.ubNames.count(name));
+    symbols_.scalars.insert(name);
+    symbols_.scalarDtypes[name] = dtype;
+    return {name, CanonicalStorageKind::Scalar, dtype, {}};
+  }
+  std::string pairMembers(const std::string &source) const {
+    const std::regex member(R"(\b([A-Za-z_]\w*)\.val\[([^]]+)\])");
+    std::string result;
+    size_t previous = 0;
+    for (std::sregex_iterator i(source.begin(), source.end(), member), end;
+         i != end; ++i) {
+      result += source.substr(previous, i->position() - previous);
+      const auto name = (*i)[1].str();
+      if (symbols_.pairs.count(name) && (*i)[2] != "0" && (*i)[2] != "1")
+        throw std::runtime_error(
+            "vector_2xvl component index must be zero or one");
+      result += symbols_.pairs.count(name)
+                    ? symbols_.pairs.at(name).at(std::stoi((*i)[2])).valueId
+                    : i->str();
+      previous = i->position() + i->length();
+    }
+    result += source.substr(previous);
+    for (const auto &[name, dtype] : symbols_.registers)
+      if (dtype == "s4x2")
+        result = std::regex_replace(
+            result, std::regex("\\b" + name + R"(\.val\b(?!\[))"), name);
+    return result;
+  }
+  std::vector<AdapterNode> pairMemory(const std::string &api,
+                                      const std::vector<std::string> &args,
+                                      int64_t line) {
+    const size_t expected = api == "vlds" ? 3 : 4;
+    if (args.size() != expected)
+      throw std::runtime_error(api + " vector_2xvl has invalid arguments");
+    const auto pair = symbols_.pairs.at(baseIdentifier(args[0]));
+    const auto ref = ubReference(args[1]);
+    if (!ref)
+      throw std::runtime_error("Pair memory requires a declared UB pointer");
+    const auto base = ref->first;
+    if (dtypeElementBytes(scalarDtype(symbols_.ubDtypes.at(base))) != 8)
+      throw std::runtime_error("Pair memory requires a 64-bit element pointer");
+    const auto offset = "((" + ref->second + ")+(" +
+                        expandExpression(args[2], symbols_.initializers) +
+                        "))*8";
+    AdapterValue memory{base,
+                        CanonicalStorageKind::UB,
+                        scalarDtype(symbols_.ubDtypes.at(base)),
+                        {}};
+    auto access = [&](CanonicalAccessKind kind, const std::string &address,
+                      int span) {
+      AdapterMemoryAccess a;
+      a.valueId = base;
+      a.accessKind = kind;
+      a.offset = address;
+      a.span = span;
+      a.addressUnitBytes = 1;
+      return a;
+    };
+    if (api == "vlds") {
+      AdapterNode n;
+      n.name = "VLDS_PAIR";
+      n.form = "b32";
+      n.instructionClass = CanonicalInstructionClass::Load;
+      n.src = {memory};
+      n.dst = pair;
+      n.sourceLocation = location(line);
+      n.memoryAccesses = {access(CanonicalAccessKind::Read, offset, 512)};
+      return {n};
+    }
+    const auto maskName = baseIdentifier(args[3]);
+    if (!symbols_.registers.count(maskName) ||
+        symbols_.registers.at(maskName) != "bool")
+      throw std::runtime_error("Pair store requires a predicate");
+    const auto mask = typedRegister(maskName);
+    std::vector<AdapterValue> predicates = {temporaryRegister("bool"),
+                                            temporaryRegister("bool")};
+    std::vector<AdapterValue> vectors = {temporaryRegister("uint32"),
+                                         temporaryRegister("uint32")};
+    AdapterNode masks;
+    masks.name = "PINTLV";
+    masks.form = "b32";
+    masks.src = {mask, mask};
+    masks.dst = predicates;
+    masks.sourceLocation = location(line);
+    AdapterNode data;
+    data.name = "VINTLV";
+    data.form = "uint32";
+    data.src = pair;
+    data.dst = vectors;
+    data.sourceLocation = location(line);
+    std::vector<AdapterNode> nodes = {masks, data};
+    for (int i = 0; i < 2; ++i) {
+      AdapterNode n;
+      n.name = "VSTS_BYTES";
+      n.form = "b32";
+      n.instructionClass = CanonicalInstructionClass::Store;
+      n.src = {vectors[i], predicates[i]};
+      n.dst = {memory};
+      n.sourceLocation = location(line);
+      n.memoryAccesses = {access(CanonicalAccessKind::Write,
+                                 "(" + offset + ")+" + std::to_string(i * 256),
+                                 256)};
+      nodes.push_back(std::move(n));
+    }
+    return nodes;
+  }
+  std::vector<AdapterNode>
+  pairIndexedMemory(const std::string &api,
+                    const std::vector<std::string> &args, int64_t line) {
+    if (args.size() != 4)
+      throw std::runtime_error(api + " vector_2xvl expects four arguments");
+    const auto pair = symbols_.pairs.at(baseIdentifier(args[0]));
+    const auto indexName = baseIdentifier(args[2]);
+    const auto maskName = baseIdentifier(args[3]);
+    if (!symbols_.registers.count(indexName) ||
+        symbols_.registers.at(indexName) != "uint32")
+      throw std::runtime_error(
+          "Pair indexed memory requires vector_u32 indices");
+    if (!symbols_.registers.count(maskName) ||
+        symbols_.registers.at(maskName) != "bool")
+      throw std::runtime_error("Pair indexed memory requires a predicate");
+    const auto ref = ubReference(args[1]);
+    if (!ref)
+      throw std::runtime_error(
+          "Pair indexed memory requires a declared UB pointer");
+    const auto base = ref->first;
+    const auto dtype = scalarDtype(symbols_.ubDtypes.at(base));
+    if (dtypeElementBytes(dtype) != 8)
+      throw std::runtime_error(
+          "Pair indexed memory requires a 64-bit element pointer");
+    const AdapterValue memory{base, CanonicalStorageKind::UB, dtype, {}};
+    const auto index = typedRegister(indexName), mask = typedRegister(maskName);
+    const auto low = temporaryRegister("uint32"),
+               high = temporaryRegister("uint32");
+    auto compute = [&](const std::string &op,
+                       const std::vector<AdapterValue> &src,
+                       const AdapterValue &dst) {
+      AdapterNode node;
+      node.name = op;
+      node.form = "uint32";
+      node.instructionClass = CanonicalInstructionClass::Compute;
+      node.src = src;
+      node.dst = {dst};
+      node.sourceLocation = location(line);
+      return node;
+    };
+    std::vector<AdapterNode> nodes{
+        compute(
+            "VMULS",
+            {index, {"2", CanonicalStorageKind::Scalar, "uint32", {}}, mask},
+            low),
+        compute("VADDS",
+                {low, {"1", CanonicalStorageKind::Scalar, "uint32", {}}, mask},
+                high)};
+    const bool load = api == "vgather2";
+    for (size_t i = 0; i < 2; ++i) {
+      const auto &indices = i == 0 ? low : high;
+      AdapterNode node;
+      node.name = load ? "VGATHER2_BYTES" : "VSCATTER_BYTES";
+      node.form = pair[i].dtype;
+      node.instructionClass = load ? CanonicalInstructionClass::Load
+                                   : CanonicalInstructionClass::Store;
+      node.src = load ? std::vector<AdapterValue>{memory, indices, mask}
+                      : std::vector<AdapterValue>{pair[i], indices, mask};
+      node.dst = load ? std::vector<AdapterValue>{pair[i]}
+                      : std::vector<AdapterValue>{memory};
+      AdapterMemoryAccess access;
+      access.valueId = base;
+      access.accessKind =
+          load ? CanonicalAccessKind::Read : CanonicalAccessKind::Write;
+      access.offset = "(" + ref->second + ")*8";
+      access.span = 256;
+      access.addressUnitBytes = 1;
+      node.memoryAccesses = {access};
+      node.sourceLocation = location(line);
+      node.attributes["cann_software_api"] = api;
+      nodes.push_back(std::move(node));
+    }
+    return nodes;
+  }
+  std::vector<AdapterNode> memoryWrapper(const std::string &api,
+                                         const std::vector<std::string> &args,
+                                         int64_t line) {
+    const bool load = api == "vload";
+    const size_t minimum = load ? 2 : 3;
+    if (args.size() < minimum || args.size() > minimum + 1)
+      throw std::runtime_error(api + " has an invalid argument count");
+    const auto mode =
+        args.size() > minimum ? trim(args[minimum]) : "ADDRESS_UNALIGNED";
+    if (mode != "ADDRESS_ALIGNED" && mode != "ADDRESS_UNALIGNED")
+      throw std::runtime_error("Invalid " + api + " address type");
+    const auto name = baseIdentifier(args[load ? 0 : 1]);
+    const bool pair = symbols_.pairs.count(name) != 0;
+    const auto dtype = symbols_.registers.at(name);
+    if (!pair &&
+        !std::set<std::string>{"int8", "uint8", "int16", "uint16", "int32",
+                               "uint32", "fp16", "fp32", "bf16"}
+             .count(dtype))
+      throw std::runtime_error("Unsupported " + api + " vector type");
+    const auto pointer = args[load ? 1 : 0];
+    const auto ref = ubReference(pointer);
+    if (!ref)
+      throw std::runtime_error(api + " requires a declared UB pointer");
+    const auto base = ref->first, offset = ref->second,
+               rootDtype = scalarDtype(symbols_.ubDtypes.at(base));
+    const auto rootWidth = dtypeElementBytes(rootDtype);
+    if (!rootWidth)
+      throw std::runtime_error("Unknown UB pointer width");
+    const AdapterValue memory{base, CanonicalStorageKind::UB, rootDtype, {}};
+    const auto state = newAlign(api);
+    auto cursor = newPointer(api);
+    const auto loc = location(line);
+    std::vector<AdapterNode> nodes;
+    auto emit = [&](const std::string &op, const std::string &form,
+                    std::vector<AdapterValue> inputs,
+                    std::vector<AdapterValue> outputs, const std::string &at,
+                    std::optional<int64_t> advance = std::nullopt,
+                    const std::string &alignment = "", bool byte = false,
+                    std::optional<int64_t> span = std::nullopt) {
+      AdapterNode n;
+      n.name = op;
+      n.form = form;
+      n.instructionClass =
+          instructionClass(catalog_.lookup(op)->instructionClass);
+      n.src = std::move(inputs);
+      n.dst = std::move(outputs);
+      n.sourceLocation = loc;
+      AdapterMemoryAccess a;
+      a.valueId = base;
+      a.offset = at;
+      a.span = span;
+      a.addressStateId = cursor;
+      a.accessKind = n.instructionClass == CanonicalInstructionClass::Load
+                         ? CanonicalAccessKind::Read
+                         : CanonicalAccessKind::Write;
+      if (byte)
+        a.addressUnitBytes = 1;
+      if (advance) {
+        a.updateMode = "post_update";
+        a.postUpdateDeltaBytes = std::to_string(*advance);
+      }
+      n.memoryAccesses = {a};
+      n.attributes["cann_software_api"] = api;
+      if (!alignment.empty()) {
+        n.attributes["align_state_operation"] = alignment;
+        n.attributes["align_state_id"] = state;
+      }
+      nodes.push_back(std::move(n));
+    };
+    auto compute = [&](const std::string &op, const std::string &form,
+                       std::vector<AdapterValue> inputs,
+                       std::vector<AdapterValue> outputs) {
+      AdapterNode n;
+      n.name = op;
+      n.form = form;
+      n.instructionClass = CanonicalInstructionClass::Compute;
+      n.src = std::move(inputs);
+      n.dst = std::move(outputs);
+      n.sourceLocation = loc;
+      n.attributes["cann_software_api"] = api;
+      nodes.push_back(std::move(n));
+    };
+    if (load) {
+      if (mode == "ADDRESS_ALIGNED") {
+        if (pair)
+          return pairMemory("vlds", {args[0], pointer, "0"}, line);
+        emit("VLDS", dtype, {memory}, {typedRegister(name)}, offset);
+      } else if (pair) {
+        const auto at = "(" + offset + ")*" + std::to_string(rootWidth);
+        emit("VLDAS_BYTES", "b32", {memory}, {}, at, std::nullopt, "load_init",
+             true, 256);
+        std::vector<AdapterValue> chunks{temporaryRegister("uint32"),
+                                         temporaryRegister("uint32")};
+        for (const auto &chunk : chunks)
+          emit("VLDUS_BYTES", "b32", {memory}, {chunk}, at, 256, "load_use",
+               true, 256);
+        compute("VDINTLV", "uint32", chunks, symbols_.pairs.at(name));
+      } else {
+        emit("VLDAS", dtype, {memory}, {}, offset, std::nullopt, "load_init");
+        emit("VLDUS", dtype, {memory}, {typedRegister(name)}, offset,
+             std::nullopt, "load_use");
+      }
+      return nodes;
+    }
+    const auto countExpression =
+        expandExpression(args[2], symbols_.initializers);
+    auto count = evaluateInteger(countExpression, integerConstants());
+    if (mode == "ADDRESS_ALIGNED") {
+      auto mask = temporaryRegister("bool"),
+           counter = temporaryScalar("uint32");
+      const auto raw = baseIdentifier(args[2]);
+      AdapterValue source;
+      if (symbols_.scalars.count(raw))
+        source = {raw, CanonicalStorageKind::Scalar, "uint32", {}};
+      else if (count)
+        source = {
+            std::to_string(*count), CanonicalStorageKind::Scalar, "uint32", {}};
+      else
+        source = temporaryScalar("uint32");
+      const auto width = pair ? 32 : dtypeElementBytes(dtype) * 8;
+      compute("PLT", "b" + std::to_string(width), {source}, {mask, counter});
+      if (pair) {
+        auto stores =
+            pairMemory("vsts", {args[1], pointer, "0", mask.valueId}, line);
+        nodes.insert(nodes.end(), stores.begin(), stores.end());
+      } else
+        emit("VSTS", dtype, {typedRegister(name), mask}, {memory}, offset);
+      return nodes;
+    }
+    if (!count)
+      throw std::runtime_error("Unaligned vstore requires elementCount in "
+                               "loop_params for its pointer advances");
+    if (*count < 0 || *count > (pair ? 64 : 256 / dtypeElementBytes(dtype)))
+      throw std::runtime_error("vstore elementCount exceeds one vector");
+    if (pair) {
+      const auto at = "(" + offset + ")*" + std::to_string(rootWidth);
+      std::vector<AdapterValue> chunks{temporaryRegister("uint32"),
+                                       temporaryRegister("uint32")};
+      compute("VINTLV", "uint32", symbols_.pairs.at(name), chunks);
+      emit("VSTUS_BYTES", "b32", {chunks[0]}, {memory}, at,
+           std::min<int64_t>(32, *count) * 8, "append", true, 256);
+      emit("VSTUS_BYTES", "b32", {chunks[1]}, {memory}, at,
+           std::max<int64_t>(0, *count - 32) * 8, "append", true, 256);
+      emit("VSTAS_BYTES", "b32", {}, {memory}, at, std::nullopt, "consume",
+           true, 256);
+    } else {
+      emit("VSTUI", dtype, {typedRegister(name)}, {memory}, offset,
+           *count * dtypeElementBytes(dtype), "append");
+      cursor = newPointer(api + ":flush");
+      emit("VSTAI", dtype, {}, {memory}, offset, std::nullopt, "consume");
+      nodes.back().attributes["cann_pointer_result_discarded"] = true;
+    }
+    return nodes;
+  }
+  std::optional<std::vector<AdapterNode>>
+  softwareCall(const std::string &api, const std::vector<std::string> &args,
+               int64_t line) {
+    std::vector<std::string> dtypes;
+    bool pair = false;
+    for (const auto &arg : args) {
+      std::smatch cast;
+      std::string dtype;
+      if (std::regex_search(
+              arg, cast,
+              std::regex(
+                  R"(^\s*\(\s*(?:const\s+)?vector_([A-Za-z0-9_]+)\s*&?\s*\))")))
+        dtype = normalizeDtype(cast[1]);
+      else if (symbols_.registers.count(baseIdentifier(arg)))
+        dtype = symbols_.registers.at(baseIdentifier(arg));
+      pair |= begins(dtype, "2xvl_");
+      dtypes.push_back(std::move(dtype));
+    }
+    const bool unmaskedVcvt =
+        api == "vcvt" && dtypes.size() >= 3 && dtypes[2] != "bool";
+    if (!pair && !unmaskedVcvt && api != "vmod" &&
+        !(api == "vdiv" && !dtypes.empty() &&
+          std::set<std::string>{"int16", "uint16", "int32", "uint32"}.count(
+              dtypes[0])))
+      return std::nullopt;
+    if (pair && (api == "vlds" || api == "vsts"))
+      return pairMemory(api, args, line);
+    if (pair && (api == "vgather2" || api == "vscatter"))
+      return pairIndexedMemory(api, args, line);
+    const auto *recipe = selectSoftwareRecipe(api, args, dtypes);
+    if (!recipe)
+      throw std::runtime_error("Unsupported CANN software signature: " + api);
+    std::map<int, std::vector<AdapterValue>> arguments;
+    for (const auto &operand : recipe->asObject().at("arguments").asArray()) {
+      const auto &o = operand.asObject();
+      if (o.at("config").asBool())
+        continue;
+      const int pos = o.at("position").asInt();
+      const auto name = baseIdentifier(args.at(pos)),
+                 type = o.at("type").asString();
+      if (begins(type, "vector_2xvl_"))
+        arguments[pos] = symbols_.pairs.at(name);
+      else if (begins(type, "vector_"))
+        arguments[pos] = {typedRegister(name)};
+      else if (symbols_.scalars.count(name))
+        arguments[pos] = {{name,
+                           CanonicalStorageKind::Scalar,
+                           scalarDtype(symbols_.scalarDtypes.at(name)),
+                           {}}};
+      else if (numericLiteral(args.at(pos)))
+        arguments[pos] = {{trim(args[pos]),
+                           CanonicalStorageKind::Scalar,
+                           scalarDtype(type),
+                           {}}};
+      else
+        throw std::runtime_error("Expected a scalar argument: " + args[pos]);
+    }
+    std::set<std::string> destinations;
+    for (const auto &operand : recipe->asObject().at("arguments").asArray()) {
+      const auto &o = operand.asObject();
+      if (o.at("type").asString().find('&') == std::string::npos)
+        continue;
+      for (const auto &v :
+           arguments.at(static_cast<int>(o.at("position").asInt())))
+        if (!destinations.insert(v.valueId).second)
+          throw std::runtime_error(
+              "Multi-result destinations must be distinct");
+    }
+    return emitSoftwareRecipe(
+        *recipe, arguments,
+        [&](const auto &dtype) { return temporaryRegister(dtype); },
+        [&](const auto &dtype) { return temporaryScalar(dtype); },
+        location(line));
+  }
+  std::vector<AdapterNode>
+  lowerConversionWrapper(const NativeInstructionSpec &spec,
+                         const std::vector<std::string> &args,
+                         const std::vector<AdapterValue> &src,
+                         const std::vector<AdapterValue> &dst,
+                         const std::string &form, int64_t line) {
+    std::map<std::string, std::string> options;
+    for (const auto &o : spec.operands)
+      if (o.kind == CatalogArgumentKind::Config &&
+          static_cast<size_t>(o.argumentIndex) < args.size())
+        options[o.name] = trim(args[o.argumentIndex]);
+    auto nodes = instructionPrefix_;
+    const auto sourceLocation = location(line);
+    auto emit = [&](const std::string &op, const std::string &key,
+                    std::vector<AdapterValue> inputs,
+                    std::vector<AdapterValue> outputs) {
+      AdapterNode n;
+      n.name = op;
+      n.form = key;
+      n.instructionClass = CanonicalInstructionClass::Compute;
+      n.src = std::move(inputs);
+      n.dst = std::move(outputs);
+      n.sourceLocation = sourceLocation;
+      nodes.push_back(std::move(n));
+    };
+    auto predicate = [&](const std::string &op, const std::string &key,
+                         const std::vector<AdapterValue> &inputs) {
+      auto value = temporaryRegister("bool");
+      emit(op, key, inputs, {value});
+      return value;
+    };
+    auto pset = [&](int width, const std::string &pattern = "PAT_ALL") {
+      auto result = predicate("PSET_B" + std::to_string(width),
+                              "b" + std::to_string(width), {});
+      nodes.back().attributes["pattern"] = pattern;
+      return result;
+    };
+    auto interleave = [&](const AdapterValue &left, const AdapterValue &right) {
+      auto first = temporaryRegister("bool"),
+           second = temporaryRegister("bool");
+      emit("PINTLV", "b8", {left, right}, {first, second});
+      return first;
+    };
+    bool masked = false;
+    for (const auto &o : spec.operands)
+      masked = masked || o.kind == CatalogArgumentKind::Predicate;
+    const auto split = form.find("_to_");
+    const auto sourceType = form.substr(0, split),
+               destType = form.substr(split + 4);
+    const int sourceWidth = sourceType.find("32") != std::string::npos   ? 32
+                            : sourceType.find("16") != std::string::npos ? 16
+                                                                         : 8;
+    const auto family = spec.opcode.substr(0, spec.opcode.find('_'));
+    const int maskWidth =
+        family == "VSCVT" && (sourceType == "s32" || sourceType == "u32") &&
+                destType == "u8"
+            ? 32
+        : sourceWidth <= 16 &&
+                (destType == "f32" || destType == "s32" || destType == "f16") &&
+                !masked
+            ? sourceWidth
+            : 8;
+    const auto mask = masked ? src.at(1) : pset(maskWidth);
+    const bool merging = options["mode"] == "MODE_MERGING";
+    const auto result =
+        merging ? temporaryRegister(normalizeDtype(destType)) : dst.at(0);
+    std::string physical = "VCVT_" + form;
+    std::transform(
+        physical.begin(), physical.end(), physical.begin(),
+        [](unsigned char c) { return static_cast<char>(std::toupper(c)); });
+    emit(physical, form, {src.at(0), mask}, {result});
+    if (merging) {
+      AdapterValue mergeMask;
+      if (masked)
+        mergeMask = mask;
+      else if (sourceWidth == 32 && destType == "u8") {
+        const auto pp = options.count("pp") ? options.at("pp") : "PART_P0";
+        const int part = pp.back() - '0';
+        if (part == 0)
+          mergeMask = pset(8, "PAT_M4");
+        else {
+          const auto all = pset(8), zeros = pset(8, "PAT_ALLF");
+          const auto mid = part == 2 || part == 3 ? interleave(zeros, all)
+                                                  : interleave(all, zeros);
+          mergeMask =
+              part == 2 ? interleave(mid, zeros) : interleave(zeros, mid);
+        }
+      } else {
+        mergeMask = pset(8, sourceWidth == 16 ? "PAT_H" : "PAT_M4");
+        if (sourceWidth == 16)
+          mergeMask = predicate("PUNPACK", "b8", {mergeMask});
+        if (options["part"] == "PART_ODD") {
+          const auto all = maskWidth == 8 ? mask : pset(8);
+          mergeMask = predicate("PNOT", "b8", {mergeMask, all});
+        }
+      }
+      emit("VMOV_MERGE", normalizeDtype(destType),
+           {dst.at(0), result, mergeMask}, dst);
+    }
+    for (auto &n : nodes)
+      n.sourceLocation = sourceLocation;
+    return nodes;
+  }
+  std::string conversionForm(const std::vector<std::string> &args) const {
+    if (args.size() < 2)
+      return "";
+    std::vector<std::string> dtypes;
+    for (size_t i = 0; i < 2; ++i) {
+      std::smatch cast;
+      if (std::regex_search(
+              args[i], cast,
+              std::regex(
+                  R"(^\s*\(\s*(?:const\s+)?vector_([A-Za-z0-9_]+)\s*&?\s*\))")))
+        dtypes.push_back(normalizeDtype(cast[1]));
+      else {
+        const auto found = symbols_.registers.find(baseIdentifier(args[i]));
+        dtypes.push_back(found == symbols_.registers.end() ? ""
+                                                           : found->second);
+      }
+    }
+    return dtypes[0].empty() || dtypes[1].empty()
+               ? ""
+               : compactDtype(dtypes[1]) + "_to_" + compactDtype(dtypes[0]);
   }
   std::optional<AdapterValue> bindArgument(const std::string &callee,
                                            const std::string &arg,
@@ -340,6 +912,9 @@ class ScopeParser {
     }
     if (kind == CatalogArgumentKind::Scalar ||
         kind == CatalogArgumentKind::RegisterOrScalar) {
+      if (numericLiteral(arg))
+        return AdapterValue{
+            trim(arg), CanonicalStorageKind::Scalar, castScalarDtype(arg), {}};
       if (symbols_.registers.count(name)) {
         if (kind == CatalogArgumentKind::Scalar ||
             symbols_.registers.at(name) == "bool")
@@ -353,9 +928,6 @@ class ScopeParser {
                             CanonicalStorageKind::Scalar,
                             scalarDtype(symbols_.scalarDtypes[name]),
                             {}};
-      if (numericLiteral(arg))
-        return AdapterValue{
-            trim(arg), CanonicalStorageKind::Scalar, castScalarDtype(arg), {}};
       error("must be a declared scalar or literal");
     }
     if (kind == CatalogArgumentKind::Predicate) {
@@ -375,7 +947,7 @@ class ScopeParser {
         producer.form = spec->fixedForm;
         producer.src = std::move(bound.first);
         producer.dst = std::move(bound.second);
-        predicatePrefix_.push_back(std::move(producer));
+        instructionPrefix_.push_back(std::move(producer));
       }
       if (symbols_.registers.count(name) &&
           symbols_.registers.at(name) == "bool")
@@ -394,8 +966,15 @@ class ScopeParser {
         auto candidate = arg;
         std::smatch vag;
         if (std::regex_match(arg, vag,
-                             std::regex(R"(vag_b(?:16|32)\s*\(([\s\S]*)\))")))
+                             std::regex(R"(vag_b(?:8|16|32)\s*\(([\s\S]*)\))")))
           candidate = vag[1];
+        if (std::regex_match(arg,
+                             std::regex(R"(vag_b(?:8|16|32)\s*\([\s\S]*\))"))) {
+          auto parts = splitArguments(candidate);
+          candidate = "0";
+          for (const auto &part : parts)
+            candidate = combine(candidate, part);
+        }
         if (isAffine(candidate, params_, names, locals))
           return std::nullopt;
         error("has invalid offset expression");
@@ -408,7 +987,8 @@ class ScopeParser {
       if (!operand.allowedValues.empty() &&
           !operand.allowedValues.count(trim(arg)) && !integer)
         error("has unsupported configuration");
-      if (std::regex_match(trim(arg),
+      if (operand.allowedValues.count(trim(arg)) ||
+          std::regex_match(trim(arg),
                            std::regex(R"([A-Z][A-Z0-9_]*|[+-]?\d+)")) ||
           integer)
         return std::nullopt;
@@ -476,6 +1056,36 @@ class ScopeParser {
                           {}};
     return std::nullopt;
   }
+  std::string vagOffset(const std::string &text, int width) const {
+    auto strides = splitArguments(text);
+    if (strides.empty() || strides.size() > 4)
+      throw std::runtime_error("VAG requires one to four loop strides");
+    std::string result = "0";
+    for (size_t i = 0; i < strides.size(); ++i) {
+      auto stride = expandExpression(strides[strides.size() - i - 1],
+                                     symbols_.initializers);
+      auto value = evaluateInteger(stride, integerConstants());
+      if (value && *value == 0)
+        continue;
+      if (i >= loopInductions_.size())
+        throw std::runtime_error("VAG stride has no enclosing hardware loop");
+      const auto &[var, start, step] =
+          loopInductions_[loopInductions_.size() - i - 1];
+      if (step != 1) {
+        if (!value || *value % step)
+          throw std::runtime_error(
+              "VAG stride is not affine in the source loop index");
+        stride = std::to_string(*value / step);
+      }
+      for (const auto &[name, a, b] : loopInductions_)
+        if (std::regex_search(stride, std::regex("\\b" + name + "\\b")))
+          throw std::runtime_error("VAG strides must be loop invariant");
+      result =
+          combine(result, "((" + var + ")-(" + std::to_string(start) + "))*(" +
+                              stride + ")*" + std::to_string(width));
+    }
+    return result;
+  }
   std::vector<AdapterMemoryAccess>
   memoryAccess(const NativeInstructionSpec &spec,
                const std::vector<std::string> &args, const std::string &form) {
@@ -500,10 +1110,26 @@ class ScopeParser {
     auto ref = ubReference(args[memory->argumentIndex]);
     if (!ref)
       return {};
+    const auto distribution =
+        mode && static_cast<size_t>(mode->argumentIndex) < args.size()
+            ? trim(args[mode->argumentIndex])
+            : "";
+    int immediateUnit =
+        (spec.opcode == "PLDI" || spec.opcode == "PSTI")
+            ? (distribution == "US" || distribution == "PK" ? 16 : 32)
+            : 1;
+    if (offset && static_cast<size_t>(offset->argumentIndex) < args.size() &&
+        !evaluateInteger(args[offset->argumentIndex], integerConstants()))
+      immediateUnit = 1;
     auto expression = args[memory->argumentIndex],
          pointer = trim(stripUbWrappers(expression)
                             .substr(0, stripUbWrappers(expression).find('+')));
     auto state = symbols_.pointerStates.at(pointer);
+    const auto binding =
+        addressBindings_.find(offset ? offset->argumentIndex : -1);
+    const bool addressState = binding != addressBindings_.end();
+    if (addressState)
+      state = binding->second;
     bool post = update &&
                 static_cast<size_t>(update->argumentIndex) < args.size() &&
                 trim(args[update->argumentIndex]) == "POST_UPDATE";
@@ -514,7 +1140,7 @@ class ScopeParser {
       post = true;
     }
     if (post) {
-      if (stripUbWrappers(expression) != pointer)
+      if (!addressState && stripUbWrappers(expression) != pointer)
         throw std::runtime_error(
             "POST_UPDATE requires a pointer variable, not pointer arithmetic");
       if (loopPointers_.count(state))
@@ -524,10 +1150,12 @@ class ScopeParser {
         throw std::runtime_error("POST_UPDATE has no declared delta rule");
       if (implicit == spec.implicitPostUpdateBytes.end()) {
         auto raw = trim(args.at(delta->argumentIndex));
-        if (std::regex_search(raw, std::regex(R"(\bvag_b(?:16|32)\s*\()")))
+        if (std::regex_search(raw, std::regex(R"(\bvag_b(?:8|16|32)\s*\()")))
           throw std::runtime_error(
               "POST_UPDATE with VAG requires address-generator modeling");
-        if (delta->postUpdateDeltaEncoding == "unsigned_bit_field") {
+        if (delta->postUpdateDeltaEncoding == "byte_count") {
+          deltaBytes = expandExpression(raw, symbols_.initializers);
+        } else if (delta->postUpdateDeltaEncoding == "unsigned_bit_field") {
           auto value =
               evaluateUnsigned(raw, integerConstants(), symbols_.initializers);
           if (!value)
@@ -553,28 +1181,57 @@ class ScopeParser {
                                      expression);
           if (dtype.size() > 2 && dtype.substr(dtype.size() - 2) == "_t")
             dtype.resize(dtype.size() - 2);
-          static const std::map<std::string, int> widths{
-              {"fp32", 4},   {"fp16", 2},   {"bf16", 2},
-              {"int32", 4},  {"uint32", 4}, {"int16", 2},
-              {"uint16", 2}, {"int8", 1},   {"uint8", 1}};
-          auto width = widths.find(dtype);
-          if (width == widths.end())
+          const auto width = dtypeElementBytes(dtype);
+          if (!width)
             throw std::runtime_error(
                 "Unknown POST_UPDATE pointer element width: " + dtype);
           deltaBytes = "(" + expandExpression(raw, symbols_.initializers) +
-                       ")*" + std::to_string(width->second);
+                       ")*" + std::to_string(width);
         }
       }
+      if (immediateUnit != 1 && implicit == spec.implicitPostUpdateBytes.end())
+        deltaBytes = "(" + *deltaBytes + ")*" + std::to_string(immediateUnit);
       updated_.insert(state);
       allUpdated_.insert(state);
     }
     auto address = ref->second;
-    if (!post && offset &&
+    auto addressUnit = spec.memoryAddressUnitBytes;
+    if (spec.memoryAddressUnitBytes) {
+      if (spec.memoryAddressUnitBytes != 1)
+        throw std::runtime_error(
+            "Only byte-addressed fixed-unit CCE memory operands are supported");
+      const auto width =
+          dtypeElementBytes(scalarDtype(symbols_.ubDtypes.at(ref->first)));
+      if (!width)
+        throw std::runtime_error("Unknown pointer width for " + spec.opcode);
+      address = "(" + address + ")*" + std::to_string(width);
+    }
+    if ((!post || spec.opcode == "VLDU" || spec.opcode == "VSTU") && offset &&
         static_cast<size_t>(offset->argumentIndex) < args.size()) {
       auto raw = trim(args[offset->argumentIndex]);
-      if (!std::regex_match(raw, std::regex(R"(vag_b(?:16|32)\s*\([\s\S]*\))")))
-        address =
-            combine(address, expandExpression(raw, symbols_.initializers));
+      std::smatch vag;
+      if (std::regex_match(raw, vag,
+                           std::regex(R"(vag_b(8|16|32)\s*\(([\s\S]*)\))"))) {
+        if (!addressUnit)
+          address = "(" + address + ")*" +
+                    std::to_string(dtypeElementBytes(
+                        scalarDtype(symbols_.ubDtypes.at(ref->first))));
+        addressUnit = 1;
+        address = combine(address, vagOffset(vag[2], std::stoi(vag[1]) / 8));
+      } else {
+        auto displacement = expandExpression(raw, symbols_.initializers);
+        if (immediateUnit != 1)
+          displacement =
+              "(" + displacement + ")*" + std::to_string(immediateUnit);
+        if (spec.opcode == "VSLDB")
+          displacement = "(" + displacement + ")*32";
+        else if (addressUnit == 1 &&
+                 (spec.opcode == "VLDS" || spec.opcode == "VSTS"))
+          displacement = "(" + displacement + ")*" +
+                         std::to_string(dtypeElementBytes(
+                             scalarDtype(symbols_.ubDtypes.at(ref->first))));
+        address = combine(address, displacement);
+      }
     }
     std::string memoryMode =
         mode && static_cast<size_t>(mode->argumentIndex) < args.size()
@@ -588,20 +1245,38 @@ class ScopeParser {
       span = spec.memorySpan;
     else if (begins(memoryMode, "BRC_") || begins(memoryMode, "ONEPT_"))
       span = 1;
+    if (spec.opcode == "VSSTB") {
+      const auto config = evaluateUnsigned(memoryMode, integerConstants(),
+                                           symbols_.initializers);
+      if (!config)
+        throw std::runtime_error(
+            "VSSTB configuration must resolve to a uint64 constant");
+      const auto width =
+          dtypeElementBytes(scalarDtype(symbols_.ubDtypes.at(ref->first)));
+      const auto stride = (*config >> 16) & 65535;
+      span = (7 * stride + 1) * 32 / width;
+      if (!post)
+        address =
+            combine(address, std::to_string((*config & 65535) * 32 / width));
+    }
     return {{ref->first,
              spec.instructionClass == CatalogInstructionClass::Load
                  ? CanonicalAccessKind::Read
                  : CanonicalAccessKind::Write,
-             address, span, state, post ? "post_update" : "none", deltaBytes}};
+             address, span, state, post ? "post_update" : "none", deltaBytes,
+             addressUnit ? std::optional<int64_t>(addressUnit) : std::nullopt}};
   }
-  std::vector<AdapterNode> statement(const std::string &stmt, int64_t line) {
-    predicatePrefix_.clear();
+  std::vector<AdapterNode> statement(const std::string &sourceStatement,
+                                     int64_t line) {
+    const auto stmt = pairMembers(sourceStatement);
+    instructionPrefix_.clear();
     if (stmt.empty())
       return {};
     std::smatch m;
     if (begins(stmt, "vector_")) {
       vectorDecl(stmt);
-      if (std::regex_match(stmt, m, vectorDeclaration) && m[1] == "bool") {
+      if (std::regex_match(stmt, m, vectorDeclaration) &&
+          (m[1] == "bool" || m[1] == "2xvl_s64" || m[1] == "2xvl_u64")) {
         std::vector<AdapterNode> out;
         for (const auto &item : splitArguments(m[2]))
           if (auto equal = item.find('='); equal != std::string::npos) {
@@ -625,9 +1300,33 @@ class ScopeParser {
     if (std::regex_match(stmt,
                          std::regex(R"(\(\s*void\s*\)\s*[A-Za-z_]\w*\s*;)")))
       return {};
+    if (std::regex_match(stmt, m,
+                         std::regex(R"(([A-Za-z_]\w*)\s*=\s*([\s\S]*);)")) &&
+        symbols_.addresses.count(m[1])) {
+      const auto rhs = trim(m[2]);
+      symbols_.addresses[m[1]] =
+          symbols_.addresses.count(rhs) ? symbols_.addresses.at(rhs) : rhs;
+      return {};
+    }
     if (std::regex_match(
             stmt, m,
             std::regex(R"(([A-Za-z_]\w*)\s*=\s*([A-Za-z_]\w*)\s*;)"))) {
+      if (symbols_.pairs.count(m[1]) || symbols_.pairs.count(m[2])) {
+        if (!symbols_.pairs.count(m[1]) || !symbols_.pairs.count(m[2]))
+          throw std::runtime_error(
+              "Pair assignment requires two vector_2xvl values");
+        std::vector<AdapterNode> out;
+        for (int i = 0; i < 2; ++i) {
+          AdapterNode n;
+          n.kind = AdapterNode::Kind::Alias;
+          n.dst = {symbols_.pairs.at(m[1])[i]};
+          n.src = {symbols_.pairs.at(m[2])[i]};
+          n.sourceLocation = location(line);
+          n.attributes["register_bitcast"] = true;
+          out.push_back(n);
+        }
+        return out;
+      }
       if (!symbols_.registers.count(m[1]) || !symbols_.registers.count(m[2]))
         throw std::runtime_error(
             "Register alias assignment requires declared vector values: " +
@@ -642,9 +1341,13 @@ class ScopeParser {
     if (std::regex_match(
             stmt, m,
             std::regex(
-                R"(([A-Za-z_]\w*)\s*=\s*(pset_b(?:8|16|32))\s*\(([\s\S]*)\)\s*;)")))
-      return statement(m[2].str() + "(" + m[1].str() + ", " + m[3].str() + ");",
-                       line);
+                R"(([A-Za-z_]\w*)\s*=\s*(pset_b(?:8|16|32)|pge_b(?:8|16|32)|pset_2xvl_b64|movp_b(?:16|32)|plt_b(?:8|16|32)|plt_2xvl_b64|pltm_b(?:8|16|32)|pltm_2xvl_b64)\s*\(([\s\S]*)\)\s*;)"))) {
+      auto args = splitArguments(m[3]);
+      std::string bound = m[1];
+      for (const auto &arg : args)
+        bound += ", " + arg;
+      return statement(m[2].str() + "(" + bound + ");", line);
+    }
     if (std::regex_match(stmt, m,
                          std::regex(R"(SMEM_BAR\s*\.\s*([A-Za-z_]\w*)\s*;)",
                                     std::regex::icase))) {
@@ -668,7 +1371,108 @@ class ScopeParser {
       n.sourceLocation = location(line);
       return {n};
     }
+    addressBindings_.clear();
+    for (size_t i = 0; i < args.size(); ++i)
+      if (symbols_.addressStates.count(trim(args[i])))
+        addressBindings_[static_cast<int>(i)] =
+            symbols_.addressStates.at(trim(args[i]));
+    for (auto &arg : args)
+      if (symbols_.addresses.count(trim(arg))) {
+        auto expr = symbols_.addresses.at(trim(arg));
+        if (expr.empty())
+          throw std::runtime_error("Uninitialized vector_address");
+        arg = expr;
+      }
+    std::smatch immediate;
+    if (std::regex_match(low, immediate, std::regex(R"(vdupi_([su])(8|16))"))) {
+      if (args.size() != 2)
+        throw std::runtime_error("VDUPI requires a vector and an immediate");
+      const auto dtype = std::string(immediate[1] == "s" ? "int" : "uint") +
+                         immediate[2].str();
+      auto value =
+          std::regex_replace(args[1], std::regex(R"(^\s*\([^)]*\)\s*)"), "");
+      auto literal = evaluateInteger(value, integerConstants());
+      if (!literal)
+        throw std::runtime_error("VDUPI requires a constant integer immediate");
+      const auto target = typedRegister(baseIdentifier(args[0]));
+      AdapterNode first;
+      first.name = "VDUPI";
+      first.form = dtype;
+      first.instructionClass = CanonicalInstructionClass::Compute;
+      first.sourceLocation = location(line);
+      first.src = {{std::to_string(*literal & 255),
+                    CanonicalStorageKind::Scalar,
+                    dtype,
+                    {}}};
+      first.dst = {target};
+      std::vector<AdapterNode> out{first};
+      if (immediate[2] == "16") {
+        first.name = "VDUPI_HI";
+        first.src = {
+            target,
+            {std::to_string((static_cast<uint64_t>(*literal) >> 8) & 255),
+             CanonicalStorageKind::Scalar,
+             dtype,
+             {}}};
+        out.push_back(first);
+      }
+      return out;
+    }
     auto op = catalog_.canonicalOpcode(callee);
+    if (op == "VGATHERB" && args.size() == 3)
+      op = "VGATHERB_UNMASKED";
+    if (op == "VLD" && args.size() == 3) {
+      op = "VLDS";
+      auto destination = args[0];
+      if (symbols_.registers.count(baseIdentifier(destination)) &&
+          symbols_.registers.at(baseIdentifier(destination)) == "s4x2")
+        destination = "(vector_s8 &)" + destination;
+      args = {destination, args[1], "0", args[2]};
+    } else if (op == "VLD" && args.size() == 4 &&
+               symbols_.registers.count(baseIdentifier(args[1])) &&
+               catalog_.lookupMemoryMode("VLD", trim(args.back()))) {
+      op = "VLDS";
+      args = {args[0], args[1], args[2], "0", args[3]};
+    }
+    if (low == "vload" || low == "vstore")
+      return memoryWrapper(low, args, line);
+    if (auto lowered = softwareCall(low, args, line))
+      return *lowered;
+    if (op == "VLDU" && args.size() == 5)
+      args.push_back("POST_UPDATE");
+    if (op == "VSTU" && (args.size() != 5 || trim(args[4]) != "POST_UPDATE"))
+      throw std::runtime_error("VSTU requires POST_UPDATE");
+    if (op == "VSTUR" && args.size() == 4) {
+      const auto width =
+          dtypeElementBytes(symbols_.registers.at(baseIdentifier(args[1])));
+      if (!width ||
+          (trim(args[3]) != "POST_UPDATE" && trim(args[3]) != "NO_POST_UPDATE"))
+        throw std::runtime_error("Invalid vstur signature");
+      const auto update = trim(args[3]);
+      args = {args[0], std::to_string(256 / width), args[1], args[2]};
+      if (update == "POST_UPDATE")
+        args.push_back(update);
+    }
+    if (op == "VDUP" && args.size() >= 3) {
+      const bool scalar =
+          symbols_.registers.count(baseIdentifier(args[1])) == 0;
+      const bool modeOk = trim(args.back()) == "MODE_ZEROING" ||
+                          trim(args.back()) == "MODE_MERGING";
+      const bool valid =
+          (args.size() == 4 && scalar && modeOk) ||
+          (args.size() == 5 && !scalar && modeOk &&
+           (trim(args[3]) == "POS_LOWEST" || trim(args[3]) == "POS_HIGHEST"));
+      if (!valid)
+        throw std::runtime_error("Unsupported vdup call variant; expected "
+                                 "scalar or data vector signature");
+      const bool merging = trim(args.back()) == "MODE_MERGING";
+      const bool highest = args.size() == 5 && trim(args[3]) == "POS_HIGHEST";
+      op = std::string(scalar    ? "VDUPS"
+                       : highest ? "VDUP_HIGHEST"
+                                 : "VDUP") +
+           (merging ? "_MERGE" : "");
+      args.resize(3);
+    }
     auto spec = catalog_.lookup(op);
     if (!spec) {
       if (!begins(low, "v") && !begins(low, "pset_"))
@@ -696,14 +1500,30 @@ class ScopeParser {
       n.form = inferForm(op, n.dst, n.src);
       return {n};
     }
+    std::smatch calleeWidth;
+    const bool hasCalleeWidth =
+        std::regex_search(callee, calleeWidth, std::regex(R"(_b(8|16|32)$)"));
+    if (callee == "plt_b8" || callee == "plt_b16" || callee == "plt_b32" ||
+        callee == "plt_2xvl_b64") {
+      if (args.size() != 3 || trim(args[2]) != "POST_UPDATE")
+        throw std::runtime_error(callee +
+                                 " requires a scalar count and POST_UPDATE");
+      args[2] = args[1];
+    }
+    if (op == "VMOV" && (args.size() == 3 || args.size() == 4)) {
+      op = "VMOV_MERGE";
+      spec = catalog_.lookup(op);
+    }
     if (spec->virtualOpcode && spec->formRule == "conversion" &&
         args.size() >= 2) {
-      auto dst = symbols_.registers.find(baseIdentifier(args[0])),
-           src = symbols_.registers.find(baseIdentifier(args[1]));
-      if (dst != symbols_.registers.end() && src != symbols_.registers.end()) {
-        op = catalog_.specializeOpcode(op, compactDtype(src->second) + "_to_" +
-                                               compactDtype(dst->second));
+      const auto form = conversionForm(args);
+      if (!form.empty()) {
+        op = catalog_.specializeOpcode(op, form);
         spec = catalog_.lookup(op);
+        if (spec->virtualOpcode && !begins(spec->opcode, "VFCVT_") &&
+            !begins(spec->opcode, "VSFCVT_") && !begins(spec->opcode, "VSCVT_"))
+          throw std::runtime_error("Unsupported semantic form for " + callee +
+                                   ": " + form);
       }
     }
     std::string memoryMode;
@@ -720,6 +1540,8 @@ class ScopeParser {
       }
     auto bound = bindCall(callee, *spec, args);
     auto &src = bound.first, &dst = bound.second;
+    if (op == "VDUPS_MERGE" && dst.at(0).dtype == "bf16")
+      src.at(0) = temporaryRegister("bf16");
     if (dst.size() > 1) {
       std::set<std::string> ids, dtypes;
       for (const auto &v : dst)
@@ -737,6 +1559,53 @@ class ScopeParser {
             "Multi-result register operands must have matching dtypes");
     }
     auto form = inferForm(op, dst, src);
+    if (op == "VGATHER2") {
+      const auto ref = ubReference(args.at(1));
+      if (ref && symbols_.ubDtypes.count(ref->first))
+        form = scalarDtype(symbols_.ubDtypes.at(ref->first));
+    }
+    if ((spec->instructionClass == CatalogInstructionClass::Compute ||
+         op == "VLDS" || op == "VLD" || op == "VSTS" || op == "VST") &&
+        (spec->formRule == "operand_dtype" ||
+         spec->formRule == "source_dtype")) {
+      const NativeOperandSpec *primary = nullptr;
+      for (const auto &o : spec->operands)
+        if (o.kind == CatalogArgumentKind::Register &&
+            (o.direction == CatalogOperandDirection::Output ||
+             o.direction == CatalogOperandDirection::ReadWrite)) {
+          primary = &o;
+          break;
+        }
+      if (!primary || spec->formRule == "source_dtype")
+        for (const auto &o : spec->operands)
+          if (o.kind == CatalogArgumentKind::Register &&
+              o.direction == CatalogOperandDirection::Input) {
+            primary = &o;
+            break;
+          }
+      std::smatch view;
+      if (primary &&
+          static_cast<size_t>(primary->argumentIndex) < args.size() &&
+          std::regex_search(
+              args[primary->argumentIndex], view,
+              std::regex(
+                  R"(^\s*\(\s*(?:const\s+)?vector_([A-Za-z0-9_]+)\s*&?\s*\))")))
+        form = normalizeDtype(view[1]);
+    }
+    if (spec->formRule == "conversion") {
+      const auto actual = conversionForm(args);
+      if (!actual.empty())
+        form = actual;
+    } else if (spec->fixedForm.find("_to_") != std::string::npos) {
+      const auto actual = conversionForm(args);
+      if (!actual.empty() && actual != spec->fixedForm)
+        throw std::runtime_error(callee + " requires " + spec->fixedForm +
+                                 ", got " + actual);
+    }
+    if (hasCalleeWidth && spec->forms.count("b" + calleeWidth[1].str()))
+      form = "b" + calleeWidth[1].str();
+    if (callee == "plt_2xvl_b64" || callee == "pltm_2xvl_b64")
+      form = "b32";
     if (form.empty())
       for (const auto &o : spec->operands)
         if (o.kind == CatalogArgumentKind::UB &&
@@ -761,8 +1630,62 @@ class ScopeParser {
           !allowed->second.count(trim(args[o.argumentIndex])))
         throw std::runtime_error(callee + " " + form + " argument " + o.name +
                                  " is outside its allowed values");
+    if (spec->virtualOpcode &&
+        (begins(spec->opcode, "VFCVT_") || begins(spec->opcode, "VSFCVT_") ||
+         begins(spec->opcode, "VSCVT_")))
+      return lowerConversionWrapper(*spec, args, src, dst, form, line);
     AdapterNode n;
-    n.name = op;
+    n.name = catalog_.specializeOpcode(op, form);
+    if (op == "PMOV") {
+      // Both CCE predicate-copy forms lower to a single PAND.
+      const auto source = src.at(0);
+      src = {source, source, src.size() == 2 ? src[1] : source};
+    }
+    if (op == "VCADD") {
+      const auto &source = src.at(0).dtype;
+      const auto result = source == "int16"    ? "int32"
+                          : source == "uint16" ? "uint32"
+                                               : source;
+      if (dst.at(0).dtype != result)
+        throw std::runtime_error("VCADD " + source + " requires a " + result +
+                                 " destination");
+    }
+    if (op == "VEXPDIF") {
+      std::vector<std::string> views;
+      for (size_t i = 0; i < 2; ++i) {
+        std::smatch view;
+        views.push_back(
+            std::regex_search(
+                args[i + 1], view,
+                std::regex(R"(^\s*\(\s*vector_([A-Za-z0-9_]+)\s*&?\s*\))"))
+                ? normalizeDtype(view[1])
+                : src.at(i).dtype);
+      }
+      if (dst.at(0).dtype != "fp32" ||
+          (views[0] != "fp16" && views[0] != "fp32") || views[1] != views[0])
+        throw std::runtime_error(
+            "Unsupported semantic form for VEXPDIF: requires matching "
+            "FP16/FP32 sources and an FP32 destination");
+    }
+    if (op == "VMULS" && form == "bf16") {
+      std::string temporary;
+      do {
+        temporary = "__vfsim_vector_" + std::to_string(vectorSerial_++);
+      } while (symbols_.registers.count(temporary) ||
+               symbols_.scalars.count(temporary) ||
+               symbols_.ubNames.count(temporary));
+      symbols_.registers[temporary] = "bf16";
+      AdapterValue scalarVector{temporary, CanonicalStorageKind::Register,
+                                "bf16"};
+      AdapterNode broadcast;
+      broadcast.name = "VDUPS";
+      broadcast.form = "bf16";
+      broadcast.src = {src.at(1), src.at(2)};
+      broadcast.dst = {scalarVector};
+      broadcast.instructionClass = CanonicalInstructionClass::Compute;
+      instructionPrefix_.push_back(std::move(broadcast));
+      src = {src.at(0), scalarVector, src.at(2)};
+    }
     n.form = form;
     n.instructionClass = instructionClass(spec->instructionClass);
     n.src = std::move(src);
@@ -781,9 +1704,38 @@ class ScopeParser {
       n.attributes["align_state_id"] = symbols_.align.at(name);
     }
     n.memoryAccesses = memoryAccess(*spec, args, form);
-    for (auto &p : predicatePrefix_)
+    for (auto &p : instructionPrefix_)
       p.sourceLocation = n.sourceLocation;
-    auto result = std::move(predicatePrefix_);
+    auto result = std::move(instructionPrefix_);
+    bool merging = false;
+    for (const auto &o : spec->operands)
+      merging |= o.name == "mode" &&
+                 static_cast<size_t>(o.argumentIndex) < args.size() &&
+                 trim(args[o.argumentIndex]) == "MODE_MERGING";
+    if (merging && spec->opcode != "VMOV_MERGE") {
+      if (n.dst.size() != 1 ||
+          n.dst[0].storage != CanonicalStorageKind::Register)
+        throw std::runtime_error("Unsupported merging destination for " +
+                                 callee);
+      auto mask = std::find_if(n.src.rbegin(), n.src.rend(), [](const auto &v) {
+        return v.storage == CanonicalStorageKind::PredicateRegister;
+      });
+      if (mask == n.src.rend())
+        throw std::runtime_error("Merging requires a predicate for " + callee);
+      auto destination = n.dst;
+      auto temporary = temporaryRegister(destination[0].dtype);
+      AdapterNode merge;
+      merge.name = "VMOV_MERGE";
+      merge.form = form;
+      merge.instructionClass = CanonicalInstructionClass::Compute;
+      merge.src = {destination[0], temporary, *mask};
+      merge.dst = destination;
+      merge.sourceLocation = n.sourceLocation;
+      n.dst = {temporary};
+      result.push_back(std::move(n));
+      result.push_back(std::move(merge));
+      return result;
+    }
     result.push_back(std::move(n));
     return result;
   }
@@ -853,9 +1805,11 @@ class ScopeParser {
           n.inductionStart = start;
           n.inductionStep = step;
           n.sourceLocation = location(baseLine + lineNumber(text, pos) - 1);
+          loopInductions_.emplace_back(var, start, step);
           n.body =
               block(text.substr(bodyOpen + 1, bodyClose - bodyOpen - 1),
                     variables, baseLine + lineNumber(text, bodyOpen + 1) - 1);
+          loopInductions_.pop_back();
           nodes.push_back(std::move(n));
           unroll = 1;
           pos = bodyClose + 1;
@@ -917,6 +1871,13 @@ public:
           pointerDecl(stmt);
         start = i + 1;
       }
+    collectingDeclarations_ = false;
+    std::vector<std::pair<std::string, std::string>> pairs;
+    for (const auto &[name, dtype] : symbols_.registers)
+      if (dtype == "2xvl_s64" || dtype == "2xvl_u64")
+        pairs.push_back({name, dtype});
+    for (const auto &[name, dtype] : pairs)
+      declarePair(name, dtype);
   }
   AdapterProgram run() {
     AdapterProgram p;

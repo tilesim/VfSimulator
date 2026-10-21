@@ -28,6 +28,6 @@ DINTLV_B32 描述一条 LOAD 的两个 vector 结果，IDU 原子检查目的资
 
 VLDAS/VLDUS 维护加载初始化依赖。VSTUS、PSTU 追加存储对齐组，VSTAS 消费封存组。PSTU 读取谓词源并更新地址状态，其有效载荷、指针推进和 UB 调度预算分别表达。
 
-PLT 可产生 predicate mask 和 scalar remaining；mask 使用谓词资源池。FP16 的 UNPK_B16 与 PK_B32 模式由 Catalog 检查 form、操作数和 span。示例见 [v2_plt_packed_fp16.json](../tests/fixtures/canonical_vf_info/v2_plt_packed_fp16.json)。
+PLT 可产生 predicate mask 和 scalar remaining；mask 使用谓词资源池。FP16 的 UNPK_B16 与 PK_B32 模式由 Catalog 检查 form、操作数和 span。示例见 [v2_plt_packed_fp16.json](../VFtest/canonical/fixtures/v2_plt_packed_fp16.json)。
 
 地址与依赖测试位于 `tests/address_state_test.cpp`、`components_test.cpp` 和 `input_api_test.cpp`。

@@ -1,0 +1,12 @@
+void vf(__ubuf__ uint64_t *input, __ubuf__ uint64_t *output) {
+    __VEC_SCOPE__ {
+        vector_2xvl_u64 data;
+        vector_u32 indices;
+        vector_bool p = pset_b32(PAT_ALL);
+        vload(data, input + 1, ADDRESS_UNALIGNED);
+        vstore(output + 1, data, 63, ADDRESS_UNALIGNED);
+        vci((vector_s32 &)indices, 0, INC_ORDER);
+        vgather2(data, input, indices, p);
+        vscatter(data, output, indices, p);
+    }
+}

@@ -20,6 +20,7 @@ struct AdapterMemoryAccess {
   std::optional<std::string> addressStateId;
   std::string updateMode = "none";
   std::optional<std::string> postUpdateDeltaBytes;
+  std::optional<int64_t> addressUnitBytes;
 };
 struct AdapterNode {
   enum class Kind { Instruction, Loop, Alias, Membar };

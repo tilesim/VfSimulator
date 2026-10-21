@@ -98,6 +98,17 @@ void run(const ParamDB &db) {
     rejected = true;
   }
   require(rejected);
+  for (const auto &kind : {"VV_ALL", "VST_VST"}) {
+    MembarController unit(&db, config);
+    barrier(unit, 3, kind);
+    require(unit.blocks(4, "STORE"));
+    require(unit.blocks(4, "LOAD") == (std::string(kind) == "VV_ALL"));
+    require(!unit.blocks(4, "COMPUTE"));
+    unit.update([](auto, const auto &cls) { return cls == "LOAD"; }, 20);
+    require(unit.empty() == (std::string(kind) == "VST_VST"));
+    unit.update([](auto, auto) { return false; }, 21);
+    require(unit.empty());
+  }
 }
 } // namespace
 

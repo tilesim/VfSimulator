@@ -54,8 +54,7 @@ void LSU::updateReady(int64_t cycle, bool storesOnly) {
     if (storesOnly && u->profile->opClass != "STORE")
       continue;
     if (u->profile->opClass == "LOAD") {
-      u->readyCycle =
-          std::max(db_.isaDefaults().vfStartupCost, u->lsqReadyCycle);
+      u->readyCycle = std::max(regs_.readyCycle(*u), u->lsqReadyCycle);
       auto align = regs_.alignReady(*u);
       if (align)
         u->readyCycle = std::max(u->readyCycle, *align);
@@ -112,6 +111,11 @@ LsuIssueCounts LSU::issue(int64_t cycle, LsuIssueCounts counts,
     if (u->profile->opClass == "STORE" && !u->storeDependenciesResolved &&
         !u->producerOpForStore)
       continue;
+    const auto &resource = u->profile->lsuResource;
+    if (!resource.empty() && cycle < resourceReady_[resource])
+      continue;
+    if (!resource.empty())
+      resourceReady_[resource] = cycle + u->profile->lsuIssueInterval;
     u->startCycle = cycle;
     u->doneCycle = cycle + u->profile->latency;
     u->state = "running";

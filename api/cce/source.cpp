@@ -23,19 +23,32 @@ std::string lower(std::string s) {
 }
 std::string normalizeDtype(const std::string &s) {
   static const std::map<std::string, std::string> aliases{
-      {"f32", "fp32"},      {"float32", "fp32"},  {"f16", "fp16"},
-      {"float16", "fp16"},  {"bfloat16", "bf16"}, {"s32", "int32"},
-      {"i32", "int32"},     {"u32", "uint32"},    {"u16", "uint16"},
-      {"s8", "int8"},       {"u8", "uint8"},      {"boolean", "bool"},
-      {"predicate", "bool"}};
+      {"s16", "int16"},     {"i16", "int16"},    {"s64", "int64"},
+      {"i64", "int64"},     {"u64", "uint64"},   {"f32", "fp32"},
+      {"float32", "fp32"},  {"f16", "fp16"},     {"float16", "fp16"},
+      {"bfloat16", "bf16"}, {"s32", "int32"},    {"i32", "int32"},
+      {"u32", "uint32"},    {"u16", "uint16"},   {"s8", "int8"},
+      {"u8", "uint8"},      {"boolean", "bool"}, {"predicate", "bool"}};
   auto value = lower(trim(s));
   auto it = aliases.find(value);
   return it == aliases.end() ? value : it->second;
 }
 std::string scalarDtype(const std::string &s) {
   static const std::map<std::string, std::string> aliases{
-      {"int", "int32"},  {"unsigned", "uint32"}, {"unsigned int", "uint32"},
-      {"float", "fp32"}, {"half", "fp16"},       {"bfloat16_t", "bf16"}};
+      {"int", "int32"},
+      {"unsigned", "uint32"},
+      {"unsigned int", "uint32"},
+      {"float", "fp32"},
+      {"half", "fp16"},
+      {"__cce_half", "fp16"},
+      {"bfloat16_t", "bf16"},
+      {"float8_e4m3_t", "f8e4m3"},
+      {"float8_e5m2_t", "f8e5m2"},
+      {"float8_e8m0_t", "f8e8m0"},
+      {"hifloat8_t", "hif8"},
+      {"float4_e1m2x2_t", "f4e1m2x2"},
+      {"float4_e2m1x2_t", "f4e2m1x2"},
+      {"int4x2_t", "s4x2"}};
   auto value = lower(trim(s));
   auto it = aliases.find(value);
   if (it != aliases.end())
@@ -46,11 +59,22 @@ std::string scalarDtype(const std::string &s) {
 }
 std::string compactDtype(const std::string &s) {
   static const std::map<std::string, std::string> aliases{
-      {"fp32", "f32"},   {"fp16", "f16"}, {"int32", "s32"}, {"uint32", "u32"},
-      {"uint16", "u16"}, {"int8", "s8"},  {"uint8", "u8"}};
+      {"fp32", "f32"},   {"fp16", "f16"},  {"int32", "s32"}, {"uint32", "u32"},
+      {"uint16", "u16"}, {"int16", "s16"}, {"int8", "s8"},   {"uint8", "u8"},
+      {"int64", "s64"},  {"uint64", "u64"}};
   auto value = normalizeDtype(s);
   auto it = aliases.find(value);
   return it == aliases.end() ? value : it->second;
+}
+int dtypeElementBytes(const std::string &s) {
+  static const std::map<std::string, int> widths{
+      {"fp32", 4},     {"fp16", 2},   {"bf16", 2},   {"int8", 1},
+      {"uint8", 1},    {"int16", 2},  {"uint16", 2}, {"int32", 4},
+      {"uint32", 4},   {"int64", 8},  {"uint64", 8}, {"f8e4m3", 1},
+      {"f8e5m2", 1},   {"f8e8m0", 1}, {"hif8", 1},   {"f4e1m2x2", 1},
+      {"f4e2m1x2", 1}, {"s4x2", 1}};
+  const auto it = widths.find(normalizeDtype(s));
+  return it == widths.end() ? 0 : it->second;
 }
 std::string normalizeForm(const std::string &s) {
   auto value = lower(trim(s));
@@ -208,7 +232,7 @@ std::vector<VFScope> extractScopes(const std::string &clean,
       if (std::regex_search(
               raw, dtype,
               std::regex(
-                  R"(__ubuf__\s+([A-Za-z_]\w*)\s*\*\s*([A-Za-z_]\w*))")) ||
+                  R"(__ubuf__\s+([A-Za-z_]\w*)\s*\*\s*&?\s*([A-Za-z_]\w*))")) ||
           std::regex_match(
               raw, dtype,
               std::regex(

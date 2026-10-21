@@ -11,8 +11,8 @@ Canonical JSON、指令 Catalog、参数配置和测试输入随仓库提供。
 两种输入在 API 出口完成通用语义校验。
 `CoreVfCostModel` 构造时加载参数快照，`runVfInfo()` 接收校验成功的对象，
 合并 VF 配置覆盖、准备指令并运行仿真。
-`InputAPI::loadCce(path, kernelName, loopParams)` 解析 CCE/DSL，`newBuilder()` 返回显式构造工具。
-`api/cce/` 负责源文件扫描、声明和 Catalog 调用解析、规范化、仿射表达式及值版本化；
+`InputAPI::loadCce(path, kernelName, loopParams)` 解析 CCE，`newBuilder()` 返回显式构造工具。
+`api/cce/` 负责源文件扫描、Catalog 调用绑定、软件展开、规范化、仿射表达式及值版本化；
 `api/programmatic/` 负责 Builder 注册和循环作用域。
 `api/json/serialization.*` 提供 `decodeCanonicalVfInfoJson()` 与 `encodeCanonicalVfInfoJson()`。
 
@@ -26,7 +26,7 @@ const auto result = simulator.runVfInfo(vf);
 const auto cycles = result.vfEndCycle;
 ```
 
-Core 的执行准备检查显式依赖、控制指令和循环展开等执行能力。
+Core 的执行准备检查控制指令、循环展开等执行能力，并构造内部指令和值信息。
 存储类别由 CanonicalValue 的 storage 字段确定。
 `canonical_dynamic_instruction_limit` 默认限制展开后的指令数量为 20,000；
 值为 0 时关闭限制，适用于显式控制规模的回归程序。
@@ -38,7 +38,7 @@ VfSimulator/
   CMakeLists.txt
   api/
     input_api.h/.cpp
-    cce/             CCE 源码解析、规范化与定义版本化
+    cce/             CCE 解析、CANN 软件展开、规范化与定义版本化
     programmatic/    Canonical Builder 与循环作用域
     common/          Canonical、Catalog、诊断与校验
     json/            JSON 解析与 Canonical 编解码
@@ -51,6 +51,8 @@ VfSimulator/
     trace/           事件记录、结果写出与 Perfetto 导出
   cli/               命令行入口
   tests/             C++ 组件与契约测试
+  VFtest/            CCE、Canonical 和 JSON 固定输入
+  configs/           语义、软件展开与微架构参数
 ```
 
 
@@ -89,8 +91,9 @@ Uop 引用本次运行的 ParamDB 持有的只读 InstructionProfile；指令类
 
 `api/common/` 定义语义类型、Catalog、诊断和校验；
 `api/json/` 负责 JSON 解析及 Canonical 解码；
-`api/generated/` 存放编译进库的数据表，与 `configs/instruction_catalog.json`
-及 `configs/uarch_override_schema.json` 配套维护。普通构建直接使用这些数据表。
+`api/generated/` 存放编译进库的数据表，与 `configs/instruction_catalog.json`、
+`configs/cce_lowering.json` 及 `configs/uarch_override_schema.json` 配套维护。
+普通构建直接使用这些数据表。
 
 ## 周期推进
 
@@ -106,7 +109,7 @@ cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DVFSIM_BUILD_TESTS=ON
 cmake --build build -j4
 ctest --test-dir build --output-on-failure
 build/vfsim_native_json_runner \
-  --trace tests/fixtures/canonical_vf_info/v1_valid_loop.json \
+  --trace VFtest/canonical/fixtures/v1_valid_loop.json \
   --out-dir /tmp/vfsim-native
 ```
 

@@ -4,7 +4,8 @@
 #include "api/common/instruction_validation.h"
 namespace vfsim {
 namespace {
-std::optional<CatalogInstructionClass> catalogClass(CanonicalInstructionClass value) {
+std::optional<CatalogInstructionClass>
+catalogClass(CanonicalInstructionClass value) {
   switch (value) {
   case CanonicalInstructionClass::Load:
     return CatalogInstructionClass::Load;
@@ -51,18 +52,20 @@ const NativeInstructionSpec *validateInstructionForm(
       mode != inst.attributes.end()) {
     const auto *name = std::get_if<std::string>(&mode->second);
     const auto *variant =
-        name ? defaultInstructionCatalog().lookupMemoryMode(inst.opcode,
-                                                            *name)
+        name ? defaultInstructionCatalog().lookupMemoryMode(inst.opcode, *name)
              : nullptr;
     if (!variant)
-      error("unsupported_catalog_mode", "Unknown Catalog memory mode",
-            nodePath, inst.sourceLocation);
+      error("unsupported_catalog_mode", "Unknown Catalog memory mode", nodePath,
+            inst.sourceLocation);
     else {
       catalogSpec = variant;
+      const auto span = variant->memorySpanByForm.find(inst.form);
+      const auto expected = span == variant->memorySpanByForm.end()
+                                ? variant->memorySpan
+                                : span->second;
       for (const auto *operands : {&inst.inputs, &inst.outputs})
         for (const auto &operand : *operands)
-          if (operand.memoryAccess &&
-              operand.memoryAccess->span != variant->memorySpan)
+          if (operand.memoryAccess && operand.memoryAccess->span != expected)
             error("catalog_memory_span_mismatch",
                   "Memory span conflicts with Catalog mode", nodePath,
                   inst.sourceLocation);
@@ -72,31 +75,27 @@ const NativeInstructionSpec *validateInstructionForm(
     for (const auto &operand : *operands) {
       auto value = vfInfo.values.find(operand.valueId);
       if (!catalogSpec && value != vfInfo.values.end() &&
-          value->second.storage ==
-              CanonicalStorageKind::PredicateRegister)
-        error(
-            "unsupported_predicate_semantics",
-            "Predicate instructions require a complete Catalog signature",
-            nodePath, inst.sourceLocation);
+          value->second.storage == CanonicalStorageKind::PredicateRegister)
+        error("unsupported_predicate_semantics",
+              "Predicate instructions require a complete Catalog signature",
+              nodePath, inst.sourceLocation);
     }
   for (const auto &[key, value] : inst.attributes)
     if (const auto *text = std::get_if<std::string>(&value);
         text && *text == "MODE_MERGING")
       error("unsupported_merging_mode",
-            "MODE_MERGING requires an explicit old destination input",
-            nodePath, inst.sourceLocation);
+            "MODE_MERGING requires an explicit old destination input", nodePath,
+            inst.sourceLocation);
   if (catalogSpec) {
     for (const auto *operands : {&inst.inputs, &inst.outputs})
       for (const auto &operand : *operands) {
         if (!operand.memoryAccess)
           continue;
         const auto &memory = *operand.memoryAccess;
-        auto delta =
-            catalogSpec->implicitPostUpdateBytes.find(inst.form);
+        auto delta = catalogSpec->implicitPostUpdateBytes.find(inst.form);
         if (delta != catalogSpec->implicitPostUpdateBytes.end() &&
-            (memory.updateMode != "post_update" ||
-             !memory.addressStateId || memory.addressStateId->empty() ||
-             !memory.postUpdateDeltaBytes ||
+            (memory.updateMode != "post_update" || !memory.addressStateId ||
+             memory.addressStateId->empty() || !memory.postUpdateDeltaBytes ||
              memory.postUpdateDeltaBytes->constant != delta->second ||
              !memory.postUpdateDeltaBytes->terms.empty()))
           error("catalog_implicit_update_mismatch",
@@ -109,6 +108,11 @@ const NativeInstructionSpec *validateInstructionForm(
           error("catalog_memory_span_mismatch",
                 "Memory span conflicts with Catalog form", nodePath,
                 inst.sourceLocation);
+        if (memory.addressUnitBytes.value_or(0) !=
+            catalogSpec->memoryAddressUnitBytes)
+          error("catalog_memory_address_unit_mismatch",
+                "Address unit conflicts with Catalog", nodePath,
+                inst.sourceLocation);
       }
     if (inst.opcode != catalogSpec->opcode)
       error("noncanonical_opcode",
@@ -117,7 +121,11 @@ const NativeInstructionSpec *validateInstructionForm(
     if (const auto cls = catalogClass(inst.instructionClass);
         cls && *cls != catalogSpec->instructionClass)
       error("catalog_instruction_class_mismatch",
-            "Instruction class conflicts with Catalog semantics",
+            "Instruction class conflicts with Catalog semantics", nodePath,
+            inst.sourceLocation);
+    if (catalogSpec->virtualOpcode)
+      error("catalog_lowering_required",
+            "Virtual instruction must be lowered before Canonical input",
             nodePath, inst.sourceLocation);
     const bool validForm = catalogSpec->virtualOpcode ||
                            catalogSpec->forms.count(inst.form) ||
@@ -133,17 +141,15 @@ const NativeInstructionSpec *validateInstructionForm(
             "Virtual opcode/form must use specialized opcode", nodePath,
             inst.sourceLocation);
     if (!catalogSpec->alignStateOperation.empty()) {
-      const auto operation =
-          inst.attributes.find("align_state_operation");
+      const auto operation = inst.attributes.find("align_state_operation");
       const auto state = inst.attributes.find("align_state_id");
       const auto *operationValue =
           operation == inst.attributes.end()
               ? nullptr
               : std::get_if<std::string>(&operation->second);
-      const auto *stateValue =
-          state == inst.attributes.end()
-              ? nullptr
-              : std::get_if<std::string>(&state->second);
+      const auto *stateValue = state == inst.attributes.end()
+                                   ? nullptr
+                                   : std::get_if<std::string>(&state->second);
       if (operationValue == nullptr ||
           *operationValue != catalogSpec->alignStateOperation ||
           stateValue == nullptr || stateValue->empty())
@@ -156,10 +162,11 @@ const NativeInstructionSpec *validateInstructionForm(
   return catalogSpec;
 }
 
-void validateInstructionOperands(
-    const CanonicalVfInfo &vfInfo, const CanonicalInstruction &inst,
-    const NativeInstructionSpec *catalogSpec, const std::string &nodePath,
-    const InstructionError &error) {
+void validateInstructionOperands(const CanonicalVfInfo &vfInfo,
+                                 const CanonicalInstruction &inst,
+                                 const NativeInstructionSpec *catalogSpec,
+                                 const std::string &nodePath,
+                                 const InstructionError &error) {
   if (catalogSpec) {
     std::vector<const NativeOperandSpec *> expectedInputs;
     std::vector<const NativeOperandSpec *> expectedOutputs;
@@ -173,18 +180,16 @@ void validateInstructionOperands(
           operand.direction == CatalogOperandDirection::ReadWrite)
         expectedOutputs.push_back(&operand);
     }
-    auto actualOperands =
-        [](const std::vector<CanonicalOperand> &operands) {
-          std::vector<const CanonicalOperand *> result;
-          for (const auto &operand : operands)
-            if (operand.role != CanonicalOperandRole::Config)
-              result.push_back(&operand);
-          return result;
-        };
+    auto actualOperands = [](const std::vector<CanonicalOperand> &operands) {
+      std::vector<const CanonicalOperand *> result;
+      for (const auto &operand : operands)
+        if (operand.role != CanonicalOperandRole::Config)
+          result.push_back(&operand);
+      return result;
+    };
     const auto actualInputs = actualOperands(inst.inputs);
     const auto actualOutputs = actualOperands(inst.outputs);
-    auto validateCatalogOperands = [&](const auto &actual,
-                                       const auto &expected,
+    auto validateCatalogOperands = [&](const auto &actual, const auto &expected,
                                        const std::string &direction) {
       if (actual.size() != expected.size()) {
         error("catalog_operand_count_mismatch",
@@ -197,33 +202,30 @@ void validateInstructionOperands(
         const auto &operand = *actual[operandIndex];
         const auto &operandSpec = *expected[operandIndex];
         const std::string operandPath = nodePath + "." + direction + "[" +
-                                        std::to_string(operandIndex) +
-                                        "]";
+                                        std::to_string(operandIndex) + "]";
         const auto expectedRole =
             direction == "inputs" &&
-                    operandSpec.direction ==
-                        CatalogOperandDirection::ReadWrite
+                    operandSpec.direction == CatalogOperandDirection::ReadWrite
                 ? "source"
                 : operandSpec.role;
         if (operandRoleName(operand.role) != expectedRole)
           error("catalog_operand_role_mismatch",
-                "Operand role conflicts with Catalog signature",
-                operandPath, inst.sourceLocation);
+                "Operand role conflicts with Catalog signature", operandPath,
+                inst.sourceLocation);
         auto value = vfInfo.values.find(operand.valueId);
         if (value == vfInfo.values.end())
           continue;
         if (!operandSpec.allowedDtypes.empty() &&
             !operandSpec.allowedDtypes.count(value->second.dtype))
           error("catalog_operand_dtype_mismatch",
-                "Operand dtype conflicts with Catalog signature",
-                operandPath, inst.sourceLocation);
+                "Operand dtype conflicts with Catalog signature", operandPath,
+                inst.sourceLocation);
         if (catalogSpec->memorySpan &&
-            (value->second.storage == CanonicalStorageKind::Register ||
-             value->second.storage == CanonicalStorageKind::UB) &&
+            value->second.storage == CanonicalStorageKind::Register &&
             !catalogSpec->forms.count(value->second.dtype))
           error("catalog_operand_dtype_mismatch",
-                "Operand dtype conflicts with Catalog memory mode",
-                operandPath, inst.sourceLocation);
+                "Operand dtype conflicts with Catalog memory mode", operandPath,
+                inst.sourceLocation);
         const CanonicalStorageKind storage = value->second.storage;
         bool storageMatches = true;
         switch (operandSpec.kind) {
@@ -241,8 +243,7 @@ void validateInstructionOperands(
                            storage == CanonicalStorageKind::Scalar;
           break;
         case CatalogArgumentKind::Predicate:
-          storageMatches =
-              storage == CanonicalStorageKind::PredicateRegister;
+          storageMatches = storage == CanonicalStorageKind::PredicateRegister;
           break;
         case CatalogArgumentKind::Config:
         case CatalogArgumentKind::AlignState:
@@ -250,8 +251,8 @@ void validateInstructionOperands(
         }
         if (!storageMatches)
           error("catalog_operand_storage_mismatch",
-                "Operand storage conflicts with Catalog signature",
-                operandPath, inst.sourceLocation);
+                "Operand storage conflicts with Catalog signature", operandPath,
+                inst.sourceLocation);
       }
     };
     validateCatalogOperands(actualInputs, expectedInputs, "inputs");

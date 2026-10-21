@@ -1,0 +1,20 @@
+void vf(__ubuf__ int16_t *input, __ubuf__ uint16_t *output, bfloat16_t factor) {
+    __VEC_SCOPE__ {
+        vector_bool p = pset_b16(PAT_ALL);
+        vector_bool q = pset_b32(PAT_ALL);
+        vector_bool carry;
+        vector_s16 a, b;
+        vector_u16 u;
+        vector_bf16 x, y;
+        vector_u32 lo, hi, c0, c1;
+        vlds(a, input, 0, NORM);
+        vneg(b, a, p, MODE_UNKNOWN);
+        vshl(u, u, b, p);
+        vmula(a, a, b, p);
+        vaddc(carry, c0, c0, c1, q);
+        vaddcs(carry, c1, c0, c1, carry, q);
+        vmull(lo, hi, c0, c1, q);
+        vmuls(y, x, factor, p);
+        vsts(u, output, 0, NORM_B16, p);
+    }
+}

@@ -1,0 +1,12 @@
+void vf(__ubuf__ float *output) {
+    __VEC_SCOPE__ {
+        vector_s8 bytes;
+        vector_s16 halves;
+        vector_f32 result;
+        vector_bool p = pset_b16(PAT_ALL);
+        vdupi_s8(bytes, -7);
+        vdupi_s16(halves, -1234);
+        vexpdif(result, (vector_f16)halves, (vector_f16)halves, p, PART_ODD);
+        vsts(result, output, 0, NORM_B32, p);
+    }
+}

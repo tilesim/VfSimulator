@@ -62,7 +62,7 @@ int main() {
   }
 
   const auto &instructionCatalog = defaultInstructionCatalog();
-  if (instructionCatalog.canonicalOpcode("vld") != "VLDS" ||
+  if (instructionCatalog.canonicalOpcode("vld") != "VLD" ||
       instructionCatalog.canonicalOpcode("vexpdif") != "VEXPDIF" ||
       instructionCatalog.specializeOpcode("vcvt", "f32_to_bf16") !=
           "VCVT_F32_TO_BF16" ||
@@ -91,24 +91,25 @@ int main() {
       instructionCatalog.lookup("VSSTB")
               ->operands[2]
               .postUpdateDeltaUnitBytes != 32 ||
-      instructionCatalog.lookup("VDUP")
-              ->callVariants[1]
-              .argumentValues.at(3)
-              .count("POS_LOWEST") != 1 ||
+      instructionCatalog.lookup("VDUP")->operands[1].kind !=
+          CatalogArgumentKind::Register ||
+      instructionCatalog.lookup("VDUPS")->operands[1].kind !=
+          CatalogArgumentKind::Scalar ||
       instructionCatalog.lookup("VSTUS")->alignStateOperation != "append" ||
       instructionCatalog.lookup("VSTAS")->alignStateOperation != "consume" ||
       instructionCatalog.lookup("VSTAS")->operands.front().kind !=
           CatalogArgumentKind::AlignState)
     throw std::runtime_error("native generated instruction catalog mismatch");
 
-  auto packed = decodeCanonicalVfInfoJson(json::parseFile(
-      std::filesystem::path(VFSIM_SOURCE_ROOT) /
-      "tests/fixtures/canonical_vf_info/v2_plt_packed_fp16.json"));
+  auto packed = decodeCanonicalVfInfoJson(
+      json::parseFile(std::filesystem::path(VFSIM_SOURCE_ROOT) /
+                      "VFtest/canonical/fixtures/v2_plt_packed_fp16.json"));
   if (!validateCanonicalVfInfo(packed).ok())
     throw std::runtime_error("PLT/packed fp16 fixture rejected");
   if (instructionCatalog.lookupMemoryMode("VSTS", "PK_B32")->ubTransferBytes !=
-          256 ||
-      instructionCatalog.lookupMemoryMode("VLDS", "UNPK_B16")->memorySpan != 64)
+          128 ||
+      instructionCatalog.lookupMemoryMode("VLDS", "UNPK_B16")->memorySpan !=
+          128)
     throw std::runtime_error("Packed payload/transaction width mismatch");
   packed.values.at("count.0").dtype = "fp32";
   if (validateCanonicalVfInfo(packed).ok())
@@ -116,7 +117,7 @@ int main() {
 
   const auto sharedFixtureJson =
       json::parseFile(std::filesystem::path(VFSIM_SOURCE_ROOT) /
-                      "tests/fixtures/canonical_vf_info/v1_valid_loop.json");
+                      "VFtest/canonical/fixtures/v1_valid_loop.json");
   CanonicalVfInfo canonicalContract =
       decodeCanonicalVfInfoJson(sharedFixtureJson);
   if (!validateCanonicalVfInfo(canonicalContract).ok())
@@ -148,9 +149,9 @@ int main() {
                      "catalog_align_state_mismatch"))
     throw std::runtime_error(
         "native validator accepted VSTAS without align-state attributes");
-  const auto sharedCarriedJson = json::parseFile(
-      std::filesystem::path(VFSIM_SOURCE_ROOT) /
-      "tests/fixtures/canonical_vf_info/v1_valid_loop_carried.json");
+  const auto sharedCarriedJson =
+      json::parseFile(std::filesystem::path(VFSIM_SOURCE_ROOT) /
+                      "VFtest/canonical/fixtures/v1_valid_loop_carried.json");
   CanonicalVfInfo canonicalCarriedContract =
       decodeCanonicalVfInfoJson(sharedCarriedJson);
   if (!validateCanonicalVfInfo(canonicalCarriedContract).ok())
@@ -211,9 +212,9 @@ int main() {
         "cycles=" +
         std::to_string(canonicalCarriedResult.cyclesExecuted) +
         ", end=" + std::to_string(canonicalCarriedResult.vfEndCycle));
-  const auto topBlockJson = json::parseFile(
-      std::filesystem::path(VFSIM_SOURCE_ROOT) /
-      "tests/fixtures/canonical_vf_info/v1_valid_top_blocks.json");
+  const auto topBlockJson =
+      json::parseFile(std::filesystem::path(VFSIM_SOURCE_ROOT) /
+                      "VFtest/canonical/fixtures/v1_valid_top_blocks.json");
   const CanonicalVfInfo topBlockContract =
       decodeCanonicalVfInfoJson(topBlockJson);
   const PreparedProgram topBlockRuntime =
@@ -235,7 +236,7 @@ int main() {
         "native canonical loop-epilogue-membar-loop did not complete");
   const auto emptyTopBlockJson = json::parseFile(
       std::filesystem::path(VFSIM_SOURCE_ROOT) /
-      "tests/fixtures/canonical_vf_info/v1_valid_empty_top_block.json");
+      "VFtest/canonical/fixtures/v1_valid_empty_top_block.json");
   const CanonicalVfInfo emptyTopBlockContract =
       decodeCanonicalVfInfoJson(emptyTopBlockJson);
   const PreparedProgram emptyTopBlockRuntime =
@@ -395,7 +396,7 @@ int main() {
   CanonicalInstruction catalogMismatch =
       std::get<CanonicalInstruction>(catalogLoop.body.front().payload);
   catalogMismatch.opcode = "VEXPDIF";
-  catalogMismatch.form = "fp16";
+  catalogMismatch.form = "bf16";
   catalogLoop.body.front() =
       CanonicalNode::makeInstruction(std::move(catalogMismatch));
   catalogContract.context.front() =
@@ -440,9 +441,9 @@ int main() {
       invalidResult.diagnostics.back().code != "missing_membar_type")
     throw std::runtime_error("missing native Membar type was not diagnosed");
 
-  const auto sharedInvalidJson = json::parseFile(
-      std::filesystem::path(VFSIM_SOURCE_ROOT) /
-      "tests/fixtures/canonical_vf_info/v1_invalid_loop_scope.json");
+  const auto sharedInvalidJson =
+      json::parseFile(std::filesystem::path(VFSIM_SOURCE_ROOT) /
+                      "VFtest/canonical/fixtures/v1_invalid_loop_scope.json");
   const auto sharedInvalidResult =
       validateCanonicalVfInfo(decodeCanonicalVfInfoJson(sharedInvalidJson));
   if (sharedInvalidResult.ok() || sharedInvalidResult.diagnostics.size() != 1 ||

@@ -70,7 +70,7 @@ int main(int argc, char **argv) {
         std::filesystem::path(VFSIM_SOURCE_ROOT).lexically_normal();
     auto path = args.ccePath.empty() ? args.tracePath : args.ccePath;
     if (path.empty())
-      path = "tests/fixtures/canonical_vf_info/v1_valid_loop.json";
+      path = "VFtest/canonical/fixtures/v1_valid_loop.json";
     if (!path.is_absolute())
       path = root / path;
     const auto vf = args.ccePath.empty()

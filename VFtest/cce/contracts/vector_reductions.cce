@@ -1,0 +1,30 @@
+void vector_reductions(__ubuf__ int16_t *signed_input,
+                       __ubuf__ uint16_t *unsigned_input,
+                       __ubuf__ float *float_input,
+                       __ubuf__ int32_t *signed_output,
+                       __ubuf__ uint32_t *unsigned_output,
+                       __ubuf__ float *float_output) {
+    __VEC_SCOPE__ {
+        vector_bool p16 = pset_b16(PAT_ALL);
+        vector_bool p32 = pset_b32(PAT_ALL);
+        vector_s16 s16, s16_group;
+        vector_u16 u16, u16_group;
+        vector_s32 s32_sum;
+        vector_u32 u32_sum;
+        vector_f32 f32, f32_group, f32_pair, f32_sum;
+        vlds(s16, signed_input, 0, NORM);
+        vlds(u16, unsigned_input, 0, NORM);
+        vlds(f32, float_input, 0, NORM);
+        vcadd(s32_sum, s16, p16);
+        vcadd(u32_sum, u16, p16, MODE_UNKNOWN);
+        vcgadd(s16_group, s16, p16, MODE_ZEROING);
+        vcgmin(u16_group, u16, p16);
+        vcgmax(f32_group, f32, p32, MODE_UNKNOWN);
+        vcpadd(f32_pair, f32, p32, MODE_ZEROING);
+        vcadd(f32_sum, f32_pair, p32, MODE_ZEROING);
+        vsts(s32_sum, signed_output, 0, NORM_B32, p32);
+        vsts(u32_sum, unsigned_output, 0, NORM_B32, p32);
+        vsts(f32_group, float_output, 0, NORM_B32, p32);
+        vsts(f32_sum, float_output, 64, NORM_B32, p32);
+    }
+}

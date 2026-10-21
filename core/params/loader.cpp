@@ -56,6 +56,17 @@ std::string qualifyOp(const std::string &op, const std::string &form) {
 InstructionProfile readInstructionProfile(const JsonValue::Object &object) {
   InstructionProfile cfg;
   cfg.latency = readIntField(object, "latency");
+  if (object.count("align_state_latency")) {
+    cfg.alignStateLatency = readIntField(object, "align_state_latency");
+    if (cfg.alignStateLatency < 0)
+      throw std::runtime_error("align_state_latency must be nonnegative");
+  }
+  cfg.lsuResource = readStringField(object, "lsu_resource");
+  if (object.count("lsu_issue_interval")) {
+    cfg.lsuIssueInterval = readIntField(object, "lsu_issue_interval");
+    if (cfg.lsuIssueInterval < 1)
+      throw std::runtime_error("lsu_issue_interval must be positive");
+  }
   cfg.fuType = readStringField(object, "EXU");
   cfg.dispatchExu = readStringField(object, "dispatch_exu");
   cfg.opClass = readStringField(object, "op_class");
@@ -143,6 +154,16 @@ ParamBundle loadParameters(const std::filesystem::path &baseDir) {
                                  " must be an object");
       auto &dtypeMap = bundle.isa[opName];
       const auto &opObject = opValue.asObject();
+      if (const auto *modes = findKey(opObject, "memory_mode_latency")) {
+        if (!modes->isObject())
+          throw std::runtime_error("memory_mode_latency must be an object");
+        for (const auto &[mode, latency] : modes->asObject()) {
+          if (!latency.isInt() || latency.asInt() < 0)
+            throw std::runtime_error(
+                "memory_mode_latency must contain nonnegative integers");
+          bundle.memoryModeLatency[opName][mode] = latency.asInt();
+        }
+      }
       const std::string inheritedOpClass =
           readStringField(opObject, "op_class");
       if (const JsonValue *forms = findKey(opObject, "forms")) {

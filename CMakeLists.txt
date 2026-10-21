@@ -14,6 +14,7 @@ add_library(vfsim_native_core STATIC
   api/cce/affine.cpp
   api/cce/normalization.cpp
   api/cce/parser.cpp
+  api/cce/software.cpp
   api/cce/value_versioning.cpp
   api/cce/adapter.cpp
   api/programmatic/builder.cpp

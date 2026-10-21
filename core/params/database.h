@@ -37,9 +37,10 @@ public:
   }
 
   bool hasInst(const std::string &op, const std::string &dtype) const;
-  const InstructionProfile &
-  inst(const std::string &op, const std::string &dtype,
-       const std::string &instructionClass = {}) const;
+  const InstructionProfile &inst(const std::string &op,
+                                 const std::string &dtype,
+                                 const std::string &instructionClass = {},
+                                 const std::string &memoryMode = {}) const;
   void recordWarning(const std::string &kind,
                      std::map<std::string, json::Value> fields = {}) const;
   std::vector<ModelWarning> warnings() const;

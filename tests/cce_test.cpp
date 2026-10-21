@@ -109,6 +109,10 @@ void catalogBinding(Inputs &in) {
   in.rejects(scope("mask=pset_b32(PAT_ALL);vdup(a,b,mask,POS_LOWEST);"),
              "variant");
   in.rejects(scope("vlds(a,p,0,123);"), "configuration");
+  in.rejects("void vf(__ubuf__ int16_t *p){__VEC_SCOPE__{"
+             "vector_s16 a,out;vector_bool mask=pset_b16(PAT_ALL);"
+             "vlds(a,p,0,NORM);vcadd(out,a,mask);}}",
+             "int32 destination");
 }
 
 void valueAliases(Inputs &in) {
@@ -224,7 +228,7 @@ void packedAndConversions(Inputs &in) {
   require(load.outputs.size() == 2 &&
               std::get<std::string>(load.attributes.at("catalog_mode")) ==
                   "DINTLV_B32" &&
-              load.inputs[0].memoryAccess->span == 128,
+              load.inputs[0].memoryAccess->span == 512,
           "Packed loads must retain multiple results and explicit spans");
   auto cvt = in.parse(
       "void vf(){__VEC_SCOPE__{vector_f32 a;vector_f16 b;"
@@ -255,13 +259,57 @@ json::Value normalizeSourcePaths(const json::Value &value) {
   return value;
 }
 
+void predicateMemoryAndMasks(Inputs &in) {
+  const auto literal = in.parse(
+      scope("vector_f32 f;mask=pset_b32(PAT_ALL);vadds(a,b,1.25f,mask);"));
+  const auto &scalar = inst(literal.context[1]).inputs[1];
+  require(literal.values.at(scalar.valueId).storage ==
+              CanonicalStorageKind::Scalar,
+          "Floating suffix must not bind to a vector named f");
+  auto vf = in.parse("void vf(__ubuf__ uint32_t *spill){__VEC_SCOPE__{"
+                     "vector_bool p;__ubuf__ uint32_t *slot=spill+8;"
+                     "plds(p,slot,-32,NORM);psts(p,slot,32,NORM);}}");
+  const auto &load = inst(vf.context[0]);
+  const auto &store = inst(vf.context[1]);
+  require(load.inputs[0].memoryAccess->offset.constant == 0 &&
+              store.outputs[0].memoryAccess->offset.constant == 64 &&
+              load.inputs[0].memoryAccess->addressUnitBytes == 1 &&
+              load.inputs[0].memoryAccess->span == 32,
+          "Predicate spill pointer aliases and byte offsets must use distinct "
+          "units");
+  for (const auto *body :
+       {"movp_b32(a);", "plds(a,p,0,NORM);",
+        "plds(mask,p,0,NORM,INVALID_UPDATE);", "plds(mask,p,0,BRC_B32);"})
+    in.rejects(scope(body), "");
+}
+
 void canonicalContractFixtures() {
   const auto root =
-      std::filesystem::path(VFSIM_SOURCE_ROOT) / "tests/fixtures/cce";
-  for (const auto *name :
-       {"mixed", "alias", "packed", "post_update", "align", "conversion"}) {
+      std::filesystem::path(VFSIM_SOURCE_ROOT) / "VFtest/cce/contracts";
+  for (const auto *name : {"mixed",
+                           "alias",
+                           "packed",
+                           "post_update",
+                           "align",
+                           "conversion",
+                           "movp",
+                           "predicate_spill",
+                           "predicate_logic",
+                           "ordinary_vector_types",
+                           "vector_reductions",
+                           "vector_conversions",
+                           "vector_conversion_views",
+                           "vector_a5_address",
+                           "vector_a5_immediate",
+                           "vector_a5_memory_wrappers",
+                           "vector_a5_predicates",
+                           "vector_a5_software",
+                           "vector_a5_distributions",
+                           "vector_a5_predicate_memory"}) {
     const auto vf = InputAPI::loadCce(root / (std::string(name) + ".cce"));
-    const auto expected = json::parseFile(root / (std::string(name) + ".json"));
+    const auto expected = json::parseFile(
+        std::filesystem::path(VFSIM_SOURCE_ROOT) /
+        "VFtest/canonical/cce_expected" / (std::string(name) + ".json"));
     require(normalizeSourcePaths(encodeCanonicalVfInfoJson(vf)) == expected,
             "CCE Canonical contract fixture mismatch: " + std::string(name));
   }
@@ -278,5 +326,6 @@ int main() {
   predicateValues(inputs);
   alignState(inputs);
   packedAndConversions(inputs);
+  predicateMemoryAndMasks(inputs);
   canonicalContractFixtures();
 }

@@ -56,7 +56,7 @@ private:
     bool released = false;
     int64_t availableCycle = 0;
     std::shared_ptr<Barrier> previous;
-    std::shared_ptr<LsuProgress> predecessors;
+    std::vector<std::shared_ptr<LsuProgress>> predecessors;
     std::optional<int64_t> issueCycle;
     std::optional<int64_t> releaseCycle;
     std::optional<int64_t> retireCycle;

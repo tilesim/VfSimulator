@@ -1,0 +1,14 @@
+void vf(__ubuf__ uint32_t *spill, __ubuf__ float *out) {
+    __VEC_SCOPE__ {
+        __ubuf__ uint32_t *slot = spill + 8;
+        vector_bool p = pset_b32(PAT_ALL);
+        vector_bool q;
+        vector_f32 x;
+        psts(p, slot, -32, NORM);
+        mem_bar(VST_VLD);
+        plds(q, slot, -32, NORM);
+        psts(q, slot, 32, NORM);
+        vdup(x, 1.0f, q, MODE_ZEROING);
+        vsts(x, out, 0, NORM_B32, p);
+    }
+}

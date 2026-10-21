@@ -1,0 +1,394 @@
+{
+  "schema_version": 2,
+  "context": [
+    {
+      "kind": "instruction",
+      "instruction_id": "instruction.0",
+      "opcode": "PSET_B8",
+      "instruction_class": "compute",
+      "form": "b8",
+      "inputs": [],
+      "outputs": [
+        {
+          "value_id": "all.def0",
+          "role": "destination",
+          "dtype": "bool",
+          "memory_access": null
+        }
+      ],
+      "attributes": {},
+      "source_location": {
+        "source": "vf",
+        "line": 3,
+        "column": null,
+        "path": "<cce>"
+      }
+    },
+    {
+      "kind": "instruction",
+      "instruction_id": "instruction.1",
+      "opcode": "PSET_B32",
+      "instruction_class": "compute",
+      "form": "b32",
+      "inputs": [],
+      "outputs": [
+        {
+          "value_id": "partial.def1",
+          "role": "destination",
+          "dtype": "bool",
+          "memory_access": null
+        }
+      ],
+      "attributes": {},
+      "source_location": {
+        "source": "vf",
+        "line": 4,
+        "column": null,
+        "path": "<cce>"
+      }
+    },
+    {
+      "kind": "instruction",
+      "instruction_id": "instruction.2",
+      "opcode": "PNOT",
+      "instruction_class": "compute",
+      "form": "b8",
+      "inputs": [
+        {
+          "value_id": "partial.def1",
+          "role": "predicate",
+          "dtype": "bool",
+          "memory_access": null
+        },
+        {
+          "value_id": "all.def0",
+          "role": "predicate",
+          "dtype": "bool",
+          "memory_access": null
+        }
+      ],
+      "outputs": [
+        {
+          "value_id": "q.def2",
+          "role": "destination",
+          "dtype": "bool",
+          "memory_access": null
+        }
+      ],
+      "attributes": {},
+      "source_location": {
+        "source": "vf",
+        "line": 6,
+        "column": null,
+        "path": "<cce>"
+      }
+    },
+    {
+      "kind": "instruction",
+      "instruction_id": "instruction.3",
+      "opcode": "PXOR",
+      "instruction_class": "compute",
+      "form": "b8",
+      "inputs": [
+        {
+          "value_id": "q.def2",
+          "role": "predicate",
+          "dtype": "bool",
+          "memory_access": null
+        },
+        {
+          "value_id": "partial.def1",
+          "role": "predicate",
+          "dtype": "bool",
+          "memory_access": null
+        },
+        {
+          "value_id": "all.def0",
+          "role": "predicate",
+          "dtype": "bool",
+          "memory_access": null
+        }
+      ],
+      "outputs": [
+        {
+          "value_id": "r.def3",
+          "role": "destination",
+          "dtype": "bool",
+          "memory_access": null
+        }
+      ],
+      "attributes": {},
+      "source_location": {
+        "source": "vf",
+        "line": 7,
+        "column": null,
+        "path": "<cce>"
+      }
+    },
+    {
+      "kind": "instruction",
+      "instruction_id": "instruction.4",
+      "opcode": "PAND",
+      "instruction_class": "compute",
+      "form": "b8",
+      "inputs": [
+        {
+          "value_id": "r.def3",
+          "role": "predicate",
+          "dtype": "bool",
+          "memory_access": null
+        },
+        {
+          "value_id": "r.def3",
+          "role": "predicate",
+          "dtype": "bool",
+          "memory_access": null
+        },
+        {
+          "value_id": "r.def3",
+          "role": "predicate",
+          "dtype": "bool",
+          "memory_access": null
+        }
+      ],
+      "outputs": [
+        {
+          "value_id": "q.def4",
+          "role": "destination",
+          "dtype": "bool",
+          "memory_access": null
+        }
+      ],
+      "attributes": {},
+      "source_location": {
+        "source": "vf",
+        "line": 8,
+        "column": null,
+        "path": "<cce>"
+      }
+    },
+    {
+      "kind": "instruction",
+      "instruction_id": "instruction.5",
+      "opcode": "PAND",
+      "instruction_class": "compute",
+      "form": "b8",
+      "inputs": [
+        {
+          "value_id": "q.def4",
+          "role": "predicate",
+          "dtype": "bool",
+          "memory_access": null
+        },
+        {
+          "value_id": "q.def4",
+          "role": "predicate",
+          "dtype": "bool",
+          "memory_access": null
+        },
+        {
+          "value_id": "all.def0",
+          "role": "predicate",
+          "dtype": "bool",
+          "memory_access": null
+        }
+      ],
+      "outputs": [
+        {
+          "value_id": "r.def5",
+          "role": "destination",
+          "dtype": "bool",
+          "memory_access": null
+        }
+      ],
+      "attributes": {},
+      "source_location": {
+        "source": "vf",
+        "line": 9,
+        "column": null,
+        "path": "<cce>"
+      }
+    },
+    {
+      "kind": "instruction",
+      "instruction_id": "instruction.6",
+      "opcode": "PSEL",
+      "instruction_class": "compute",
+      "form": "b8",
+      "inputs": [
+        {
+          "value_id": "q.def4",
+          "role": "predicate",
+          "dtype": "bool",
+          "memory_access": null
+        },
+        {
+          "value_id": "r.def5",
+          "role": "predicate",
+          "dtype": "bool",
+          "memory_access": null
+        },
+        {
+          "value_id": "partial.def1",
+          "role": "predicate",
+          "dtype": "bool",
+          "memory_access": null
+        }
+      ],
+      "outputs": [
+        {
+          "value_id": "s.def6",
+          "role": "destination",
+          "dtype": "bool",
+          "memory_access": null
+        }
+      ],
+      "attributes": {},
+      "source_location": {
+        "source": "vf",
+        "line": 10,
+        "column": null,
+        "path": "<cce>"
+      }
+    },
+    {
+      "kind": "instruction",
+      "instruction_id": "instruction.7",
+      "opcode": "PSTS",
+      "instruction_class": "store",
+      "form": "b8",
+      "inputs": [
+        {
+          "value_id": "s.def6",
+          "role": "predicate",
+          "dtype": "bool",
+          "memory_access": null
+        }
+      ],
+      "outputs": [
+        {
+          "value_id": "spill.def7",
+          "role": "memory",
+          "dtype": "uint32",
+          "memory_access": {
+            "base_object_id": "ub.spill",
+            "offset": {
+              "constant": 0,
+              "terms": []
+            },
+            "access_kind": "write",
+            "span": 32,
+            "address_unit_bytes": 1,
+            "alias_group": null,
+            "address_state_id": "vf:pointer:0:spill",
+            "update_mode": "none",
+            "post_update_delta_bytes": null
+          }
+        }
+      ],
+      "attributes": {},
+      "source_location": {
+        "source": "vf",
+        "line": 11,
+        "column": null,
+        "path": "<cce>"
+      }
+    }
+  ],
+  "values": {
+    "all.def0": {
+      "definition_id": "all.def0",
+      "logical_id": "all",
+      "storage": "PredicateRegister",
+      "dtype": "bool",
+      "shape": [],
+      "producer_node_id": "instruction.0",
+      "storage_object_id": null,
+      "source_location": null
+    },
+    "partial.def1": {
+      "definition_id": "partial.def1",
+      "logical_id": "partial",
+      "storage": "PredicateRegister",
+      "dtype": "bool",
+      "shape": [],
+      "producer_node_id": "instruction.1",
+      "storage_object_id": null,
+      "source_location": null
+    },
+    "q.def2": {
+      "definition_id": "q.def2",
+      "logical_id": "q",
+      "storage": "PredicateRegister",
+      "dtype": "bool",
+      "shape": [],
+      "producer_node_id": "instruction.2",
+      "storage_object_id": null,
+      "source_location": null
+    },
+    "r.def3": {
+      "definition_id": "r.def3",
+      "logical_id": "r",
+      "storage": "PredicateRegister",
+      "dtype": "bool",
+      "shape": [],
+      "producer_node_id": "instruction.3",
+      "storage_object_id": null,
+      "source_location": null
+    },
+    "q.def4": {
+      "definition_id": "q.def4",
+      "logical_id": "q",
+      "storage": "PredicateRegister",
+      "dtype": "bool",
+      "shape": [],
+      "producer_node_id": "instruction.4",
+      "storage_object_id": null,
+      "source_location": null
+    },
+    "r.def5": {
+      "definition_id": "r.def5",
+      "logical_id": "r",
+      "storage": "PredicateRegister",
+      "dtype": "bool",
+      "shape": [],
+      "producer_node_id": "instruction.5",
+      "storage_object_id": null,
+      "source_location": null
+    },
+    "s.def6": {
+      "definition_id": "s.def6",
+      "logical_id": "s",
+      "storage": "PredicateRegister",
+      "dtype": "bool",
+      "shape": [],
+      "producer_node_id": "instruction.6",
+      "storage_object_id": null,
+      "source_location": null
+    },
+    "spill.def7": {
+      "definition_id": "spill.def7",
+      "logical_id": "spill",
+      "storage": "UB",
+      "dtype": "uint32",
+      "shape": [],
+      "producer_node_id": "instruction.7",
+      "storage_object_id": "ub.spill",
+      "source_location": null
+    }
+  },
+  "storage_objects": {
+    "ub.spill": {
+      "object_id": "ub.spill",
+      "storage": "UB",
+      "shape": [],
+      "source_location": null
+    }
+  },
+  "params": {},
+  "uarch": {},
+  "source": {
+    "adapter": "cce",
+    "path": "<cce>"
+  }
+}

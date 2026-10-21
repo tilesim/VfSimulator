@@ -5,13 +5,14 @@
 | 文件 | 内容与使用方式 |
 | --- | --- |
 | `configs/instruction_catalog.json` | opcode、操作数、form、mode、对齐操作及访存预算的语义声明 |
+| `configs/cce_lowering.json` | CANN 软件 wrapper 的物理指令与 SSA 依赖规则 |
 | `configs/uarch_override_schema.json` | Canonical 配置覆盖的字段类型与支持范围 |
 | `configs/uarch.json` | 队列、寄存器、端口、带宽、循环及屏障参数 |
 | `configs/isa.json` | 各指令 form 的 latency、FU、端口与 VF startup/drain |
 | `configs/forwarding.json` | producer 到 consumer 的数据可用间隔 |
 | `configs/InitiationInterval.json` | 前后指令在同端口的发射间隔 |
 
-Catalog 和覆盖字段表编译在 `api/generated/*.inc` 中；变更其语义声明时同步维护对应数据表并重新构建。其余四类参数文件在模型构造时读取。
+Catalog、软件展开和覆盖字段表编译在 `api/generated/*.inc` 中；变更其语义声明时同步维护对应数据表并重新构建。ISA、uarch、forwarding 和 II 参数文件在模型构造时读取。
 
 ## 文件选择与快照
 
@@ -25,8 +26,21 @@ Catalog 和覆盖字段表编译在 `api/generated/*.inc` 中；变更其语义�
 
 ## 时序查询
 
-`ParamDB::inst()` 返回缓存的 `InstructionProfile`，提供 latency、FU、指令类别和允许的 EXU 端口。form 优先精确匹配，支持 `b16→fp16`、`b32→fp32` 备选。缺失指令参数采用 latency=9，计算指令默认使用 ALU 和两个 EXU 端口，并记录警告。
+`ParamDB::inst()` 返回缓存的 `InstructionProfile`，提供 latency、FU、指令类别和允许的 EXU 端口。查询区分 opcode、form、dtype、类别和 memory mode。form 优先精确匹配，支持 `b16→fp16`、`b32→fp32` 备选。缺失指令参数采用 latency=9，计算指令默认使用 ALU 和两个 EXU 端口，并记录警告。
 
 forwarding 优先查询指令对及 producer 的 wildcard 项。缺失 LOAD→STORE 使用 6 cycles，其他缺失对使用 producer latency 减配置 offset，并截断到非负值。II 缺失时，若前条 latency 比后条大 1 则取 2，其他情况取 1。警告通过 `model_warnings.json` 输出。
 
 理论场景通过 `CoreVfCostModel` 构造参数 `vloopOnly`、`directIssue` 或对应的 `theoretical_limit_*` 配置字段启用，用于放宽结构资源后的周期比较。
+
+## A5 资源与参数
+
+`isa.json.instructions.OP.memory_mode_latency` 可按 `catalog_mode` 覆盖访存 latency。
+`lsu_resource` 与正整数 `lsu_issue_interval` 定义共享 GSU 或块存储服务资源；
+`align_state_latency` 定义状态发布间隔，默认值为 1。
+
+EXU 的 `exq_issue_inflight_cap_per_port` 默认值为 7；值为 0 时关闭在途容量限制。
+self-II 历史、相邻指令 II、单周期发射和完成带宽分别参与调度，详见
+[执行模型](execution_model.md)和[指令时序](instruction_timing.md)。
+
+A5 参数范围、实测来源、同编码继承与缺口分别记录在
+[覆盖清单](a5_instruction_coverage.md)和[覆盖进度](instruction_coverage/a5/progress.md)。

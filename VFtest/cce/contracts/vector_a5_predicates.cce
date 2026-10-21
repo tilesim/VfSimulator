@@ -1,0 +1,11 @@
+void vf(uint32_t left, uint32_t right) {
+    __VEC_SCOPE__ {
+        vector_bool p = pset_b8(PAT_ALL), a, b, c, d;
+        pintlv_b16(a, b, p, p);
+        pdintlv_b16(c, d, a, b);
+        ppack(a, c, LOWER);
+        punpack(b, a, HIGHER);
+        pltm_b8(c, left, right);
+        psel(d, a, b, c);
+    }
+}
