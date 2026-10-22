@@ -142,7 +142,7 @@
         "kind": {"const": "instruction"},
         "instruction_id": {"type": "string", "minLength": 1},
         "opcode": {"type": "string", "minLength": 1},
-        "instruction_class": {"enum": ["load", "store", "compute", "control"]},
+        "instruction_class": {"enum": ["load", "store", "compute", "scalar", "control"]},
         "form": {"type": "string", "minLength": 1},
         "inputs": {"type": "array", "items": {"$ref": "#/$defs/operand"}},
         "outputs": {"type": "array", "items": {"$ref": "#/$defs/operand"}},

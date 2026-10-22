@@ -1,0 +1,317 @@
+{
+  "scope": "Python profile-owned FU initiation interval scope; n2048 used to diagnose history loss, not an untouched acceptance holdout",
+  "cases": [
+    {
+      "case": "ln_fp32_n512",
+      "dtype": "fp32",
+      "op": "VLN",
+      "golden": {
+        "passed": true,
+        "elements_checked": 512,
+        "mismatches": 0,
+        "guard_bytes_checked": 30720,
+        "guard_passed": true,
+        "nonfinite_expected": 270
+      },
+      "dynamic_counts_match": true,
+      "raw_sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "63c11bc34bb30dd56e070e4d5c45ef49ef41c48be00d56026f80e2d3e0ba9648",
+        "core0.veccore0.instr_log.dump": "e526cc62d627c048e958d7df3e703badd69e3637827015e70837028bd68ee2a1",
+        "core0.veccore0.instr_popped_log.dump": "3042d1bfff9d0dea8f02f79dc9a8580a2b6d091142395beff99dd93f13b2c291"
+      },
+      "compute_pop_cycles": [
+        3737,
+        3738,
+        3741,
+        3742,
+        3745,
+        3746,
+        3749,
+        3750
+      ],
+      "minimum_spacing_two_starts": 4,
+      "note": "Two EXU ports; native gaps constrain existing per-port self II, no new fitted cycle coefficient"
+    },
+    {
+      "case": "ln_fp16_n512",
+      "dtype": "fp16",
+      "op": "VLN",
+      "golden": {
+        "passed": true,
+        "elements_checked": 512,
+        "mismatches": 0,
+        "guard_bytes_checked": 31744,
+        "guard_passed": true,
+        "nonfinite_expected": 391
+      },
+      "dynamic_counts_match": true,
+      "raw_sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "c7998a32f634c8b1014ab05d57d3c51039c939c9b13083cbb0f08abe774c5b03",
+        "core0.veccore0.instr_log.dump": "3d01af5b73bcb3d129fb8d10fe3d1880351b3bc4114b396a84c32d94d48dbfd4",
+        "core0.veccore0.instr_popped_log.dump": "30ae365dd1416da8b778775733b911216968a9a9dacf35e58cd6c79a0be303d3"
+      },
+      "compute_pop_cycles": [
+        3737,
+        3738,
+        3745,
+        3746
+      ],
+      "minimum_spacing_two_starts": 8,
+      "note": "Two EXU ports; native gaps constrain existing per-port self II, no new fitted cycle coefficient"
+    },
+    {
+      "case": "sqrt_fp32_n512",
+      "dtype": "fp32",
+      "op": "VSQRT",
+      "golden": {
+        "passed": true,
+        "elements_checked": 512,
+        "mismatches": 0,
+        "guard_bytes_checked": 30720,
+        "guard_passed": true,
+        "nonfinite_expected": 252
+      },
+      "dynamic_counts_match": true,
+      "raw_sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "0857a89c5e2b270910e5c6cf1bcb2a7336bf847ce1fb1dd1b219d884c838ef89",
+        "core0.veccore0.instr_log.dump": "e92f940d90580c1d8d33e04b089b6201e32eb813ef66a04cc18868808d9f2b86",
+        "core0.veccore0.instr_popped_log.dump": "452284a75f919f572e3cbcf999e721b2daacdf28b6c6e1774e70ab7f2cab3f90"
+      },
+      "compute_pop_cycles": [
+        3737,
+        3738,
+        3741,
+        3742,
+        3745,
+        3746,
+        3749,
+        3750
+      ],
+      "minimum_spacing_two_starts": 4,
+      "note": "Two EXU ports; native gaps constrain existing per-port self II, no new fitted cycle coefficient"
+    },
+    {
+      "case": "sqrt_fp16_n512",
+      "dtype": "fp16",
+      "op": "VSQRT",
+      "golden": {
+        "passed": true,
+        "elements_checked": 512,
+        "mismatches": 0,
+        "guard_bytes_checked": 31744,
+        "guard_passed": true,
+        "nonfinite_expected": 126
+      },
+      "dynamic_counts_match": true,
+      "raw_sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "5d7db5126aeb6832719907ae3a115eca969b7ee6826f98380c0cd7a6ad50e263",
+        "core0.veccore0.instr_log.dump": "f4f2a1a1a748d4bbb3a50925a0a4a42955e2195bd25ba49fbff2659890923043",
+        "core0.veccore0.instr_popped_log.dump": "721ed9ba510ac0646a52d949688300f69bb21c91747c2d4382c7ac6d327fa2d6"
+      },
+      "compute_pop_cycles": [
+        3737,
+        3738,
+        3745,
+        3746
+      ],
+      "minimum_spacing_two_starts": 8,
+      "note": "Two EXU ports; native gaps constrain existing per-port self II, no new fitted cycle coefficient"
+    },
+    {
+      "case": "ln_fp16_n2048",
+      "dtype": "fp16",
+      "op": "VLN",
+      "golden": {
+        "passed": true,
+        "elements_checked": 2048,
+        "mismatches": 0,
+        "guard_bytes_checked": 28672,
+        "guard_passed": true,
+        "nonfinite_expected": 1558
+      },
+      "dynamic_counts_match": true,
+      "raw_sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "783ee8de9fee1a7dc07b7ac282261b5866cd94ade71194744a8b9f8f4696fd58",
+        "core0.veccore0.instr_log.dump": "51cbe8c333cf0998344e7ec11a5b170d658a2f8ad05b7137bc662fde03d63298",
+        "core0.veccore0.instr_popped_log.dump": "bbbd764dfc8bc499affb599f3632fbb9e2122415ddb12460de41747153c50bec"
+      },
+      "compute_pop_cycles": [
+        3737,
+        3738,
+        3745,
+        3746,
+        3753,
+        3754,
+        3761,
+        3762,
+        3769,
+        3770,
+        3777,
+        3778,
+        3785,
+        3786,
+        3793,
+        3794
+      ],
+      "minimum_spacing_two_starts": 8,
+      "note": "Two EXU ports; native gaps constrain existing per-port self II, no new fitted cycle coefficient"
+    },
+    {
+      "case": "ln_fp32_n2048",
+      "dtype": "fp32",
+      "op": "VLN",
+      "golden": {
+        "passed": true,
+        "elements_checked": 2048,
+        "mismatches": 0,
+        "guard_bytes_checked": 24576,
+        "guard_passed": true,
+        "nonfinite_expected": 1065
+      },
+      "dynamic_counts_match": true,
+      "raw_sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "f2025a80182601e1cef27d2d3d4dcbb1e228811a6b4d2abf06a3e77fabbac8ef",
+        "core0.veccore0.instr_log.dump": "55cd111569b3f7bb8c8946fcff97873995eb8ea399d1f800d27dd15d4505b475",
+        "core0.veccore0.instr_popped_log.dump": "bd3bc916d52e90b3efd6562f1b604ac2cf76970a650a4bbd7926831af6b63676"
+      },
+      "compute_pop_cycles": [
+        3737,
+        3738,
+        3741,
+        3742,
+        3745,
+        3746,
+        3749,
+        3750,
+        3753,
+        3754,
+        3757,
+        3758,
+        3761,
+        3762,
+        3765,
+        3766,
+        3769,
+        3770,
+        3773,
+        3774,
+        3777,
+        3778,
+        3781,
+        3782,
+        3785,
+        3786,
+        3789,
+        3790,
+        3793,
+        3794,
+        3797,
+        3798
+      ],
+      "minimum_spacing_two_starts": 4,
+      "note": "Two EXU ports; native gaps constrain existing per-port self II, no new fitted cycle coefficient"
+    },
+    {
+      "case": "sqrt_fp16_n2048",
+      "dtype": "fp16",
+      "op": "VSQRT",
+      "golden": {
+        "passed": true,
+        "elements_checked": 2048,
+        "mismatches": 0,
+        "guard_bytes_checked": 28672,
+        "guard_passed": true,
+        "nonfinite_expected": 499
+      },
+      "dynamic_counts_match": true,
+      "raw_sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "7d7f31a0cd765b5d85a6bb2c81dadc4f6c48971a42da05413af0efdd43038668",
+        "core0.veccore0.instr_log.dump": "52740f72ba0c18d507a49b0faddb86bf24913585e4b7d0f12687667aef53fdb7",
+        "core0.veccore0.instr_popped_log.dump": "c36d66c561591351558387c230f828678c75a12ffb4e12dab5e8c1c147c5c7bb"
+      },
+      "compute_pop_cycles": [
+        3737,
+        3738,
+        3745,
+        3746,
+        3753,
+        3754,
+        3761,
+        3762,
+        3769,
+        3770,
+        3777,
+        3778,
+        3785,
+        3786,
+        3793,
+        3794
+      ],
+      "minimum_spacing_two_starts": 8,
+      "note": "Two EXU ports; native gaps constrain existing per-port self II, no new fitted cycle coefficient"
+    },
+    {
+      "case": "sqrt_fp32_n2048",
+      "dtype": "fp32",
+      "op": "VSQRT",
+      "golden": {
+        "passed": true,
+        "elements_checked": 2048,
+        "mismatches": 0,
+        "guard_bytes_checked": 24576,
+        "guard_passed": true,
+        "nonfinite_expected": 994
+      },
+      "dynamic_counts_match": true,
+      "raw_sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "1d9da7fcb7589ea267e7e136101af0d0b2d53b0fc28a0550f182ecc6d20c76f7",
+        "core0.veccore0.instr_log.dump": "e6ea5fedb185bf4664921da017988bc04a77a84d6de99a9bbfb355599d70bc69",
+        "core0.veccore0.instr_popped_log.dump": "1f4bfa56450952ef3480b65afdfe87599d86e0d4a0f2ad89f6e56e399e1b180f"
+      },
+      "compute_pop_cycles": [
+        3737,
+        3738,
+        3741,
+        3742,
+        3745,
+        3746,
+        3749,
+        3750,
+        3753,
+        3754,
+        3757,
+        3758,
+        3761,
+        3762,
+        3765,
+        3766,
+        3769,
+        3770,
+        3773,
+        3774,
+        3777,
+        3778,
+        3781,
+        3782,
+        3785,
+        3786,
+        3789,
+        3790,
+        3793,
+        3794,
+        3797,
+        3798
+      ],
+      "minimum_spacing_two_starts": 4,
+      "note": "Two EXU ports; native gaps constrain existing per-port self II, no new fitted cycle coefficient"
+    }
+  ]
+}

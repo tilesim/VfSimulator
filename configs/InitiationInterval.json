@@ -2,6 +2,31 @@
   "schema_version": 2,
   "defaults": 1,
   "InitiationInterval": {
+    "VTRC.fp32": {
+      "VTRC.fp32": 1
+    },
+    "VSHRI.int32": {
+      "VSHRI.int32": 1
+    },
+    "VSHLS.int32": {
+      "VSHLS.int32": 1
+    },
+    "VNOT.b32": {
+      "VNOT.b32": 1
+    },
+    "VXOR.b32": {
+      "VXOR.b32": 1
+    },
+    "VOR.b32": {
+      "VOR.b32": 1
+    },
+    "VAND.b32": {
+      "VAND.b32": 1
+    },
+    "VLRELU.fp32":{"VLRELU.fp32":1},
+    "VLRELU.fp16":{"VLRELU.fp16":1},
+    "VLN.fp16":{"VLN.fp16":8},
+    "VSQRT.fp16":{"VSQRT.fp16":8},
     "MOVP_B16.b16":{"MOVP_B16.b16":1},
     "MOVP_B32.b32":{"MOVP_B32.b32":1},
     "VCI.int32": {

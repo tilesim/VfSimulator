@@ -17,3 +17,4 @@ class InstructionProfile:
     fu_type: str
     dispatch_exu: str
     latency: int
+    initiation_interval_scope: str = 'exu'

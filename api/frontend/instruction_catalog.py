@@ -91,6 +91,7 @@ class InstructionSpec:
     )
     virtual: bool = False
     timing_optional: bool = False
+    side_effect_only: bool = False
     call_variants: tuple[CallVariant, ...] = ()
     align_state_operation: str | None = None
     align_state_argument_index: int | None = None
@@ -140,7 +141,8 @@ class InstructionCatalog:
                 mode_operands = [o for o in variant.operands if o.name == "mode"]
                 if (variant.opcode != spec.opcode or type(variant.memory_span) is not int
                     or variant.memory_span <= 0
-                    or variant.instruction_class != InstructionClass.LOAD
+                    or variant.instruction_class != spec.instruction_class
+                    or variant.instruction_class not in (InstructionClass.LOAD, InstructionClass.STORE)
                     or not variant.forms.issubset(spec.forms)
                     or len(mode_operands) != 1
                     or mode_operands[0].kind != ArgumentKind.CONFIG
@@ -357,6 +359,11 @@ class InstructionCatalog:
             if operand.kind in (ArgumentKind.REGISTER, ArgumentKind.PREDICATE)
             and operand.direction == OperandDirection.OUTPUT
         ]
+        scalar_outputs = [
+            operand for operand in tracked
+            if operand.kind == ArgumentKind.SCALAR
+            and operand.direction == OperandDirection.OUTPUT
+        ]
         if spec.instruction_class == InstructionClass.LOAD:
             if len(memory_inputs) != 1 or memory_outputs or (not register_outputs and spec.align_state_operation != "load_init"):
                 raise ValueError(f"Invalid load signature for {spec.opcode}")
@@ -364,8 +371,14 @@ class InstructionCatalog:
             if memory_inputs or len(memory_outputs) != 1 or register_outputs:
                 raise ValueError(f"Invalid store signature for {spec.opcode}")
         elif spec.instruction_class == InstructionClass.COMPUTE:
-            if memory_inputs or memory_outputs or not register_outputs:
+            if (memory_inputs or memory_outputs
+                    or (not register_outputs and not scalar_outputs and not spec.side_effect_only)
+                    or ((register_outputs or scalar_outputs) and spec.side_effect_only)):
                 raise ValueError(f"Invalid compute signature for {spec.opcode}")
+        elif spec.instruction_class == InstructionClass.SCALAR:
+            if (memory_inputs or memory_outputs or register_outputs or not scalar_outputs
+                    or any(operand.kind != ArgumentKind.SCALAR for operand in tracked)):
+                raise ValueError(f"Invalid scalar signature for {spec.opcode}")
 
     @property
     def specs(self) -> Mapping[str, InstructionSpec]:
@@ -548,6 +561,11 @@ def instruction_catalog_from_dict(payload: Mapping[str, Any]) -> InstructionCata
         specializations = raw.get("specializations", {})
         virtual = raw.get("virtual", False)
         timing_optional = raw.get("timing_optional", False)
+        side_effect_only = raw.get("side_effect_only", False)
+        if not isinstance(side_effect_only, bool):
+            raise ValueError(f"{opcode}.side_effect_only must be a boolean")
+        if side_effect_only and raw.get("class") != "compute":
+            raise ValueError(f"{opcode}.side_effect_only requires a compute instruction")
         raw_call_variants = raw.get("call_variants", [])
         if not isinstance(aliases, list) or not all(
             isinstance(value, str) and value for value in aliases
@@ -641,6 +659,7 @@ def instruction_catalog_from_dict(payload: Mapping[str, Any]) -> InstructionCata
             }),
             virtual=virtual,
             timing_optional=timing_optional,
+            side_effect_only=side_effect_only,
             call_variants=tuple(call_variants),
             align_state_operation=align_state_operation,
             align_state_argument_index=align_state_argument_index,

@@ -148,6 +148,7 @@ class ValueVersioningPass:
         self._values = {}
         self._storage_objects = {}
         self._logical_values = dict(normalized.values)
+        self._include_scalar_versions = bool((source or {}).get("scalar_timing", False))
         self._params = dict(normalized.params)
         self._node_ids = set()
 
@@ -232,6 +233,11 @@ class ValueVersioningPass:
             environment[logical_id] = definition_id
         return definition_id
 
+    def _versioned_storage(self, storage) -> bool:
+        return is_renameable_storage(storage) or (
+            getattr(self, "_include_scalar_versions", False) and storage == StorageKind.SCALAR
+        )
+
     def _written_registers(self, nodes: Iterable[AdapterNode]) -> set[str]:
         written: set[str] = set()
         for node in nodes:
@@ -239,7 +245,7 @@ class ValueVersioningPass:
                 written.update(
                     str(value_id)
                     for value_id in node.dst
-                    if is_renameable_storage(self._logical_values[str(value_id)].storage)
+                    if self._versioned_storage(self._logical_values[str(value_id)].storage)
                 )
             elif isinstance(node, AdapterAlias):
                 destination_id = str(node.destination)
@@ -339,7 +345,9 @@ class ValueVersioningPass:
                     catalog_role=(
                         input_roles[operand_index]
                         if operand_index < len(input_roles)
-                        else None
+                        else OperandRole.CONFIG if logical_id == node.attributes.get(
+                            f"scalar_address_input_{operand_index - len(input_roles)}"
+                        ) else None
                     ),
                     access=access_by_value.get(logical_id),
                     induction_variables=induction_variables,
@@ -524,7 +532,7 @@ class ValueVersioningPass:
             else:
                 continue
             reads.update(str(value) for value in sources if str(value) not in defined
-                         and is_renameable_storage(self._logical_values[str(value)].storage))
+                         and self._versioned_storage(self._logical_values[str(value)].storage))
             defined.update(str(value) for value in destinations)
         return reads
 

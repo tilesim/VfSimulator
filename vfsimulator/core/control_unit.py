@@ -24,6 +24,7 @@ class ControlUnit:
     _SUPPORTED = {
         "VST_VLD": ("STORE", "LOAD"),
         "VLD_VST": ("LOAD", "STORE"),
+        "VST_VST": ("STORE", "STORE"),
     }
 
     def __init__(self, pdb: Any, dtype: str = "fp32") -> None:
@@ -70,6 +71,9 @@ class ControlUnit:
                cycle: int = 0, has_pending_dispatch=None) -> None:
         for barrier in self.barriers:
             if barrier.released:
+                continue
+            if (barrier.barrier == 'VST_VST' and has_pending_dispatch
+                    and has_pending_dispatch(barrier.stream_seq)):
                 continue
             barrier.released = not has_pending_prior(
                 int(barrier.stream_seq),

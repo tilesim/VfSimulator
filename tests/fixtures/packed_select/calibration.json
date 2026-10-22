@@ -1,0 +1,4261 @@
+{
+  "cases": [
+    {
+      "case": "sign_fp16_1x1",
+      "opcode": "SIGN",
+      "dtype": "fp16",
+      "shape": [
+        1,
+        1
+      ],
+      "arity": 1,
+      "expected_vf_calls": 7,
+      "source": "PyPTO vector/sign.h::SignFloat",
+      "golden": {
+        "passed": true,
+        "mismatches": 0,
+        "guard_passed": true,
+        "guard_bytes_checked": 32766,
+        "elements_checked": 1
+      },
+      "source_count_expectations": {
+        "RV_VLDI": 6,
+        "RV_VSTI": 5,
+        "RV_PST": 2,
+        "RV_PLD": 2,
+        "RV_VSEL": 2,
+        "RV_VCMPS": 2
+      },
+      "source_data_counts_match": true,
+      "instruction_counts": {
+        "MOV_XD_SPR": 12,
+        "MOVK": 18,
+        "MOV_XD_IMM": 30,
+        "ADD": 8,
+        "SHR": 1,
+        "AND": 1,
+        "ADD_IMM": 3,
+        "SHL": 10,
+        "MADD": 1,
+        "DC_PRELOAD_XN_IMM": 1,
+        "LDP_XI_XJ_XN": 1,
+        "INSERT_XD_XN": 12,
+        "MOV_XD_XN": 1,
+        "NOP": 14,
+        "PUSH_PB": 7,
+        "MOV_SRC_TO_DST_ALIGNv2": 3,
+        "SET_FLAG": 2,
+        "WAIT_FLAG": 2,
+        "RV_VLOOPv2": 9,
+        "RV_SMOVI": 9,
+        "RV_SEND": 21,
+        "RV_PLT": 9,
+        "RV_VLD": 4,
+        "RV_VCMPS_LT": 1,
+        "RV_PST": 2,
+        "VF": 7,
+        "RV_SMOV": 7,
+        "RV_VDUPS": 4,
+        "RV_VSTI": 3,
+        "RV_SNOP": 2,
+        "RV_PLD": 2,
+        "RV_VSEL": 2,
+        "RV_VST": 2,
+        "RV_VCMPS_GT": 1,
+        "RV_VLDI": 2,
+        "RV_VSUB": 1,
+        "BAR": 1,
+        "END": 1,
+        "DCCI": 2,
+        "END_LABEL": 1
+      },
+      "instruction_elapsed_histograms": {
+        "MOV_XD_SPR": {
+          "4": 12
+        },
+        "MOVK": {
+          "4": 18
+        },
+        "MOV_XD_IMM": {
+          "4": 30
+        },
+        "ADD": {
+          "4": 8
+        },
+        "SHR": {
+          "4": 1
+        },
+        "AND": {
+          "4": 1
+        },
+        "ADD_IMM": {
+          "4": 3
+        },
+        "SHL": {
+          "4": 10
+        },
+        "MADD": {
+          "5": 1
+        },
+        "DC_PRELOAD_XN_IMM": {
+          "407": 1
+        },
+        "LDP_XI_XJ_XN": {
+          "393": 1
+        },
+        "INSERT_XD_XN": {
+          "4": 12
+        },
+        "MOV_XD_XN": {
+          "4": 1
+        },
+        "NOP": {
+          "0": 14
+        },
+        "PUSH_PB": {
+          "4": 7
+        },
+        "MOV_SRC_TO_DST_ALIGNv2": {
+          "1554": 1,
+          "2621": 1,
+          "1369": 1
+        },
+        "SET_FLAG": {
+          "2622": 1,
+          "2138": 1
+        },
+        "WAIT_FLAG": {
+          "2622": 1,
+          "2137": 1
+        },
+        "RV_VLOOPv2": {
+          "0": 9
+        },
+        "RV_SMOVI": {
+          "0": 9
+        },
+        "RV_SEND": {
+          "-9": 1,
+          "9": 14,
+          "-11": 2,
+          "-14": 3,
+          "-16": 1
+        },
+        "RV_PLT": {
+          "6": 9
+        },
+        "RV_VLD": {
+          "9": 4
+        },
+        "RV_VCMPS_LT": {
+          "6": 1
+        },
+        "RV_PST": {
+          "9": 2
+        },
+        "VF": {
+          "54": 1,
+          "58": 1,
+          "67": 1,
+          "66": 1,
+          "72": 1,
+          "85": 1,
+          "70": 1
+        },
+        "RV_SMOV": {
+          "1": 7
+        },
+        "RV_VDUPS": {
+          "6": 4
+        },
+        "RV_VSTI": {
+          "13": 3
+        },
+        "RV_SNOP": {
+          "1": 2
+        },
+        "RV_PLD": {
+          "10": 2
+        },
+        "RV_VSEL": {
+          "6": 2
+        },
+        "RV_VST": {
+          "13": 2
+        },
+        "RV_VCMPS_GT": {
+          "6": 1
+        },
+        "RV_VLDI": {
+          "9": 1,
+          "10": 1
+        },
+        "RV_VSUB": {
+          "7": 1
+        },
+        "END": {
+          "0": 1
+        },
+        "DCCI": {
+          "4": 1,
+          "6": 1
+        },
+        "END_LABEL": {
+          "5": 1
+        }
+      },
+      "vf_cycles": [
+        54,
+        32,
+        39,
+        35,
+        32,
+        39,
+        39
+      ],
+      "measured_vec_cycles": 270,
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "core0.veccore0.instr_log.dump": "0c613a8e30233ee8331ae06da5a0df4aa936dfb6e807123fc19c1f1af00b40e4",
+        "core0.veccore0.instr_popped_log.dump": "8e6647821182fd4a0338942680ad8e831606fb40205b526a83bccbc489090ba6"
+      },
+      "state": "native_verified"
+    },
+    {
+      "case": "sign_fp16_1x64",
+      "opcode": "SIGN",
+      "dtype": "fp16",
+      "shape": [
+        1,
+        64
+      ],
+      "arity": 1,
+      "expected_vf_calls": 7,
+      "source": "PyPTO vector/sign.h::SignFloat",
+      "golden": {
+        "passed": true,
+        "mismatches": 0,
+        "guard_passed": true,
+        "guard_bytes_checked": 32640,
+        "elements_checked": 64
+      },
+      "source_count_expectations": {
+        "RV_VLDI": 6,
+        "RV_VSTI": 5,
+        "RV_PST": 2,
+        "RV_PLD": 2,
+        "RV_VSEL": 2,
+        "RV_VCMPS": 2
+      },
+      "source_data_counts_match": true,
+      "instruction_counts": {
+        "MOV_XD_SPR": 12,
+        "MOVK": 17,
+        "MOV_XD_IMM": 31,
+        "ADD": 8,
+        "SHR": 1,
+        "AND": 1,
+        "ADD_IMM": 3,
+        "SHL": 10,
+        "MADD": 1,
+        "DC_PRELOAD_XN_IMM": 1,
+        "LDP_XI_XJ_XN": 1,
+        "INSERT_XD_XN": 12,
+        "MOV_XD_XN": 2,
+        "NOP": 14,
+        "PUSH_PB": 7,
+        "MOV_SRC_TO_DST_ALIGNv2": 3,
+        "SET_FLAG": 2,
+        "WAIT_FLAG": 2,
+        "RV_VLOOPv2": 9,
+        "RV_SMOVI": 9,
+        "RV_PLT": 9,
+        "RV_SEND": 21,
+        "RV_VLD": 4,
+        "RV_VCMPS_LT": 1,
+        "RV_PST": 2,
+        "VF": 7,
+        "RV_SMOV": 7,
+        "RV_VDUPS": 4,
+        "RV_VSTI": 3,
+        "RV_SNOP": 2,
+        "RV_PLD": 2,
+        "RV_VSEL": 2,
+        "RV_VST": 2,
+        "RV_VCMPS_GT": 1,
+        "RV_VLDI": 2,
+        "RV_VSUB": 1,
+        "BAR": 1,
+        "END": 1,
+        "DCCI": 2,
+        "END_LABEL": 1
+      },
+      "instruction_elapsed_histograms": {
+        "MOV_XD_SPR": {
+          "4": 12
+        },
+        "MOVK": {
+          "4": 17
+        },
+        "MOV_XD_IMM": {
+          "4": 31
+        },
+        "ADD": {
+          "4": 8
+        },
+        "SHR": {
+          "4": 1
+        },
+        "AND": {
+          "4": 1
+        },
+        "ADD_IMM": {
+          "4": 3
+        },
+        "SHL": {
+          "4": 10
+        },
+        "MADD": {
+          "5": 1
+        },
+        "DC_PRELOAD_XN_IMM": {
+          "407": 1
+        },
+        "LDP_XI_XJ_XN": {
+          "393": 1
+        },
+        "INSERT_XD_XN": {
+          "4": 12
+        },
+        "MOV_XD_XN": {
+          "4": 2
+        },
+        "NOP": {
+          "0": 14
+        },
+        "PUSH_PB": {
+          "4": 7
+        },
+        "MOV_SRC_TO_DST_ALIGNv2": {
+          "1555": 1,
+          "2587": 1,
+          "1369": 1
+        },
+        "SET_FLAG": {
+          "2588": 1,
+          "2030": 1
+        },
+        "WAIT_FLAG": {
+          "2588": 1,
+          "2029": 1
+        },
+        "RV_VLOOPv2": {
+          "0": 9
+        },
+        "RV_SMOVI": {
+          "0": 9
+        },
+        "RV_PLT": {
+          "6": 9
+        },
+        "RV_SEND": {
+          "-8": 1,
+          "9": 14,
+          "-11": 2,
+          "-14": 3,
+          "-16": 1
+        },
+        "RV_VLD": {
+          "9": 4
+        },
+        "RV_VCMPS_LT": {
+          "6": 1
+        },
+        "RV_PST": {
+          "9": 2
+        },
+        "VF": {
+          "54": 1,
+          "57": 1,
+          "67": 1,
+          "66": 1,
+          "72": 1,
+          "85": 1,
+          "70": 1
+        },
+        "RV_SMOV": {
+          "1": 7
+        },
+        "RV_VDUPS": {
+          "6": 4
+        },
+        "RV_VSTI": {
+          "9": 3
+        },
+        "RV_SNOP": {
+          "1": 2
+        },
+        "RV_PLD": {
+          "10": 2
+        },
+        "RV_VSEL": {
+          "6": 2
+        },
+        "RV_VST": {
+          "9": 2
+        },
+        "RV_VCMPS_GT": {
+          "6": 1
+        },
+        "RV_VLDI": {
+          "9": 1,
+          "10": 1
+        },
+        "RV_VSUB": {
+          "7": 1
+        },
+        "END": {
+          "0": 1
+        },
+        "DCCI": {
+          "4": 1,
+          "6": 1
+        },
+        "END_LABEL": {
+          "5": 1
+        }
+      },
+      "vf_cycles": [
+        54,
+        32,
+        39,
+        35,
+        32,
+        39,
+        39
+      ],
+      "measured_vec_cycles": 270,
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "1573bd1d449568c1c57722a21a0a07b5c6cb6c4761447039330a62d3406a3a6c",
+        "core0.veccore0.instr_log.dump": "c5b4d149d95a688eaa776341b76398c0450d0de5bdbb63a3de1945f04115ab18",
+        "core0.veccore0.instr_popped_log.dump": "7e7604c7a25ae8ab9e9481b43635ce27e3c4a8bf3f8e0b71ada5aa019bce763f"
+      },
+      "state": "native_verified"
+    },
+    {
+      "case": "sign_fp16_1x129",
+      "opcode": "SIGN",
+      "dtype": "fp16",
+      "shape": [
+        1,
+        129
+      ],
+      "arity": 1,
+      "expected_vf_calls": 7,
+      "source": "PyPTO vector/sign.h::SignFloat",
+      "golden": {
+        "passed": true,
+        "mismatches": 0,
+        "guard_passed": true,
+        "guard_bytes_checked": 32510,
+        "elements_checked": 129
+      },
+      "source_count_expectations": {
+        "RV_VLDI": 12,
+        "RV_VSTI": 10,
+        "RV_PST": 4,
+        "RV_PLD": 4,
+        "RV_VSEL": 4,
+        "RV_VCMPS": 4
+      },
+      "source_data_counts_match": true,
+      "instruction_counts": {
+        "MOV_XD_SPR": 12,
+        "MOVK": 18,
+        "MOV_XD_IMM": 30,
+        "ADD": 8,
+        "SHR": 1,
+        "AND": 1,
+        "ADD_IMM": 3,
+        "SHL": 11,
+        "MADD": 1,
+        "DC_PRELOAD_XN_IMM": 1,
+        "LDP_XI_XJ_XN": 1,
+        "INSERT_XD_XN": 12,
+        "NOP": 14,
+        "PUSH_PB": 7,
+        "MOV_SRC_TO_DST_ALIGNv2": 3,
+        "SET_FLAG": 2,
+        "WAIT_FLAG": 2,
+        "RV_VLOOPv2": 11,
+        "RV_SMOVI": 9,
+        "RV_SMOV": 9,
+        "RV_SNOP": 4,
+        "RV_SEND": 21,
+        "RV_PLT": 16,
+        "RV_VLD": 8,
+        "RV_VCMPS_LT": 2,
+        "RV_PST": 4,
+        "VF": 7,
+        "RV_VDUPS": 6,
+        "RV_VSTI": 6,
+        "RV_PLD": 4,
+        "RV_VSEL": 4,
+        "RV_VST": 4,
+        "RV_VCMPS_GT": 2,
+        "RV_VLDI": 4,
+        "RV_VSUB": 2,
+        "BAR": 1,
+        "END": 1,
+        "DCCI": 2,
+        "END_LABEL": 1
+      },
+      "instruction_elapsed_histograms": {
+        "MOV_XD_SPR": {
+          "4": 12
+        },
+        "MOVK": {
+          "4": 18
+        },
+        "MOV_XD_IMM": {
+          "4": 30
+        },
+        "ADD": {
+          "4": 8
+        },
+        "SHR": {
+          "4": 1
+        },
+        "AND": {
+          "4": 1
+        },
+        "ADD_IMM": {
+          "4": 3
+        },
+        "SHL": {
+          "4": 11
+        },
+        "MADD": {
+          "5": 1
+        },
+        "DC_PRELOAD_XN_IMM": {
+          "407": 1
+        },
+        "LDP_XI_XJ_XN": {
+          "393": 1
+        },
+        "INSERT_XD_XN": {
+          "4": 12
+        },
+        "NOP": {
+          "0": 14
+        },
+        "PUSH_PB": {
+          "4": 7
+        },
+        "MOV_SRC_TO_DST_ALIGNv2": {
+          "1553": 1,
+          "2621": 1,
+          "1369": 1
+        },
+        "SET_FLAG": {
+          "2622": 1,
+          "2149": 1
+        },
+        "WAIT_FLAG": {
+          "2622": 1,
+          "2148": 1
+        },
+        "RV_VLOOPv2": {
+          "0": 11
+        },
+        "RV_SMOVI": {
+          "0": 9
+        },
+        "RV_SMOV": {
+          "1": 9
+        },
+        "RV_SNOP": {
+          "1": 4
+        },
+        "RV_SEND": {
+          "-13": 2,
+          "9": 14,
+          "-12": 2,
+          "-14": 2,
+          "-16": 1
+        },
+        "RV_PLT": {
+          "6": 16
+        },
+        "RV_VLD": {
+          "9": 8
+        },
+        "RV_VCMPS_LT": {
+          "6": 2
+        },
+        "RV_PST": {
+          "9": 4
+        },
+        "VF": {
+          "57": 1,
+          "63": 2,
+          "77": 2,
+          "69": 1,
+          "71": 1
+        },
+        "RV_VDUPS": {
+          "6": 6
+        },
+        "RV_VSTI": {
+          "9": 3,
+          "13": 3
+        },
+        "RV_PLD": {
+          "9": 2,
+          "10": 2
+        },
+        "RV_VSEL": {
+          "6": 4
+        },
+        "RV_VST": {
+          "9": 2,
+          "13": 2
+        },
+        "RV_VCMPS_GT": {
+          "6": 2
+        },
+        "RV_VLDI": {
+          "9": 2,
+          "10": 2
+        },
+        "RV_VSUB": {
+          "7": 2
+        },
+        "END": {
+          "0": 1
+        },
+        "DCCI": {
+          "4": 1,
+          "6": 1
+        },
+        "END_LABEL": {
+          "5": 1
+        }
+      },
+      "vf_cycles": [
+        57,
+        33,
+        40,
+        38,
+        33,
+        40,
+        40
+      ],
+      "measured_vec_cycles": 281,
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "b1240015208867abf7e86b88a6b927374bf69ee2298c49998d52356a12f8b79a",
+        "core0.veccore0.instr_log.dump": "5543244cfb26957cb0450d9320e1396783970bcbbf72d3cefe2f33718d82a3a1",
+        "core0.veccore0.instr_popped_log.dump": "a2f90dc28b2603afa2c318ed742045505256ae3e6e74a2e4fcedf7db05bfbb28"
+      },
+      "state": "native_verified"
+    },
+    {
+      "case": "sign_fp16_1x256",
+      "opcode": "SIGN",
+      "dtype": "fp16",
+      "shape": [
+        1,
+        256
+      ],
+      "arity": 1,
+      "expected_vf_calls": 7,
+      "source": "PyPTO vector/sign.h::SignFloat",
+      "golden": {
+        "passed": true,
+        "mismatches": 0,
+        "guard_passed": true,
+        "guard_bytes_checked": 32256,
+        "elements_checked": 256
+      },
+      "source_count_expectations": {
+        "RV_VLDI": 12,
+        "RV_VSTI": 10,
+        "RV_PST": 4,
+        "RV_PLD": 4,
+        "RV_VSEL": 4,
+        "RV_VCMPS": 4
+      },
+      "source_data_counts_match": true,
+      "instruction_counts": {
+        "MOV_XD_SPR": 12,
+        "MOVK": 18,
+        "MOV_XD_IMM": 30,
+        "ADD": 8,
+        "SHR": 1,
+        "AND": 1,
+        "ADD_IMM": 3,
+        "SHL": 11,
+        "MADD": 1,
+        "DC_PRELOAD_XN_IMM": 1,
+        "LDP_XI_XJ_XN": 1,
+        "INSERT_XD_XN": 12,
+        "NOP": 14,
+        "PUSH_PB": 7,
+        "MOV_SRC_TO_DST_ALIGNv2": 3,
+        "SET_FLAG": 2,
+        "WAIT_FLAG": 2,
+        "RV_VLOOPv2": 11,
+        "RV_SMOVI": 9,
+        "RV_SMOV": 9,
+        "RV_SNOP": 4,
+        "RV_SEND": 21,
+        "RV_PLT": 16,
+        "RV_VLD": 8,
+        "RV_VCMPS_LT": 2,
+        "RV_PST": 4,
+        "VF": 7,
+        "RV_VDUPS": 6,
+        "RV_VSTI": 6,
+        "RV_PLD": 4,
+        "RV_VSEL": 4,
+        "RV_VST": 4,
+        "RV_VCMPS_GT": 2,
+        "RV_VLDI": 4,
+        "RV_VSUB": 2,
+        "BAR": 1,
+        "END": 1,
+        "DCCI": 2,
+        "END_LABEL": 1
+      },
+      "instruction_elapsed_histograms": {
+        "MOV_XD_SPR": {
+          "4": 12
+        },
+        "MOVK": {
+          "4": 18
+        },
+        "MOV_XD_IMM": {
+          "4": 30
+        },
+        "ADD": {
+          "4": 8
+        },
+        "SHR": {
+          "4": 1
+        },
+        "AND": {
+          "4": 1
+        },
+        "ADD_IMM": {
+          "4": 3
+        },
+        "SHL": {
+          "4": 11
+        },
+        "MADD": {
+          "5": 1
+        },
+        "DC_PRELOAD_XN_IMM": {
+          "407": 1
+        },
+        "LDP_XI_XJ_XN": {
+          "393": 1
+        },
+        "INSERT_XD_XN": {
+          "4": 12
+        },
+        "NOP": {
+          "0": 14
+        },
+        "PUSH_PB": {
+          "4": 7
+        },
+        "MOV_SRC_TO_DST_ALIGNv2": {
+          "1553": 1,
+          "2621": 1,
+          "1369": 1
+        },
+        "SET_FLAG": {
+          "2622": 1,
+          "2149": 1
+        },
+        "WAIT_FLAG": {
+          "2622": 1,
+          "2148": 1
+        },
+        "RV_VLOOPv2": {
+          "0": 11
+        },
+        "RV_SMOVI": {
+          "0": 9
+        },
+        "RV_SMOV": {
+          "1": 9
+        },
+        "RV_SNOP": {
+          "1": 4
+        },
+        "RV_SEND": {
+          "-13": 2,
+          "9": 14,
+          "-12": 2,
+          "-14": 2,
+          "-16": 1
+        },
+        "RV_PLT": {
+          "6": 16
+        },
+        "RV_VLD": {
+          "9": 8
+        },
+        "RV_VCMPS_LT": {
+          "6": 2
+        },
+        "RV_PST": {
+          "9": 4
+        },
+        "VF": {
+          "57": 1,
+          "63": 2,
+          "77": 2,
+          "69": 1,
+          "71": 1
+        },
+        "RV_VDUPS": {
+          "6": 6
+        },
+        "RV_VSTI": {
+          "9": 6
+        },
+        "RV_PLD": {
+          "10": 4
+        },
+        "RV_VSEL": {
+          "6": 4
+        },
+        "RV_VST": {
+          "9": 4
+        },
+        "RV_VCMPS_GT": {
+          "6": 2
+        },
+        "RV_VLDI": {
+          "9": 2,
+          "10": 2
+        },
+        "RV_VSUB": {
+          "7": 2
+        },
+        "END": {
+          "0": 1
+        },
+        "DCCI": {
+          "4": 1,
+          "6": 1
+        },
+        "END_LABEL": {
+          "5": 1
+        }
+      },
+      "vf_cycles": [
+        57,
+        33,
+        40,
+        38,
+        33,
+        40,
+        40
+      ],
+      "measured_vec_cycles": 281,
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "433cbda4b347c83820bb33b35246146d55baa8359a4351667951b0ae85b0fc8d",
+        "core0.veccore0.instr_log.dump": "8367e08d04a970e1a24f360f9246b23a62e5a02c2007671fb42ae245e9ff5672",
+        "core0.veccore0.instr_popped_log.dump": "0e6a5a1d0c6e4ad90fbf807191989ef1768e45fdca1d4d896f00dc345d5cb564"
+      },
+      "state": "native_verified"
+    },
+    {
+      "case": "sign_fp16_1x512",
+      "opcode": "SIGN",
+      "dtype": "fp16",
+      "shape": [
+        1,
+        512
+      ],
+      "arity": 1,
+      "expected_vf_calls": 7,
+      "source": "PyPTO vector/sign.h::SignFloat",
+      "golden": {
+        "passed": true,
+        "mismatches": 0,
+        "guard_passed": true,
+        "guard_bytes_checked": 31744,
+        "elements_checked": 512
+      },
+      "source_count_expectations": {
+        "RV_VLDI": 24,
+        "RV_VSTI": 20,
+        "RV_PST": 8,
+        "RV_PLD": 8,
+        "RV_VSEL": 8,
+        "RV_VCMPS": 8
+      },
+      "source_data_counts_match": true,
+      "instruction_counts": {
+        "MOV_XD_SPR": 12,
+        "MOVK": 18,
+        "MOV_XD_IMM": 30,
+        "ADD": 8,
+        "SHR": 1,
+        "AND": 1,
+        "ADD_IMM": 3,
+        "SHL": 11,
+        "MADD": 1,
+        "DC_PRELOAD_XN_IMM": 1,
+        "LDP_XI_XJ_XN": 1,
+        "INSERT_XD_XN": 12,
+        "NOP": 14,
+        "PUSH_PB": 7,
+        "MOV_SRC_TO_DST_ALIGNv2": 3,
+        "SET_FLAG": 2,
+        "WAIT_FLAG": 2,
+        "RV_VLOOPv2": 11,
+        "RV_SMOVI": 9,
+        "RV_SMOV": 9,
+        "RV_SNOP": 4,
+        "RV_SEND": 21,
+        "RV_PLT": 30,
+        "RV_VLD": 16,
+        "RV_VCMPS_LT": 4,
+        "RV_PST": 8,
+        "VF": 7,
+        "RV_VDUPS": 10,
+        "RV_VSTI": 12,
+        "RV_PLD": 8,
+        "RV_VSEL": 8,
+        "RV_VST": 8,
+        "RV_VCMPS_GT": 4,
+        "RV_VLDI": 8,
+        "RV_VSUB": 4,
+        "BAR": 1,
+        "END": 1,
+        "DCCI": 2,
+        "END_LABEL": 1
+      },
+      "instruction_elapsed_histograms": {
+        "MOV_XD_SPR": {
+          "4": 12
+        },
+        "MOVK": {
+          "4": 18
+        },
+        "MOV_XD_IMM": {
+          "4": 30
+        },
+        "ADD": {
+          "4": 8
+        },
+        "SHR": {
+          "4": 1
+        },
+        "AND": {
+          "4": 1
+        },
+        "ADD_IMM": {
+          "4": 3
+        },
+        "SHL": {
+          "4": 11
+        },
+        "MADD": {
+          "5": 1
+        },
+        "DC_PRELOAD_XN_IMM": {
+          "407": 1
+        },
+        "LDP_XI_XJ_XN": {
+          "393": 1
+        },
+        "INSERT_XD_XN": {
+          "4": 12
+        },
+        "NOP": {
+          "0": 14
+        },
+        "PUSH_PB": {
+          "4": 7
+        },
+        "MOV_SRC_TO_DST_ALIGNv2": {
+          "1553": 1,
+          "2611": 1,
+          "1369": 1
+        },
+        "SET_FLAG": {
+          "2612": 1,
+          "2153": 1
+        },
+        "WAIT_FLAG": {
+          "2612": 1,
+          "2152": 1
+        },
+        "RV_VLOOPv2": {
+          "0": 11
+        },
+        "RV_SMOVI": {
+          "0": 9
+        },
+        "RV_SMOV": {
+          "1": 9
+        },
+        "RV_SNOP": {
+          "1": 4
+        },
+        "RV_SEND": {
+          "-13": 4,
+          "9": 14,
+          "-12": 2,
+          "-16": 1
+        },
+        "RV_PLT": {
+          "6": 30
+        },
+        "RV_VLD": {
+          "9": 12,
+          "10": 4
+        },
+        "RV_VCMPS_LT": {
+          "6": 4
+        },
+        "RV_PST": {
+          "9": 8
+        },
+        "VF": {
+          "59": 1,
+          "65": 2,
+          "71": 2,
+          "70": 1,
+          "72": 1
+        },
+        "RV_VDUPS": {
+          "6": 10
+        },
+        "RV_VSTI": {
+          "9": 12
+        },
+        "RV_PLD": {
+          "10": 4,
+          "9": 4
+        },
+        "RV_VSEL": {
+          "6": 8
+        },
+        "RV_VST": {
+          "9": 8
+        },
+        "RV_VCMPS_GT": {
+          "6": 4
+        },
+        "RV_VLDI": {
+          "9": 6,
+          "10": 2
+        },
+        "RV_VSUB": {
+          "7": 4
+        },
+        "END": {
+          "0": 1
+        },
+        "DCCI": {
+          "4": 1,
+          "6": 1
+        },
+        "END_LABEL": {
+          "5": 1
+        }
+      },
+      "vf_cycles": [
+        59,
+        35,
+        42,
+        40,
+        35,
+        42,
+        42
+      ],
+      "measured_vec_cycles": 295,
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "769e6e31f8b0d45e8815777cb46b5f26662ce030f2a6349f99dd745c54bb3167",
+        "core0.veccore0.instr_log.dump": "a60604eb2cd94b6c9c23b84f9f5a2c04cd9b972a74f83722a98ce0c29613dcb7",
+        "core0.veccore0.instr_popped_log.dump": "aa3ebc4cd9f6e4943a63e4b6efb28f4efac7e04655be432d7451b8705a0f9bbb"
+      },
+      "state": "native_verified"
+    },
+    {
+      "case": "sign_fp16_1x1024",
+      "opcode": "SIGN",
+      "dtype": "fp16",
+      "shape": [
+        1,
+        1024
+      ],
+      "arity": 1,
+      "expected_vf_calls": 7,
+      "source": "PyPTO vector/sign.h::SignFloat",
+      "golden": {
+        "passed": true,
+        "mismatches": 0,
+        "guard_passed": true,
+        "guard_bytes_checked": 30720,
+        "elements_checked": 1024
+      },
+      "source_count_expectations": {
+        "RV_VLDI": 48,
+        "RV_VSTI": 40,
+        "RV_PST": 16,
+        "RV_PLD": 16,
+        "RV_VSEL": 16,
+        "RV_VCMPS": 16
+      },
+      "source_data_counts_match": true,
+      "instruction_counts": {
+        "MOV_XD_SPR": 12,
+        "MOVK": 18,
+        "MOV_XD_IMM": 30,
+        "ADD": 8,
+        "SHR": 1,
+        "AND": 1,
+        "ADD_IMM": 3,
+        "SHL": 11,
+        "MADD": 1,
+        "DC_PRELOAD_XN_IMM": 1,
+        "LDP_XI_XJ_XN": 1,
+        "INSERT_XD_XN": 12,
+        "NOP": 14,
+        "PUSH_PB": 7,
+        "MOV_SRC_TO_DST_ALIGNv2": 3,
+        "SET_FLAG": 2,
+        "WAIT_FLAG": 2,
+        "RV_VLOOPv2": 11,
+        "RV_SMOVI": 9,
+        "RV_SMOV": 9,
+        "RV_PLT": 58,
+        "RV_SNOP": 4,
+        "RV_VLD": 32,
+        "RV_SEND": 21,
+        "RV_VCMPS_LT": 8,
+        "RV_PST": 16,
+        "VF": 7,
+        "RV_VDUPS": 18,
+        "RV_VSTI": 24,
+        "RV_PLD": 16,
+        "RV_VSEL": 16,
+        "RV_VST": 16,
+        "RV_VCMPS_GT": 8,
+        "RV_VLDI": 16,
+        "RV_VSUB": 8,
+        "BAR": 1,
+        "END": 1,
+        "DCCI": 2,
+        "END_LABEL": 1
+      },
+      "instruction_elapsed_histograms": {
+        "MOV_XD_SPR": {
+          "4": 12
+        },
+        "MOVK": {
+          "4": 18
+        },
+        "MOV_XD_IMM": {
+          "4": 30
+        },
+        "ADD": {
+          "4": 8
+        },
+        "SHR": {
+          "4": 1
+        },
+        "AND": {
+          "4": 1
+        },
+        "ADD_IMM": {
+          "4": 3
+        },
+        "SHL": {
+          "4": 11
+        },
+        "MADD": {
+          "5": 1
+        },
+        "DC_PRELOAD_XN_IMM": {
+          "407": 1
+        },
+        "LDP_XI_XJ_XN": {
+          "393": 1
+        },
+        "INSERT_XD_XN": {
+          "4": 12
+        },
+        "NOP": {
+          "0": 14
+        },
+        "PUSH_PB": {
+          "4": 7
+        },
+        "MOV_SRC_TO_DST_ALIGNv2": {
+          "1553": 1,
+          "2611": 1,
+          "1369": 1
+        },
+        "SET_FLAG": {
+          "2612": 1,
+          "2183": 1
+        },
+        "WAIT_FLAG": {
+          "2612": 1,
+          "2182": 1
+        },
+        "RV_VLOOPv2": {
+          "0": 11
+        },
+        "RV_SMOVI": {
+          "0": 9
+        },
+        "RV_SMOV": {
+          "1": 9
+        },
+        "RV_PLT": {
+          "6": 58
+        },
+        "RV_SNOP": {
+          "1": 4
+        },
+        "RV_VLD": {
+          "9": 24,
+          "10": 8
+        },
+        "RV_SEND": {
+          "-13": 2,
+          "9": 14,
+          "-12": 2,
+          "-14": 2,
+          "-16": 1
+        },
+        "RV_VCMPS_LT": {
+          "6": 8
+        },
+        "RV_PST": {
+          "9": 16
+        },
+        "VF": {
+          "63": 1,
+          "69": 2,
+          "76": 2,
+          "75": 1,
+          "77": 1
+        },
+        "RV_VDUPS": {
+          "6": 18
+        },
+        "RV_VSTI": {
+          "9": 24
+        },
+        "RV_PLD": {
+          "10": 8,
+          "9": 8
+        },
+        "RV_VSEL": {
+          "6": 16
+        },
+        "RV_VST": {
+          "9": 16
+        },
+        "RV_VCMPS_GT": {
+          "6": 8
+        },
+        "RV_VLDI": {
+          "9": 14,
+          "10": 2
+        },
+        "RV_VSUB": {
+          "7": 8
+        },
+        "END": {
+          "0": 1
+        },
+        "DCCI": {
+          "4": 1,
+          "6": 1
+        },
+        "END_LABEL": {
+          "5": 1
+        }
+      },
+      "vf_cycles": [
+        63,
+        39,
+        47,
+        44,
+        39,
+        47,
+        46
+      ],
+      "measured_vec_cycles": 325,
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "876a975efa7a3f38bb478aa21d8518daa2439f11ee563083871b88959f13a45c",
+        "core0.veccore0.instr_log.dump": "85683a18bc89bc5c8cc4dda4fcd730f0009b2770c08e5b3fbe65ba4461a3e165",
+        "core0.veccore0.instr_popped_log.dump": "0f644dbb01d8affe935290ca2ef4f34bb6ab3f4d4ab075418625c926ad6f2942"
+      },
+      "state": "native_verified"
+    },
+    {
+      "case": "sign_fp32_1x1",
+      "opcode": "SIGN",
+      "dtype": "fp32",
+      "shape": [
+        1,
+        1
+      ],
+      "arity": 1,
+      "expected_vf_calls": 7,
+      "source": "PyPTO vector/sign.h::SignFloat",
+      "golden": {
+        "passed": true,
+        "mismatches": 0,
+        "guard_passed": true,
+        "guard_bytes_checked": 32764,
+        "elements_checked": 1
+      },
+      "source_count_expectations": {
+        "RV_VLDI": 8,
+        "RV_VSTI": 5,
+        "RV_PST": 2,
+        "RV_PLD": 2,
+        "RV_VSEL": 2,
+        "RV_PINTLV": 0,
+        "RV_PUNPACK": 2,
+        "RV_PDINTLV": 2,
+        "RV_VCMPS": 4
+      },
+      "source_data_counts_match": true,
+      "instruction_counts": {
+        "MOV_XD_SPR": 12,
+        "MOVK": 16,
+        "MOV_XD_IMM": 27,
+        "ADD": 8,
+        "SHR": 1,
+        "AND": 1,
+        "ADD_IMM": 3,
+        "SHL": 9,
+        "MADD": 1,
+        "DC_PRELOAD_XN_IMM": 1,
+        "LDP_XI_XJ_XN": 1,
+        "INSERT_XD_XN": 10,
+        "NOP": 14,
+        "PUSH_PB": 7,
+        "MOV_XD_XN": 1,
+        "MOV_SRC_TO_DST_ALIGNv2": 3,
+        "SET_FLAG": 2,
+        "WAIT_FLAG": 2,
+        "RV_VLOOPv2": 7,
+        "RV_SMOVI": 7,
+        "RV_PLT": 9,
+        "RV_SEND": 21,
+        "RV_VLD": 6,
+        "RV_VCMPS_LT": 2,
+        "RV_PDINTLV": 2,
+        "RV_PST": 2,
+        "VF": 7,
+        "RV_SMOV": 5,
+        "RV_VDUPS": 4,
+        "RV_VSTI": 3,
+        "RV_PLD": 2,
+        "RV_PUNPACK": 2,
+        "RV_VSEL": 2,
+        "RV_VST": 2,
+        "RV_VCMPS_GT": 2,
+        "RV_VLDI": 2,
+        "RV_VSUB": 1,
+        "BAR": 1,
+        "END": 1,
+        "DCCI": 2,
+        "END_LABEL": 1
+      },
+      "instruction_elapsed_histograms": {
+        "MOV_XD_SPR": {
+          "4": 12
+        },
+        "MOVK": {
+          "4": 16
+        },
+        "MOV_XD_IMM": {
+          "4": 27
+        },
+        "ADD": {
+          "4": 8
+        },
+        "SHR": {
+          "4": 1
+        },
+        "AND": {
+          "4": 1
+        },
+        "ADD_IMM": {
+          "4": 3
+        },
+        "SHL": {
+          "4": 9
+        },
+        "MADD": {
+          "5": 1
+        },
+        "DC_PRELOAD_XN_IMM": {
+          "407": 1
+        },
+        "LDP_XI_XJ_XN": {
+          "393": 1
+        },
+        "INSERT_XD_XN": {
+          "4": 10
+        },
+        "NOP": {
+          "0": 14
+        },
+        "PUSH_PB": {
+          "4": 7
+        },
+        "MOV_XD_XN": {
+          "4": 1
+        },
+        "MOV_SRC_TO_DST_ALIGNv2": {
+          "1553": 1,
+          "2621": 1,
+          "1369": 1
+        },
+        "SET_FLAG": {
+          "2622": 1,
+          "2164": 1
+        },
+        "WAIT_FLAG": {
+          "2622": 1,
+          "2163": 1
+        },
+        "RV_VLOOPv2": {
+          "0": 7
+        },
+        "RV_SMOVI": {
+          "0": 7
+        },
+        "RV_PLT": {
+          "6": 9
+        },
+        "RV_SEND": {
+          "-17": 1,
+          "9": 14,
+          "-11": 2,
+          "-22": 2,
+          "-21": 1,
+          "-16": 1
+        },
+        "RV_VLD": {
+          "9": 4,
+          "10": 2
+        },
+        "RV_VCMPS_LT": {
+          "6": 2
+        },
+        "RV_PDINTLV": {
+          "11": 2
+        },
+        "RV_PST": {
+          "9": 2
+        },
+        "VF": {
+          "62": 1,
+          "66": 1,
+          "82": 1,
+          "99": 1,
+          "105": 1,
+          "108": 1,
+          "104": 1
+        },
+        "RV_SMOV": {
+          "1": 5
+        },
+        "RV_VDUPS": {
+          "6": 4
+        },
+        "RV_VSTI": {
+          "9": 3
+        },
+        "RV_PLD": {
+          "9": 2
+        },
+        "RV_PUNPACK": {
+          "11": 2
+        },
+        "RV_VSEL": {
+          "6": 2
+        },
+        "RV_VST": {
+          "9": 2
+        },
+        "RV_VCMPS_GT": {
+          "6": 2
+        },
+        "RV_VLDI": {
+          "9": 1,
+          "10": 1
+        },
+        "RV_VSUB": {
+          "7": 1
+        },
+        "END": {
+          "0": 1
+        },
+        "DCCI": {
+          "4": 1,
+          "6": 1
+        },
+        "END_LABEL": {
+          "5": 1
+        }
+      },
+      "vf_cycles": [
+        62,
+        32,
+        42,
+        43,
+        32,
+        42,
+        39
+      ],
+      "measured_vec_cycles": 292,
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "dc4edfff8dac64f336899a096883d84eb081d13b124e6fe8ef7a74d1ba4d5d41",
+        "core0.veccore0.instr_log.dump": "baa36bcf88e61464dfbf7642c6d182e767d89a54266d8a174524f1b5dc558508",
+        "core0.veccore0.instr_popped_log.dump": "4fc21d0843f0ac23d42fc8754e5a7b445b84da5b32450ff9d6b063cb2aa8a3b1"
+      },
+      "state": "native_verified"
+    },
+    {
+      "case": "sign_fp32_1x64",
+      "opcode": "SIGN",
+      "dtype": "fp32",
+      "shape": [
+        1,
+        64
+      ],
+      "arity": 1,
+      "expected_vf_calls": 7,
+      "source": "PyPTO vector/sign.h::SignFloat",
+      "golden": {
+        "passed": true,
+        "mismatches": 0,
+        "guard_passed": true,
+        "guard_bytes_checked": 32512,
+        "elements_checked": 64
+      },
+      "source_count_expectations": {
+        "RV_VLDI": 8,
+        "RV_VSTI": 5,
+        "RV_PST": 2,
+        "RV_PLD": 2,
+        "RV_VSEL": 2,
+        "RV_PINTLV": 0,
+        "RV_PUNPACK": 2,
+        "RV_PDINTLV": 2,
+        "RV_VCMPS": 4
+      },
+      "source_data_counts_match": true,
+      "instruction_counts": {
+        "MOV_XD_SPR": 12,
+        "MOVK": 16,
+        "MOV_XD_IMM": 27,
+        "ADD": 8,
+        "SHR": 1,
+        "AND": 1,
+        "ADD_IMM": 3,
+        "SHL": 9,
+        "MADD": 1,
+        "DC_PRELOAD_XN_IMM": 1,
+        "LDP_XI_XJ_XN": 1,
+        "INSERT_XD_XN": 10,
+        "NOP": 14,
+        "PUSH_PB": 7,
+        "MOV_XD_XN": 1,
+        "MOV_SRC_TO_DST_ALIGNv2": 3,
+        "SET_FLAG": 2,
+        "WAIT_FLAG": 2,
+        "RV_VLOOPv2": 7,
+        "RV_SMOVI": 7,
+        "RV_PLT": 9,
+        "RV_SEND": 21,
+        "RV_VLD": 6,
+        "RV_VCMPS_LT": 2,
+        "RV_PDINTLV": 2,
+        "RV_PST": 2,
+        "VF": 7,
+        "RV_SMOV": 5,
+        "RV_VDUPS": 4,
+        "RV_VSTI": 3,
+        "RV_PLD": 2,
+        "RV_PUNPACK": 2,
+        "RV_VSEL": 2,
+        "RV_VST": 2,
+        "RV_VCMPS_GT": 2,
+        "RV_VLDI": 2,
+        "RV_VSUB": 1,
+        "BAR": 1,
+        "END": 1,
+        "DCCI": 2,
+        "END_LABEL": 1
+      },
+      "instruction_elapsed_histograms": {
+        "MOV_XD_SPR": {
+          "4": 12
+        },
+        "MOVK": {
+          "4": 16
+        },
+        "MOV_XD_IMM": {
+          "4": 27
+        },
+        "ADD": {
+          "4": 8
+        },
+        "SHR": {
+          "4": 1
+        },
+        "AND": {
+          "4": 1
+        },
+        "ADD_IMM": {
+          "4": 3
+        },
+        "SHL": {
+          "4": 9
+        },
+        "MADD": {
+          "5": 1
+        },
+        "DC_PRELOAD_XN_IMM": {
+          "407": 1
+        },
+        "LDP_XI_XJ_XN": {
+          "393": 1
+        },
+        "INSERT_XD_XN": {
+          "4": 10
+        },
+        "NOP": {
+          "0": 14
+        },
+        "PUSH_PB": {
+          "4": 7
+        },
+        "MOV_XD_XN": {
+          "4": 1
+        },
+        "MOV_SRC_TO_DST_ALIGNv2": {
+          "1553": 1,
+          "2621": 1,
+          "1369": 1
+        },
+        "SET_FLAG": {
+          "2622": 1,
+          "2164": 1
+        },
+        "WAIT_FLAG": {
+          "2622": 1,
+          "2163": 1
+        },
+        "RV_VLOOPv2": {
+          "0": 7
+        },
+        "RV_SMOVI": {
+          "0": 7
+        },
+        "RV_PLT": {
+          "6": 9
+        },
+        "RV_SEND": {
+          "-17": 1,
+          "9": 14,
+          "-11": 2,
+          "-22": 2,
+          "-21": 1,
+          "-16": 1
+        },
+        "RV_VLD": {
+          "9": 6
+        },
+        "RV_VCMPS_LT": {
+          "6": 2
+        },
+        "RV_PDINTLV": {
+          "11": 2
+        },
+        "RV_PST": {
+          "9": 2
+        },
+        "VF": {
+          "62": 1,
+          "66": 1,
+          "82": 1,
+          "99": 1,
+          "105": 1,
+          "108": 1,
+          "104": 1
+        },
+        "RV_SMOV": {
+          "1": 5
+        },
+        "RV_VDUPS": {
+          "6": 4
+        },
+        "RV_VSTI": {
+          "9": 3
+        },
+        "RV_PLD": {
+          "9": 2
+        },
+        "RV_PUNPACK": {
+          "11": 2
+        },
+        "RV_VSEL": {
+          "6": 2
+        },
+        "RV_VST": {
+          "9": 2
+        },
+        "RV_VCMPS_GT": {
+          "6": 2
+        },
+        "RV_VLDI": {
+          "9": 1,
+          "10": 1
+        },
+        "RV_VSUB": {
+          "7": 1
+        },
+        "END": {
+          "0": 1
+        },
+        "DCCI": {
+          "4": 1,
+          "6": 1
+        },
+        "END_LABEL": {
+          "5": 1
+        }
+      },
+      "vf_cycles": [
+        62,
+        32,
+        42,
+        43,
+        32,
+        42,
+        39
+      ],
+      "measured_vec_cycles": 292,
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "5897c80f3b3d56bc2f1fb48946a8f0224affb7a2e9de83bc444668e6fd27ffb1",
+        "core0.veccore0.instr_log.dump": "909ca1694797272478fadfbffc3d085f852c8bbad940646b922e621d66e0c7c6",
+        "core0.veccore0.instr_popped_log.dump": "f06975a278a026dede3ed58745bd70759d355c0cfd5d863b2c48635ea238422c"
+      },
+      "state": "native_verified"
+    },
+    {
+      "case": "sign_fp32_1x129",
+      "opcode": "SIGN",
+      "dtype": "fp32",
+      "shape": [
+        1,
+        129
+      ],
+      "arity": 1,
+      "expected_vf_calls": 7,
+      "source": "PyPTO vector/sign.h::SignFloat",
+      "golden": {
+        "passed": true,
+        "mismatches": 0,
+        "guard_passed": true,
+        "guard_bytes_checked": 32252,
+        "elements_checked": 129
+      },
+      "source_count_expectations": {
+        "RV_VLDI": 20,
+        "RV_VSTI": 15,
+        "RV_PST": 4,
+        "RV_PLD": 4,
+        "RV_VSEL": 6,
+        "RV_PINTLV": 2,
+        "RV_PUNPACK": 2,
+        "RV_PDINTLV": 4,
+        "RV_VCMPS": 8
+      },
+      "source_data_counts_match": true,
+      "instruction_counts": {
+        "MOV_XD_SPR": 12,
+        "MOVK": 29,
+        "MOV_XD_IMM": 38,
+        "ADD": 8,
+        "SHR": 1,
+        "AND": 1,
+        "ADD_IMM": 3,
+        "SHL": 9,
+        "MADD": 1,
+        "DC_PRELOAD_XN_IMM": 1,
+        "LDP_XI_XJ_XN": 1,
+        "INSERT_XD_XN": 18,
+        "PUSH_PB": 9,
+        "NOP": 14,
+        "MOV_SRC_TO_DST_ALIGNv2": 3,
+        "SET_FLAG": 2,
+        "WAIT_FLAG": 2,
+        "RV_VLOOPv2": 13,
+        "RV_SMOVI": 7,
+        "RV_SMOV": 11,
+        "RV_SNOP": 4,
+        "RV_SEND": 21,
+        "RV_PLT": 25,
+        "RV_VLD": 14,
+        "RV_VCMPS_LT": 4,
+        "RV_PDINTLV": 4,
+        "RV_PST": 4,
+        "VF": 7,
+        "RV_VDUPS": 8,
+        "RV_VSTI": 9,
+        "RV_SCBZI": 2,
+        "RV_PSET": 2,
+        "RV_PLD": 4,
+        "RV_SJUMPI": 4,
+        "RV_PINTLV": 2,
+        "RV_VSEL": 6,
+        "RV_VST": 6,
+        "RV_PUNPACK": 2,
+        "RV_VCMPS_GT": 4,
+        "RV_VLDI": 6,
+        "RV_VSUB": 3,
+        "BAR": 1,
+        "END": 1,
+        "DCCI": 2,
+        "END_LABEL": 1
+      },
+      "instruction_elapsed_histograms": {
+        "MOV_XD_SPR": {
+          "4": 12
+        },
+        "MOVK": {
+          "4": 29
+        },
+        "MOV_XD_IMM": {
+          "4": 38
+        },
+        "ADD": {
+          "4": 8
+        },
+        "SHR": {
+          "4": 1
+        },
+        "AND": {
+          "4": 1
+        },
+        "ADD_IMM": {
+          "4": 3
+        },
+        "SHL": {
+          "4": 9
+        },
+        "MADD": {
+          "5": 1
+        },
+        "DC_PRELOAD_XN_IMM": {
+          "407": 1
+        },
+        "LDP_XI_XJ_XN": {
+          "393": 1
+        },
+        "INSERT_XD_XN": {
+          "4": 18
+        },
+        "PUSH_PB": {
+          "4": 9
+        },
+        "NOP": {
+          "0": 14
+        },
+        "MOV_SRC_TO_DST_ALIGNv2": {
+          "1553": 1,
+          "2636": 1,
+          "1367": 1
+        },
+        "SET_FLAG": {
+          "2637": 1,
+          "2149": 1
+        },
+        "WAIT_FLAG": {
+          "2637": 1,
+          "2148": 1
+        },
+        "RV_VLOOPv2": {
+          "0": 13
+        },
+        "RV_SMOVI": {
+          "0": 7
+        },
+        "RV_SMOV": {
+          "1": 11
+        },
+        "RV_SNOP": {
+          "1": 4
+        },
+        "RV_SEND": {
+          "-21": 2,
+          "9": 14,
+          "-12": 2,
+          "-17": 2,
+          "-16": 1
+        },
+        "RV_PLT": {
+          "6": 25
+        },
+        "RV_VLD": {
+          "9": 10,
+          "10": 4
+        },
+        "RV_VCMPS_LT": {
+          "6": 4
+        },
+        "RV_PDINTLV": {
+          "11": 4
+        },
+        "RV_PST": {
+          "9": 4
+        },
+        "VF": {
+          "68": 1,
+          "72": 2,
+          "118": 2,
+          "83": 1,
+          "75": 1
+        },
+        "RV_VDUPS": {
+          "6": 8
+        },
+        "RV_VSTI": {
+          "9": 9
+        },
+        "RV_SCBZI": {
+          "1": 2
+        },
+        "RV_PSET": {
+          "6": 2
+        },
+        "RV_PLD": {
+          "9": 4
+        },
+        "RV_SJUMPI": {
+          "0": 4
+        },
+        "RV_PINTLV": {
+          "11": 2
+        },
+        "RV_VSEL": {
+          "6": 6
+        },
+        "RV_VST": {
+          "9": 6
+        },
+        "RV_PUNPACK": {
+          "11": 2
+        },
+        "RV_VCMPS_GT": {
+          "6": 4
+        },
+        "RV_VLDI": {
+          "9": 4,
+          "10": 2
+        },
+        "RV_VSUB": {
+          "7": 3
+        },
+        "END": {
+          "0": 1
+        },
+        "DCCI": {
+          "4": 1,
+          "6": 1
+        },
+        "END_LABEL": {
+          "5": 1
+        }
+      },
+      "vf_cycles": [
+        68,
+        34,
+        72,
+        49,
+        34,
+        72,
+        41
+      ],
+      "measured_vec_cycles": 370,
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "58af8d745e3b219929abbaa039ddf87927112ac84a7b1fb7d12ff67c57a8063c",
+        "core0.veccore0.instr_log.dump": "d81c1d56c82ea584be67a01939de2856e62edbd19236fd0f4cc77aa6e927740c",
+        "core0.veccore0.instr_popped_log.dump": "387ca48400b62804756b83316b0a9b57de3cbe5f8060923a8ed070d2eb8438a3"
+      },
+      "state": "native_verified"
+    },
+    {
+      "case": "sign_fp32_1x256",
+      "opcode": "SIGN",
+      "dtype": "fp32",
+      "shape": [
+        1,
+        256
+      ],
+      "arity": 1,
+      "expected_vf_calls": 7,
+      "source": "PyPTO vector/sign.h::SignFloat",
+      "golden": {
+        "passed": true,
+        "mismatches": 0,
+        "guard_passed": true,
+        "guard_bytes_checked": 31744,
+        "elements_checked": 256
+      },
+      "source_count_expectations": {
+        "RV_VLDI": 24,
+        "RV_VSTI": 20,
+        "RV_PST": 4,
+        "RV_PLD": 4,
+        "RV_VSEL": 8,
+        "RV_PINTLV": 4,
+        "RV_PUNPACK": 0,
+        "RV_PDINTLV": 4,
+        "RV_VCMPS": 8
+      },
+      "source_data_counts_match": true,
+      "instruction_counts": {
+        "MOV_XD_SPR": 12,
+        "MOVK": 28,
+        "MOV_XD_IMM": 37,
+        "ADD": 8,
+        "SHR": 1,
+        "AND": 1,
+        "ADD_IMM": 3,
+        "SHL": 9,
+        "MADD": 1,
+        "DC_PRELOAD_XN_IMM": 1,
+        "LDP_XI_XJ_XN": 1,
+        "INSERT_XD_XN": 17,
+        "PUSH_PB": 9,
+        "NOP": 14,
+        "MOV_SRC_TO_DST_ALIGNv2": 3,
+        "SET_FLAG": 2,
+        "WAIT_FLAG": 2,
+        "RV_VLOOPv2": 11,
+        "RV_SMOVI": 7,
+        "RV_SMOV": 11,
+        "RV_SNOP": 4,
+        "RV_SEND": 21,
+        "RV_PLT": 30,
+        "RV_VLD": 16,
+        "RV_VCMPS_LT": 4,
+        "RV_PDINTLV": 4,
+        "RV_PST": 4,
+        "VF": 7,
+        "RV_VDUPS": 10,
+        "RV_VSTI": 12,
+        "RV_PSET": 2,
+        "RV_SCBZI": 2,
+        "RV_PLD": 4,
+        "RV_PINTLV": 4,
+        "RV_VSEL": 8,
+        "RV_VST": 8,
+        "RV_VCMPS_GT": 4,
+        "RV_VLDI": 8,
+        "RV_VSUB": 4,
+        "BAR": 1,
+        "END": 1,
+        "DCCI": 2,
+        "END_LABEL": 1
+      },
+      "instruction_elapsed_histograms": {
+        "MOV_XD_SPR": {
+          "4": 12
+        },
+        "MOVK": {
+          "4": 28
+        },
+        "MOV_XD_IMM": {
+          "4": 37
+        },
+        "ADD": {
+          "4": 8
+        },
+        "SHR": {
+          "4": 1
+        },
+        "AND": {
+          "4": 1
+        },
+        "ADD_IMM": {
+          "4": 3
+        },
+        "SHL": {
+          "4": 9
+        },
+        "MADD": {
+          "5": 1
+        },
+        "DC_PRELOAD_XN_IMM": {
+          "407": 1
+        },
+        "LDP_XI_XJ_XN": {
+          "393": 1
+        },
+        "INSERT_XD_XN": {
+          "4": 17
+        },
+        "PUSH_PB": {
+          "4": 9
+        },
+        "NOP": {
+          "0": 14
+        },
+        "MOV_SRC_TO_DST_ALIGNv2": {
+          "1557": 1,
+          "2636": 1,
+          "1363": 1
+        },
+        "SET_FLAG": {
+          "2637": 1,
+          "2118": 1
+        },
+        "WAIT_FLAG": {
+          "2637": 1,
+          "2117": 1
+        },
+        "RV_VLOOPv2": {
+          "0": 11
+        },
+        "RV_SMOVI": {
+          "0": 7
+        },
+        "RV_SMOV": {
+          "1": 11
+        },
+        "RV_SNOP": {
+          "1": 4
+        },
+        "RV_SEND": {
+          "-21": 2,
+          "9": 14,
+          "-12": 2,
+          "-10": 2,
+          "-16": 1
+        },
+        "RV_PLT": {
+          "6": 30
+        },
+        "RV_VLD": {
+          "9": 12,
+          "10": 4
+        },
+        "RV_VCMPS_LT": {
+          "6": 4
+        },
+        "RV_PDINTLV": {
+          "11": 4
+        },
+        "RV_PST": {
+          "9": 4
+        },
+        "VF": {
+          "68": 1,
+          "73": 2,
+          "79": 2,
+          "76": 1,
+          "69": 1
+        },
+        "RV_VDUPS": {
+          "6": 10
+        },
+        "RV_VSTI": {
+          "9": 12
+        },
+        "RV_PSET": {
+          "6": 2
+        },
+        "RV_SCBZI": {
+          "1": 2
+        },
+        "RV_PLD": {
+          "9": 4
+        },
+        "RV_PINTLV": {
+          "11": 4
+        },
+        "RV_VSEL": {
+          "6": 8
+        },
+        "RV_VST": {
+          "9": 8
+        },
+        "RV_VCMPS_GT": {
+          "6": 4
+        },
+        "RV_VLDI": {
+          "9": 6,
+          "10": 2
+        },
+        "RV_VSUB": {
+          "7": 4
+        },
+        "END": {
+          "0": 1
+        },
+        "DCCI": {
+          "4": 1,
+          "6": 1
+        },
+        "END_LABEL": {
+          "5": 1
+        }
+      },
+      "vf_cycles": [
+        68,
+        35,
+        50,
+        49,
+        35,
+        50,
+        42
+      ],
+      "measured_vec_cycles": 329,
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "e8b16a00bf89500beb162fd909fcd683e0af016b97140f0db53db1d5e78e501b",
+        "core0.veccore0.instr_log.dump": "53b79a41597e98e24c74418dd755d1b7d96644d0732f9ee367aae3f3088d9152",
+        "core0.veccore0.instr_popped_log.dump": "f567f4e8ffb48ebba15de2916037b4e4c3d45d75a149983c2a630a3ffe8d1ecf"
+      },
+      "state": "native_verified"
+    },
+    {
+      "case": "sign_fp32_1x512",
+      "opcode": "SIGN",
+      "dtype": "fp32",
+      "shape": [
+        1,
+        512
+      ],
+      "arity": 1,
+      "expected_vf_calls": 7,
+      "source": "PyPTO vector/sign.h::SignFloat",
+      "golden": {
+        "passed": true,
+        "mismatches": 0,
+        "guard_passed": true,
+        "guard_bytes_checked": 30720,
+        "elements_checked": 512
+      },
+      "source_count_expectations": {
+        "RV_VLDI": 48,
+        "RV_VSTI": 40,
+        "RV_PST": 8,
+        "RV_PLD": 8,
+        "RV_VSEL": 16,
+        "RV_PINTLV": 8,
+        "RV_PUNPACK": 0,
+        "RV_PDINTLV": 8,
+        "RV_VCMPS": 16
+      },
+      "source_data_counts_match": true,
+      "instruction_counts": {
+        "MOV_XD_SPR": 12,
+        "MOVK": 28,
+        "MOV_XD_IMM": 37,
+        "ADD": 8,
+        "SHR": 1,
+        "AND": 1,
+        "ADD_IMM": 3,
+        "SHL": 9,
+        "MADD": 1,
+        "DC_PRELOAD_XN_IMM": 1,
+        "LDP_XI_XJ_XN": 1,
+        "INSERT_XD_XN": 17,
+        "PUSH_PB": 9,
+        "NOP": 14,
+        "MOV_SRC_TO_DST_ALIGNv2": 3,
+        "SET_FLAG": 2,
+        "WAIT_FLAG": 2,
+        "RV_VLOOPv2": 11,
+        "RV_SMOVI": 7,
+        "RV_SMOV": 11,
+        "RV_PLT": 58,
+        "RV_VLD": 32,
+        "RV_SNOP": 4,
+        "RV_SEND": 21,
+        "RV_VCMPS_LT": 8,
+        "RV_PDINTLV": 8,
+        "RV_PST": 8,
+        "VF": 7,
+        "RV_VDUPS": 18,
+        "RV_VSTI": 24,
+        "RV_PSET": 2,
+        "RV_PLD": 8,
+        "RV_SCBZI": 2,
+        "RV_PINTLV": 8,
+        "RV_VSEL": 16,
+        "RV_VST": 16,
+        "RV_VCMPS_GT": 8,
+        "RV_VLDI": 16,
+        "RV_VSUB": 8,
+        "BAR": 1,
+        "END": 1,
+        "DCCI": 2,
+        "END_LABEL": 1
+      },
+      "instruction_elapsed_histograms": {
+        "MOV_XD_SPR": {
+          "4": 12
+        },
+        "MOVK": {
+          "4": 28
+        },
+        "MOV_XD_IMM": {
+          "4": 37
+        },
+        "ADD": {
+          "4": 8
+        },
+        "SHR": {
+          "4": 1
+        },
+        "AND": {
+          "4": 1
+        },
+        "ADD_IMM": {
+          "4": 3
+        },
+        "SHL": {
+          "4": 9
+        },
+        "MADD": {
+          "5": 1
+        },
+        "DC_PRELOAD_XN_IMM": {
+          "407": 1
+        },
+        "LDP_XI_XJ_XN": {
+          "393": 1
+        },
+        "INSERT_XD_XN": {
+          "4": 17
+        },
+        "PUSH_PB": {
+          "4": 9
+        },
+        "NOP": {
+          "0": 14
+        },
+        "MOV_SRC_TO_DST_ALIGNv2": {
+          "1557": 1,
+          "2636": 1,
+          "1363": 1
+        },
+        "SET_FLAG": {
+          "2637": 1,
+          "2161": 1
+        },
+        "WAIT_FLAG": {
+          "2637": 1,
+          "2160": 1
+        },
+        "RV_VLOOPv2": {
+          "0": 11
+        },
+        "RV_SMOVI": {
+          "0": 7
+        },
+        "RV_SMOV": {
+          "1": 11
+        },
+        "RV_PLT": {
+          "6": 58
+        },
+        "RV_VLD": {
+          "9": 24,
+          "10": 8
+        },
+        "RV_SNOP": {
+          "1": 4
+        },
+        "RV_SEND": {
+          "-29": 1,
+          "9": 14,
+          "-12": 2,
+          "-11": 1,
+          "-23": 1,
+          "-10": 1,
+          "-16": 1
+        },
+        "RV_VCMPS_LT": {
+          "6": 8
+        },
+        "RV_PDINTLV": {
+          "11": 8
+        },
+        "RV_PST": {
+          "9": 8
+        },
+        "VF": {
+          "80": 1,
+          "85": 2,
+          "86": 1,
+          "83": 1,
+          "79": 1,
+          "73": 1
+        },
+        "RV_VDUPS": {
+          "6": 18
+        },
+        "RV_VSTI": {
+          "9": 24
+        },
+        "RV_PSET": {
+          "6": 2
+        },
+        "RV_PLD": {
+          "9": 8
+        },
+        "RV_SCBZI": {
+          "1": 2
+        },
+        "RV_PINTLV": {
+          "11": 8
+        },
+        "RV_VSEL": {
+          "6": 16
+        },
+        "RV_VST": {
+          "9": 16
+        },
+        "RV_VCMPS_GT": {
+          "6": 8
+        },
+        "RV_VLDI": {
+          "9": 14,
+          "10": 2
+        },
+        "RV_VSUB": {
+          "7": 8
+        },
+        "END": {
+          "0": 1
+        },
+        "DCCI": {
+          "4": 1,
+          "6": 1
+        },
+        "END_LABEL": {
+          "5": 1
+        }
+      },
+      "vf_cycles": [
+        80,
+        39,
+        57,
+        55,
+        39,
+        56,
+        46
+      ],
+      "measured_vec_cycles": 372,
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "382a19799b9c2726c028afca38e173c3fe3242118fbe0865c118c073d79b5ada",
+        "core0.veccore0.instr_log.dump": "819e9090be474b0e41559d743e14a3ef0b739be01aa1ad7c7410dc69ebb68e20",
+        "core0.veccore0.instr_popped_log.dump": "cb4c65ce724414aacc680266203b3f95ff62afe78bfeb1daf9332276687e8a30"
+      },
+      "state": "native_verified"
+    },
+    {
+      "case": "sign_fp32_1x1024",
+      "opcode": "SIGN",
+      "dtype": "fp32",
+      "shape": [
+        1,
+        1024
+      ],
+      "arity": 1,
+      "expected_vf_calls": 7,
+      "source": "PyPTO vector/sign.h::SignFloat",
+      "golden": {
+        "passed": true,
+        "mismatches": 0,
+        "guard_passed": true,
+        "guard_bytes_checked": 28672,
+        "elements_checked": 1024
+      },
+      "source_count_expectations": {
+        "RV_VLDI": 96,
+        "RV_VSTI": 80,
+        "RV_PST": 16,
+        "RV_PLD": 16,
+        "RV_VSEL": 32,
+        "RV_PINTLV": 16,
+        "RV_PUNPACK": 0,
+        "RV_PDINTLV": 16,
+        "RV_VCMPS": 32
+      },
+      "source_data_counts_match": true,
+      "instruction_counts": {
+        "MOV_XD_SPR": 12,
+        "MOVK": 28,
+        "MOV_XD_IMM": 37,
+        "ADD": 8,
+        "SHR": 1,
+        "AND": 1,
+        "ADD_IMM": 3,
+        "SHL": 9,
+        "MADD": 1,
+        "DC_PRELOAD_XN_IMM": 1,
+        "LDP_XI_XJ_XN": 1,
+        "INSERT_XD_XN": 17,
+        "PUSH_PB": 9,
+        "NOP": 14,
+        "MOV_SRC_TO_DST_ALIGNv2": 3,
+        "SET_FLAG": 2,
+        "WAIT_FLAG": 2,
+        "RV_VLOOPv2": 11,
+        "RV_SMOVI": 7,
+        "RV_SMOV": 11,
+        "RV_PLT": 114,
+        "RV_VLD": 64,
+        "RV_VCMPS_LT": 16,
+        "RV_PDINTLV": 16,
+        "RV_SNOP": 4,
+        "RV_SEND": 21,
+        "RV_PST": 16,
+        "VF": 7,
+        "RV_VDUPS": 34,
+        "RV_VSTI": 48,
+        "RV_PSET": 2,
+        "RV_PLD": 16,
+        "RV_PINTLV": 16,
+        "RV_VSEL": 32,
+        "RV_SCBZI": 2,
+        "RV_VST": 32,
+        "RV_VCMPS_GT": 16,
+        "RV_VLDI": 32,
+        "RV_VSUB": 16,
+        "BAR": 1,
+        "END": 1,
+        "DCCI": 2,
+        "END_LABEL": 1
+      },
+      "instruction_elapsed_histograms": {
+        "MOV_XD_SPR": {
+          "4": 12
+        },
+        "MOVK": {
+          "4": 28
+        },
+        "MOV_XD_IMM": {
+          "4": 37
+        },
+        "ADD": {
+          "4": 8
+        },
+        "SHR": {
+          "4": 1
+        },
+        "AND": {
+          "4": 1
+        },
+        "ADD_IMM": {
+          "4": 3
+        },
+        "SHL": {
+          "4": 9
+        },
+        "MADD": {
+          "5": 1
+        },
+        "DC_PRELOAD_XN_IMM": {
+          "407": 1
+        },
+        "LDP_XI_XJ_XN": {
+          "393": 1
+        },
+        "INSERT_XD_XN": {
+          "4": 17
+        },
+        "PUSH_PB": {
+          "4": 9
+        },
+        "NOP": {
+          "0": 14
+        },
+        "MOV_SRC_TO_DST_ALIGNv2": {
+          "1557": 1,
+          "2636": 1,
+          "1363": 1
+        },
+        "SET_FLAG": {
+          "2637": 1,
+          "2251": 1
+        },
+        "WAIT_FLAG": {
+          "2637": 1,
+          "2250": 1
+        },
+        "RV_VLOOPv2": {
+          "0": 11
+        },
+        "RV_SMOVI": {
+          "0": 7
+        },
+        "RV_SMOV": {
+          "1": 11
+        },
+        "RV_PLT": {
+          "6": 114
+        },
+        "RV_VLD": {
+          "9": 48,
+          "10": 16
+        },
+        "RV_VCMPS_LT": {
+          "6": 16
+        },
+        "RV_PDINTLV": {
+          "11": 16
+        },
+        "RV_SNOP": {
+          "1": 4
+        },
+        "RV_SEND": {
+          "-31": 1,
+          "9": 14,
+          "-12": 2,
+          "-11": 1,
+          "-23": 1,
+          "-10": 1,
+          "-16": 1
+        },
+        "RV_PST": {
+          "9": 16
+        },
+        "VF": {
+          "98": 1,
+          "95": 1,
+          "101": 2,
+          "87": 1,
+          "100": 1,
+          "81": 1
+        },
+        "RV_VDUPS": {
+          "6": 34
+        },
+        "RV_VSTI": {
+          "9": 48
+        },
+        "RV_PSET": {
+          "6": 2
+        },
+        "RV_PLD": {
+          "9": 16
+        },
+        "RV_PINTLV": {
+          "11": 16
+        },
+        "RV_VSEL": {
+          "6": 32
+        },
+        "RV_SCBZI": {
+          "1": 2
+        },
+        "RV_VST": {
+          "11": 4,
+          "10": 4,
+          "9": 24
+        },
+        "RV_VCMPS_GT": {
+          "6": 16
+        },
+        "RV_VLDI": {
+          "9": 30,
+          "10": 2
+        },
+        "RV_VSUB": {
+          "7": 16
+        },
+        "END": {
+          "0": 1
+        },
+        "DCCI": {
+          "4": 1,
+          "6": 1
+        },
+        "END_LABEL": {
+          "5": 1
+        }
+      },
+      "vf_cycles": [
+        98,
+        47,
+        72,
+        73,
+        47,
+        71,
+        54
+      ],
+      "measured_vec_cycles": 462,
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "3262ab3c3eb16ad5824cd93fbde249bb9d9f68ff986361c1e028ba4165f7a725",
+        "core0.veccore0.instr_log.dump": "d3b24b88ba0c4ebb6bd1e9259badd49f57cd55dd5904738454755cee4d31722a",
+        "core0.veccore0.instr_popped_log.dump": "21130aae79e0930db550ad5e283d1a2b46b4857572c32497b63252404926fd8c"
+      },
+      "state": "native_verified"
+    },
+    {
+      "case": "log1p_fp32_1x1",
+      "opcode": "LOG1P",
+      "dtype": "fp32",
+      "shape": [
+        1,
+        1
+      ],
+      "arity": 1,
+      "expected_vf_calls": 9,
+      "source": "PyPTO vector/log1p.h::TLog1pTileImpl",
+      "golden": {
+        "passed": true,
+        "mismatches": 0,
+        "guard_passed": true,
+        "guard_bytes_checked": 32764,
+        "elements_checked": 1
+      },
+      "source_count_expectations": {
+        "RV_VLDI": 15,
+        "RV_VSTI": 7,
+        "RV_PST": 2,
+        "RV_PLD": 2,
+        "RV_VSEL": 2,
+        "RV_PINTLV": 0,
+        "RV_PUNPACK": 2,
+        "RV_PDINTLV": 2,
+        "RV_VCMPS": 4
+      },
+      "source_data_counts_match": true,
+      "instruction_counts": {
+        "MOV_XD_SPR": 14,
+        "MOVK": 28,
+        "MOV_XD_IMM": 39,
+        "ADD": 10,
+        "SHR": 1,
+        "AND": 1,
+        "ADD_IMM": 3,
+        "SHL": 11,
+        "MADD": 1,
+        "DC_PRELOAD_XN_IMM": 1,
+        "LDP_XI_XJ_XN": 1,
+        "INSERT_XD_XN": 16,
+        "MOV_XD_XN": 2,
+        "NOP": 18,
+        "PUSH_PB": 9,
+        "MOV_SRC_TO_DST_ALIGNv2": 3,
+        "SET_FLAG": 2,
+        "WAIT_FLAG": 2,
+        "RV_VLOOPv2": 9,
+        "RV_SMOV": 12,
+        "RV_SMOVI": 9,
+        "RV_SEND": 27,
+        "RV_PLT": 11,
+        "RV_VLDI": 7,
+        "RV_VADDS": 2,
+        "RV_VSTI": 5,
+        "VF": 9,
+        "RV_VDIV": 1,
+        "RV_VLN": 1,
+        "RV_VMUL": 1,
+        "RV_VLD": 8,
+        "RV_VCMPS_EQ": 4,
+        "RV_PDINTLV": 2,
+        "RV_PST": 2,
+        "RV_PLD": 2,
+        "RV_PUNPACK": 2,
+        "RV_VSEL": 2,
+        "RV_VST": 2,
+        "BAR": 1,
+        "END": 1,
+        "DCCI": 2,
+        "END_LABEL": 1
+      },
+      "instruction_elapsed_histograms": {
+        "MOV_XD_SPR": {
+          "4": 14
+        },
+        "MOVK": {
+          "4": 28
+        },
+        "MOV_XD_IMM": {
+          "4": 39
+        },
+        "ADD": {
+          "4": 10
+        },
+        "SHR": {
+          "4": 1
+        },
+        "AND": {
+          "4": 1
+        },
+        "ADD_IMM": {
+          "4": 3
+        },
+        "SHL": {
+          "4": 11
+        },
+        "MADD": {
+          "5": 1
+        },
+        "DC_PRELOAD_XN_IMM": {
+          "407": 1
+        },
+        "LDP_XI_XJ_XN": {
+          "393": 1
+        },
+        "INSERT_XD_XN": {
+          "4": 16
+        },
+        "MOV_XD_XN": {
+          "4": 2
+        },
+        "NOP": {
+          "0": 18
+        },
+        "PUSH_PB": {
+          "4": 9
+        },
+        "MOV_SRC_TO_DST_ALIGNv2": {
+          "1557": 1,
+          "2636": 1,
+          "1381": 1
+        },
+        "SET_FLAG": {
+          "2637": 1,
+          "2191": 1
+        },
+        "WAIT_FLAG": {
+          "2637": 1,
+          "2190": 1
+        },
+        "RV_VLOOPv2": {
+          "0": 9
+        },
+        "RV_SMOV": {
+          "1": 12
+        },
+        "RV_SMOVI": {
+          "0": 9
+        },
+        "RV_SEND": {
+          "-11": 1,
+          "9": 18,
+          "-15": 1,
+          "-26": 2,
+          "-17": 1,
+          "-21": 2,
+          "-22": 2
+        },
+        "RV_PLT": {
+          "6": 11
+        },
+        "RV_VLDI": {
+          "9": 5,
+          "10": 2
+        },
+        "RV_VADDS": {
+          "7": 2
+        },
+        "RV_VSTI": {
+          "9": 5
+        },
+        "VF": {
+          "56": 1,
+          "65": 1,
+          "88": 1,
+          "110": 1,
+          "124": 1,
+          "121": 1,
+          "114": 1,
+          "118": 1,
+          "117": 1
+        },
+        "RV_VDIV": {
+          "17": 1
+        },
+        "RV_VLN": {
+          "18": 1
+        },
+        "RV_VMUL": {
+          "8": 1
+        },
+        "RV_VLD": {
+          "9": 4,
+          "10": 4
+        },
+        "RV_VCMPS_EQ": {
+          "6": 4
+        },
+        "RV_PDINTLV": {
+          "11": 2
+        },
+        "RV_PST": {
+          "9": 2
+        },
+        "RV_PLD": {
+          "9": 2
+        },
+        "RV_PUNPACK": {
+          "11": 2
+        },
+        "RV_VSEL": {
+          "6": 2
+        },
+        "RV_VST": {
+          "9": 2
+        },
+        "END": {
+          "0": 1
+        },
+        "DCCI": {
+          "4": 1,
+          "6": 1
+        },
+        "END_LABEL": {
+          "5": 1
+        }
+      },
+      "vf_cycles": [
+        56,
+        37,
+        49,
+        48,
+        40,
+        43,
+        42,
+        43,
+        42
+      ],
+      "measured_vec_cycles": 400,
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "194a9e67f4c0660c239fbc0f8d9fa0b89139ffba0de3637319de23a11762d405",
+        "core0.veccore0.instr_log.dump": "31efd4fd3d478341bd5940de960faa83678b669be1f2327318149f7852ec6aba",
+        "core0.veccore0.instr_popped_log.dump": "e4567ea1d6245be0f455fffc429973d91e1eeb71424d1262e25f3097ec6efa74"
+      },
+      "state": "native_verified"
+    },
+    {
+      "case": "log1p_fp32_1x64",
+      "opcode": "LOG1P",
+      "dtype": "fp32",
+      "shape": [
+        1,
+        64
+      ],
+      "arity": 1,
+      "expected_vf_calls": 9,
+      "source": "PyPTO vector/log1p.h::TLog1pTileImpl",
+      "golden": {
+        "passed": true,
+        "mismatches": 0,
+        "guard_passed": true,
+        "guard_bytes_checked": 32512,
+        "elements_checked": 64
+      },
+      "source_count_expectations": {
+        "RV_VLDI": 15,
+        "RV_VSTI": 7,
+        "RV_PST": 2,
+        "RV_PLD": 2,
+        "RV_VSEL": 2,
+        "RV_PINTLV": 0,
+        "RV_PUNPACK": 2,
+        "RV_PDINTLV": 2,
+        "RV_VCMPS": 4
+      },
+      "source_data_counts_match": true,
+      "instruction_counts": {
+        "MOV_XD_SPR": 14,
+        "MOVK": 27,
+        "MOV_XD_IMM": 38,
+        "ADD": 10,
+        "SHR": 1,
+        "AND": 1,
+        "ADD_IMM": 3,
+        "SHL": 11,
+        "MADD": 1,
+        "DC_PRELOAD_XN_IMM": 1,
+        "LDP_XI_XJ_XN": 1,
+        "INSERT_XD_XN": 16,
+        "MOV_XD_XN": 2,
+        "NOP": 18,
+        "PUSH_PB": 9,
+        "MOV_SRC_TO_DST_ALIGNv2": 3,
+        "SET_FLAG": 2,
+        "WAIT_FLAG": 2,
+        "RV_VLOOPv2": 9,
+        "RV_SMOV": 12,
+        "RV_SMOVI": 9,
+        "RV_SEND": 27,
+        "RV_PLT": 11,
+        "RV_VLDI": 7,
+        "RV_VADDS": 2,
+        "RV_VSTI": 5,
+        "VF": 9,
+        "RV_VDIV": 1,
+        "RV_VLN": 1,
+        "RV_VMUL": 1,
+        "RV_VLD": 8,
+        "RV_VCMPS_EQ": 4,
+        "RV_PDINTLV": 2,
+        "RV_PST": 2,
+        "RV_PLD": 2,
+        "RV_PUNPACK": 2,
+        "RV_VSEL": 2,
+        "RV_VST": 2,
+        "BAR": 1,
+        "END": 1,
+        "DCCI": 2,
+        "END_LABEL": 1
+      },
+      "instruction_elapsed_histograms": {
+        "MOV_XD_SPR": {
+          "4": 14
+        },
+        "MOVK": {
+          "4": 27
+        },
+        "MOV_XD_IMM": {
+          "4": 38
+        },
+        "ADD": {
+          "4": 10
+        },
+        "SHR": {
+          "4": 1
+        },
+        "AND": {
+          "4": 1
+        },
+        "ADD_IMM": {
+          "4": 3
+        },
+        "SHL": {
+          "4": 11
+        },
+        "MADD": {
+          "5": 1
+        },
+        "DC_PRELOAD_XN_IMM": {
+          "407": 1
+        },
+        "LDP_XI_XJ_XN": {
+          "393": 1
+        },
+        "INSERT_XD_XN": {
+          "4": 16
+        },
+        "MOV_XD_XN": {
+          "4": 2
+        },
+        "NOP": {
+          "0": 18
+        },
+        "PUSH_PB": {
+          "4": 9
+        },
+        "MOV_SRC_TO_DST_ALIGNv2": {
+          "1557": 1,
+          "2636": 1,
+          "1381": 1
+        },
+        "SET_FLAG": {
+          "2637": 1,
+          "2191": 1
+        },
+        "WAIT_FLAG": {
+          "2637": 1,
+          "2190": 1
+        },
+        "RV_VLOOPv2": {
+          "0": 9
+        },
+        "RV_SMOV": {
+          "1": 12
+        },
+        "RV_SMOVI": {
+          "0": 9
+        },
+        "RV_SEND": {
+          "-11": 1,
+          "9": 18,
+          "-15": 1,
+          "-25": 1,
+          "-26": 1,
+          "-17": 1,
+          "-21": 2,
+          "-22": 2
+        },
+        "RV_PLT": {
+          "6": 11
+        },
+        "RV_VLDI": {
+          "9": 6,
+          "10": 1
+        },
+        "RV_VADDS": {
+          "7": 2
+        },
+        "RV_VSTI": {
+          "9": 5
+        },
+        "VF": {
+          "56": 1,
+          "65": 1,
+          "87": 1,
+          "109": 1,
+          "123": 1,
+          "121": 1,
+          "114": 1,
+          "118": 1,
+          "117": 1
+        },
+        "RV_VDIV": {
+          "17": 1
+        },
+        "RV_VLN": {
+          "18": 1
+        },
+        "RV_VMUL": {
+          "8": 1
+        },
+        "RV_VLD": {
+          "9": 8
+        },
+        "RV_VCMPS_EQ": {
+          "6": 4
+        },
+        "RV_PDINTLV": {
+          "11": 2
+        },
+        "RV_PST": {
+          "9": 2
+        },
+        "RV_PLD": {
+          "9": 2
+        },
+        "RV_PUNPACK": {
+          "11": 2
+        },
+        "RV_VSEL": {
+          "6": 2
+        },
+        "RV_VST": {
+          "9": 2
+        },
+        "END": {
+          "0": 1
+        },
+        "DCCI": {
+          "4": 1,
+          "6": 1
+        },
+        "END_LABEL": {
+          "5": 1
+        }
+      },
+      "vf_cycles": [
+        56,
+        37,
+        48,
+        48,
+        40,
+        43,
+        42,
+        43,
+        42
+      ],
+      "measured_vec_cycles": 399,
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "c066fd58a4ab9ca622b17493b677f4feddfa9e6d5a71719e514748616b40f70e",
+        "core0.veccore0.instr_log.dump": "4137b10ae9bcbe00d0b1ca25950014db90b1f06ae9ef70c9a3b00f9837d993b9",
+        "core0.veccore0.instr_popped_log.dump": "e8a00bae9483b6e6d9b17e0a5e3d10b696066edaa914bf90ef04ddb08961a3b1"
+      },
+      "state": "native_verified"
+    },
+    {
+      "case": "log1p_fp32_1x129",
+      "opcode": "LOG1P",
+      "dtype": "fp32",
+      "shape": [
+        1,
+        129
+      ],
+      "arity": 1,
+      "expected_vf_calls": 9,
+      "source": "PyPTO vector/log1p.h::TLog1pTileImpl",
+      "golden": {
+        "passed": true,
+        "mismatches": 0,
+        "guard_passed": true,
+        "guard_bytes_checked": 32252,
+        "elements_checked": 129
+      },
+      "source_count_expectations": {
+        "RV_VLDI": 41,
+        "RV_VSTI": 21,
+        "RV_PST": 4,
+        "RV_PLD": 4,
+        "RV_VSEL": 6,
+        "RV_PINTLV": 2,
+        "RV_PUNPACK": 2,
+        "RV_PDINTLV": 4,
+        "RV_VCMPS": 8
+      },
+      "source_data_counts_match": true,
+      "instruction_counts": {
+        "MOV_XD_SPR": 14,
+        "MOVK": 41,
+        "MOV_XD_IMM": 52,
+        "ADD": 10,
+        "SHR": 1,
+        "AND": 1,
+        "ADD_IMM": 3,
+        "SHL": 11,
+        "MADD": 1,
+        "DC_PRELOAD_XN_IMM": 1,
+        "LDP_XI_XJ_XN": 1,
+        "INSERT_XD_XN": 24,
+        "MOV_XD_XN": 1,
+        "NOP": 18,
+        "PUSH_PB": 13,
+        "MOV_SRC_TO_DST_ALIGNv2": 3,
+        "SET_FLAG": 2,
+        "WAIT_FLAG": 2,
+        "RV_VLOOPv2": 15,
+        "RV_SMOV": 18,
+        "RV_SMOVI": 9,
+        "RV_SEND": 27,
+        "RV_PLT": 31,
+        "RV_VLDI": 21,
+        "RV_VADDS": 6,
+        "RV_VSTI": 15,
+        "VF": 9,
+        "RV_VDIV": 3,
+        "RV_VLN": 3,
+        "RV_VMUL": 3,
+        "RV_SNOP": 4,
+        "RV_VLD": 20,
+        "RV_VCMPS_EQ": 8,
+        "RV_PDINTLV": 4,
+        "RV_PST": 4,
+        "RV_SCBZI": 2,
+        "RV_PLD": 4,
+        "RV_SJUMPI": 4,
+        "RV_PINTLV": 2,
+        "RV_VSEL": 6,
+        "RV_VST": 6,
+        "RV_PUNPACK": 2,
+        "BAR": 1,
+        "END": 1,
+        "DCCI": 2,
+        "END_LABEL": 1
+      },
+      "instruction_elapsed_histograms": {
+        "MOV_XD_SPR": {
+          "4": 14
+        },
+        "MOVK": {
+          "4": 41
+        },
+        "MOV_XD_IMM": {
+          "4": 52
+        },
+        "ADD": {
+          "4": 10
+        },
+        "SHR": {
+          "4": 1
+        },
+        "AND": {
+          "4": 1
+        },
+        "ADD_IMM": {
+          "4": 3
+        },
+        "SHL": {
+          "4": 11
+        },
+        "MADD": {
+          "5": 1
+        },
+        "DC_PRELOAD_XN_IMM": {
+          "407": 1
+        },
+        "LDP_XI_XJ_XN": {
+          "393": 1
+        },
+        "INSERT_XD_XN": {
+          "4": 24
+        },
+        "MOV_XD_XN": {
+          "4": 1
+        },
+        "NOP": {
+          "0": 18
+        },
+        "PUSH_PB": {
+          "4": 13
+        },
+        "MOV_SRC_TO_DST_ALIGNv2": {
+          "1557": 1,
+          "2636": 1,
+          "1359": 1
+        },
+        "SET_FLAG": {
+          "2637": 1,
+          "2259": 1
+        },
+        "WAIT_FLAG": {
+          "2637": 1,
+          "2258": 1
+        },
+        "RV_VLOOPv2": {
+          "0": 15
+        },
+        "RV_SMOV": {
+          "1": 18
+        },
+        "RV_SMOVI": {
+          "0": 9
+        },
+        "RV_SEND": {
+          "-13": 1,
+          "9": 18,
+          "-15": 1,
+          "-28": 2,
+          "-17": 1,
+          "-21": 2,
+          "-8": 2
+        },
+        "RV_PLT": {
+          "6": 31
+        },
+        "RV_VLDI": {
+          "9": 15,
+          "10": 6
+        },
+        "RV_VADDS": {
+          "7": 6
+        },
+        "RV_VSTI": {
+          "9": 15
+        },
+        "VF": {
+          "58": 1,
+          "69": 1,
+          "85": 1,
+          "97": 1,
+          "87": 1,
+          "83": 1,
+          "110": 2,
+          "74": 1
+        },
+        "RV_VDIV": {
+          "17": 3
+        },
+        "RV_VLN": {
+          "18": 3
+        },
+        "RV_VMUL": {
+          "8": 3
+        },
+        "RV_SNOP": {
+          "1": 4
+        },
+        "RV_VLD": {
+          "9": 8,
+          "10": 12
+        },
+        "RV_VCMPS_EQ": {
+          "6": 8
+        },
+        "RV_PDINTLV": {
+          "11": 4
+        },
+        "RV_PST": {
+          "9": 4
+        },
+        "RV_SCBZI": {
+          "1": 2
+        },
+        "RV_PLD": {
+          "9": 4
+        },
+        "RV_SJUMPI": {
+          "0": 4
+        },
+        "RV_PINTLV": {
+          "11": 2
+        },
+        "RV_VSEL": {
+          "6": 6
+        },
+        "RV_VST": {
+          "9": 6
+        },
+        "RV_PUNPACK": {
+          "11": 2
+        },
+        "END": {
+          "0": 1
+        },
+        "DCCI": {
+          "4": 1,
+          "6": 1
+        },
+        "END_LABEL": {
+          "5": 1
+        }
+      },
+      "vf_cycles": [
+        58,
+        39,
+        53,
+        52,
+        42,
+        49,
+        72,
+        49,
+        72
+      ],
+      "measured_vec_cycles": 486,
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "3ac46c33377cc60fe39cfe76059e3f8ca177153cf814eeeccda563cab732de35",
+        "core0.veccore0.instr_log.dump": "7ca1e78ed23b969a8e79f4e2ee688353db7e182ef3c2d7d7fc10647127fe4459",
+        "core0.veccore0.instr_popped_log.dump": "8f3353a98355856f272472b87835acd92e285a3b1bc425c7f753262166982226"
+      },
+      "state": "native_verified"
+    },
+    {
+      "case": "log1p_fp32_1x256",
+      "opcode": "LOG1P",
+      "dtype": "fp32",
+      "shape": [
+        1,
+        256
+      ],
+      "arity": 1,
+      "expected_vf_calls": 9,
+      "source": "PyPTO vector/log1p.h::TLog1pTileImpl",
+      "golden": {
+        "passed": true,
+        "mismatches": 0,
+        "guard_passed": true,
+        "guard_bytes_checked": 31744,
+        "elements_checked": 256
+      },
+      "source_count_expectations": {
+        "RV_VLDI": 52,
+        "RV_VSTI": 28,
+        "RV_PST": 4,
+        "RV_PLD": 4,
+        "RV_VSEL": 8,
+        "RV_PINTLV": 4,
+        "RV_PUNPACK": 0,
+        "RV_PDINTLV": 4,
+        "RV_VCMPS": 8
+      },
+      "source_data_counts_match": true,
+      "instruction_counts": {
+        "MOV_XD_SPR": 14,
+        "MOVK": 40,
+        "MOV_XD_IMM": 51,
+        "ADD": 10,
+        "SHR": 1,
+        "AND": 1,
+        "ADD_IMM": 3,
+        "SHL": 11,
+        "MADD": 1,
+        "DC_PRELOAD_XN_IMM": 1,
+        "LDP_XI_XJ_XN": 1,
+        "INSERT_XD_XN": 23,
+        "MOV_XD_XN": 1,
+        "NOP": 18,
+        "PUSH_PB": 13,
+        "MOV_SRC_TO_DST_ALIGNv2": 3,
+        "SET_FLAG": 2,
+        "WAIT_FLAG": 2,
+        "RV_VLOOPv2": 13,
+        "RV_SMOV": 18,
+        "RV_SMOVI": 9,
+        "RV_SEND": 27,
+        "RV_PLT": 38,
+        "RV_VLDI": 28,
+        "RV_VADDS": 8,
+        "RV_VSTI": 20,
+        "VF": 9,
+        "RV_VDIV": 4,
+        "RV_VLN": 4,
+        "RV_VMUL": 4,
+        "RV_SNOP": 4,
+        "RV_VLD": 24,
+        "RV_VCMPS_EQ": 8,
+        "RV_PDINTLV": 4,
+        "RV_PST": 4,
+        "RV_SCBZI": 2,
+        "RV_PLD": 4,
+        "RV_PINTLV": 4,
+        "RV_VSEL": 8,
+        "RV_VST": 8,
+        "BAR": 1,
+        "END": 1,
+        "DCCI": 2,
+        "END_LABEL": 1
+      },
+      "instruction_elapsed_histograms": {
+        "MOV_XD_SPR": {
+          "4": 14
+        },
+        "MOVK": {
+          "4": 40
+        },
+        "MOV_XD_IMM": {
+          "4": 51
+        },
+        "ADD": {
+          "4": 10
+        },
+        "SHR": {
+          "4": 1
+        },
+        "AND": {
+          "4": 1
+        },
+        "ADD_IMM": {
+          "4": 3
+        },
+        "SHL": {
+          "4": 11
+        },
+        "MADD": {
+          "5": 1
+        },
+        "DC_PRELOAD_XN_IMM": {
+          "407": 1
+        },
+        "LDP_XI_XJ_XN": {
+          "393": 1
+        },
+        "INSERT_XD_XN": {
+          "4": 23
+        },
+        "MOV_XD_XN": {
+          "4": 1
+        },
+        "NOP": {
+          "0": 18
+        },
+        "PUSH_PB": {
+          "4": 13
+        },
+        "MOV_SRC_TO_DST_ALIGNv2": {
+          "1557": 1,
+          "2610": 1,
+          "1360": 1
+        },
+        "SET_FLAG": {
+          "2611": 1,
+          "2195": 1
+        },
+        "WAIT_FLAG": {
+          "2611": 1,
+          "2194": 1
+        },
+        "RV_VLOOPv2": {
+          "0": 13
+        },
+        "RV_SMOV": {
+          "1": 18
+        },
+        "RV_SMOVI": {
+          "0": 9
+        },
+        "RV_SEND": {
+          "-14": 1,
+          "9": 18,
+          "-15": 1,
+          "-28": 2,
+          "-17": 1,
+          "-21": 2,
+          "-10": 2
+        },
+        "RV_PLT": {
+          "6": 38
+        },
+        "RV_VLDI": {
+          "9": 24,
+          "10": 4
+        },
+        "RV_VADDS": {
+          "7": 8
+        },
+        "RV_VSTI": {
+          "9": 20
+        },
+        "VF": {
+          "59": 1,
+          "71": 1,
+          "86": 1,
+          "98": 1,
+          "88": 3,
+          "83": 1,
+          "76": 1
+        },
+        "RV_VDIV": {
+          "17": 4
+        },
+        "RV_VLN": {
+          "18": 4
+        },
+        "RV_VMUL": {
+          "8": 4
+        },
+        "RV_SNOP": {
+          "1": 4
+        },
+        "RV_VLD": {
+          "9": 12,
+          "10": 12
+        },
+        "RV_VCMPS_EQ": {
+          "6": 8
+        },
+        "RV_PDINTLV": {
+          "11": 4
+        },
+        "RV_PST": {
+          "9": 4
+        },
+        "RV_SCBZI": {
+          "1": 2
+        },
+        "RV_PLD": {
+          "9": 4
+        },
+        "RV_PINTLV": {
+          "11": 4
+        },
+        "RV_VSEL": {
+          "6": 8
+        },
+        "RV_VST": {
+          "9": 8
+        },
+        "END": {
+          "0": 1
+        },
+        "DCCI": {
+          "4": 1,
+          "6": 1
+        },
+        "END_LABEL": {
+          "5": 1
+        }
+      },
+      "vf_cycles": [
+        59,
+        40,
+        54,
+        53,
+        43,
+        49,
+        50,
+        49,
+        50
+      ],
+      "measured_vec_cycles": 447,
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "88c4b6f063a56c06192c41271f09b68a77295a2cd925fe6ad1d1efb6d1abb60d",
+        "core0.veccore0.instr_log.dump": "d0c7087ffb378eec41a6fecb1812e5ce7742c6a7992be857eb3b7dda3289d4c8",
+        "core0.veccore0.instr_popped_log.dump": "9e7f2e4594bf99f0e385811ba2aa588454d9d9ce6d972bd49ca926157a631072"
+      },
+      "state": "native_verified"
+    },
+    {
+      "case": "log1p_fp32_1x512",
+      "opcode": "LOG1P",
+      "dtype": "fp32",
+      "shape": [
+        1,
+        512
+      ],
+      "arity": 1,
+      "expected_vf_calls": 9,
+      "source": "PyPTO vector/log1p.h::TLog1pTileImpl",
+      "golden": {
+        "passed": true,
+        "mismatches": 0,
+        "guard_passed": true,
+        "guard_bytes_checked": 30720,
+        "elements_checked": 512
+      },
+      "source_count_expectations": {
+        "RV_VLDI": 104,
+        "RV_VSTI": 56,
+        "RV_PST": 8,
+        "RV_PLD": 8,
+        "RV_VSEL": 16,
+        "RV_PINTLV": 8,
+        "RV_PUNPACK": 0,
+        "RV_PDINTLV": 8,
+        "RV_VCMPS": 16
+      },
+      "source_data_counts_match": true,
+      "instruction_counts": {
+        "MOV_XD_SPR": 14,
+        "MOVK": 40,
+        "MOV_XD_IMM": 51,
+        "ADD": 10,
+        "SHR": 1,
+        "AND": 1,
+        "ADD_IMM": 3,
+        "SHL": 11,
+        "MADD": 1,
+        "DC_PRELOAD_XN_IMM": 1,
+        "LDP_XI_XJ_XN": 1,
+        "INSERT_XD_XN": 23,
+        "MOV_XD_XN": 1,
+        "NOP": 18,
+        "PUSH_PB": 13,
+        "MOV_SRC_TO_DST_ALIGNv2": 3,
+        "SET_FLAG": 2,
+        "WAIT_FLAG": 2,
+        "RV_VLOOPv2": 13,
+        "RV_SMOV": 18,
+        "RV_SMOVI": 9,
+        "RV_PLT": 74,
+        "RV_SEND": 27,
+        "RV_VLDI": 56,
+        "RV_VADDS": 16,
+        "RV_VSTI": 40,
+        "VF": 9,
+        "RV_VDIV": 8,
+        "RV_VLN": 8,
+        "RV_VMUL": 8,
+        "RV_VLD": 48,
+        "RV_SNOP": 4,
+        "RV_VCMPS_EQ": 16,
+        "RV_PDINTLV": 8,
+        "RV_PST": 8,
+        "RV_PLD": 8,
+        "RV_SCBZI": 2,
+        "RV_PINTLV": 8,
+        "RV_VSEL": 16,
+        "RV_VST": 16,
+        "BAR": 1,
+        "END": 1,
+        "DCCI": 2,
+        "END_LABEL": 1
+      },
+      "instruction_elapsed_histograms": {
+        "MOV_XD_SPR": {
+          "4": 14
+        },
+        "MOVK": {
+          "4": 40
+        },
+        "MOV_XD_IMM": {
+          "4": 51
+        },
+        "ADD": {
+          "4": 10
+        },
+        "SHR": {
+          "4": 1
+        },
+        "AND": {
+          "4": 1
+        },
+        "ADD_IMM": {
+          "4": 3
+        },
+        "SHL": {
+          "4": 11
+        },
+        "MADD": {
+          "5": 1
+        },
+        "DC_PRELOAD_XN_IMM": {
+          "407": 1
+        },
+        "LDP_XI_XJ_XN": {
+          "393": 1
+        },
+        "INSERT_XD_XN": {
+          "4": 23
+        },
+        "MOV_XD_XN": {
+          "4": 1
+        },
+        "NOP": {
+          "0": 18
+        },
+        "PUSH_PB": {
+          "4": 13
+        },
+        "MOV_SRC_TO_DST_ALIGNv2": {
+          "1557": 1,
+          "2610": 1,
+          "1360": 1
+        },
+        "SET_FLAG": {
+          "2611": 1,
+          "2254": 1
+        },
+        "WAIT_FLAG": {
+          "2611": 1,
+          "2253": 1
+        },
+        "RV_VLOOPv2": {
+          "0": 13
+        },
+        "RV_SMOV": {
+          "1": 18
+        },
+        "RV_SMOVI": {
+          "0": 9
+        },
+        "RV_PLT": {
+          "6": 74
+        },
+        "RV_SEND": {
+          "-15": 2,
+          "9": 18,
+          "-32": 2,
+          "-17": 1,
+          "-29": 1,
+          "-11": 1,
+          "-23": 1,
+          "-10": 1
+        },
+        "RV_VLDI": {
+          "9": 52,
+          "10": 4
+        },
+        "RV_VADDS": {
+          "7": 16
+        },
+        "RV_VSTI": {
+          "9": 40
+        },
+        "VF": {
+          "63": 1,
+          "76": 1,
+          "94": 1,
+          "110": 1,
+          "96": 2,
+          "95": 1,
+          "103": 1,
+          "83": 1
+        },
+        "RV_VDIV": {
+          "17": 8
+        },
+        "RV_VLN": {
+          "18": 8
+        },
+        "RV_VMUL": {
+          "8": 8
+        },
+        "RV_VLD": {
+          "9": 28,
+          "10": 20
+        },
+        "RV_SNOP": {
+          "1": 4
+        },
+        "RV_VCMPS_EQ": {
+          "6": 16
+        },
+        "RV_PDINTLV": {
+          "11": 8
+        },
+        "RV_PST": {
+          "9": 8
+        },
+        "RV_PLD": {
+          "9": 8
+        },
+        "RV_SCBZI": {
+          "1": 2
+        },
+        "RV_PINTLV": {
+          "11": 8
+        },
+        "RV_VSEL": {
+          "6": 16
+        },
+        "RV_VST": {
+          "9": 16
+        },
+        "END": {
+          "0": 1
+        },
+        "DCCI": {
+          "4": 1,
+          "6": 1
+        },
+        "END_LABEL": {
+          "5": 1
+        }
+      },
+      "vf_cycles": [
+        63,
+        44,
+        62,
+        61,
+        47,
+        61,
+        57,
+        55,
+        56
+      ],
+      "measured_vec_cycles": 506,
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "b5e1c8d0fac34bc230afaf7ebeecc93497e45ecc902a339b7448e048fe90850d",
+        "core0.veccore0.instr_log.dump": "ce03ab3237303b6646418746b2de73012bfb02f7dc163f035eebd90d9c83057c",
+        "core0.veccore0.instr_popped_log.dump": "24e9ce9d5fa19b154d7d4b0dc13f8b35c1e54c93c8ee0232732fd0bbdee03e0f"
+      },
+      "state": "native_verified"
+    },
+    {
+      "case": "log1p_fp32_1x1024",
+      "opcode": "LOG1P",
+      "dtype": "fp32",
+      "shape": [
+        1,
+        1024
+      ],
+      "arity": 1,
+      "expected_vf_calls": 9,
+      "source": "PyPTO vector/log1p.h::TLog1pTileImpl",
+      "golden": {
+        "passed": true,
+        "mismatches": 0,
+        "guard_passed": true,
+        "guard_bytes_checked": 28672,
+        "elements_checked": 1024
+      },
+      "source_count_expectations": {
+        "RV_VLDI": 208,
+        "RV_VSTI": 112,
+        "RV_PST": 16,
+        "RV_PLD": 16,
+        "RV_VSEL": 32,
+        "RV_PINTLV": 16,
+        "RV_PUNPACK": 0,
+        "RV_PDINTLV": 16,
+        "RV_VCMPS": 32
+      },
+      "source_data_counts_match": true,
+      "instruction_counts": {
+        "MOV_XD_SPR": 14,
+        "MOVK": 40,
+        "MOV_XD_IMM": 51,
+        "ADD": 10,
+        "SHR": 1,
+        "AND": 1,
+        "ADD_IMM": 3,
+        "SHL": 11,
+        "MADD": 1,
+        "DC_PRELOAD_XN_IMM": 1,
+        "LDP_XI_XJ_XN": 1,
+        "INSERT_XD_XN": 23,
+        "MOV_XD_XN": 1,
+        "NOP": 18,
+        "PUSH_PB": 13,
+        "MOV_SRC_TO_DST_ALIGNv2": 3,
+        "SET_FLAG": 2,
+        "WAIT_FLAG": 2,
+        "RV_VLOOPv2": 13,
+        "RV_SMOV": 18,
+        "RV_SMOVI": 9,
+        "RV_PLT": 146,
+        "RV_VLDI": 112,
+        "RV_VADDS": 32,
+        "RV_SEND": 27,
+        "RV_VSTI": 80,
+        "VF": 9,
+        "RV_VDIV": 16,
+        "RV_VLN": 16,
+        "RV_VMUL": 16,
+        "RV_VLD": 96,
+        "RV_VCMPS_EQ": 32,
+        "RV_PDINTLV": 16,
+        "RV_SNOP": 4,
+        "RV_PST": 16,
+        "RV_PLD": 16,
+        "RV_PINTLV": 16,
+        "RV_VSEL": 32,
+        "RV_SCBZI": 2,
+        "RV_VST": 32,
+        "BAR": 1,
+        "END": 1,
+        "DCCI": 2,
+        "END_LABEL": 1
+      },
+      "instruction_elapsed_histograms": {
+        "MOV_XD_SPR": {
+          "4": 14
+        },
+        "MOVK": {
+          "4": 40
+        },
+        "MOV_XD_IMM": {
+          "4": 51
+        },
+        "ADD": {
+          "4": 10
+        },
+        "SHR": {
+          "4": 1
+        },
+        "AND": {
+          "4": 1
+        },
+        "ADD_IMM": {
+          "4": 3
+        },
+        "SHL": {
+          "4": 11
+        },
+        "MADD": {
+          "5": 1
+        },
+        "DC_PRELOAD_XN_IMM": {
+          "407": 1
+        },
+        "LDP_XI_XJ_XN": {
+          "393": 1
+        },
+        "INSERT_XD_XN": {
+          "4": 23
+        },
+        "MOV_XD_XN": {
+          "4": 1
+        },
+        "NOP": {
+          "0": 18
+        },
+        "PUSH_PB": {
+          "4": 13
+        },
+        "MOV_SRC_TO_DST_ALIGNv2": {
+          "1557": 1,
+          "2610": 1,
+          "1360": 1
+        },
+        "SET_FLAG": {
+          "2611": 1,
+          "2376": 1
+        },
+        "WAIT_FLAG": {
+          "2611": 1,
+          "2375": 1
+        },
+        "RV_VLOOPv2": {
+          "0": 13
+        },
+        "RV_SMOV": {
+          "1": 18
+        },
+        "RV_SMOVI": {
+          "0": 9
+        },
+        "RV_PLT": {
+          "6": 146
+        },
+        "RV_VLDI": {
+          "9": 108,
+          "10": 4
+        },
+        "RV_VADDS": {
+          "7": 32
+        },
+        "RV_SEND": {
+          "-15": 2,
+          "9": 18,
+          "-40": 2,
+          "-17": 1,
+          "-31": 1,
+          "-11": 1,
+          "-23": 1,
+          "-10": 1
+        },
+        "RV_VSTI": {
+          "9": 80
+        },
+        "VF": {
+          "71": 1,
+          "84": 1,
+          "110": 1,
+          "134": 1,
+          "112": 1,
+          "113": 1,
+          "120": 1,
+          "101": 1,
+          "111": 1
+        },
+        "RV_VDIV": {
+          "17": 16
+        },
+        "RV_VLN": {
+          "18": 16
+        },
+        "RV_VMUL": {
+          "8": 16
+        },
+        "RV_VLD": {
+          "9": 56,
+          "10": 40
+        },
+        "RV_VCMPS_EQ": {
+          "6": 32
+        },
+        "RV_PDINTLV": {
+          "11": 16
+        },
+        "RV_SNOP": {
+          "1": 4
+        },
+        "RV_PST": {
+          "9": 16
+        },
+        "RV_PLD": {
+          "9": 16
+        },
+        "RV_PINTLV": {
+          "11": 16
+        },
+        "RV_VSEL": {
+          "6": 32
+        },
+        "RV_SCBZI": {
+          "1": 2
+        },
+        "RV_VST": {
+          "12": 4,
+          "11": 4,
+          "10": 4,
+          "9": 20
+        },
+        "END": {
+          "0": 1
+        },
+        "DCCI": {
+          "4": 1,
+          "6": 1
+        },
+        "END_LABEL": {
+          "5": 1
+        }
+      },
+      "vf_cycles": [
+        71,
+        52,
+        78,
+        77,
+        55,
+        79,
+        72,
+        73,
+        71
+      ],
+      "measured_vec_cycles": 628,
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "11c783f9f7d3c10bf8f1b7cb7c6558af68c7b40a13ff3b0711bf815b19238e88",
+        "core0.veccore0.instr_log.dump": "f8d5dad44cde14317045ff6818004548dcf8b41e89bd6cbeb3dc7717f0ef2606",
+        "core0.veccore0.instr_popped_log.dump": "d2a0159a22b22f919450cc7c3da285d6029ad85b97b89034abc3b9c22bc7a542"
+      },
+      "state": "native_verified"
+    }
+  ],
+  "profiles": {
+    "PLDS_US": {
+      "op_class": "LOAD",
+      "forms": {
+        "uint8": {
+          "latency": 9,
+          "dtype": "bool"
+        }
+      }
+    },
+    "PINTLV_B16": {
+      "op_class": "COMPUTE",
+      "forms": {
+        "b16": {
+          "latency": 11,
+          "dtype": "bool",
+          "EXU": "ALU",
+          "dispatch_exu": "EXU01"
+        }
+      }
+    },
+    "PUNPACK_LOWER": {
+      "op_class": "COMPUTE",
+      "forms": {
+        "b8": {
+          "latency": 11,
+          "dtype": "bool",
+          "EXU": "ALU",
+          "dispatch_exu": "EXU01"
+        }
+      }
+    }
+  },
+  "forwarding_minima": {
+    "PLDS_US.uint8->VSEL.fp16": 6,
+    "PLDS_US.uint8->PUNPACK_LOWER.b8": 6,
+    "PUNPACK_LOWER.b8->VSEL.fp32": 8,
+    "PLDS_US.uint8->PINTLV_B16.b16": 6,
+    "PINTLV_B16.b16->VSEL.fp32": 8
+  },
+  "scope": "18 independent semantic golden/fullguard/manual source data-count cases. PLDS base latency9, observed9/10 includes variable memory stalls. Predicate interleave/unpack latency11. Forwarding uses minimum observed dependent issue gaps. Isolated initiation capacity and all memory conflict modes not established. No total-cycle fitting."
+}

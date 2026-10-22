@@ -47,6 +47,7 @@ class Uop:
     preg_old: List[Optional[str]]
     profile: Optional[InstructionProfile] = None
     ub_transfer_bytes: int = 0
+    indexed_initiation_interval: int = 0
 
     state: str = "blocked"  # blocked/ready/running/done
     ready_cycle: int = 0
@@ -58,6 +59,8 @@ class Uop:
     producer_form_for_store: Optional[str] = None
     producer_start_for_store: Optional[int] = None
     store_dependencies_resolved: bool = False
+    special_state_dependencies: List[Uop] = field(default_factory=list)
+    scalar_dependencies: List[Uop] = field(default_factory=list)
     align_state_operation: Optional[str] = None
     align_state_id: Optional[str] = None
     align_generation: Optional[AlignGeneration] = None
@@ -130,12 +133,19 @@ class OoOCore:
         # queues
         self.SHQ: List[Uop] = []   # compute queue (SHQ)
         self.LSQ: List[Uop] = []   # VLD/VST only
+        self.indexed_lsu_next_free = {"LOAD": 0, "STORE": 0}
         self.ROB: Deque[Uop] = deque()
+        # VF SGPR arithmetic has its own native RVECSU issue path. It must
+        # never consume vector EXQ/EXU ports or vector physical registers.
+        self.SUQ: Deque[Uop] = deque()
+        self.scalar_producers: Dict[Any, Uop] = {}
 
         # dependency tracking
         self.preg_producer = self.vector_bank.producer
         self.preg_producer_uop = self.vector_bank.producer_uop
         self.preg_producer_profile = self.vector_bank.producer_profile
+        self.compression_initializer: Optional[Uop] = None
+        self.compression_users: List[Uop] = []
         self.align_state_open: Dict[str, AlignGeneration] = {}
         self.align_state_next_generation: Dict[str, int] = {}
         self.align_load_initializers: Dict[str, AlignProducerRecord] = {}
@@ -144,6 +154,8 @@ class OoOCore:
         # By default, II is enforced at EXU level (cross-FU), because each EXU
         # contains ALU+SFU resources but dispatch is still serialized per EXU.
         self.enable_cross_fu_ii = bool(uarch.get("enable_cross_fu_ii", True))
+        self.enforce_fu_occupancy = bool(uarch.get("enforce_fu_occupancy", False))
+        self.enqueue_pending_sfu = bool(uarch.get("enqueue_pending_sfu", False))
         self.last_issue_cycle = {
             "ALU": [-10**9] * self.issue_ports,
             "SFU": [-10**9] * self.issue_ports,
@@ -262,7 +274,7 @@ class OoOCore:
             "op_class": op_class,
             "fu_type": (
                 profile.fu_type
-                if profile is not None and op_class == "COMPUTE"
+                if profile is not None and op_class in ("COMPUTE", "SCALAR")
                 else None
             ),
             "exu_port": u.exu_port,
@@ -289,7 +301,7 @@ class OoOCore:
             "op_class": op_class,
             "fu_type": (
                 profile.fu_type
-                if profile is not None and op_class == "COMPUTE"
+                if profile is not None and op_class in ("COMPUTE", "SCALAR")
                 else None
             ),
             "dst": u.dst,
@@ -443,7 +455,14 @@ class OoOCore:
         consumer_profile: Optional[InstructionProfile] = None,
     ) -> int:
         prod_op, prod_form, prod_start, _kind = producer_info
-        if producer_profile is not None and consumer_profile is not None:
+        if producer_profile is not None and prod_op == 'VGATHER2':
+            if consumer_op == 'VSTS' and consumer_form == 'fp16':
+                fwd = producer_profile.latency - 2
+            else:
+                fwd = producer_profile.latency
+                self.db.record_warning('unmeasured_indexed_forwarding', producer=prod_op,
+                                       consumer=consumer_op, fallback='wait for completion')
+        elif producer_profile is not None and consumer_profile is not None:
             fwd = int(self.db.get_forwarding_for_profiles(producer_profile, consumer_profile))
         else:
             fwd = int(self.db.get_forwarding_cycles(
@@ -469,6 +488,11 @@ class OoOCore:
     def _compute_ready_cycle(self, u: Uop) -> int:
         # dependency-only ready time
         t = max(self.vf_startup_cost, int(getattr(u, "shq_ready_cycle", 0)))
+        t = max(t, self._scalar_ready_cycle(u))
+        for dependency in u.special_state_dependencies:
+            if dependency.start_cycle is None:
+                return 10 ** 9
+            t = max(t, dependency.start_cycle + dependency.profile.latency)
         for ps in u.preg_src:
             if ps is None:
                 continue
@@ -489,8 +513,20 @@ class OoOCore:
             )
         return t
 
+    def _scalar_ready_cycle(self, u: Uop) -> int:
+        ready = 0
+        for producer in u.scalar_dependencies:
+            if producer.start_cycle is None:
+                return 10 ** 9
+            # No scalar bypass is invented: wait for measured completion.
+            ready = max(ready, producer.start_cycle + producer.profile.latency)
+        return ready
+
     def _load_ready_cycle(self, u: Uop) -> int:
-        ready = max(self.vf_startup_cost, int(getattr(u, "lsq_ready_cycle", 0)))
+        # Indexed loads consume vector indices and predicates. They must wait
+        # for renamed register producers just like compute/store operations;
+        # ordinary VLDS has no such sources and retains its previous timing.
+        ready = max(self._compute_ready_cycle(u), int(getattr(u, "lsq_ready_cycle", 0)))
         producer = u.align_load_producer
         if producer is not None:
             if producer.start_cycle is None:
@@ -570,9 +606,29 @@ class OoOCore:
 
         if not has_dependency:
             return 10 ** 9, None, None, None
-        best_t = max(best_t, int(getattr(u, "lsq_ready_cycle", 0)))
+        best_t = max(best_t, int(getattr(u, "lsq_ready_cycle", 0)), self._scalar_ready_cycle(u))
         u.store_dependencies_resolved = True
         return best_t, pop, pform, pst
+
+    def bind_compression_state(self, u: Uop) -> None:
+        # SPR_AR is architectural state, not a fictitious vector result. A reset
+        # waits for older users; following MODE_STORED operations wait for reset.
+        # Updating/count forwarding between VSQZ operations is not calibrated.
+        if u.op == "SPRCLR":
+            u.special_state_dependencies = list(self.compression_users)
+            if self.compression_initializer is not None:
+                u.special_state_dependencies.append(self.compression_initializer)
+            self.compression_initializer = u
+            self.compression_users = []
+        elif u.op == "VSQZ":
+            if self.compression_initializer is None:
+                self.db.record_warning("external_compression_state", op=u.op,
+                                       reason="SPR_AR initialization supplied outside this VF")
+            else:
+                u.special_state_dependencies.append(self.compression_initializer)
+            self.compression_users.append(u)
+            self.db.record_warning("unmeasured_compression_state_forwarding", op=u.op,
+                                   reason="SPR_AR update forwarding between VSQZ instructions is not calibrated")
 
     def bind_align_state(self, u: Uop, attributes: Any) -> None:
         if not isinstance(attributes, dict):
@@ -640,6 +696,19 @@ class OoOCore:
             "OoOCore._free_old_pregs() must be implemented by a concrete OOO model"
         )
 
+    def _fu_next_issue_cycle(self, port, fu_type, op, form=None, profile=None):
+        # Cross-FU dispatch does not reset a functional unit's own occupancy.
+        # The EXQ issue predictor already uses this same FU history; actual
+        # issue must honor it too when an ALU instruction intervenes.
+        scope = (profile.initiation_interval_scope if profile is not None else
+                 self._inst_params(op, form=form).get('initiation_interval_scope', 'exu'))
+        if not self.enforce_fu_occupancy and scope != 'fu':
+            return -10**9
+        return self.last_issue_cycle[fu_type][port] + self._get_ii(
+            self.last_op[fu_type][port], op,
+            prev_form=self.last_form[fu_type][port], cur_form=form,
+            prev_profile=self.last_profile[fu_type][port], cur_profile=profile)
+
     def _pick_exu_port(
         self,
         fu_type: str,
@@ -672,7 +741,7 @@ class OoOCore:
                     prev_profile=(self.last_profile_exu[port] if self.enable_cross_fu_ii else self.last_profile[fu_type][port]),
                     cur_profile=cur_profile,
                 )
-                if c >= prev_issue + ii:
+                if c >= max(prev_issue + ii, self._fu_next_issue_cycle(port, fu_type, cur_op, cur_form, cur_profile)):
                     return port
             return None
 
@@ -698,7 +767,7 @@ class OoOCore:
                 prev_profile=(self.last_profile_exu[port] if self.enable_cross_fu_ii else self.last_profile[fu_type][port]),
                 cur_profile=cur_profile,
             )
-            avail = max(c, prev_issue + ii)
+            avail = max(c, prev_issue + ii, self._fu_next_issue_cycle(port, fu_type, cur_op, cur_form, cur_profile))
             candidates.append((port, avail))
 
         if not candidates:

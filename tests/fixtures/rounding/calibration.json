@@ -1,0 +1,857 @@
+{
+  "cases": [
+    {
+      "case": "ceil_fp32_fp32_cast_ceil_n64",
+      "dtype": "fp32",
+      "golden": {
+        "passed": true,
+        "elements_checked": 64,
+        "mismatches": 0,
+        "guard_bytes_checked": 32512,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "98de41639bcf77fbfd5c67d7a67d0d5e140aa9215df7ca52a053a5693cc7605f",
+        "core0.veccore0.instr_log.dump": "34e925f546b34bf9007bf397843c409f86924b01cfa0f50d3d0638b5ead9159b",
+        "core0.veccore0.instr_popped_log.dump": "68ee80b97fe90b8f53ca18af30cf829adf5a41457cc5f6327197bb891a3d9c44"
+      },
+      "measured_vec_cycles": 54,
+      "compute_latency": [
+        8
+      ],
+      "load_to_compute": [
+        6
+      ],
+      "compute_to_store": [
+        6
+      ],
+      "compute_pop_cycles": [
+        3753
+      ]
+    },
+    {
+      "case": "ceil_fp32_fp32_cast_ceil_n129",
+      "dtype": "fp32",
+      "golden": {
+        "passed": true,
+        "elements_checked": 129,
+        "mismatches": 0,
+        "guard_bytes_checked": 32252,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "3c771040b238965a71145856171781834e620ada90cfc2d78d2dc03ccbb3dbf7",
+        "core0.veccore0.instr_log.dump": "fa422305c2ded544a6d660337ade71e591058a6957713c0ec1b4f37935b8c27d",
+        "core0.veccore0.instr_popped_log.dump": "ff8f1ebdf75774daa68884aafa01ad0d57a00c36fd0aa4106c6659fb7a38609a"
+      },
+      "measured_vec_cycles": 58,
+      "compute_latency": [
+        8,
+        8,
+        8
+      ],
+      "load_to_compute": [
+        6,
+        6,
+        6
+      ],
+      "compute_to_store": [
+        6,
+        6,
+        6
+      ],
+      "compute_pop_cycles": [
+        3736,
+        3737,
+        3738
+      ]
+    },
+    {
+      "case": "ceil_fp32_fp32_cast_ceil_n512",
+      "dtype": "fp32",
+      "golden": {
+        "passed": true,
+        "elements_checked": 512,
+        "mismatches": 0,
+        "guard_bytes_checked": 30720,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "c9f95a2b711a81cda146e729758a0531a777d03e2f5210448a5f982e1bab5e41",
+        "core0.veccore0.instr_log.dump": "364796817df2d03e260256bb6178c49dd86076987ab6915551983c93dc4a33bd",
+        "core0.veccore0.instr_popped_log.dump": "0f083ffa30bc217e3622d848c02b947de1ec92acc50e09e01b906fa7dff4ec7a"
+      },
+      "measured_vec_cycles": 63,
+      "compute_latency": [
+        8,
+        8,
+        8,
+        8,
+        8,
+        8,
+        8,
+        8
+      ],
+      "load_to_compute": [
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6
+      ],
+      "compute_to_store": [
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6
+      ],
+      "compute_pop_cycles": [
+        3736,
+        3737,
+        3738,
+        3739,
+        3740,
+        3741,
+        3742,
+        3743
+      ]
+    },
+    {
+      "case": "ceil_fp32_fp32_cast_ceil_n2048",
+      "dtype": "fp32",
+      "golden": {
+        "passed": true,
+        "elements_checked": 2048,
+        "mismatches": 0,
+        "guard_bytes_checked": 24576,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "876eb32dfbba57b7819305dda14f8beac5779147879b64a818135ccd203029fd",
+        "core0.veccore0.instr_log.dump": "534e9b0e72e832768634d9dcdad9d4402ca08092febcd1e6cff86c2ae78c5cac",
+        "core0.veccore0.instr_popped_log.dump": "63f103016daaedcf6b67ce020b7eb10963e33cad3ed804882fbd93ecc1b24be2"
+      },
+      "measured_vec_cycles": 87,
+      "compute_latency": [
+        8,
+        8,
+        8,
+        8,
+        8,
+        8,
+        8,
+        8,
+        8,
+        8,
+        8,
+        8,
+        8,
+        8,
+        8,
+        8,
+        8,
+        8,
+        8,
+        8,
+        8,
+        8,
+        8,
+        8,
+        8,
+        8,
+        8,
+        8,
+        8,
+        8,
+        8,
+        8
+      ],
+      "load_to_compute": [
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6
+      ],
+      "compute_to_store": [
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6
+      ],
+      "compute_pop_cycles": [
+        3736,
+        3737,
+        3738,
+        3739,
+        3740,
+        3741,
+        3742,
+        3743,
+        3744,
+        3745,
+        3746,
+        3747,
+        3748,
+        3749,
+        3750,
+        3751,
+        3752,
+        3753,
+        3754,
+        3755,
+        3756,
+        3757,
+        3758,
+        3759,
+        3760,
+        3761,
+        3762,
+        3763,
+        3764,
+        3765,
+        3766,
+        3767
+      ]
+    },
+    {
+      "case": "floor_fp32_fp32_cast_floor_n64",
+      "dtype": "fp32",
+      "golden": {
+        "passed": true,
+        "elements_checked": 64,
+        "mismatches": 0,
+        "guard_bytes_checked": 32512,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "a7f2de1e27afc51dbc964d2ea275231a6b05a56887502e80fda750547dcef616",
+        "core0.veccore0.instr_log.dump": "34b62b155bf310c180bc6b9d32e55891779f93021a1ab0abe13d905de860b96e",
+        "core0.veccore0.instr_popped_log.dump": "013de243cce60fa65f3ffc123ad8902216d14314f9660f34e8ea4e1ed493375c"
+      },
+      "measured_vec_cycles": 54,
+      "compute_latency": [
+        8
+      ],
+      "load_to_compute": [
+        6
+      ],
+      "compute_to_store": [
+        6
+      ],
+      "compute_pop_cycles": [
+        3753
+      ]
+    },
+    {
+      "case": "floor_fp32_fp32_cast_floor_n129",
+      "dtype": "fp32",
+      "golden": {
+        "passed": true,
+        "elements_checked": 129,
+        "mismatches": 0,
+        "guard_bytes_checked": 32252,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "bd49798a2e59950a3519606f68dce918a90b592389c443ee90688d7eb3173956",
+        "core0.veccore0.instr_log.dump": "2e01e6bb6a5d8119585b543cb83b59b804dd76e124fe914ad5595181a1b3d487",
+        "core0.veccore0.instr_popped_log.dump": "e79b4d2c7f8700181c96aa38eb53abad547cace0c26ebfbf1a619fd8381f2bea"
+      },
+      "measured_vec_cycles": 58,
+      "compute_latency": [
+        8,
+        8,
+        8
+      ],
+      "load_to_compute": [
+        6,
+        6,
+        6
+      ],
+      "compute_to_store": [
+        6,
+        6,
+        6
+      ],
+      "compute_pop_cycles": [
+        3736,
+        3737,
+        3738
+      ]
+    },
+    {
+      "case": "floor_fp32_fp32_cast_floor_n512",
+      "dtype": "fp32",
+      "golden": {
+        "passed": true,
+        "elements_checked": 512,
+        "mismatches": 0,
+        "guard_bytes_checked": 30720,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "4c1e8566a41ca7c495bfd164cb1ac37bce89c13c002164be460d6b4358f20aa8",
+        "core0.veccore0.instr_log.dump": "1f5d0d2f473815a143afbe1cd574a40381cde894d2c39d8779166d2ec00c4204",
+        "core0.veccore0.instr_popped_log.dump": "4f62252ccd44859eb88e273be3e39092f4e0df0fdd19b3606f7c45dd5b0b6551"
+      },
+      "measured_vec_cycles": 63,
+      "compute_latency": [
+        8,
+        8,
+        8,
+        8,
+        8,
+        8,
+        8,
+        8
+      ],
+      "load_to_compute": [
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6
+      ],
+      "compute_to_store": [
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6
+      ],
+      "compute_pop_cycles": [
+        3736,
+        3737,
+        3738,
+        3739,
+        3740,
+        3741,
+        3742,
+        3743
+      ]
+    },
+    {
+      "case": "floor_fp32_fp32_cast_floor_n2048",
+      "dtype": "fp32",
+      "golden": {
+        "passed": true,
+        "elements_checked": 2048,
+        "mismatches": 0,
+        "guard_bytes_checked": 24576,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "32fc7b3a5b5ea080eeb2c68c418f9916546c7fdc5cb2b02904fdc9832bb6ab4c",
+        "core0.veccore0.instr_log.dump": "1975797ca787555a455a880b5949c76624de243dc6343d9f04a934823519d457",
+        "core0.veccore0.instr_popped_log.dump": "80bd5ded1bd4adecf8476d754ebf8720b24aae606aa0c37ce5517d665b5a936b"
+      },
+      "measured_vec_cycles": 87,
+      "compute_latency": [
+        8,
+        8,
+        8,
+        8,
+        8,
+        8,
+        8,
+        8,
+        8,
+        8,
+        8,
+        8,
+        8,
+        8,
+        8,
+        8,
+        8,
+        8,
+        8,
+        8,
+        8,
+        8,
+        8,
+        8,
+        8,
+        8,
+        8,
+        8,
+        8,
+        8,
+        8,
+        8
+      ],
+      "load_to_compute": [
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6
+      ],
+      "compute_to_store": [
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6
+      ],
+      "compute_pop_cycles": [
+        3737,
+        3738,
+        3739,
+        3740,
+        3741,
+        3742,
+        3743,
+        3744,
+        3745,
+        3746,
+        3747,
+        3748,
+        3749,
+        3750,
+        3751,
+        3752,
+        3753,
+        3754,
+        3755,
+        3756,
+        3757,
+        3758,
+        3759,
+        3760,
+        3761,
+        3762,
+        3763,
+        3764,
+        3765,
+        3766,
+        3767,
+        3768
+      ]
+    },
+    {
+      "case": "trunc_fp32_fp32_cast_trunc_n64",
+      "dtype": "fp32",
+      "golden": {
+        "passed": true,
+        "elements_checked": 64,
+        "mismatches": 0,
+        "guard_bytes_checked": 32512,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "db5d4c0014b093efcaa70a891385c81c159907dfee5f28628999384317d1b909",
+        "core0.veccore0.instr_log.dump": "0b64a4a7fc1bff2ec40cc598028f52554d7091ae58ca2fd281cdf6383a614d3e",
+        "core0.veccore0.instr_popped_log.dump": "dd416bea2faa64d3da429f7db5b9098ae7ed916cc666838c6cbf508d9e3f548d"
+      },
+      "measured_vec_cycles": 54,
+      "compute_latency": [
+        8
+      ],
+      "load_to_compute": [
+        6
+      ],
+      "compute_to_store": [
+        6
+      ],
+      "compute_pop_cycles": [
+        3753
+      ]
+    },
+    {
+      "case": "trunc_fp32_fp32_cast_trunc_n129",
+      "dtype": "fp32",
+      "golden": {
+        "passed": true,
+        "elements_checked": 129,
+        "mismatches": 0,
+        "guard_bytes_checked": 32252,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "3256be262178cdc04075020e3457bf984d340008457c94359d75f16710f02554",
+        "core0.veccore0.instr_log.dump": "54b789d1def0d173132cc65579ee2ab9af5803c87bf356e94c69ab9e548e6056",
+        "core0.veccore0.instr_popped_log.dump": "266767aee889c21a42f6bad0a20114bf3a7028ce36f1873b5783482eb4633560"
+      },
+      "measured_vec_cycles": 58,
+      "compute_latency": [
+        8,
+        8,
+        8
+      ],
+      "load_to_compute": [
+        6,
+        6,
+        6
+      ],
+      "compute_to_store": [
+        6,
+        6,
+        6
+      ],
+      "compute_pop_cycles": [
+        3736,
+        3737,
+        3738
+      ]
+    },
+    {
+      "case": "trunc_fp32_fp32_cast_trunc_n512",
+      "dtype": "fp32",
+      "golden": {
+        "passed": true,
+        "elements_checked": 512,
+        "mismatches": 0,
+        "guard_bytes_checked": 30720,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "ae9454528bc7df32ee96948ba82ecbc1eb86c9fb67b8884ceeb9d21fdda42df8",
+        "core0.veccore0.instr_log.dump": "ae0dce5652c1e6e90d9635d866d5e6665fd39d132a49a209d9230695f9fe2e8d",
+        "core0.veccore0.instr_popped_log.dump": "ffd301d8ec1451f6bb72f5f2fd1fadf4005e3776f98dffcdcb60c0f572cd6b0e"
+      },
+      "measured_vec_cycles": 63,
+      "compute_latency": [
+        8,
+        8,
+        8,
+        8,
+        8,
+        8,
+        8,
+        8
+      ],
+      "load_to_compute": [
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6
+      ],
+      "compute_to_store": [
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6
+      ],
+      "compute_pop_cycles": [
+        3736,
+        3737,
+        3738,
+        3739,
+        3740,
+        3741,
+        3742,
+        3743
+      ]
+    },
+    {
+      "case": "trunc_fp32_fp32_cast_trunc_n2048",
+      "dtype": "fp32",
+      "golden": {
+        "passed": true,
+        "elements_checked": 2048,
+        "mismatches": 0,
+        "guard_bytes_checked": 24576,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "a09de914115febd6925fcb22a1cf78b816a60db11890dcbf02cc46622f1d8884",
+        "core0.veccore0.instr_log.dump": "f1ac6ca581c8b874ae27b712cb01acaecfbd055ee0865dd2162bcc5bd14196cd",
+        "core0.veccore0.instr_popped_log.dump": "de5dd5491ca231991e01f369713fde5d8569a3027a7918ee718a829d7596bfe2"
+      },
+      "measured_vec_cycles": 87,
+      "compute_latency": [
+        8,
+        8,
+        8,
+        8,
+        8,
+        8,
+        8,
+        8,
+        8,
+        8,
+        8,
+        8,
+        8,
+        8,
+        8,
+        8,
+        8,
+        8,
+        8,
+        8,
+        8,
+        8,
+        8,
+        8,
+        8,
+        8,
+        8,
+        8,
+        8,
+        8,
+        8,
+        8
+      ],
+      "load_to_compute": [
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6
+      ],
+      "compute_to_store": [
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6
+      ],
+      "compute_pop_cycles": [
+        3736,
+        3737,
+        3738,
+        3739,
+        3740,
+        3741,
+        3742,
+        3743,
+        3744,
+        3745,
+        3746,
+        3747,
+        3748,
+        3749,
+        3750,
+        3751,
+        3752,
+        3753,
+        3754,
+        3755,
+        3756,
+        3757,
+        3758,
+        3759,
+        3760,
+        3761,
+        3762,
+        3763,
+        3764,
+        3765,
+        3766,
+        3767
+      ]
+    }
+  ],
+  "scope": "native VTRC fp32, three rounding modes; complete PTO outputs/guards/counts checked; long total errors are not fitted"
+}

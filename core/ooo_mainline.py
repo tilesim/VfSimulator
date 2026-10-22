@@ -257,6 +257,16 @@ class RenameController:
         op = str(inst.get("op"))
         form = str(inst.get("form", "") or self.core.fallback_dtype)
         profile = self.core._profile(op, form)
+        mode = (inst.get('attributes') or {}).get('catalog_mode')
+        if op == 'VSTS' and mode in {'ONEPT_B16','ONEPT_B32'}:
+            profile = self.core.db.resolve_memory_mode_inst(op,form,self.core.fallback_dtype,mode)
+        indexed_timing = None
+        if op in {'VGATHER2', 'VSCATTER'}:
+            profile, indexed_timing = self.core.db.resolve_indexed_inst(
+                op, form, self.core.fallback_dtype, inst.get('attributes') or {})
+            if indexed_timing.initiation_interval is None:
+                self.core.db.record_warning('unmeasured_indexed_throughput', op=op,
+                    form=form, fallback='serialize at measured isolated latency')
         inst_id = int(inst.get("inst_id", inst.get("id", -1)))
         iter_stack = list(inst.get("iter_stack", []))
         top_block_id = int(inst.get("top_block_id", 0))
@@ -420,7 +430,22 @@ class RenameController:
             src_value_instances=src_value_instances,
             dst_value_instances=dst_value_instances,
         )
+        for index, source in enumerate(srcs):
+            if self.core.value_storage.is_scalar(source):
+                instance = src_value_instances[index] if index < len(src_value_instances) else None
+                producer = self.core.scalar_producers.get(rat_key(instance, source))
+                if producer is not None and all(producer is not dep for dep in u.scalar_dependencies):
+                    u.scalar_dependencies.append(producer)
+        if profile.op_class == "SCALAR":
+            for index, destination in enumerate(dsts):
+                if not self.core.value_storage.is_scalar(destination):
+                    raise ValueError("VF scalar instructions require true Scalar destinations")
+                instance = dst_value_instances[index] if index < len(dst_value_instances) else None
+                self.core.scalar_producers[rat_key(instance, destination)] = u
+        self.core.bind_compression_state(u)
         self.core.bind_align_state(u, inst.get("attributes"))
+        if indexed_timing is not None:
+            u.indexed_initiation_interval = indexed_timing.initiation_interval or indexed_timing.latency
         if u.profile.op_class in ("LOAD", "STORE"):
             spec = DEFAULT_INSTRUCTION_CATALOG.lookup(u.op)
             mode = (inst.get("attributes") or {}).get("catalog_mode")
@@ -434,7 +459,9 @@ class RenameController:
         for pd in preg_dst:
             self.core.preg_pending.add(pd)
 
-        if profile.op_class in ("LOAD", "STORE"):
+        if profile.op_class == "SCALAR":
+            self.core.SUQ.append(u)
+        elif profile.op_class in ("LOAD", "STORE"):
             u.lsq_ready_cycle = int(self.core.cycle) + max(0, int(self.core.ooo_to_lsq_delay))
             self.core.LSQ.append(u)
         else:
@@ -750,6 +777,8 @@ class OoOCoreMainline(OoOCore):
                 break
 
             op_class = u.profile.op_class
+            if u.indexed_initiation_interval and cycle < self.indexed_lsu_next_free[op_class]:
+                continue
             transfer_bytes = u.ub_transfer_bytes
             if transfer_bytes <= 0:
                 raise ValueError("Missing Uop UB transfer bytes")
@@ -778,6 +807,8 @@ class OoOCoreMainline(OoOCore):
                 continue
 
             u.start_cycle = cycle
+            if u.indexed_initiation_interval:
+                self.indexed_lsu_next_free[op_class] = cycle + u.indexed_initiation_interval
             control = getattr(self, "control_unit", None)
             if control is not None and hasattr(control, "notify_lsu_start"):
                 control.notify_lsu_start(u.stream_seq, cycle)
@@ -871,6 +902,19 @@ class OoOCoreMainline(OoOCore):
         # Retry delayed recycle points every cycle, otherwise a preg that
         # became free exactly at (done + k) may never be revisited.
         self._try_free_eligible_pregs()
+
+        # Native RVECSU: one scalar issue per cycle, independent of vector
+        # execution and LSU slots. SGPR data dependencies remain explicit.
+        if self.SUQ:
+            u = self.SUQ[0]
+            u.ready_cycle = self._compute_ready_cycle(u)
+            if c >= u.ready_cycle:
+                self.SUQ.popleft()
+                u.state = "running"
+                u.start_cycle = c
+                u.done_cycle = c + u.profile.latency
+                self._log("start", u)
+                self._log_start_simple(u)
 
         for u in self.LSQ:
             if u.state in ("running", "done"):

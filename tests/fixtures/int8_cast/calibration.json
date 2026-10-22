@@ -1,0 +1,3107 @@
+{
+  "cases": [
+    {
+      "case": "cast_fp16_int8_cast_none_off_n64",
+      "shape": [
+        1,
+        64
+      ],
+      "golden": {
+        "passed": true,
+        "elements_checked": 64,
+        "mismatches": 0,
+        "guard_bytes_checked": 32704,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "7826ffc17bb886390cdd128b7dfd19d9ecec8a0ff9204fb926ffcc2501c54d3d",
+        "output0.bin": "1e7a623510f1373601b1e80b12fd090364b711467581212aae15726db6526a02",
+        "core0.veccore0.instr_log.dump": "ddebc6e5cbd496ff53734f5ed4180f41cd72b16601ffd6f1073974d3637ebe22",
+        "core0.veccore0.instr_popped_log.dump": "365036d65e119199712bd92d2ed0f29b3ad7c6d83fdd94ca546a758baeecef47"
+      },
+      "instruction_counts": {
+        "MOV_XD_SPR": 11,
+        "MOVK": 11,
+        "MOV_XD_IMM": 19,
+        "ADD": 2,
+        "SHR": 1,
+        "AND": 3,
+        "ADD_IMM": 3,
+        "SHL": 3,
+        "MADD": 1,
+        "DC_PRELOAD_XN_IMM": 1,
+        "LDP_XI_XJ_XN": 1,
+        "MOV_SPR_XN": 4,
+        "SBITSET": 4,
+        "CMP": 2,
+        "INSERT_XD_XN": 3,
+        "NOP": 2,
+        "PUSH_PB": 1,
+        "JUMPC": 2,
+        "JUMP": 2,
+        "MOV_SRC_TO_DST_ALIGNv2": 3,
+        "SET_FLAG": 2,
+        "WAIT_FLAG": 2,
+        "RV_SMOVI": 2,
+        "RV_SEND": 3,
+        "RV_PSET": 1,
+        "RV_PLT": 2,
+        "RV_VLDI": 1,
+        "RV_VDUPS": 1,
+        "RV_VCVT_F2I": 2,
+        "RV_VAND": 1,
+        "RV_VCVT_I2F": 1,
+        "RV_VSTI": 1,
+        "VF": 1,
+        "BAR": 1,
+        "END": 1,
+        "DCCI": 2,
+        "END_LABEL": 1
+      },
+      "measured_vec_cycles": 64,
+      "instruction_latencies": {
+        "LOAD": [
+          9
+        ],
+        "STORE": [
+          9
+        ],
+        "VDUP": [
+          6
+        ],
+        "F162S16": [
+          8
+        ],
+        "RV_VAND": [
+          6
+        ],
+        "S162F16": [
+          8
+        ],
+        "F162S8": [
+          8
+        ]
+      },
+      "forwarding": {
+        "LOAD->F162S16": [
+          6
+        ],
+        "F162S16->RV_VAND": [
+          4
+        ],
+        "RV_VAND->S162F16": [
+          2
+        ],
+        "S162F16->F162S8": [
+          4
+        ],
+        "F162S8->STORE": [
+          6
+        ]
+      }
+    },
+    {
+      "case": "cast_fp16_int8_cast_none_off_n129",
+      "shape": [
+        1,
+        129
+      ],
+      "golden": {
+        "passed": true,
+        "elements_checked": 129,
+        "mismatches": 0,
+        "guard_bytes_checked": 32639,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "7826ffc17bb886390cdd128b7dfd19d9ecec8a0ff9204fb926ffcc2501c54d3d",
+        "output0.bin": "62d774a7e3df10952de8fd50abb948070fc51ead476703dc07a5310a030cc6f7",
+        "core0.veccore0.instr_log.dump": "168d89689ba4ec6efe8a05d9482fadda20616aa0e03d2a8438d64d9183db8e66",
+        "core0.veccore0.instr_popped_log.dump": "cfed8d5d36bc9250500fd2b424f117bb07d7a14432587a7eb52b8d455d662cb9"
+      },
+      "instruction_counts": {
+        "MOV_XD_SPR": 11,
+        "MOVK": 11,
+        "MOV_XD_IMM": 21,
+        "ADD": 2,
+        "SHR": 1,
+        "AND": 3,
+        "ADD_IMM": 3,
+        "SHL": 3,
+        "MADD": 1,
+        "DC_PRELOAD_XN_IMM": 1,
+        "LDP_XI_XJ_XN": 1,
+        "MOV_SPR_XN": 4,
+        "SBITSET": 4,
+        "CMP": 2,
+        "INSERT_XD_XN": 4,
+        "NOP": 2,
+        "PUSH_PB": 1,
+        "JUMPC": 2,
+        "JUMP": 2,
+        "MOV_SRC_TO_DST_ALIGNv2": 3,
+        "SET_FLAG": 2,
+        "WAIT_FLAG": 2,
+        "RV_VLOOPv2": 1,
+        "RV_SMOVI": 2,
+        "RV_SEND": 3,
+        "RV_PLT": 3,
+        "RV_PSET": 1,
+        "RV_VDUPS": 1,
+        "RV_VLD": 2,
+        "RV_VCVT_F2I": 4,
+        "RV_VAND": 2,
+        "RV_VCVT_I2F": 2,
+        "RV_VST": 2,
+        "VF": 1,
+        "BAR": 1,
+        "END": 1,
+        "DCCI": 2,
+        "END_LABEL": 1
+      },
+      "measured_vec_cycles": 69,
+      "instruction_latencies": {
+        "LOAD": [
+          9,
+          9
+        ],
+        "STORE": [
+          9,
+          13
+        ],
+        "VDUP": [
+          6
+        ],
+        "F162S16": [
+          8,
+          8
+        ],
+        "RV_VAND": [
+          6,
+          6
+        ],
+        "S162F16": [
+          8,
+          8
+        ],
+        "F162S8": [
+          8,
+          8
+        ]
+      },
+      "forwarding": {
+        "LOAD->F162S16": [
+          6,
+          6
+        ],
+        "F162S16->RV_VAND": [
+          4,
+          4
+        ],
+        "RV_VAND->S162F16": [
+          2,
+          2
+        ],
+        "S162F16->F162S8": [
+          4,
+          4
+        ],
+        "F162S8->STORE": [
+          6,
+          6
+        ]
+      }
+    },
+    {
+      "case": "cast_fp16_int8_cast_none_off_n512",
+      "shape": [
+        1,
+        512
+      ],
+      "golden": {
+        "passed": true,
+        "elements_checked": 512,
+        "mismatches": 0,
+        "guard_bytes_checked": 32256,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "7826ffc17bb886390cdd128b7dfd19d9ecec8a0ff9204fb926ffcc2501c54d3d",
+        "output0.bin": "d4526e70700f287472be3bc7ac053c88617a2e7b7dc93925aae5b408cfcbb88c",
+        "core0.veccore0.instr_log.dump": "f5183f0eb095a60953bd357d86dbb1c0f68f09b4ee02ce32418559091ef2aed8",
+        "core0.veccore0.instr_popped_log.dump": "6cd2fe6f3f40ba2afd254357531f804512a74622f100621b6421fca04ef21f31"
+      },
+      "instruction_counts": {
+        "MOV_XD_SPR": 11,
+        "MOVK": 12,
+        "MOV_XD_IMM": 22,
+        "ADD": 2,
+        "SHR": 1,
+        "AND": 3,
+        "ADD_IMM": 3,
+        "SHL": 3,
+        "MADD": 1,
+        "DC_PRELOAD_XN_IMM": 1,
+        "LDP_XI_XJ_XN": 1,
+        "MOV_SPR_XN": 4,
+        "SBITSET": 4,
+        "CMP": 2,
+        "INSERT_XD_XN": 4,
+        "NOP": 2,
+        "PUSH_PB": 1,
+        "JUMPC": 2,
+        "JUMP": 2,
+        "MOV_SRC_TO_DST_ALIGNv2": 3,
+        "SET_FLAG": 2,
+        "WAIT_FLAG": 2,
+        "RV_VLOOPv2": 1,
+        "RV_SMOVI": 2,
+        "RV_PLT": 5,
+        "RV_PSET": 1,
+        "RV_SEND": 3,
+        "RV_VDUPS": 1,
+        "RV_VLD": 4,
+        "RV_VCVT_F2I": 8,
+        "RV_VAND": 4,
+        "RV_VCVT_I2F": 4,
+        "RV_VST": 4,
+        "VF": 1,
+        "BAR": 1,
+        "END": 1,
+        "DCCI": 2,
+        "END_LABEL": 1
+      },
+      "measured_vec_cycles": 73,
+      "instruction_latencies": {
+        "LOAD": [
+          9,
+          9,
+          9,
+          9
+        ],
+        "STORE": [
+          9,
+          9,
+          9,
+          9
+        ],
+        "VDUP": [
+          6
+        ],
+        "F162S16": [
+          8,
+          8,
+          8,
+          8
+        ],
+        "RV_VAND": [
+          6,
+          6,
+          6,
+          6
+        ],
+        "S162F16": [
+          8,
+          8,
+          8,
+          8
+        ],
+        "F162S8": [
+          8,
+          8,
+          8,
+          8
+        ]
+      },
+      "forwarding": {
+        "LOAD->F162S16": [
+          6,
+          6,
+          6,
+          6
+        ],
+        "F162S16->RV_VAND": [
+          4,
+          4,
+          4,
+          5
+        ],
+        "RV_VAND->S162F16": [
+          2,
+          2,
+          2,
+          3
+        ],
+        "S162F16->F162S8": [
+          4,
+          4,
+          5,
+          4
+        ],
+        "F162S8->STORE": [
+          6,
+          6,
+          6,
+          6
+        ]
+      }
+    },
+    {
+      "case": "cast_fp16_int8_cast_none_off_n2048",
+      "shape": [
+        1,
+        2048
+      ],
+      "golden": {
+        "passed": true,
+        "elements_checked": 2048,
+        "mismatches": 0,
+        "guard_bytes_checked": 30720,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "7826ffc17bb886390cdd128b7dfd19d9ecec8a0ff9204fb926ffcc2501c54d3d",
+        "output0.bin": "f841b4286c0b8e634b2e87cac5e25764f501a0c3635cb68052ede2e037f76a7a",
+        "core0.veccore0.instr_log.dump": "586c140fe017ebd2feb6f1324576466f6aed3cca58373c6f0b1ecf110bfa9073",
+        "core0.veccore0.instr_popped_log.dump": "325915f1c694f367b24a28b5192dc06a2d2479d55a70a5e7961d0a46e0074d1b"
+      },
+      "instruction_counts": {
+        "MOV_XD_SPR": 11,
+        "MOVK": 12,
+        "MOV_XD_IMM": 22,
+        "ADD": 2,
+        "SHR": 1,
+        "AND": 3,
+        "ADD_IMM": 3,
+        "SHL": 3,
+        "MADD": 1,
+        "DC_PRELOAD_XN_IMM": 1,
+        "LDP_XI_XJ_XN": 1,
+        "MOV_SPR_XN": 4,
+        "SBITSET": 4,
+        "CMP": 2,
+        "INSERT_XD_XN": 4,
+        "NOP": 2,
+        "PUSH_PB": 1,
+        "JUMPC": 2,
+        "JUMP": 2,
+        "MOV_SRC_TO_DST_ALIGNv2": 3,
+        "SET_FLAG": 2,
+        "WAIT_FLAG": 2,
+        "RV_VLOOPv2": 1,
+        "RV_SMOVI": 2,
+        "RV_PLT": 17,
+        "RV_PSET": 1,
+        "RV_VDUPS": 1,
+        "RV_VLD": 16,
+        "RV_VCVT_F2I": 32,
+        "RV_VAND": 16,
+        "RV_VCVT_I2F": 16,
+        "RV_SEND": 3,
+        "RV_VST": 16,
+        "VF": 1,
+        "BAR": 1,
+        "END": 1,
+        "DCCI": 2,
+        "END_LABEL": 1
+      },
+      "measured_vec_cycles": 108,
+      "instruction_latencies": {
+        "LOAD": [
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9
+        ],
+        "STORE": [
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9
+        ],
+        "VDUP": [
+          6
+        ],
+        "F162S16": [
+          8,
+          8,
+          8,
+          8,
+          8,
+          8,
+          8,
+          8,
+          8,
+          8,
+          8,
+          8,
+          8,
+          8,
+          8,
+          8
+        ],
+        "RV_VAND": [
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6
+        ],
+        "S162F16": [
+          8,
+          8,
+          8,
+          8,
+          8,
+          8,
+          8,
+          8,
+          8,
+          8,
+          8,
+          8,
+          8,
+          8,
+          8,
+          8
+        ],
+        "F162S8": [
+          8,
+          8,
+          8,
+          8,
+          8,
+          8,
+          8,
+          8,
+          8,
+          8,
+          8,
+          8,
+          8,
+          8,
+          8,
+          8
+        ]
+      },
+      "forwarding": {
+        "LOAD->F162S16": [
+          6,
+          6,
+          6,
+          6,
+          14,
+          7,
+          17,
+          8,
+          19,
+          9,
+          18,
+          10,
+          23,
+          14,
+          25,
+          14
+        ],
+        "F162S16->RV_VAND": [
+          4,
+          4,
+          4,
+          5,
+          5,
+          5,
+          5,
+          5,
+          5,
+          5,
+          5,
+          7,
+          5,
+          7,
+          5,
+          5
+        ],
+        "RV_VAND->S162F16": [
+          2,
+          2,
+          3,
+          3,
+          3,
+          5,
+          3,
+          5,
+          5,
+          7,
+          7,
+          5,
+          3,
+          5,
+          2,
+          7
+        ],
+        "S162F16->F162S8": [
+          4,
+          6,
+          6,
+          6,
+          8,
+          6,
+          8,
+          8,
+          8,
+          8,
+          8,
+          8,
+          6,
+          6,
+          4,
+          5
+        ],
+        "F162S8->STORE": [
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          7,
+          6,
+          7,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6
+        ]
+      }
+    },
+    {
+      "case": "cast_fp16_int8_cast_none_on_n64",
+      "shape": [
+        1,
+        64
+      ],
+      "golden": {
+        "passed": true,
+        "elements_checked": 64,
+        "mismatches": 0,
+        "guard_bytes_checked": 32704,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "7826ffc17bb886390cdd128b7dfd19d9ecec8a0ff9204fb926ffcc2501c54d3d",
+        "output0.bin": "db45d895a0bd7af5b362a2b3e32c1af9e0f214d9fcd36cb4c950226031e1530e",
+        "core0.veccore0.instr_log.dump": "5522a7f134caef698229c78abb5a15ff177ff2e7bc6e454070d161ee214ee5be",
+        "core0.veccore0.instr_popped_log.dump": "091cacaba10b8224e2e065aee225df4f50a75707e3748ac78df348c92a2811b0"
+      },
+      "instruction_counts": {
+        "MOV_XD_SPR": 11,
+        "MOVK": 9,
+        "MOV_XD_IMM": 17,
+        "ADD": 2,
+        "SHR": 1,
+        "AND": 3,
+        "ADD_IMM": 3,
+        "SHL": 2,
+        "MADD": 1,
+        "DC_PRELOAD_XN_IMM": 1,
+        "LDP_XI_XJ_XN": 1,
+        "MOV_SPR_XN": 4,
+        "SBITSET": 4,
+        "CMP": 2,
+        "NOP": 2,
+        "INSERT_XD_XN": 1,
+        "PUSH_PB": 1,
+        "JUMPC": 2,
+        "JUMP": 2,
+        "MOV_SRC_TO_DST_ALIGNv2": 3,
+        "SET_FLAG": 2,
+        "WAIT_FLAG": 2,
+        "RV_SMOVI": 2,
+        "RV_SEND": 3,
+        "RV_PLT": 2,
+        "RV_VLDI": 1,
+        "RV_VCVT_F2I": 1,
+        "RV_VSTI": 1,
+        "VF": 1,
+        "BAR": 1,
+        "END": 1,
+        "DCCI": 2,
+        "END_LABEL": 1
+      },
+      "measured_vec_cycles": 54,
+      "instruction_latencies": {
+        "LOAD": [
+          9
+        ],
+        "STORE": [
+          9
+        ],
+        "VDUP": [],
+        "F162S16": [],
+        "RV_VAND": [],
+        "S162F16": [],
+        "F162S8": [
+          8
+        ]
+      },
+      "forwarding": {
+        "F162S8->STORE": [
+          6
+        ],
+        "LOAD->F162S8": [
+          6
+        ]
+      }
+    },
+    {
+      "case": "cast_fp16_int8_cast_none_on_n129",
+      "shape": [
+        1,
+        129
+      ],
+      "golden": {
+        "passed": true,
+        "elements_checked": 129,
+        "mismatches": 0,
+        "guard_bytes_checked": 32639,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "7826ffc17bb886390cdd128b7dfd19d9ecec8a0ff9204fb926ffcc2501c54d3d",
+        "output0.bin": "068809ebfdec735ba8cc755cdb842aa0291b497c919a020720d2b4cde50bab56",
+        "core0.veccore0.instr_log.dump": "a0465c83c2932feb9015a23585277f1c4c7095ee5809840ca380c95243fc0b7e",
+        "core0.veccore0.instr_popped_log.dump": "28d4f2fbb9eaead8c2b5bed47e8f73d916d3a4cfee5f4c5f988f815377496f10"
+      },
+      "instruction_counts": {
+        "MOV_XD_SPR": 11,
+        "MOVK": 11,
+        "MOV_XD_IMM": 20,
+        "ADD": 2,
+        "SHR": 1,
+        "AND": 3,
+        "ADD_IMM": 3,
+        "SHL": 3,
+        "MADD": 1,
+        "DC_PRELOAD_XN_IMM": 1,
+        "LDP_XI_XJ_XN": 1,
+        "MOV_SPR_XN": 4,
+        "INSERT_XD_XN": 4,
+        "SBITSET": 4,
+        "CMP": 2,
+        "NOP": 2,
+        "PUSH_PB": 1,
+        "JUMPC": 2,
+        "JUMP": 2,
+        "MOV_SRC_TO_DST_ALIGNv2": 3,
+        "SET_FLAG": 2,
+        "WAIT_FLAG": 2,
+        "RV_VLOOPv2": 1,
+        "RV_SMOVI": 2,
+        "RV_SEND": 3,
+        "RV_PLT": 3,
+        "RV_VLD": 2,
+        "RV_VCVT_F2I": 2,
+        "RV_VST": 2,
+        "VF": 1,
+        "BAR": 1,
+        "END": 1,
+        "DCCI": 2,
+        "END_LABEL": 1
+      },
+      "measured_vec_cycles": 58,
+      "instruction_latencies": {
+        "LOAD": [
+          9,
+          9
+        ],
+        "STORE": [
+          9,
+          13
+        ],
+        "VDUP": [],
+        "F162S16": [],
+        "RV_VAND": [],
+        "S162F16": [],
+        "F162S8": [
+          8,
+          8
+        ]
+      },
+      "forwarding": {
+        "F162S8->STORE": [
+          6,
+          6
+        ],
+        "LOAD->F162S8": [
+          6,
+          6
+        ]
+      }
+    },
+    {
+      "case": "cast_fp16_int8_cast_none_on_n512",
+      "shape": [
+        1,
+        512
+      ],
+      "golden": {
+        "passed": true,
+        "elements_checked": 512,
+        "mismatches": 0,
+        "guard_bytes_checked": 32256,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "7826ffc17bb886390cdd128b7dfd19d9ecec8a0ff9204fb926ffcc2501c54d3d",
+        "output0.bin": "f8b9d16152e215deb0503d9e5e034c4d6aacd41534000a971f11425f2b60db20",
+        "core0.veccore0.instr_log.dump": "ab49d8f04b4882735010bd1c22d66f9719cdec75f8b2617f1fec0cd538caed5d",
+        "core0.veccore0.instr_popped_log.dump": "2192db307ad0d58d3c4f41d307fc4e8629000bebc1258482d409f2beecbb2712"
+      },
+      "instruction_counts": {
+        "MOV_XD_SPR": 11,
+        "MOVK": 12,
+        "MOV_XD_IMM": 21,
+        "ADD": 2,
+        "SHR": 1,
+        "AND": 3,
+        "ADD_IMM": 3,
+        "SHL": 3,
+        "MADD": 1,
+        "DC_PRELOAD_XN_IMM": 1,
+        "LDP_XI_XJ_XN": 1,
+        "MOV_SPR_XN": 4,
+        "SBITSET": 4,
+        "CMP": 2,
+        "INSERT_XD_XN": 4,
+        "NOP": 2,
+        "PUSH_PB": 1,
+        "JUMPC": 2,
+        "JUMP": 2,
+        "MOV_SRC_TO_DST_ALIGNv2": 3,
+        "SET_FLAG": 2,
+        "WAIT_FLAG": 2,
+        "RV_VLOOPv2": 1,
+        "RV_SMOVI": 2,
+        "RV_SEND": 3,
+        "RV_PLT": 5,
+        "RV_VLD": 4,
+        "RV_VCVT_F2I": 4,
+        "RV_VST": 4,
+        "VF": 1,
+        "BAR": 1,
+        "END": 1,
+        "DCCI": 2,
+        "END_LABEL": 1
+      },
+      "measured_vec_cycles": 60,
+      "instruction_latencies": {
+        "LOAD": [
+          9,
+          9,
+          9,
+          9
+        ],
+        "STORE": [
+          9,
+          9,
+          9,
+          9
+        ],
+        "VDUP": [],
+        "F162S16": [],
+        "RV_VAND": [],
+        "S162F16": [],
+        "F162S8": [
+          8,
+          8,
+          8,
+          8
+        ]
+      },
+      "forwarding": {
+        "F162S8->STORE": [
+          6,
+          6,
+          6,
+          6
+        ],
+        "LOAD->F162S8": [
+          6,
+          6,
+          6,
+          6
+        ]
+      }
+    },
+    {
+      "case": "cast_fp16_int8_cast_none_on_n2048",
+      "shape": [
+        1,
+        2048
+      ],
+      "golden": {
+        "passed": true,
+        "elements_checked": 2048,
+        "mismatches": 0,
+        "guard_bytes_checked": 30720,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "7826ffc17bb886390cdd128b7dfd19d9ecec8a0ff9204fb926ffcc2501c54d3d",
+        "output0.bin": "cb2cc839c202663798f2c1dadc46fe06b1ef2f15006af1c02cea2bccf9183e8f",
+        "core0.veccore0.instr_log.dump": "80222250730e792d8a4c4982aad566edc189ed880afb9406b423283807f422f8",
+        "core0.veccore0.instr_popped_log.dump": "c3fc92b8324ba55ce08c88a61402908a4d7dfefe266a2dd9a840caa32cdfff15"
+      },
+      "instruction_counts": {
+        "MOV_XD_SPR": 11,
+        "MOVK": 12,
+        "MOV_XD_IMM": 21,
+        "ADD": 2,
+        "SHR": 1,
+        "AND": 3,
+        "ADD_IMM": 3,
+        "SHL": 3,
+        "MADD": 1,
+        "DC_PRELOAD_XN_IMM": 1,
+        "LDP_XI_XJ_XN": 1,
+        "MOV_SPR_XN": 4,
+        "SBITSET": 4,
+        "CMP": 2,
+        "INSERT_XD_XN": 4,
+        "NOP": 2,
+        "PUSH_PB": 1,
+        "JUMPC": 2,
+        "JUMP": 2,
+        "MOV_SRC_TO_DST_ALIGNv2": 3,
+        "SET_FLAG": 2,
+        "WAIT_FLAG": 2,
+        "RV_VLOOPv2": 1,
+        "RV_SMOVI": 2,
+        "RV_PLT": 17,
+        "RV_VLD": 16,
+        "RV_VCVT_F2I": 16,
+        "RV_SEND": 3,
+        "RV_VST": 16,
+        "VF": 1,
+        "BAR": 1,
+        "END": 1,
+        "DCCI": 2,
+        "END_LABEL": 1
+      },
+      "measured_vec_cycles": 72,
+      "instruction_latencies": {
+        "LOAD": [
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9
+        ],
+        "STORE": [
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9
+        ],
+        "VDUP": [],
+        "F162S16": [],
+        "RV_VAND": [],
+        "S162F16": [],
+        "F162S8": [
+          8,
+          8,
+          8,
+          8,
+          8,
+          8,
+          8,
+          8,
+          8,
+          8,
+          8,
+          8,
+          8,
+          8,
+          8,
+          8
+        ]
+      },
+      "forwarding": {
+        "F162S8->STORE": [
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6
+        ],
+        "LOAD->F162S8": [
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6
+        ]
+      }
+    },
+    {
+      "case": "cast_fp16_int8_cast_rint_off_n64",
+      "shape": [
+        1,
+        64
+      ],
+      "golden": {
+        "passed": true,
+        "elements_checked": 64,
+        "mismatches": 0,
+        "guard_bytes_checked": 32704,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "7826ffc17bb886390cdd128b7dfd19d9ecec8a0ff9204fb926ffcc2501c54d3d",
+        "output0.bin": "b3cf80b3498043273360eb92962a57f37f8916827246a44744b97ba9143a1910",
+        "core0.veccore0.instr_log.dump": "fe65371c795878b258bac35f85a7740fee2849ab35312f2e273c073201600c12",
+        "core0.veccore0.instr_popped_log.dump": "db9f08296fe7fa74264fe2eb63e8b07d93c68f59cb6145c82ec1ab3480b868ef"
+      },
+      "instruction_counts": {
+        "MOV_XD_SPR": 11,
+        "MOVK": 11,
+        "MOV_XD_IMM": 19,
+        "ADD": 2,
+        "SHR": 1,
+        "AND": 3,
+        "ADD_IMM": 3,
+        "SHL": 3,
+        "MADD": 1,
+        "DC_PRELOAD_XN_IMM": 1,
+        "LDP_XI_XJ_XN": 1,
+        "MOV_SPR_XN": 4,
+        "SBITSET": 4,
+        "CMP": 2,
+        "INSERT_XD_XN": 3,
+        "NOP": 2,
+        "PUSH_PB": 1,
+        "JUMPC": 2,
+        "JUMP": 2,
+        "MOV_SRC_TO_DST_ALIGNv2": 3,
+        "SET_FLAG": 2,
+        "WAIT_FLAG": 2,
+        "RV_SMOVI": 2,
+        "RV_SEND": 3,
+        "RV_PSET": 1,
+        "RV_PLT": 2,
+        "RV_VLDI": 1,
+        "RV_VDUPS": 1,
+        "RV_VCVT_F2I": 2,
+        "RV_VAND": 1,
+        "RV_VCVT_I2F": 1,
+        "RV_VSTI": 1,
+        "VF": 1,
+        "BAR": 1,
+        "END": 1,
+        "DCCI": 2,
+        "END_LABEL": 1
+      },
+      "measured_vec_cycles": 64,
+      "instruction_latencies": {
+        "LOAD": [
+          9
+        ],
+        "STORE": [
+          9
+        ],
+        "VDUP": [
+          6
+        ],
+        "F162S16": [
+          8
+        ],
+        "RV_VAND": [
+          6
+        ],
+        "S162F16": [
+          8
+        ],
+        "F162S8": [
+          8
+        ]
+      },
+      "forwarding": {
+        "LOAD->F162S16": [
+          6
+        ],
+        "F162S16->RV_VAND": [
+          4
+        ],
+        "RV_VAND->S162F16": [
+          2
+        ],
+        "S162F16->F162S8": [
+          4
+        ],
+        "F162S8->STORE": [
+          6
+        ]
+      }
+    },
+    {
+      "case": "cast_fp16_int8_cast_rint_off_n129",
+      "shape": [
+        1,
+        129
+      ],
+      "golden": {
+        "passed": true,
+        "elements_checked": 129,
+        "mismatches": 0,
+        "guard_bytes_checked": 32639,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "7826ffc17bb886390cdd128b7dfd19d9ecec8a0ff9204fb926ffcc2501c54d3d",
+        "output0.bin": "ed7d8d844751bc81bb3683803ea1966bc090b892d15cc99f2a0d9c84da144396",
+        "core0.veccore0.instr_log.dump": "c2bd23e579445a29c4b0aa364b9357bbea9389b353069aaede55fd650b881c73",
+        "core0.veccore0.instr_popped_log.dump": "f615ea8ad9d56cf7e0453f5ba08b7ccd5fe5d70a731d73f82a545775465d0f0c"
+      },
+      "instruction_counts": {
+        "MOV_XD_SPR": 11,
+        "MOVK": 11,
+        "MOV_XD_IMM": 21,
+        "ADD": 2,
+        "SHR": 1,
+        "AND": 3,
+        "ADD_IMM": 3,
+        "SHL": 3,
+        "MADD": 1,
+        "DC_PRELOAD_XN_IMM": 1,
+        "LDP_XI_XJ_XN": 1,
+        "MOV_SPR_XN": 4,
+        "SBITSET": 4,
+        "CMP": 2,
+        "INSERT_XD_XN": 4,
+        "NOP": 2,
+        "PUSH_PB": 1,
+        "JUMPC": 2,
+        "JUMP": 2,
+        "MOV_SRC_TO_DST_ALIGNv2": 3,
+        "SET_FLAG": 2,
+        "WAIT_FLAG": 2,
+        "RV_VLOOPv2": 1,
+        "RV_SMOVI": 2,
+        "RV_SEND": 3,
+        "RV_PLT": 3,
+        "RV_PSET": 1,
+        "RV_VDUPS": 1,
+        "RV_VLD": 2,
+        "RV_VCVT_F2I": 4,
+        "RV_VAND": 2,
+        "RV_VCVT_I2F": 2,
+        "RV_VST": 2,
+        "VF": 1,
+        "BAR": 1,
+        "END": 1,
+        "DCCI": 2,
+        "END_LABEL": 1
+      },
+      "measured_vec_cycles": 69,
+      "instruction_latencies": {
+        "LOAD": [
+          9,
+          9
+        ],
+        "STORE": [
+          9,
+          13
+        ],
+        "VDUP": [
+          6
+        ],
+        "F162S16": [
+          8,
+          8
+        ],
+        "RV_VAND": [
+          6,
+          6
+        ],
+        "S162F16": [
+          8,
+          8
+        ],
+        "F162S8": [
+          8,
+          8
+        ]
+      },
+      "forwarding": {
+        "LOAD->F162S16": [
+          6,
+          6
+        ],
+        "F162S16->RV_VAND": [
+          4,
+          4
+        ],
+        "RV_VAND->S162F16": [
+          2,
+          2
+        ],
+        "S162F16->F162S8": [
+          4,
+          4
+        ],
+        "F162S8->STORE": [
+          6,
+          6
+        ]
+      }
+    },
+    {
+      "case": "cast_fp16_int8_cast_rint_off_n512",
+      "shape": [
+        1,
+        512
+      ],
+      "golden": {
+        "passed": true,
+        "elements_checked": 512,
+        "mismatches": 0,
+        "guard_bytes_checked": 32256,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "7826ffc17bb886390cdd128b7dfd19d9ecec8a0ff9204fb926ffcc2501c54d3d",
+        "output0.bin": "dc8a8d125982470995130361ce0681ef35f9c7ef97807cdef919cbceabd67f83",
+        "core0.veccore0.instr_log.dump": "7788af6f5029a6d36536b529e403dc932e9bd4f55edcf5fae807f4522c167ff1",
+        "core0.veccore0.instr_popped_log.dump": "ab14048224e9706f7505d6134b5d34c1a828dff2ce79c305c95ad7895ba34393"
+      },
+      "instruction_counts": {
+        "MOV_XD_SPR": 11,
+        "MOVK": 12,
+        "MOV_XD_IMM": 22,
+        "ADD": 2,
+        "SHR": 1,
+        "AND": 3,
+        "ADD_IMM": 3,
+        "SHL": 3,
+        "MADD": 1,
+        "DC_PRELOAD_XN_IMM": 1,
+        "LDP_XI_XJ_XN": 1,
+        "MOV_SPR_XN": 4,
+        "SBITSET": 4,
+        "CMP": 2,
+        "INSERT_XD_XN": 4,
+        "NOP": 2,
+        "PUSH_PB": 1,
+        "JUMPC": 2,
+        "JUMP": 2,
+        "MOV_SRC_TO_DST_ALIGNv2": 3,
+        "SET_FLAG": 2,
+        "WAIT_FLAG": 2,
+        "RV_VLOOPv2": 1,
+        "RV_SMOVI": 2,
+        "RV_PLT": 5,
+        "RV_PSET": 1,
+        "RV_SEND": 3,
+        "RV_VDUPS": 1,
+        "RV_VLD": 4,
+        "RV_VCVT_F2I": 8,
+        "RV_VAND": 4,
+        "RV_VCVT_I2F": 4,
+        "RV_VST": 4,
+        "VF": 1,
+        "BAR": 1,
+        "END": 1,
+        "DCCI": 2,
+        "END_LABEL": 1
+      },
+      "measured_vec_cycles": 73,
+      "instruction_latencies": {
+        "LOAD": [
+          9,
+          9,
+          9,
+          9
+        ],
+        "STORE": [
+          9,
+          9,
+          9,
+          9
+        ],
+        "VDUP": [
+          6
+        ],
+        "F162S16": [
+          8,
+          8,
+          8,
+          8
+        ],
+        "RV_VAND": [
+          6,
+          6,
+          6,
+          6
+        ],
+        "S162F16": [
+          8,
+          8,
+          8,
+          8
+        ],
+        "F162S8": [
+          8,
+          8,
+          8,
+          8
+        ]
+      },
+      "forwarding": {
+        "LOAD->F162S16": [
+          6,
+          6,
+          6,
+          6
+        ],
+        "F162S16->RV_VAND": [
+          4,
+          4,
+          4,
+          5
+        ],
+        "RV_VAND->S162F16": [
+          2,
+          2,
+          2,
+          3
+        ],
+        "S162F16->F162S8": [
+          4,
+          4,
+          5,
+          4
+        ],
+        "F162S8->STORE": [
+          6,
+          6,
+          6,
+          6
+        ]
+      }
+    },
+    {
+      "case": "cast_fp16_int8_cast_rint_off_n2048",
+      "shape": [
+        1,
+        2048
+      ],
+      "golden": {
+        "passed": true,
+        "elements_checked": 2048,
+        "mismatches": 0,
+        "guard_bytes_checked": 30720,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "7826ffc17bb886390cdd128b7dfd19d9ecec8a0ff9204fb926ffcc2501c54d3d",
+        "output0.bin": "22b2589265a76d55f887e88207125d5ce22dc3eddd87530125bd93f5f200dab1",
+        "core0.veccore0.instr_log.dump": "80fe8ab9fe44b13db4c65b843e75761711bc897cddf08e9088b20269f5e0167b",
+        "core0.veccore0.instr_popped_log.dump": "775acd6856e7a0450289ef3450d149f9d703d01607879c564fe26f4ae2afa82b"
+      },
+      "instruction_counts": {
+        "MOV_XD_SPR": 11,
+        "MOVK": 12,
+        "MOV_XD_IMM": 22,
+        "ADD": 2,
+        "SHR": 1,
+        "AND": 3,
+        "ADD_IMM": 3,
+        "SHL": 3,
+        "MADD": 1,
+        "DC_PRELOAD_XN_IMM": 1,
+        "LDP_XI_XJ_XN": 1,
+        "MOV_SPR_XN": 4,
+        "SBITSET": 4,
+        "CMP": 2,
+        "INSERT_XD_XN": 4,
+        "NOP": 2,
+        "PUSH_PB": 1,
+        "JUMPC": 2,
+        "JUMP": 2,
+        "MOV_SRC_TO_DST_ALIGNv2": 3,
+        "SET_FLAG": 2,
+        "WAIT_FLAG": 2,
+        "RV_VLOOPv2": 1,
+        "RV_SMOVI": 2,
+        "RV_PLT": 17,
+        "RV_PSET": 1,
+        "RV_VDUPS": 1,
+        "RV_VLD": 16,
+        "RV_VCVT_F2I": 32,
+        "RV_VAND": 16,
+        "RV_VCVT_I2F": 16,
+        "RV_SEND": 3,
+        "RV_VST": 16,
+        "VF": 1,
+        "BAR": 1,
+        "END": 1,
+        "DCCI": 2,
+        "END_LABEL": 1
+      },
+      "measured_vec_cycles": 108,
+      "instruction_latencies": {
+        "LOAD": [
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9
+        ],
+        "STORE": [
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9
+        ],
+        "VDUP": [
+          6
+        ],
+        "F162S16": [
+          8,
+          8,
+          8,
+          8,
+          8,
+          8,
+          8,
+          8,
+          8,
+          8,
+          8,
+          8,
+          8,
+          8,
+          8,
+          8
+        ],
+        "RV_VAND": [
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6
+        ],
+        "S162F16": [
+          8,
+          8,
+          8,
+          8,
+          8,
+          8,
+          8,
+          8,
+          8,
+          8,
+          8,
+          8,
+          8,
+          8,
+          8,
+          8
+        ],
+        "F162S8": [
+          8,
+          8,
+          8,
+          8,
+          8,
+          8,
+          8,
+          8,
+          8,
+          8,
+          8,
+          8,
+          8,
+          8,
+          8,
+          8
+        ]
+      },
+      "forwarding": {
+        "LOAD->F162S16": [
+          6,
+          6,
+          6,
+          6,
+          14,
+          7,
+          17,
+          8,
+          19,
+          9,
+          18,
+          10,
+          23,
+          14,
+          25,
+          14
+        ],
+        "F162S16->RV_VAND": [
+          4,
+          4,
+          4,
+          5,
+          5,
+          5,
+          5,
+          5,
+          5,
+          5,
+          5,
+          7,
+          5,
+          7,
+          5,
+          5
+        ],
+        "RV_VAND->S162F16": [
+          2,
+          2,
+          3,
+          3,
+          3,
+          5,
+          3,
+          5,
+          5,
+          7,
+          7,
+          5,
+          3,
+          5,
+          2,
+          7
+        ],
+        "S162F16->F162S8": [
+          4,
+          6,
+          6,
+          6,
+          8,
+          6,
+          8,
+          8,
+          8,
+          8,
+          8,
+          8,
+          6,
+          6,
+          4,
+          5
+        ],
+        "F162S8->STORE": [
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          7,
+          6,
+          7,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6
+        ]
+      }
+    },
+    {
+      "case": "cast_fp16_int8_cast_rint_on_n64",
+      "shape": [
+        1,
+        64
+      ],
+      "golden": {
+        "passed": true,
+        "elements_checked": 64,
+        "mismatches": 0,
+        "guard_bytes_checked": 32704,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "7826ffc17bb886390cdd128b7dfd19d9ecec8a0ff9204fb926ffcc2501c54d3d",
+        "output0.bin": "60bc5c38b4596ffba9f01bff94839046fbd108f548b7e063638b09c91e23b8a7",
+        "core0.veccore0.instr_log.dump": "279e105f1115c64426a80336b5dff95ebb008ed8802480d603d28132a08e6a85",
+        "core0.veccore0.instr_popped_log.dump": "848ac68552958d9eaddc19f30383781458279570be467b02d487cadb9e5e3813"
+      },
+      "instruction_counts": {
+        "MOV_XD_SPR": 11,
+        "MOVK": 9,
+        "MOV_XD_IMM": 17,
+        "ADD": 2,
+        "SHR": 1,
+        "AND": 3,
+        "ADD_IMM": 3,
+        "SHL": 2,
+        "MADD": 1,
+        "DC_PRELOAD_XN_IMM": 1,
+        "LDP_XI_XJ_XN": 1,
+        "MOV_SPR_XN": 4,
+        "SBITSET": 4,
+        "CMP": 2,
+        "NOP": 2,
+        "INSERT_XD_XN": 1,
+        "PUSH_PB": 1,
+        "JUMPC": 2,
+        "JUMP": 2,
+        "MOV_SRC_TO_DST_ALIGNv2": 3,
+        "SET_FLAG": 2,
+        "WAIT_FLAG": 2,
+        "RV_SMOVI": 2,
+        "RV_SEND": 3,
+        "RV_PLT": 2,
+        "RV_VLDI": 1,
+        "RV_VCVT_F2I": 1,
+        "RV_VSTI": 1,
+        "VF": 1,
+        "BAR": 1,
+        "END": 1,
+        "DCCI": 2,
+        "END_LABEL": 1
+      },
+      "measured_vec_cycles": 54,
+      "instruction_latencies": {
+        "LOAD": [
+          9
+        ],
+        "STORE": [
+          9
+        ],
+        "VDUP": [],
+        "F162S16": [],
+        "RV_VAND": [],
+        "S162F16": [],
+        "F162S8": [
+          8
+        ]
+      },
+      "forwarding": {
+        "F162S8->STORE": [
+          6
+        ],
+        "LOAD->F162S8": [
+          6
+        ]
+      }
+    },
+    {
+      "case": "cast_fp16_int8_cast_rint_on_n129",
+      "shape": [
+        1,
+        129
+      ],
+      "golden": {
+        "passed": true,
+        "elements_checked": 129,
+        "mismatches": 0,
+        "guard_bytes_checked": 32639,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "7826ffc17bb886390cdd128b7dfd19d9ecec8a0ff9204fb926ffcc2501c54d3d",
+        "output0.bin": "01f6bd333bb3c80f70ee1bb9ea31dd7fb3cdbd7b38d68bdf67ae09dc0937316b",
+        "core0.veccore0.instr_log.dump": "b1c366366e5ad261ce4c01c394ca651f105abb00af65838e032ff1a89f727716",
+        "core0.veccore0.instr_popped_log.dump": "41c92217c4372d9d4b744e7c682164c668dbe2e095f46ceef78901b76c5c9957"
+      },
+      "instruction_counts": {
+        "MOV_XD_SPR": 11,
+        "MOVK": 11,
+        "MOV_XD_IMM": 20,
+        "ADD": 2,
+        "SHR": 1,
+        "AND": 3,
+        "ADD_IMM": 3,
+        "SHL": 3,
+        "MADD": 1,
+        "DC_PRELOAD_XN_IMM": 1,
+        "LDP_XI_XJ_XN": 1,
+        "MOV_SPR_XN": 4,
+        "INSERT_XD_XN": 4,
+        "SBITSET": 4,
+        "CMP": 2,
+        "NOP": 2,
+        "PUSH_PB": 1,
+        "JUMPC": 2,
+        "JUMP": 2,
+        "MOV_SRC_TO_DST_ALIGNv2": 3,
+        "SET_FLAG": 2,
+        "WAIT_FLAG": 2,
+        "RV_VLOOPv2": 1,
+        "RV_SMOVI": 2,
+        "RV_SEND": 3,
+        "RV_PLT": 3,
+        "RV_VLD": 2,
+        "RV_VCVT_F2I": 2,
+        "RV_VST": 2,
+        "VF": 1,
+        "BAR": 1,
+        "END": 1,
+        "DCCI": 2,
+        "END_LABEL": 1
+      },
+      "measured_vec_cycles": 58,
+      "instruction_latencies": {
+        "LOAD": [
+          9,
+          9
+        ],
+        "STORE": [
+          9,
+          13
+        ],
+        "VDUP": [],
+        "F162S16": [],
+        "RV_VAND": [],
+        "S162F16": [],
+        "F162S8": [
+          8,
+          8
+        ]
+      },
+      "forwarding": {
+        "F162S8->STORE": [
+          6,
+          6
+        ],
+        "LOAD->F162S8": [
+          6,
+          6
+        ]
+      }
+    },
+    {
+      "case": "cast_fp16_int8_cast_rint_on_n512",
+      "shape": [
+        1,
+        512
+      ],
+      "golden": {
+        "passed": true,
+        "elements_checked": 512,
+        "mismatches": 0,
+        "guard_bytes_checked": 32256,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "7826ffc17bb886390cdd128b7dfd19d9ecec8a0ff9204fb926ffcc2501c54d3d",
+        "output0.bin": "e9b658ff034204c3db21364ea4b3b71226321ba228c9db3bf0fa675a41779b36",
+        "core0.veccore0.instr_log.dump": "64423bc4a11818957ee69c3f4692c472f3a2027a1f814d89a3fc9f5fb88d3256",
+        "core0.veccore0.instr_popped_log.dump": "cd2dad688946cbf3983530d5627d872f5a5efbfad10f1e0ff3198261ef65e5fb"
+      },
+      "instruction_counts": {
+        "MOV_XD_SPR": 11,
+        "MOVK": 12,
+        "MOV_XD_IMM": 21,
+        "ADD": 2,
+        "SHR": 1,
+        "AND": 3,
+        "ADD_IMM": 3,
+        "SHL": 3,
+        "MADD": 1,
+        "DC_PRELOAD_XN_IMM": 1,
+        "LDP_XI_XJ_XN": 1,
+        "MOV_SPR_XN": 4,
+        "SBITSET": 4,
+        "CMP": 2,
+        "INSERT_XD_XN": 4,
+        "NOP": 2,
+        "PUSH_PB": 1,
+        "JUMPC": 2,
+        "JUMP": 2,
+        "MOV_SRC_TO_DST_ALIGNv2": 3,
+        "SET_FLAG": 2,
+        "WAIT_FLAG": 2,
+        "RV_VLOOPv2": 1,
+        "RV_SMOVI": 2,
+        "RV_SEND": 3,
+        "RV_PLT": 5,
+        "RV_VLD": 4,
+        "RV_VCVT_F2I": 4,
+        "RV_VST": 4,
+        "VF": 1,
+        "BAR": 1,
+        "END": 1,
+        "DCCI": 2,
+        "END_LABEL": 1
+      },
+      "measured_vec_cycles": 60,
+      "instruction_latencies": {
+        "LOAD": [
+          9,
+          9,
+          9,
+          9
+        ],
+        "STORE": [
+          9,
+          9,
+          9,
+          9
+        ],
+        "VDUP": [],
+        "F162S16": [],
+        "RV_VAND": [],
+        "S162F16": [],
+        "F162S8": [
+          8,
+          8,
+          8,
+          8
+        ]
+      },
+      "forwarding": {
+        "F162S8->STORE": [
+          6,
+          6,
+          6,
+          6
+        ],
+        "LOAD->F162S8": [
+          6,
+          6,
+          6,
+          6
+        ]
+      }
+    },
+    {
+      "case": "cast_fp16_int8_cast_rint_on_n2048",
+      "shape": [
+        1,
+        2048
+      ],
+      "golden": {
+        "passed": true,
+        "elements_checked": 2048,
+        "mismatches": 0,
+        "guard_bytes_checked": 30720,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "7826ffc17bb886390cdd128b7dfd19d9ecec8a0ff9204fb926ffcc2501c54d3d",
+        "output0.bin": "3fed712058481ed12d08f4073ab65a2ebc9714f1a868a11d2e984409732332f6",
+        "core0.veccore0.instr_log.dump": "77bbb7d1a6d15c9eae0967af87d67896865390154bea3c77fc586b3a3ec5ad0a",
+        "core0.veccore0.instr_popped_log.dump": "e8824b415666e82a298a594bf8772f6562ceda2dcabcb0c6e6c35b2915781e4f"
+      },
+      "instruction_counts": {
+        "MOV_XD_SPR": 11,
+        "MOVK": 12,
+        "MOV_XD_IMM": 21,
+        "ADD": 2,
+        "SHR": 1,
+        "AND": 3,
+        "ADD_IMM": 3,
+        "SHL": 3,
+        "MADD": 1,
+        "DC_PRELOAD_XN_IMM": 1,
+        "LDP_XI_XJ_XN": 1,
+        "MOV_SPR_XN": 4,
+        "SBITSET": 4,
+        "CMP": 2,
+        "INSERT_XD_XN": 4,
+        "NOP": 2,
+        "PUSH_PB": 1,
+        "JUMPC": 2,
+        "JUMP": 2,
+        "MOV_SRC_TO_DST_ALIGNv2": 3,
+        "SET_FLAG": 2,
+        "WAIT_FLAG": 2,
+        "RV_VLOOPv2": 1,
+        "RV_SMOVI": 2,
+        "RV_PLT": 17,
+        "RV_VLD": 16,
+        "RV_VCVT_F2I": 16,
+        "RV_SEND": 3,
+        "RV_VST": 16,
+        "VF": 1,
+        "BAR": 1,
+        "END": 1,
+        "DCCI": 2,
+        "END_LABEL": 1
+      },
+      "measured_vec_cycles": 72,
+      "instruction_latencies": {
+        "LOAD": [
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9
+        ],
+        "STORE": [
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9
+        ],
+        "VDUP": [],
+        "F162S16": [],
+        "RV_VAND": [],
+        "S162F16": [],
+        "F162S8": [
+          8,
+          8,
+          8,
+          8,
+          8,
+          8,
+          8,
+          8,
+          8,
+          8,
+          8,
+          8,
+          8,
+          8,
+          8,
+          8
+        ]
+      },
+      "forwarding": {
+        "F162S8->STORE": [
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6
+        ],
+        "LOAD->F162S8": [
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6
+        ]
+      }
+    },
+    {
+      "case": "cast_fp16_int8_cast_trunc_off_n64",
+      "shape": [
+        1,
+        64
+      ],
+      "golden": {
+        "passed": true,
+        "elements_checked": 64,
+        "mismatches": 0,
+        "guard_bytes_checked": 32704,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "7826ffc17bb886390cdd128b7dfd19d9ecec8a0ff9204fb926ffcc2501c54d3d",
+        "output0.bin": "1e7a623510f1373601b1e80b12fd090364b711467581212aae15726db6526a02",
+        "core0.veccore0.instr_log.dump": "ddebc6e5cbd496ff53734f5ed4180f41cd72b16601ffd6f1073974d3637ebe22",
+        "core0.veccore0.instr_popped_log.dump": "365036d65e119199712bd92d2ed0f29b3ad7c6d83fdd94ca546a758baeecef47"
+      },
+      "instruction_counts": {
+        "MOV_XD_SPR": 11,
+        "MOVK": 11,
+        "MOV_XD_IMM": 19,
+        "ADD": 2,
+        "SHR": 1,
+        "AND": 3,
+        "ADD_IMM": 3,
+        "SHL": 3,
+        "MADD": 1,
+        "DC_PRELOAD_XN_IMM": 1,
+        "LDP_XI_XJ_XN": 1,
+        "MOV_SPR_XN": 4,
+        "SBITSET": 4,
+        "CMP": 2,
+        "INSERT_XD_XN": 3,
+        "NOP": 2,
+        "PUSH_PB": 1,
+        "JUMPC": 2,
+        "JUMP": 2,
+        "MOV_SRC_TO_DST_ALIGNv2": 3,
+        "SET_FLAG": 2,
+        "WAIT_FLAG": 2,
+        "RV_SMOVI": 2,
+        "RV_SEND": 3,
+        "RV_PSET": 1,
+        "RV_PLT": 2,
+        "RV_VLDI": 1,
+        "RV_VDUPS": 1,
+        "RV_VCVT_F2I": 2,
+        "RV_VAND": 1,
+        "RV_VCVT_I2F": 1,
+        "RV_VSTI": 1,
+        "VF": 1,
+        "BAR": 1,
+        "END": 1,
+        "DCCI": 2,
+        "END_LABEL": 1
+      },
+      "measured_vec_cycles": 64,
+      "instruction_latencies": {
+        "LOAD": [
+          9
+        ],
+        "STORE": [
+          9
+        ],
+        "VDUP": [
+          6
+        ],
+        "F162S16": [
+          8
+        ],
+        "RV_VAND": [
+          6
+        ],
+        "S162F16": [
+          8
+        ],
+        "F162S8": [
+          8
+        ]
+      },
+      "forwarding": {
+        "LOAD->F162S16": [
+          6
+        ],
+        "F162S16->RV_VAND": [
+          4
+        ],
+        "RV_VAND->S162F16": [
+          2
+        ],
+        "S162F16->F162S8": [
+          4
+        ],
+        "F162S8->STORE": [
+          6
+        ]
+      }
+    },
+    {
+      "case": "cast_fp16_int8_cast_trunc_off_n129",
+      "shape": [
+        1,
+        129
+      ],
+      "golden": {
+        "passed": true,
+        "elements_checked": 129,
+        "mismatches": 0,
+        "guard_bytes_checked": 32639,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "7826ffc17bb886390cdd128b7dfd19d9ecec8a0ff9204fb926ffcc2501c54d3d",
+        "output0.bin": "62d774a7e3df10952de8fd50abb948070fc51ead476703dc07a5310a030cc6f7",
+        "core0.veccore0.instr_log.dump": "168d89689ba4ec6efe8a05d9482fadda20616aa0e03d2a8438d64d9183db8e66",
+        "core0.veccore0.instr_popped_log.dump": "cfed8d5d36bc9250500fd2b424f117bb07d7a14432587a7eb52b8d455d662cb9"
+      },
+      "instruction_counts": {
+        "MOV_XD_SPR": 11,
+        "MOVK": 11,
+        "MOV_XD_IMM": 21,
+        "ADD": 2,
+        "SHR": 1,
+        "AND": 3,
+        "ADD_IMM": 3,
+        "SHL": 3,
+        "MADD": 1,
+        "DC_PRELOAD_XN_IMM": 1,
+        "LDP_XI_XJ_XN": 1,
+        "MOV_SPR_XN": 4,
+        "SBITSET": 4,
+        "CMP": 2,
+        "INSERT_XD_XN": 4,
+        "NOP": 2,
+        "PUSH_PB": 1,
+        "JUMPC": 2,
+        "JUMP": 2,
+        "MOV_SRC_TO_DST_ALIGNv2": 3,
+        "SET_FLAG": 2,
+        "WAIT_FLAG": 2,
+        "RV_VLOOPv2": 1,
+        "RV_SMOVI": 2,
+        "RV_SEND": 3,
+        "RV_PLT": 3,
+        "RV_PSET": 1,
+        "RV_VDUPS": 1,
+        "RV_VLD": 2,
+        "RV_VCVT_F2I": 4,
+        "RV_VAND": 2,
+        "RV_VCVT_I2F": 2,
+        "RV_VST": 2,
+        "VF": 1,
+        "BAR": 1,
+        "END": 1,
+        "DCCI": 2,
+        "END_LABEL": 1
+      },
+      "measured_vec_cycles": 69,
+      "instruction_latencies": {
+        "LOAD": [
+          9,
+          9
+        ],
+        "STORE": [
+          9,
+          13
+        ],
+        "VDUP": [
+          6
+        ],
+        "F162S16": [
+          8,
+          8
+        ],
+        "RV_VAND": [
+          6,
+          6
+        ],
+        "S162F16": [
+          8,
+          8
+        ],
+        "F162S8": [
+          8,
+          8
+        ]
+      },
+      "forwarding": {
+        "LOAD->F162S16": [
+          6,
+          6
+        ],
+        "F162S16->RV_VAND": [
+          4,
+          4
+        ],
+        "RV_VAND->S162F16": [
+          2,
+          2
+        ],
+        "S162F16->F162S8": [
+          4,
+          4
+        ],
+        "F162S8->STORE": [
+          6,
+          6
+        ]
+      }
+    },
+    {
+      "case": "cast_fp16_int8_cast_trunc_off_n512",
+      "shape": [
+        1,
+        512
+      ],
+      "golden": {
+        "passed": true,
+        "elements_checked": 512,
+        "mismatches": 0,
+        "guard_bytes_checked": 32256,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "7826ffc17bb886390cdd128b7dfd19d9ecec8a0ff9204fb926ffcc2501c54d3d",
+        "output0.bin": "d4526e70700f287472be3bc7ac053c88617a2e7b7dc93925aae5b408cfcbb88c",
+        "core0.veccore0.instr_log.dump": "f5183f0eb095a60953bd357d86dbb1c0f68f09b4ee02ce32418559091ef2aed8",
+        "core0.veccore0.instr_popped_log.dump": "6cd2fe6f3f40ba2afd254357531f804512a74622f100621b6421fca04ef21f31"
+      },
+      "instruction_counts": {
+        "MOV_XD_SPR": 11,
+        "MOVK": 12,
+        "MOV_XD_IMM": 22,
+        "ADD": 2,
+        "SHR": 1,
+        "AND": 3,
+        "ADD_IMM": 3,
+        "SHL": 3,
+        "MADD": 1,
+        "DC_PRELOAD_XN_IMM": 1,
+        "LDP_XI_XJ_XN": 1,
+        "MOV_SPR_XN": 4,
+        "SBITSET": 4,
+        "CMP": 2,
+        "INSERT_XD_XN": 4,
+        "NOP": 2,
+        "PUSH_PB": 1,
+        "JUMPC": 2,
+        "JUMP": 2,
+        "MOV_SRC_TO_DST_ALIGNv2": 3,
+        "SET_FLAG": 2,
+        "WAIT_FLAG": 2,
+        "RV_VLOOPv2": 1,
+        "RV_SMOVI": 2,
+        "RV_PLT": 5,
+        "RV_PSET": 1,
+        "RV_SEND": 3,
+        "RV_VDUPS": 1,
+        "RV_VLD": 4,
+        "RV_VCVT_F2I": 8,
+        "RV_VAND": 4,
+        "RV_VCVT_I2F": 4,
+        "RV_VST": 4,
+        "VF": 1,
+        "BAR": 1,
+        "END": 1,
+        "DCCI": 2,
+        "END_LABEL": 1
+      },
+      "measured_vec_cycles": 73,
+      "instruction_latencies": {
+        "LOAD": [
+          9,
+          9,
+          9,
+          9
+        ],
+        "STORE": [
+          9,
+          9,
+          9,
+          9
+        ],
+        "VDUP": [
+          6
+        ],
+        "F162S16": [
+          8,
+          8,
+          8,
+          8
+        ],
+        "RV_VAND": [
+          6,
+          6,
+          6,
+          6
+        ],
+        "S162F16": [
+          8,
+          8,
+          8,
+          8
+        ],
+        "F162S8": [
+          8,
+          8,
+          8,
+          8
+        ]
+      },
+      "forwarding": {
+        "LOAD->F162S16": [
+          6,
+          6,
+          6,
+          6
+        ],
+        "F162S16->RV_VAND": [
+          4,
+          4,
+          4,
+          5
+        ],
+        "RV_VAND->S162F16": [
+          2,
+          2,
+          2,
+          3
+        ],
+        "S162F16->F162S8": [
+          4,
+          4,
+          5,
+          4
+        ],
+        "F162S8->STORE": [
+          6,
+          6,
+          6,
+          6
+        ]
+      }
+    },
+    {
+      "case": "cast_fp16_int8_cast_trunc_off_n2048",
+      "shape": [
+        1,
+        2048
+      ],
+      "golden": {
+        "passed": true,
+        "elements_checked": 2048,
+        "mismatches": 0,
+        "guard_bytes_checked": 30720,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "7826ffc17bb886390cdd128b7dfd19d9ecec8a0ff9204fb926ffcc2501c54d3d",
+        "output0.bin": "f841b4286c0b8e634b2e87cac5e25764f501a0c3635cb68052ede2e037f76a7a",
+        "core0.veccore0.instr_log.dump": "586c140fe017ebd2feb6f1324576466f6aed3cca58373c6f0b1ecf110bfa9073",
+        "core0.veccore0.instr_popped_log.dump": "325915f1c694f367b24a28b5192dc06a2d2479d55a70a5e7961d0a46e0074d1b"
+      },
+      "instruction_counts": {
+        "MOV_XD_SPR": 11,
+        "MOVK": 12,
+        "MOV_XD_IMM": 22,
+        "ADD": 2,
+        "SHR": 1,
+        "AND": 3,
+        "ADD_IMM": 3,
+        "SHL": 3,
+        "MADD": 1,
+        "DC_PRELOAD_XN_IMM": 1,
+        "LDP_XI_XJ_XN": 1,
+        "MOV_SPR_XN": 4,
+        "SBITSET": 4,
+        "CMP": 2,
+        "INSERT_XD_XN": 4,
+        "NOP": 2,
+        "PUSH_PB": 1,
+        "JUMPC": 2,
+        "JUMP": 2,
+        "MOV_SRC_TO_DST_ALIGNv2": 3,
+        "SET_FLAG": 2,
+        "WAIT_FLAG": 2,
+        "RV_VLOOPv2": 1,
+        "RV_SMOVI": 2,
+        "RV_PLT": 17,
+        "RV_PSET": 1,
+        "RV_VDUPS": 1,
+        "RV_VLD": 16,
+        "RV_VCVT_F2I": 32,
+        "RV_VAND": 16,
+        "RV_VCVT_I2F": 16,
+        "RV_SEND": 3,
+        "RV_VST": 16,
+        "VF": 1,
+        "BAR": 1,
+        "END": 1,
+        "DCCI": 2,
+        "END_LABEL": 1
+      },
+      "measured_vec_cycles": 108,
+      "instruction_latencies": {
+        "LOAD": [
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9
+        ],
+        "STORE": [
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9
+        ],
+        "VDUP": [
+          6
+        ],
+        "F162S16": [
+          8,
+          8,
+          8,
+          8,
+          8,
+          8,
+          8,
+          8,
+          8,
+          8,
+          8,
+          8,
+          8,
+          8,
+          8,
+          8
+        ],
+        "RV_VAND": [
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6
+        ],
+        "S162F16": [
+          8,
+          8,
+          8,
+          8,
+          8,
+          8,
+          8,
+          8,
+          8,
+          8,
+          8,
+          8,
+          8,
+          8,
+          8,
+          8
+        ],
+        "F162S8": [
+          8,
+          8,
+          8,
+          8,
+          8,
+          8,
+          8,
+          8,
+          8,
+          8,
+          8,
+          8,
+          8,
+          8,
+          8,
+          8
+        ]
+      },
+      "forwarding": {
+        "LOAD->F162S16": [
+          6,
+          6,
+          6,
+          6,
+          14,
+          7,
+          17,
+          8,
+          19,
+          9,
+          18,
+          10,
+          23,
+          14,
+          25,
+          14
+        ],
+        "F162S16->RV_VAND": [
+          4,
+          4,
+          4,
+          5,
+          5,
+          5,
+          5,
+          5,
+          5,
+          5,
+          5,
+          7,
+          5,
+          7,
+          5,
+          5
+        ],
+        "RV_VAND->S162F16": [
+          2,
+          2,
+          3,
+          3,
+          3,
+          5,
+          3,
+          5,
+          5,
+          7,
+          7,
+          5,
+          3,
+          5,
+          2,
+          7
+        ],
+        "S162F16->F162S8": [
+          4,
+          6,
+          6,
+          6,
+          8,
+          6,
+          8,
+          8,
+          8,
+          8,
+          8,
+          8,
+          6,
+          6,
+          4,
+          5
+        ],
+        "F162S8->STORE": [
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          7,
+          6,
+          7,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6
+        ]
+      }
+    },
+    {
+      "case": "cast_fp16_int8_cast_trunc_on_n64",
+      "shape": [
+        1,
+        64
+      ],
+      "golden": {
+        "passed": true,
+        "elements_checked": 64,
+        "mismatches": 0,
+        "guard_bytes_checked": 32704,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "7826ffc17bb886390cdd128b7dfd19d9ecec8a0ff9204fb926ffcc2501c54d3d",
+        "output0.bin": "db45d895a0bd7af5b362a2b3e32c1af9e0f214d9fcd36cb4c950226031e1530e",
+        "core0.veccore0.instr_log.dump": "5522a7f134caef698229c78abb5a15ff177ff2e7bc6e454070d161ee214ee5be",
+        "core0.veccore0.instr_popped_log.dump": "091cacaba10b8224e2e065aee225df4f50a75707e3748ac78df348c92a2811b0"
+      },
+      "instruction_counts": {
+        "MOV_XD_SPR": 11,
+        "MOVK": 9,
+        "MOV_XD_IMM": 17,
+        "ADD": 2,
+        "SHR": 1,
+        "AND": 3,
+        "ADD_IMM": 3,
+        "SHL": 2,
+        "MADD": 1,
+        "DC_PRELOAD_XN_IMM": 1,
+        "LDP_XI_XJ_XN": 1,
+        "MOV_SPR_XN": 4,
+        "SBITSET": 4,
+        "CMP": 2,
+        "NOP": 2,
+        "INSERT_XD_XN": 1,
+        "PUSH_PB": 1,
+        "JUMPC": 2,
+        "JUMP": 2,
+        "MOV_SRC_TO_DST_ALIGNv2": 3,
+        "SET_FLAG": 2,
+        "WAIT_FLAG": 2,
+        "RV_SMOVI": 2,
+        "RV_SEND": 3,
+        "RV_PLT": 2,
+        "RV_VLDI": 1,
+        "RV_VCVT_F2I": 1,
+        "RV_VSTI": 1,
+        "VF": 1,
+        "BAR": 1,
+        "END": 1,
+        "DCCI": 2,
+        "END_LABEL": 1
+      },
+      "measured_vec_cycles": 54,
+      "instruction_latencies": {
+        "LOAD": [
+          9
+        ],
+        "STORE": [
+          9
+        ],
+        "VDUP": [],
+        "F162S16": [],
+        "RV_VAND": [],
+        "S162F16": [],
+        "F162S8": [
+          8
+        ]
+      },
+      "forwarding": {
+        "F162S8->STORE": [
+          6
+        ],
+        "LOAD->F162S8": [
+          6
+        ]
+      }
+    },
+    {
+      "case": "cast_fp16_int8_cast_trunc_on_n129",
+      "shape": [
+        1,
+        129
+      ],
+      "golden": {
+        "passed": true,
+        "elements_checked": 129,
+        "mismatches": 0,
+        "guard_bytes_checked": 32639,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "7826ffc17bb886390cdd128b7dfd19d9ecec8a0ff9204fb926ffcc2501c54d3d",
+        "output0.bin": "068809ebfdec735ba8cc755cdb842aa0291b497c919a020720d2b4cde50bab56",
+        "core0.veccore0.instr_log.dump": "a0465c83c2932feb9015a23585277f1c4c7095ee5809840ca380c95243fc0b7e",
+        "core0.veccore0.instr_popped_log.dump": "28d4f2fbb9eaead8c2b5bed47e8f73d916d3a4cfee5f4c5f988f815377496f10"
+      },
+      "instruction_counts": {
+        "MOV_XD_SPR": 11,
+        "MOVK": 11,
+        "MOV_XD_IMM": 20,
+        "ADD": 2,
+        "SHR": 1,
+        "AND": 3,
+        "ADD_IMM": 3,
+        "SHL": 3,
+        "MADD": 1,
+        "DC_PRELOAD_XN_IMM": 1,
+        "LDP_XI_XJ_XN": 1,
+        "MOV_SPR_XN": 4,
+        "INSERT_XD_XN": 4,
+        "SBITSET": 4,
+        "CMP": 2,
+        "NOP": 2,
+        "PUSH_PB": 1,
+        "JUMPC": 2,
+        "JUMP": 2,
+        "MOV_SRC_TO_DST_ALIGNv2": 3,
+        "SET_FLAG": 2,
+        "WAIT_FLAG": 2,
+        "RV_VLOOPv2": 1,
+        "RV_SMOVI": 2,
+        "RV_SEND": 3,
+        "RV_PLT": 3,
+        "RV_VLD": 2,
+        "RV_VCVT_F2I": 2,
+        "RV_VST": 2,
+        "VF": 1,
+        "BAR": 1,
+        "END": 1,
+        "DCCI": 2,
+        "END_LABEL": 1
+      },
+      "measured_vec_cycles": 58,
+      "instruction_latencies": {
+        "LOAD": [
+          9,
+          9
+        ],
+        "STORE": [
+          9,
+          13
+        ],
+        "VDUP": [],
+        "F162S16": [],
+        "RV_VAND": [],
+        "S162F16": [],
+        "F162S8": [
+          8,
+          8
+        ]
+      },
+      "forwarding": {
+        "F162S8->STORE": [
+          6,
+          6
+        ],
+        "LOAD->F162S8": [
+          6,
+          6
+        ]
+      }
+    },
+    {
+      "case": "cast_fp16_int8_cast_trunc_on_n512",
+      "shape": [
+        1,
+        512
+      ],
+      "golden": {
+        "passed": true,
+        "elements_checked": 512,
+        "mismatches": 0,
+        "guard_bytes_checked": 32256,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "7826ffc17bb886390cdd128b7dfd19d9ecec8a0ff9204fb926ffcc2501c54d3d",
+        "output0.bin": "f8b9d16152e215deb0503d9e5e034c4d6aacd41534000a971f11425f2b60db20",
+        "core0.veccore0.instr_log.dump": "ab49d8f04b4882735010bd1c22d66f9719cdec75f8b2617f1fec0cd538caed5d",
+        "core0.veccore0.instr_popped_log.dump": "2192db307ad0d58d3c4f41d307fc4e8629000bebc1258482d409f2beecbb2712"
+      },
+      "instruction_counts": {
+        "MOV_XD_SPR": 11,
+        "MOVK": 12,
+        "MOV_XD_IMM": 21,
+        "ADD": 2,
+        "SHR": 1,
+        "AND": 3,
+        "ADD_IMM": 3,
+        "SHL": 3,
+        "MADD": 1,
+        "DC_PRELOAD_XN_IMM": 1,
+        "LDP_XI_XJ_XN": 1,
+        "MOV_SPR_XN": 4,
+        "SBITSET": 4,
+        "CMP": 2,
+        "INSERT_XD_XN": 4,
+        "NOP": 2,
+        "PUSH_PB": 1,
+        "JUMPC": 2,
+        "JUMP": 2,
+        "MOV_SRC_TO_DST_ALIGNv2": 3,
+        "SET_FLAG": 2,
+        "WAIT_FLAG": 2,
+        "RV_VLOOPv2": 1,
+        "RV_SMOVI": 2,
+        "RV_SEND": 3,
+        "RV_PLT": 5,
+        "RV_VLD": 4,
+        "RV_VCVT_F2I": 4,
+        "RV_VST": 4,
+        "VF": 1,
+        "BAR": 1,
+        "END": 1,
+        "DCCI": 2,
+        "END_LABEL": 1
+      },
+      "measured_vec_cycles": 60,
+      "instruction_latencies": {
+        "LOAD": [
+          9,
+          9,
+          9,
+          9
+        ],
+        "STORE": [
+          9,
+          9,
+          9,
+          9
+        ],
+        "VDUP": [],
+        "F162S16": [],
+        "RV_VAND": [],
+        "S162F16": [],
+        "F162S8": [
+          8,
+          8,
+          8,
+          8
+        ]
+      },
+      "forwarding": {
+        "F162S8->STORE": [
+          6,
+          6,
+          6,
+          6
+        ],
+        "LOAD->F162S8": [
+          6,
+          6,
+          6,
+          6
+        ]
+      }
+    },
+    {
+      "case": "cast_fp16_int8_cast_trunc_on_n2048",
+      "shape": [
+        1,
+        2048
+      ],
+      "golden": {
+        "passed": true,
+        "elements_checked": 2048,
+        "mismatches": 0,
+        "guard_bytes_checked": 30720,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "7826ffc17bb886390cdd128b7dfd19d9ecec8a0ff9204fb926ffcc2501c54d3d",
+        "output0.bin": "cb2cc839c202663798f2c1dadc46fe06b1ef2f15006af1c02cea2bccf9183e8f",
+        "core0.veccore0.instr_log.dump": "80222250730e792d8a4c4982aad566edc189ed880afb9406b423283807f422f8",
+        "core0.veccore0.instr_popped_log.dump": "c3fc92b8324ba55ce08c88a61402908a4d7dfefe266a2dd9a840caa32cdfff15"
+      },
+      "instruction_counts": {
+        "MOV_XD_SPR": 11,
+        "MOVK": 12,
+        "MOV_XD_IMM": 21,
+        "ADD": 2,
+        "SHR": 1,
+        "AND": 3,
+        "ADD_IMM": 3,
+        "SHL": 3,
+        "MADD": 1,
+        "DC_PRELOAD_XN_IMM": 1,
+        "LDP_XI_XJ_XN": 1,
+        "MOV_SPR_XN": 4,
+        "SBITSET": 4,
+        "CMP": 2,
+        "INSERT_XD_XN": 4,
+        "NOP": 2,
+        "PUSH_PB": 1,
+        "JUMPC": 2,
+        "JUMP": 2,
+        "MOV_SRC_TO_DST_ALIGNv2": 3,
+        "SET_FLAG": 2,
+        "WAIT_FLAG": 2,
+        "RV_VLOOPv2": 1,
+        "RV_SMOVI": 2,
+        "RV_PLT": 17,
+        "RV_VLD": 16,
+        "RV_VCVT_F2I": 16,
+        "RV_SEND": 3,
+        "RV_VST": 16,
+        "VF": 1,
+        "BAR": 1,
+        "END": 1,
+        "DCCI": 2,
+        "END_LABEL": 1
+      },
+      "measured_vec_cycles": 72,
+      "instruction_latencies": {
+        "LOAD": [
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9
+        ],
+        "STORE": [
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9,
+          9
+        ],
+        "VDUP": [],
+        "F162S16": [],
+        "RV_VAND": [],
+        "S162F16": [],
+        "F162S8": [
+          8,
+          8,
+          8,
+          8,
+          8,
+          8,
+          8,
+          8,
+          8,
+          8,
+          8,
+          8,
+          8,
+          8,
+          8,
+          8
+        ]
+      },
+      "forwarding": {
+        "F162S8->STORE": [
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6
+        ],
+        "LOAD->F162S8": [
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6
+        ]
+      }
+    }
+  ],
+  "scope": "Finite signed ties/int8 overflows within int16 range. Native golden+guard+data counts verified. Partial packed-store RMW latency13 observed; intrinsic minimum9 is priced, tail mask RMW remains explicit approximation. No TileOp total cycle fitting."
+}

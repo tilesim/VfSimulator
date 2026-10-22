@@ -1,6 +1,8 @@
 {
   "version": 2,
   "fields": {
+    "enforce_fu_occupancy": {"type":"boolean","targets":["python"]},
+    "enqueue_pending_sfu": {"type":"boolean","targets":["python"]},
     "physical_predicate_registers": {"type": "integer", "targets": ["python", "cpp"]},
     "issue_ports": {"type": "integer", "targets": ["python", "cpp"]},
     "load_ports": {"type": "integer", "targets": ["python", "cpp"]},

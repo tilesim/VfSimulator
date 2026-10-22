@@ -274,7 +274,15 @@ class ISUController:
             if use_fu_rr_fifo and fu_type in blocked_fu_types:
                 continue
             if u.state != "ready":
-                continue
+                if (not self.core.enqueue_pending_sfu
+                        or fu_type != "SFU" or u.state != "blocked"
+                        or cycle < max(self.core.vf_startup_cost, u.shq_ready_cycle)
+                        or self.core._blocked_by_control_unit(u)):
+                    continue
+                u.exq_pending_sfu = True
+            # Measured SQRT/DIV source-order SFU assignment happens before
+            # operand readiness. ALU dispatch retains its existing policy.
+            # A pending SFU waits for true operand forwarding at EXU issue.
             if ex_count >= self.core.issue_ports:
                 break
 
@@ -378,6 +386,12 @@ class ISUController:
                 if recv_cy > cycle:
                     continue
                 ready_cy = int(self.core._compute_ready_cycle(cand))
+                if (getattr(cand, "exq_pending_sfu", False)
+                        and not self.core.theoretical_limit_legacy_forwarding):
+                    # The ordinary SHQ readiness subtracts the one-cycle EXQ
+                    # receive delay. A previously enqueued SFU cannot subtract
+                    # that delay again from physical operand availability.
+                    ready_cy += 1
                 if ready_cy > cycle:
                     continue
 
@@ -389,7 +403,8 @@ class ISUController:
                     prev_profile=self.core.last_profile_exu[port],
                     cur_profile=cand.profile,
                 )
-                if cycle < prev_issue_exu + ii_exu:
+                if cycle < max(prev_issue_exu + ii_exu, self.core._fu_next_issue_cycle(
+                        port, fu_type, cand.op, cand.form, cand.profile)):
                     continue
 
                 key = (ready_cy, recv_cy, cand.inst_id)

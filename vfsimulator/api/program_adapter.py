@@ -71,6 +71,8 @@ def program_to_canonical(program: VfSimProgram):
                 raise ValueError(f'{node.op}: operand {name!r} requires explicit metadata')
         src = list(node.src)
         opcode = normalize_opcode(node.op)
+        if opcode in {'VBITSORT', 'VBS32', 'VMRGSORT4', 'VMS4', 'VMS4V2'}:
+            raise ValueError(f'{opcode} is a legacy UB VEC instruction; use the legacy UB timing API, not VfSimProgram')
         if opcode == 'VLDSX2':
             raise ValueError('VLDSX2 must be lowered by the caller to VLDS with catalog_mode=DINTLV_B32')
         spec = DEFAULT_INSTRUCTION_CATALOG.lookup(opcode)
@@ -104,7 +106,12 @@ def program_to_canonical(program: VfSimProgram):
             if len(node.dst) > 1:
                 register_types = {values[n].dtype for n in src + node.dst
                                   if values[n].storage is StorageKind.REGISTER}
-                if len(register_types) > 1:
+                same_width_reinterpretation = (
+                    opcode in {'VINTLV','VDINTLV'}
+                    and attributes.get('bit_reinterpretation') == 'b32'
+                    and register_types <= {'fp32','int32','uint32'}
+                )
+                if len(register_types) > 1 and not same_width_reinterpretation:
                     raise ValueError(f'{node.op}: multi-result register operands must have matching dtypes')
         elif predicate_model and any(values[n].storage is StorageKind.PREDICATE_REGISTER for n in src + node.dst):
             raise ValueError(f'{node.op}: predicate semantics require a Catalog signature')
@@ -163,9 +170,37 @@ def program_to_canonical(program: VfSimProgram):
                 accesses.append(access)
         if supplied:
             raise ValueError(f'{node.op}: memory access metadata must reference UB operands of this instruction')
+        if opcode in {'VGATHER2', 'VSCATTER'}:
+            if values[src[1]].dtype != 'uint16':
+                raise ValueError(f'{opcode}.fp16 requires uint16 element indices')
+            from vfsimulator.core.indexed_memory import indexed_memory_timing
+            indexed_memory_timing(opcode, form, attributes)
+        if opcode == 'SPRCLR' and (type(attributes.get('spr')) is not int or attributes['spr'] != 74):
+            raise ValueError('Only measured SPRCLR spr=74 is supported')
+        if opcode == 'VSQZ' and attributes.get('mode', 'MODE_STORED') != 'MODE_STORED':
+            raise ValueError('Only measured VSQZ MODE_STORED is supported')
+        if opcode == 'VSTUR':
+            # MODE_STORED makes the byte count data-dependent. The frontend
+            # cannot replace it with a full-vector store or invent a pointer
+            # increment. A source lowerer with resolved masks supplies both.
+            if (len(accesses) != 1 or accesses[0].span is None
+                    or accesses[0].update_mode != 'post_update'
+                    or type(accesses[0].post_update_delta_bytes) is not int
+                    or accesses[0].post_update_delta_bytes != accesses[0].span * 4):
+                raise ValueError('VSTUR requires explicit selected span and POST_UPDATE byte count')
+        scalar_addresses = attributes.pop('scalar_address_inputs', [])
+        if not isinstance(scalar_addresses, (tuple, list)) or any(
+            not isinstance(name, str) or name not in values or values[name].storage is not StorageKind.SCALAR
+            for name in scalar_addresses
+        ):
+            raise ValueError('scalar_address_inputs requires declared Scalar values')
+        if scalar_addresses and (spec is None or spec.instruction_class.value not in ('load','store')):
+            raise ValueError('Scalar address inputs are supported only for memory instructions')
+        for index, name in enumerate(scalar_addresses):
+            attributes[f'scalar_address_input_{index}'] = name
         return AdapterInstruction(name=opcode, src=src, dst=list(node.dst),
                                   form=form, memory_accesses=tuple(accesses),
-                                  attributes=attributes)
+                                  attributes=attributes, supplemental_inputs=tuple(scalar_addresses))
 
     adapter = AdapterProgram(
         context=[convert(node) for node in program.body],

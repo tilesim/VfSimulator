@@ -27,6 +27,7 @@ class InstructionClass(str, Enum):
     LOAD = "load"
     STORE = "store"
     COMPUTE = "compute"
+    SCALAR = "scalar"
     CONTROL = "control"
 
 

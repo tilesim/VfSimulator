@@ -10,6 +10,7 @@
 
 #include <cctype>
 #include <algorithm>
+#include <stdexcept>
 
 namespace vfsim {
 namespace {
@@ -23,6 +24,8 @@ std::string canonicalOp(std::string op) {
 
 OpClass opClassFromString(const std::string &text) {
   const std::string canon = canonicalOp(text);
+  if (canon == "SCALAR")
+    throw std::invalid_argument("VF scalar SU timing currently requires the Python engine");
   if (canon == "LOAD")
     return OpClass::Load;
   if (canon == "STORE")

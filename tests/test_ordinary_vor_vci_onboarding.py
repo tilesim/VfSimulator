@@ -70,10 +70,10 @@ class OrdinaryVorVciOnboardingTest(unittest.TestCase):
         warnings = db.get_warnings()
         self.assertEqual({(w['op'], w['form']) for w in warnings
                           if w['kind'] == 'unsupported_isa_form'},
-                         {('VLDS', 'uint32'), ('VSTS', 'uint32'), ('VSTS', 'int32')})
+                         {('VLDS', 'uint32'), ('VSTS', 'uint32')})
         self.assertEqual([(w['prev'], w['cur']) for w in warnings
                           if w['kind'] == 'missing_ii_pair'],
-                         [('VOR.b32', 'VOR.b32')])
+                         [])
 
     def test_cce_to_core_runs_real_opcodes(self):
         cases = {

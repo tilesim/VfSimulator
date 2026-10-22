@@ -1,0 +1,54 @@
+{
+  "calibration": "CANN 9.2.0-beta.1, Ascend950PR_9599, dav-c310-vec",
+  "verification": "All output proposals, original-index association, per-block permutation and untouched guard bytes verified independently by analyze_topk_transpose_probes.py",
+  "measurements": [
+    {
+      "case": "bitsort_r1",
+      "hardware_repeat": 1,
+      "cycles": 51,
+      "raw_completion_line": "[info] [00007334] (PC: 0x10d0d0d8) PUSHQ    : (Binary: 0x15041880) (ID: 006229) VBS32  XD:X4=0x10000, XN:X3=0, XM:X2=0x9000, XT:X1=0x100000000000000, Id:6229, vf_execute_time: 51, vf_real_execute_time: 51",
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "cce70f8918f6953ec8c8dee51f310dd63199ec82b39614c8e8e8d6763ecaef34",
+        "core0.veccore0.instr_log.dump": "de422f6d6381d3fab78dd7ce470fe1c4286e4583f0706b6ffc7525d6dad071a5",
+        "core0.veccore0.instr_popped_log.dump": "64d133335af831c6d961d09ec43ffbe211cc68d5d61f1ac7d78c77c7a8f1aec8"
+      }
+    },
+    {
+      "case": "bitsort_r2",
+      "hardware_repeat": 2,
+      "cycles": 67,
+      "raw_completion_line": "[info] [00007350] (PC: 0x10d0d0d8) PUSHQ    : (Binary: 0x15041880) (ID: 006229) VBS32  XD:X4=0x10000, XN:X3=0, XM:X2=0x9000, XT:X1=0x200000000000000, Id:6229, vf_execute_time: 67, vf_real_execute_time: 67",
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "6acd9747e94bd45935679a32be768442a7dd88275b171b36a37847b0576207da",
+        "core0.veccore0.instr_log.dump": "4de06302d6865c2af0dfffb26f3c00d2012b9aa935a34003905d4f2465b73358",
+        "core0.veccore0.instr_popped_log.dump": "6f303c79e1cc28a945742ba15342ebc1ee818c44191484a5dc86219f5b05e643"
+      }
+    },
+    {
+      "case": "bitsort_r8",
+      "hardware_repeat": 8,
+      "cycles": 163,
+      "raw_completion_line": "[info] [00007446] (PC: 0x10d0d0d8) PUSHQ    : (Binary: 0x15041880) (ID: 006229) VBS32  XD:X4=0x10000, XN:X3=0, XM:X2=0x9000, XT:X1=0x800000000000000, Id:6229, vf_execute_time: 163, vf_real_execute_time: 163",
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "83df47d55e38a432858a0bda6dcb38c11638785d7d5fda5b8335d6bfb1a7bc3f",
+        "core0.veccore0.instr_log.dump": "6d27749548867037e2b9a029fe2cddefb124919a000bdafe214d320f4c914b22",
+        "core0.veccore0.instr_popped_log.dump": "9c7b0c4b895b28844acf688235bde733da3a90be39f64881063fa4c2f5eb38bd"
+      }
+    },
+    {
+      "case": "bitsort_r32",
+      "hardware_repeat": 32,
+      "cycles": 547,
+      "raw_completion_line": "[info] [00007830] (PC: 0x10d0d0d8) PUSHQ    : (Binary: 0x15041880) (ID: 006229) VBS32  XD:X4=0x10000, XN:X3=0, XM:X2=0x9000, XT:X1=0x2000000000000000, Id:6229, vf_execute_time: 547, vf_real_execute_time: 547",
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "30254fdacd102806fff56b2e8ac406b3b36cf1410248cb66281392a4661b7961",
+        "core0.veccore0.instr_log.dump": "767b1e3533b0a5d5b49fab80835a1447486997c99923f7ba8b899907c21da202",
+        "core0.veccore0.instr_popped_log.dump": "3ebee26c01d94d6cd0fb8331b4b141ef1d892ad56c6dc0a224d4d219b7b9033d"
+      }
+    }
+  ]
+}

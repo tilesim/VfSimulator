@@ -1,0 +1,7925 @@
+{
+  "cases": [
+    {
+      "case": "add_brc_fp16_h_left_2x128",
+      "golden": {
+        "passed": true,
+        "elements_checked": 256,
+        "mismatches": 0,
+        "guard_bytes_checked": 32256,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "b24af7cb3bf568076b839367073cdb4249e38d376589bdd3970919f0d27338b3",
+        "core0.veccore0.instr_log.dump": "044f61ecaca90efb0cbf5a992bad82da8976c03ea0540b1a88b343ca66ce6012",
+        "core0.veccore0.instr_popped_log.dump": "23667f7da9ed84fc3fb21c5173ce76d48b257f0b698ea406bf4be6aeb8482eb2"
+      },
+      "scalar_latencies": {
+        "SMOV": [
+          1,
+          1,
+          1
+        ],
+        "SMOVK": [
+          1,
+          1
+        ],
+        "SSHLI": [
+          2,
+          2
+        ],
+        "SADD": [
+          2,
+          2,
+          2,
+          2
+        ],
+        "SMIN": [
+          2,
+          2
+        ],
+        "SSUBI": [
+          2,
+          2
+        ],
+        "SADDI": [
+          2,
+          2
+        ],
+        "SZEROEXT": [
+          1,
+          1
+        ]
+      },
+      "max_scalar_issue_per_cycle": 1
+    },
+    {
+      "case": "add_brc_fp16_h_right_2x128",
+      "golden": {
+        "passed": true,
+        "elements_checked": 256,
+        "mismatches": 0,
+        "guard_bytes_checked": 32256,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "018a72a7bc3390d0250da9ec50ec66670fd9b611f5460e604ef183c74ec5977c",
+        "core0.veccore0.instr_log.dump": "7776ab47b85735d6521cade5a78c547ab365005d3a61e589187c18efe9a1e5ca",
+        "core0.veccore0.instr_popped_log.dump": "07694c882e17fb5e747c726fdab41c9acce3de33d5d9a2c8d5576f47c6a2e7e1"
+      },
+      "scalar_latencies": {
+        "SMOV": [
+          1,
+          1,
+          1
+        ],
+        "SMOVK": [
+          1
+        ],
+        "SSHLI": [
+          2,
+          2
+        ],
+        "SADD": [
+          2,
+          2
+        ],
+        "SMIN": [
+          2,
+          2
+        ],
+        "SSUBI": [
+          2,
+          2
+        ],
+        "SADDI": [
+          2,
+          2
+        ],
+        "SZEROEXT": [
+          1,
+          1
+        ]
+      },
+      "max_scalar_issue_per_cycle": 1
+    },
+    {
+      "case": "add_brc_fp16_h_left_5x256",
+      "golden": {
+        "passed": true,
+        "elements_checked": 1280,
+        "mismatches": 0,
+        "guard_bytes_checked": 30208,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "a16718777712cee12405201c3b7f7b4886fa7ce427ff6606a59c3fa507ef6eb2",
+        "core0.veccore0.instr_log.dump": "99b53dd7d04708964f9e8b7b7f4f3c55959199bca02d802c09d49397447c1082",
+        "core0.veccore0.instr_popped_log.dump": "fb4f9cd4a3d31917eaf52b0acc77e88a01f2547480c65d58e6b1d4bd3b7840ee"
+      },
+      "scalar_latencies": {
+        "SMOV": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "SMOVK": [
+          1,
+          1
+        ],
+        "SSHLI": [
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SADD": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SMIN": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SSUBI": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SADDI": [
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SZEROEXT": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ]
+      },
+      "max_scalar_issue_per_cycle": 1
+    },
+    {
+      "case": "add_brc_fp16_h_right_5x256",
+      "golden": {
+        "passed": true,
+        "elements_checked": 1280,
+        "mismatches": 0,
+        "guard_bytes_checked": 30208,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "350f2aca49261604114747b9fcc5963ae4c7a16b0bdd82e0e1738f156bdb1206",
+        "core0.veccore0.instr_log.dump": "b6066ce3d56e297218304a16fb2f8869eadb681d1f19d4137a84bf2d414ccd1e",
+        "core0.veccore0.instr_popped_log.dump": "1d0f183d324f891f730def1f871a826d9f0f19d5c97eef714057dd2b9ed4236f"
+      },
+      "scalar_latencies": {
+        "SMOV": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "SMOVK": [
+          1
+        ],
+        "SSHLI": [
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SADD": [
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SMIN": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SSUBI": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SADDI": [
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SZEROEXT": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ]
+      },
+      "max_scalar_issue_per_cycle": 1
+    },
+    {
+      "case": "add_brc_fp16_h_left_8x512",
+      "golden": {
+        "passed": true,
+        "elements_checked": 4096,
+        "mismatches": 0,
+        "guard_bytes_checked": 24576,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "8862ac23cfda7e364addc22a7688ced7ebfae4bcf8b37c798ba330994e2197a7",
+        "core0.veccore0.instr_log.dump": "04b86e2db4377b5d048dfedc1f69f95c7148ec3f50ed1b3d1e9ed4418de26173",
+        "core0.veccore0.instr_popped_log.dump": "2d7dd17a4e73e0f98b12ceb85ee7c67f075e7d5537a1d8d7550b5587e5bfa77a"
+      },
+      "scalar_latencies": {
+        "SMOV": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "SMOVK": [
+          1,
+          1
+        ],
+        "SSHLI": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SADD": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SMIN": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SSUBI": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SADDI": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SZEROEXT": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ]
+      },
+      "max_scalar_issue_per_cycle": 1
+    },
+    {
+      "case": "add_brc_fp16_h_right_8x512",
+      "golden": {
+        "passed": true,
+        "elements_checked": 4096,
+        "mismatches": 0,
+        "guard_bytes_checked": 24576,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "82f01c1523b6fdfaa157c8e9010b7363f99f67265562d45943d2f485f7092c32",
+        "core0.veccore0.instr_log.dump": "d53ff3b6eb57ffd135bdd6b9eb671a0eb25f1f5ebb4e4d75e25dbe90588a3916",
+        "core0.veccore0.instr_popped_log.dump": "dfe91a22a08aef28dbf6d95200506391ff2bba1821e07ff8f6f227cc79640bcc"
+      },
+      "scalar_latencies": {
+        "SMOV": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "SMOVK": [
+          1
+        ],
+        "SSHLI": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SADD": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SMIN": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SSUBI": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SADDI": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SZEROEXT": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ]
+      },
+      "max_scalar_issue_per_cycle": 1
+    },
+    {
+      "case": "add_brc_fp32_h_left_2x128",
+      "golden": {
+        "passed": true,
+        "elements_checked": 256,
+        "mismatches": 0,
+        "guard_bytes_checked": 31744,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "30030683bae732e595eefe7d704c8e6d9dc5335e78de02879be3c77c445ab424",
+        "core0.veccore0.instr_log.dump": "2be7116c214d3cb0a081f510f228f2310b98ccea3901e145a987830152439868",
+        "core0.veccore0.instr_popped_log.dump": "2b5e70b3967f40e583b5bd9b70128376a9fec1bbc7b12314235f12de9643832d"
+      },
+      "scalar_latencies": {
+        "SMOV": [
+          1,
+          1,
+          1
+        ],
+        "SMOVK": [
+          1,
+          1
+        ],
+        "SSHLI": [
+          2,
+          2
+        ],
+        "SADD": [
+          2,
+          2,
+          2,
+          2
+        ],
+        "SMIN": [
+          2,
+          2,
+          2,
+          2
+        ],
+        "SSUBI": [
+          2,
+          2,
+          2,
+          2
+        ],
+        "SADDI": [
+          2,
+          2
+        ],
+        "SZEROEXT": [
+          1,
+          1
+        ]
+      },
+      "max_scalar_issue_per_cycle": 1
+    },
+    {
+      "case": "add_brc_fp32_h_right_2x128",
+      "golden": {
+        "passed": true,
+        "elements_checked": 256,
+        "mismatches": 0,
+        "guard_bytes_checked": 31744,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "0b7eff806901000632f208c607495ee910f05139dbd041321da025396f01bd3c",
+        "core0.veccore0.instr_log.dump": "447faa5ad0bc4c6820934ffe52ba975498c31d0b92b46913d84ebecd324f6074",
+        "core0.veccore0.instr_popped_log.dump": "ea5f8eafa27ce1ad74b4fd268c6cca02c92c4e24b505083a7cb6f207269b8ee9"
+      },
+      "scalar_latencies": {
+        "SMOV": [
+          1,
+          1,
+          1
+        ],
+        "SMOVK": [
+          1
+        ],
+        "SSHLI": [
+          2,
+          2
+        ],
+        "SADD": [
+          2,
+          2
+        ],
+        "SMIN": [
+          2,
+          2,
+          2,
+          2
+        ],
+        "SSUBI": [
+          2,
+          2,
+          2,
+          2
+        ],
+        "SADDI": [
+          2,
+          2
+        ],
+        "SZEROEXT": [
+          1,
+          1
+        ]
+      },
+      "max_scalar_issue_per_cycle": 1
+    },
+    {
+      "case": "add_brc_fp32_h_left_5x256",
+      "golden": {
+        "passed": true,
+        "elements_checked": 1280,
+        "mismatches": 0,
+        "guard_bytes_checked": 27648,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "bf22a37620a598f3744ec65e00935f07b7e32c3f4fcba21a6ebdbdff8ff305ff",
+        "core0.veccore0.instr_log.dump": "f4f2ce22739bcb108299ebb81c0bc4de1cb314154e6ba35722e608135f27234b",
+        "core0.veccore0.instr_popped_log.dump": "bbc74a9db502199512320f2cfe7627a9fd79dc748efa91b97d36e31dddcd2d58"
+      },
+      "scalar_latencies": {
+        "SMOV": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "SMOVK": [
+          1,
+          1
+        ],
+        "SSHLI": [
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SADD": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SMIN": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SSUBI": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SADDI": [
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SZEROEXT": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ]
+      },
+      "max_scalar_issue_per_cycle": 1
+    },
+    {
+      "case": "add_brc_fp32_h_right_5x256",
+      "golden": {
+        "passed": true,
+        "elements_checked": 1280,
+        "mismatches": 0,
+        "guard_bytes_checked": 27648,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "4f2aeb4a05c834164113c2ca476c1d2d953c0f71eba67828433e5808b1a9d66b",
+        "core0.veccore0.instr_log.dump": "568dbd1e65e6f35ce9b7f605902f61665bc289ef1476dd33cab7c01dbdbaf2a9",
+        "core0.veccore0.instr_popped_log.dump": "534bc4f632aa83131ed673fc8cbbe41ef58e55251a111776b335d1d6862d7f05"
+      },
+      "scalar_latencies": {
+        "SMOV": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "SMOVK": [
+          1
+        ],
+        "SSHLI": [
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SADD": [
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SMIN": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SSUBI": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SADDI": [
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SZEROEXT": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ]
+      },
+      "max_scalar_issue_per_cycle": 1
+    },
+    {
+      "case": "add_brc_fp32_h_left_8x512",
+      "golden": {
+        "passed": true,
+        "elements_checked": 4096,
+        "mismatches": 0,
+        "guard_bytes_checked": 16384,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "68ab74cce644341237a2a45d67ec9c7b71452e348ed326ff06797d2acbd8ca51",
+        "core0.veccore0.instr_log.dump": "f5f7c31b08192d45c3a45f58a3e06a34d9cd20a5aecf7e04db46887b22dde943",
+        "core0.veccore0.instr_popped_log.dump": "e9614828c1db190ef0123e79c5afe63ab7a201bc659553fb2586cbe995e153fe"
+      },
+      "scalar_latencies": {
+        "SMOV": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "SMOVK": [
+          1,
+          1
+        ],
+        "SSHLI": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SADD": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SMIN": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SSUBI": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SADDI": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SZEROEXT": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ]
+      },
+      "max_scalar_issue_per_cycle": 1
+    },
+    {
+      "case": "add_brc_fp32_h_right_8x512",
+      "golden": {
+        "passed": true,
+        "elements_checked": 4096,
+        "mismatches": 0,
+        "guard_bytes_checked": 16384,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "981b9718d52162d42fec7377faa748a94a70b87207532dcd10c31b9417111800",
+        "core0.veccore0.instr_log.dump": "17e17e7ca3c55970fc0da8ec530b66ba86d31692baa174a207fd881648b60886",
+        "core0.veccore0.instr_popped_log.dump": "879f9d456c492d52b9fa24635640ad47a6d766dbbfd18dc7df177af4313cb547"
+      },
+      "scalar_latencies": {
+        "SMOV": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "SMOVK": [
+          1
+        ],
+        "SSHLI": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SADD": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SMIN": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SSUBI": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SADDI": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SZEROEXT": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ]
+      },
+      "max_scalar_issue_per_cycle": 1
+    },
+    {
+      "case": "sub_brc_fp16_h_left_2x128",
+      "golden": {
+        "passed": true,
+        "elements_checked": 256,
+        "mismatches": 0,
+        "guard_bytes_checked": 32256,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "004945e3c1ec5d1e2acc8b64f97ad9d4c8d4b2b16d31276d2397f545b3f745c7",
+        "core0.veccore0.instr_log.dump": "8dfc954e6c298f869d7ba1b1dbdcd0f8872afd06b2de6d676bbcc067b718143d",
+        "core0.veccore0.instr_popped_log.dump": "33750df53010a975832e23b5cdc587f465f6adcace184aa7a2a643e113c2e144"
+      },
+      "scalar_latencies": {
+        "SMOV": [
+          1,
+          1,
+          1
+        ],
+        "SMOVK": [
+          1,
+          1
+        ],
+        "SSHLI": [
+          2,
+          2
+        ],
+        "SADD": [
+          2,
+          2,
+          2,
+          2
+        ],
+        "SMIN": [
+          2,
+          2
+        ],
+        "SSUBI": [
+          2,
+          2
+        ],
+        "SADDI": [
+          2,
+          2
+        ],
+        "SZEROEXT": [
+          1,
+          1
+        ]
+      },
+      "max_scalar_issue_per_cycle": 1
+    },
+    {
+      "case": "sub_brc_fp16_h_right_2x128",
+      "golden": {
+        "passed": true,
+        "elements_checked": 256,
+        "mismatches": 0,
+        "guard_bytes_checked": 32256,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "9b499dd95c2ab6ec1862275d0affbf6168d1fe41e712db2b426ca8ec7f395cfa",
+        "core0.veccore0.instr_log.dump": "63d4b887b80ed7f4137017672661086d9de9b377d95f9ef55dc7ef580e2f81ae",
+        "core0.veccore0.instr_popped_log.dump": "d31bda9486c85976257e67ccc4c6d168a3a99109ff635930ecc4e27be0a7d898"
+      },
+      "scalar_latencies": {
+        "SMOV": [
+          1,
+          1,
+          1
+        ],
+        "SMOVK": [
+          1
+        ],
+        "SSHLI": [
+          2,
+          2
+        ],
+        "SADD": [
+          2,
+          2
+        ],
+        "SMIN": [
+          2,
+          2
+        ],
+        "SSUBI": [
+          2,
+          2
+        ],
+        "SADDI": [
+          2,
+          2
+        ],
+        "SZEROEXT": [
+          1,
+          1
+        ]
+      },
+      "max_scalar_issue_per_cycle": 1
+    },
+    {
+      "case": "sub_brc_fp16_h_left_5x256",
+      "golden": {
+        "passed": true,
+        "elements_checked": 1280,
+        "mismatches": 0,
+        "guard_bytes_checked": 30208,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "9be252fc56bfd1e71f19c2a388b3198025dd221742617daaeeecf0c7f097af3e",
+        "core0.veccore0.instr_log.dump": "b08634d7e03fbc3f3f939c6b58ee24ad6683c07541f556ce22a46e9031d87a96",
+        "core0.veccore0.instr_popped_log.dump": "029169420bc1fbead4977b2959f5b298a77c803f3f4c78260d226fe223ce56c6"
+      },
+      "scalar_latencies": {
+        "SMOV": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "SMOVK": [
+          1,
+          1
+        ],
+        "SSHLI": [
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SADD": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SMIN": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SSUBI": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SADDI": [
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SZEROEXT": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ]
+      },
+      "max_scalar_issue_per_cycle": 1
+    },
+    {
+      "case": "sub_brc_fp16_h_right_5x256",
+      "golden": {
+        "passed": true,
+        "elements_checked": 1280,
+        "mismatches": 0,
+        "guard_bytes_checked": 30208,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "eee5938e4c5135d69664e07cff39baa269b6b072482939cc58f6b6743206f218",
+        "core0.veccore0.instr_log.dump": "9d620c2e1223cdef5baa96d92dc3c6c5b17c633cf87d8671597e52d45abfd942",
+        "core0.veccore0.instr_popped_log.dump": "3e9ad3f262e0322ea3f96fe350e9c651bfded3454f3a7398788d550f85721214"
+      },
+      "scalar_latencies": {
+        "SMOV": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "SMOVK": [
+          1
+        ],
+        "SSHLI": [
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SADD": [
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SMIN": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SSUBI": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SADDI": [
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SZEROEXT": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ]
+      },
+      "max_scalar_issue_per_cycle": 1
+    },
+    {
+      "case": "sub_brc_fp16_h_left_8x512",
+      "golden": {
+        "passed": true,
+        "elements_checked": 4096,
+        "mismatches": 0,
+        "guard_bytes_checked": 24576,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "bbefe61b198f9f28f45d341b706de106526d87e4b1d5a535cb33c0dea8e1ac3b",
+        "core0.veccore0.instr_log.dump": "1cc8e9c3f50f73fdabc7fbf35f4a1ecb27f0106ce487403431cc00aee3ffaad5",
+        "core0.veccore0.instr_popped_log.dump": "4e560126d26a3b560195b12d25e6e84bf688b2be6bd23f89df7387d7b62f031c"
+      },
+      "scalar_latencies": {
+        "SMOV": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "SMOVK": [
+          1,
+          1
+        ],
+        "SSHLI": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SADD": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SMIN": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SSUBI": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SADDI": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SZEROEXT": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ]
+      },
+      "max_scalar_issue_per_cycle": 1
+    },
+    {
+      "case": "sub_brc_fp16_h_right_8x512",
+      "golden": {
+        "passed": true,
+        "elements_checked": 4096,
+        "mismatches": 0,
+        "guard_bytes_checked": 24576,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "bee99fbaae6d0c22980c43d6b8397164139c02438692b1bf5580648b4c204a08",
+        "core0.veccore0.instr_log.dump": "225e551de94ec963d223f73a744f2e11673bc369cfe82ee47c7a60440dcab5c4",
+        "core0.veccore0.instr_popped_log.dump": "8c5d385104dc7ab0f6f5955f4937664a1482864d965f53bc15e7a514b292a586"
+      },
+      "scalar_latencies": {
+        "SMOV": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "SMOVK": [
+          1
+        ],
+        "SSHLI": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SADD": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SMIN": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SSUBI": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SADDI": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SZEROEXT": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ]
+      },
+      "max_scalar_issue_per_cycle": 1
+    },
+    {
+      "case": "sub_brc_fp32_h_left_2x128",
+      "golden": {
+        "passed": true,
+        "elements_checked": 256,
+        "mismatches": 0,
+        "guard_bytes_checked": 31744,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "1308a548d148a22728a3136a1a69704775118e5e54cc6e6597464d7a47396a96",
+        "core0.veccore0.instr_log.dump": "e68234ff5d83426c4f9ec82c833d8b6407cc12523b53897af833f90c3fedc9cf",
+        "core0.veccore0.instr_popped_log.dump": "2fb376fb30d279316b9b6bed7f8aaa2f0c5b67f760ecfd65785f5e6e7b3869a4"
+      },
+      "scalar_latencies": {
+        "SMOV": [
+          1,
+          1,
+          1
+        ],
+        "SMOVK": [
+          1,
+          1
+        ],
+        "SSHLI": [
+          2,
+          2
+        ],
+        "SADD": [
+          2,
+          2,
+          2,
+          2
+        ],
+        "SMIN": [
+          2,
+          2,
+          2,
+          2
+        ],
+        "SSUBI": [
+          2,
+          2,
+          2,
+          2
+        ],
+        "SADDI": [
+          2,
+          2
+        ],
+        "SZEROEXT": [
+          1,
+          1
+        ]
+      },
+      "max_scalar_issue_per_cycle": 1
+    },
+    {
+      "case": "sub_brc_fp32_h_right_2x128",
+      "golden": {
+        "passed": true,
+        "elements_checked": 256,
+        "mismatches": 0,
+        "guard_bytes_checked": 31744,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "f6b7b5a419c6d62ecc8863192c4214cfe0762b88314c6e7bc126258ab66dcca5",
+        "core0.veccore0.instr_log.dump": "4f524e64691231002a557c641db479798d62ce19c23dfae4d987a23010e8a754",
+        "core0.veccore0.instr_popped_log.dump": "dea33cc96bf6ad7c953fb94d268607dd5fe580d52bec2fe9c3c2216fd537f0d3"
+      },
+      "scalar_latencies": {
+        "SMOV": [
+          1,
+          1,
+          1
+        ],
+        "SMOVK": [
+          1
+        ],
+        "SSHLI": [
+          2,
+          2
+        ],
+        "SADD": [
+          2,
+          2
+        ],
+        "SMIN": [
+          2,
+          2,
+          2,
+          2
+        ],
+        "SSUBI": [
+          2,
+          2,
+          2,
+          2
+        ],
+        "SADDI": [
+          2,
+          2
+        ],
+        "SZEROEXT": [
+          1,
+          1
+        ]
+      },
+      "max_scalar_issue_per_cycle": 1
+    },
+    {
+      "case": "sub_brc_fp32_h_left_5x256",
+      "golden": {
+        "passed": true,
+        "elements_checked": 1280,
+        "mismatches": 0,
+        "guard_bytes_checked": 27648,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "d57c474dec3dbaa29b71f3df5919228ced578be966fcf0d9f038c185683d7439",
+        "core0.veccore0.instr_log.dump": "9580ff1c558df90aca33854338ae5486d6237d2a270910f0e45d11c8206fe6e8",
+        "core0.veccore0.instr_popped_log.dump": "b890bbfd57a21369603821e7495f0b3cc2769d0b8a3549ae4f424fab101ce3f8"
+      },
+      "scalar_latencies": {
+        "SMOV": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "SMOVK": [
+          1,
+          1
+        ],
+        "SSHLI": [
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SADD": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SMIN": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SSUBI": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SADDI": [
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SZEROEXT": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ]
+      },
+      "max_scalar_issue_per_cycle": 1
+    },
+    {
+      "case": "sub_brc_fp32_h_right_5x256",
+      "golden": {
+        "passed": true,
+        "elements_checked": 1280,
+        "mismatches": 0,
+        "guard_bytes_checked": 27648,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "98d5ba1c39f3473197e16b4133a920ad2417f193701c2b8703f07575bad775fd",
+        "core0.veccore0.instr_log.dump": "353cd7eec6db1790d0dae82004030645a6aeeca4c7cd7d5d7502fdd6ea892d28",
+        "core0.veccore0.instr_popped_log.dump": "56a04eff2838c0c75f616eec02dd6a3f07e597715d83ef61ab84377bd40d8b5f"
+      },
+      "scalar_latencies": {
+        "SMOV": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "SMOVK": [
+          1
+        ],
+        "SSHLI": [
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SADD": [
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SMIN": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SSUBI": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SADDI": [
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SZEROEXT": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ]
+      },
+      "max_scalar_issue_per_cycle": 1
+    },
+    {
+      "case": "sub_brc_fp32_h_left_8x512",
+      "golden": {
+        "passed": true,
+        "elements_checked": 4096,
+        "mismatches": 0,
+        "guard_bytes_checked": 16384,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "117a6a9e2c489c7ef75b020d2af732599d09f85998dedf9d6d87bdf2cbf2c6c6",
+        "core0.veccore0.instr_log.dump": "0849cbe7c6fce933315f177a9a2cad90f45604e070c5a0d83c49100c29ede822",
+        "core0.veccore0.instr_popped_log.dump": "e8a698655dda39f352da200f01afebaca5f31e7678505e85acef46e11290d0c9"
+      },
+      "scalar_latencies": {
+        "SMOV": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "SMOVK": [
+          1,
+          1
+        ],
+        "SSHLI": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SADD": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SMIN": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SSUBI": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SADDI": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SZEROEXT": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ]
+      },
+      "max_scalar_issue_per_cycle": 1
+    },
+    {
+      "case": "sub_brc_fp32_h_right_8x512",
+      "golden": {
+        "passed": true,
+        "elements_checked": 4096,
+        "mismatches": 0,
+        "guard_bytes_checked": 16384,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "729521df91e61f040786fb8dd29f3340445aa52f863dc90efda7abe761b0a829",
+        "core0.veccore0.instr_log.dump": "124088b91ae27878104e39e1ce708cef2156044d2119d7c6535ba2bde91ae07a",
+        "core0.veccore0.instr_popped_log.dump": "9638fa9eda7062357a046817fa49d4c4d28b94e62969d0a08bc692e40ceca90a"
+      },
+      "scalar_latencies": {
+        "SMOV": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "SMOVK": [
+          1
+        ],
+        "SSHLI": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SADD": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SMIN": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SSUBI": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SADDI": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SZEROEXT": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ]
+      },
+      "max_scalar_issue_per_cycle": 1
+    },
+    {
+      "case": "mul_brc_fp16_h_left_2x128",
+      "golden": {
+        "passed": true,
+        "elements_checked": 256,
+        "mismatches": 0,
+        "guard_bytes_checked": 32256,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "3b6d71a90d3ed70bc279063f962b345bcaa3f3a8b0c1f74509af4b1e71c0294d",
+        "core0.veccore0.instr_log.dump": "4a0441eec7ace2a9a9017d6dc9146403ffa270946242eebfe037e773fc8b63e1",
+        "core0.veccore0.instr_popped_log.dump": "15e30654c8943b82cf4d6e1bb7816e43fa2ac66b482b2b949df0d1451d3b80cb"
+      },
+      "scalar_latencies": {
+        "SMOV": [
+          1,
+          1,
+          1
+        ],
+        "SMOVK": [
+          1,
+          1
+        ],
+        "SSHLI": [
+          2,
+          2
+        ],
+        "SADD": [
+          2,
+          2,
+          2,
+          2
+        ],
+        "SMIN": [
+          2,
+          2
+        ],
+        "SSUBI": [
+          2,
+          2
+        ],
+        "SADDI": [
+          2,
+          2
+        ],
+        "SZEROEXT": [
+          1,
+          1
+        ]
+      },
+      "max_scalar_issue_per_cycle": 1
+    },
+    {
+      "case": "mul_brc_fp16_h_right_2x128",
+      "golden": {
+        "passed": true,
+        "elements_checked": 256,
+        "mismatches": 0,
+        "guard_bytes_checked": 32256,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "363225c2ed9528ae08fd8fd95c83a32ae49aa7eefbbd7f95515945fc623859f1",
+        "core0.veccore0.instr_log.dump": "f93fee03d89f6388f58adb1a8f1b4189f7e6d14215514eee1e7b89b6214aa119",
+        "core0.veccore0.instr_popped_log.dump": "fa7cf893b18b06d844128f355058eedee4babe68fad59863665a2e8eaca5b563"
+      },
+      "scalar_latencies": {
+        "SMOV": [
+          1,
+          1,
+          1
+        ],
+        "SMOVK": [
+          1
+        ],
+        "SSHLI": [
+          2,
+          2
+        ],
+        "SADD": [
+          2,
+          2
+        ],
+        "SMIN": [
+          2,
+          2
+        ],
+        "SSUBI": [
+          2,
+          2
+        ],
+        "SADDI": [
+          2,
+          2
+        ],
+        "SZEROEXT": [
+          1,
+          1
+        ]
+      },
+      "max_scalar_issue_per_cycle": 1
+    },
+    {
+      "case": "mul_brc_fp16_h_left_5x256",
+      "golden": {
+        "passed": true,
+        "elements_checked": 1280,
+        "mismatches": 0,
+        "guard_bytes_checked": 30208,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "5f3724ec31ed24a08a9e1927f4e2110efd5c3f0ab8229971625a2e4ff7fa06e7",
+        "core0.veccore0.instr_log.dump": "0f84e7e4f41bad5d3ce8a8b7596e083b11a473484844ea0b4fb8d5175bfb10f2",
+        "core0.veccore0.instr_popped_log.dump": "af1a11db940ad6b24e93c9e65ecf7c0495ec6a61557f6fcac342243c37234a3e"
+      },
+      "scalar_latencies": {
+        "SMOV": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "SMOVK": [
+          1,
+          1
+        ],
+        "SSHLI": [
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SADD": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SMIN": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SSUBI": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SADDI": [
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SZEROEXT": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ]
+      },
+      "max_scalar_issue_per_cycle": 1
+    },
+    {
+      "case": "mul_brc_fp16_h_right_5x256",
+      "golden": {
+        "passed": true,
+        "elements_checked": 1280,
+        "mismatches": 0,
+        "guard_bytes_checked": 30208,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "f72ae83cb2e0e2ec05f25afa3314e3311577b121ea0f32f2a2f0d95d48a1f49e",
+        "core0.veccore0.instr_log.dump": "8010ca20b3beb7a6ba0d7dd3c4a40136d9effe7ac2a706c9273a1e11bdb44a69",
+        "core0.veccore0.instr_popped_log.dump": "0beabb12638153f6113f42c0eb3313ad229801494fb232d5e71b62187d0d8c82"
+      },
+      "scalar_latencies": {
+        "SMOV": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "SMOVK": [
+          1
+        ],
+        "SSHLI": [
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SADD": [
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SMIN": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SSUBI": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SADDI": [
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SZEROEXT": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ]
+      },
+      "max_scalar_issue_per_cycle": 1
+    },
+    {
+      "case": "mul_brc_fp16_h_left_8x512",
+      "golden": {
+        "passed": true,
+        "elements_checked": 4096,
+        "mismatches": 0,
+        "guard_bytes_checked": 24576,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "b4a24e834693d9118398ffb61e8428a3516b5c21eb8a0426c69df659ac4c0929",
+        "core0.veccore0.instr_log.dump": "a014fd8b5a3bd9d73a7e238397272da5a030252b97add72eb4e257bfbea01d40",
+        "core0.veccore0.instr_popped_log.dump": "5e2fc92aee875ab23b4c840e52e70b96721848a6950baeaa6ac5c8c7ebae50e0"
+      },
+      "scalar_latencies": {
+        "SMOV": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "SMOVK": [
+          1,
+          1
+        ],
+        "SSHLI": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SADD": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SMIN": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SSUBI": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SADDI": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SZEROEXT": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ]
+      },
+      "max_scalar_issue_per_cycle": 1
+    },
+    {
+      "case": "mul_brc_fp16_h_right_8x512",
+      "golden": {
+        "passed": true,
+        "elements_checked": 4096,
+        "mismatches": 0,
+        "guard_bytes_checked": 24576,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "91145ee917ea0cec942314195dcbe3731385bf09ea53e212d98116b806f42594",
+        "core0.veccore0.instr_log.dump": "9a5f600a7e2d29c9ca8b3873619a8c7a861c81855500bfe840e3769555ada820",
+        "core0.veccore0.instr_popped_log.dump": "7a3e59786c32b6640ce089da40f41313e202f570faf067b10479372e79173a20"
+      },
+      "scalar_latencies": {
+        "SMOV": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "SMOVK": [
+          1
+        ],
+        "SSHLI": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SADD": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SMIN": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SSUBI": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SADDI": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SZEROEXT": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ]
+      },
+      "max_scalar_issue_per_cycle": 1
+    },
+    {
+      "case": "mul_brc_fp32_h_left_2x128",
+      "golden": {
+        "passed": true,
+        "elements_checked": 256,
+        "mismatches": 0,
+        "guard_bytes_checked": 31744,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "34e3fd6fb2b4aa9a0d0d83261a1e50383fae9adf4623d38410c3ea4f4a82d7ad",
+        "core0.veccore0.instr_log.dump": "137f962efb20bbc6beeb484d8ded01b10a8a13ae2e29c975969b7fb8332ae032",
+        "core0.veccore0.instr_popped_log.dump": "5a78a1577d447714750e35d862ff58bdb1b313ea09e079df362e0950d9f7ef4c"
+      },
+      "scalar_latencies": {
+        "SMOV": [
+          1,
+          1,
+          1
+        ],
+        "SMOVK": [
+          1,
+          1
+        ],
+        "SSHLI": [
+          2,
+          2
+        ],
+        "SADD": [
+          2,
+          2,
+          2,
+          2
+        ],
+        "SMIN": [
+          2,
+          2,
+          2,
+          2
+        ],
+        "SSUBI": [
+          2,
+          2,
+          2,
+          2
+        ],
+        "SADDI": [
+          2,
+          2
+        ],
+        "SZEROEXT": [
+          1,
+          1
+        ]
+      },
+      "max_scalar_issue_per_cycle": 1
+    },
+    {
+      "case": "mul_brc_fp32_h_right_2x128",
+      "golden": {
+        "passed": true,
+        "elements_checked": 256,
+        "mismatches": 0,
+        "guard_bytes_checked": 31744,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "339c98f574396b9f6c0d3ad0a1b892055287850b1d469f39d24c32650e464ad8",
+        "core0.veccore0.instr_log.dump": "0f0f008b0f681b44691ad6c9c21585a25c3644f7bce289d62adb9899e3e9296f",
+        "core0.veccore0.instr_popped_log.dump": "8eca9c5e6cf2b40b5a60d31b8841208c55a5469a99048f02de6ee3a86e2a8a77"
+      },
+      "scalar_latencies": {
+        "SMOV": [
+          1,
+          1,
+          1
+        ],
+        "SMOVK": [
+          1
+        ],
+        "SSHLI": [
+          2,
+          2
+        ],
+        "SADD": [
+          2,
+          2
+        ],
+        "SMIN": [
+          2,
+          2,
+          2,
+          2
+        ],
+        "SSUBI": [
+          2,
+          2,
+          2,
+          2
+        ],
+        "SADDI": [
+          2,
+          2
+        ],
+        "SZEROEXT": [
+          1,
+          1
+        ]
+      },
+      "max_scalar_issue_per_cycle": 1
+    },
+    {
+      "case": "mul_brc_fp32_h_left_5x256",
+      "golden": {
+        "passed": true,
+        "elements_checked": 1280,
+        "mismatches": 0,
+        "guard_bytes_checked": 27648,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "8406297dddfc39ecee872d67ab1eaa85d2f3365d46128ce71920559dbe164d10",
+        "core0.veccore0.instr_log.dump": "3bf2271de8144b1794bd616232acd3a5da74c44ca78752b6303dff9fab1dc230",
+        "core0.veccore0.instr_popped_log.dump": "473683bc1c6abaa67f63c7acd1758f85c49a8097a38c807c918678b9b39fb4bb"
+      },
+      "scalar_latencies": {
+        "SMOV": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "SMOVK": [
+          1,
+          1
+        ],
+        "SSHLI": [
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SADD": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SMIN": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SSUBI": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SADDI": [
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SZEROEXT": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ]
+      },
+      "max_scalar_issue_per_cycle": 1
+    },
+    {
+      "case": "mul_brc_fp32_h_right_5x256",
+      "golden": {
+        "passed": true,
+        "elements_checked": 1280,
+        "mismatches": 0,
+        "guard_bytes_checked": 27648,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "2cc16851df9a33ea3c665132cb5a1181fc89e7cd4e2a4a0383b8823a7de510e9",
+        "core0.veccore0.instr_log.dump": "9432762cfa06c5b290d7d116e586b69b7a8e53d70522c236a580116ed92142f5",
+        "core0.veccore0.instr_popped_log.dump": "f08a265bb497925431dd9b06f1e1ab90bdab9f3c259b2b463091e262e5625157"
+      },
+      "scalar_latencies": {
+        "SMOV": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "SMOVK": [
+          1
+        ],
+        "SSHLI": [
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SADD": [
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SMIN": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SSUBI": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SADDI": [
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SZEROEXT": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ]
+      },
+      "max_scalar_issue_per_cycle": 1
+    },
+    {
+      "case": "mul_brc_fp32_h_left_8x512",
+      "golden": {
+        "passed": true,
+        "elements_checked": 4096,
+        "mismatches": 0,
+        "guard_bytes_checked": 16384,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "44dd8017f7503de7ce6a3f30887ff1fd3ed52ba2abe9b63909d5fca86cb0c4ae",
+        "core0.veccore0.instr_log.dump": "024f18ec5f9350468d3f7487fe5107125db87e3d8969b3baea55cbd5324949a5",
+        "core0.veccore0.instr_popped_log.dump": "adb640e7859754869c1c82d129d9709a1dbdf12cb0fb644de8d3434b1549ef91"
+      },
+      "scalar_latencies": {
+        "SMOV": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "SMOVK": [
+          1,
+          1
+        ],
+        "SSHLI": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SADD": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SMIN": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SSUBI": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SADDI": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SZEROEXT": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ]
+      },
+      "max_scalar_issue_per_cycle": 1
+    },
+    {
+      "case": "mul_brc_fp32_h_right_8x512",
+      "golden": {
+        "passed": true,
+        "elements_checked": 4096,
+        "mismatches": 0,
+        "guard_bytes_checked": 16384,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "49935c8c5c00acd406c6b1bfcd18e8dd1ad18759d714373009a928658eddab0f",
+        "core0.veccore0.instr_log.dump": "daa8abfb9213d05f2c73ad64830053b33be46024d1edc29a828717ef896fc87d",
+        "core0.veccore0.instr_popped_log.dump": "71cf7e6c3a8acc27df095a081064c19420509858409e723f97633e47213ace4b"
+      },
+      "scalar_latencies": {
+        "SMOV": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "SMOVK": [
+          1
+        ],
+        "SSHLI": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SADD": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SMIN": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SSUBI": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SADDI": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SZEROEXT": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ]
+      },
+      "max_scalar_issue_per_cycle": 1
+    },
+    {
+      "case": "div_brc_fp16_h_left_2x128",
+      "golden": {
+        "passed": true,
+        "elements_checked": 256,
+        "mismatches": 0,
+        "guard_bytes_checked": 32256,
+        "guard_passed": true,
+        "nonfinite_expected": 136
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "e446f020799de2588136ef17872431d5a355a75bc5611c0563d9f8c45ba3a927",
+        "core0.veccore0.instr_log.dump": "31732ccdf998450b2342a9165f63dc5d1cc4b76b576d677a36d8a44ce9bb19d6",
+        "core0.veccore0.instr_popped_log.dump": "9fd9507e715ec9f00cbd2b6e478625c21bcc547ed7301c19104bd4305a1144a0"
+      },
+      "scalar_latencies": {
+        "SMOV": [
+          1,
+          1,
+          1
+        ],
+        "SMOVK": [
+          1,
+          1
+        ],
+        "SSHLI": [
+          2,
+          2
+        ],
+        "SADD": [
+          2,
+          2,
+          2,
+          2
+        ],
+        "SMIN": [
+          2,
+          2
+        ],
+        "SSUBI": [
+          2,
+          2
+        ],
+        "SADDI": [
+          2,
+          2
+        ],
+        "SZEROEXT": [
+          1,
+          1
+        ]
+      },
+      "max_scalar_issue_per_cycle": 1
+    },
+    {
+      "case": "div_brc_fp16_h_right_2x128",
+      "golden": {
+        "passed": true,
+        "elements_checked": 256,
+        "mismatches": 0,
+        "guard_bytes_checked": 32256,
+        "guard_passed": true,
+        "nonfinite_expected": 136
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "9a0802d539b8a7f650714893126bf66f2be871396d0458e77a1493c875515db2",
+        "core0.veccore0.instr_log.dump": "1652274e452976593bee24727c3bff3e7ff105ecdd754ad422024a3427baf634",
+        "core0.veccore0.instr_popped_log.dump": "0bb98fcf448467693d8ffe897a2105fe750fcaaaedc84998f390fea54e33af2c"
+      },
+      "scalar_latencies": {
+        "SMOV": [
+          1,
+          1,
+          1
+        ],
+        "SMOVK": [
+          1
+        ],
+        "SSHLI": [
+          2,
+          2
+        ],
+        "SADD": [
+          2,
+          2
+        ],
+        "SMIN": [
+          2,
+          2
+        ],
+        "SSUBI": [
+          2,
+          2
+        ],
+        "SADDI": [
+          2,
+          2
+        ],
+        "SZEROEXT": [
+          1,
+          1
+        ]
+      },
+      "max_scalar_issue_per_cycle": 1
+    },
+    {
+      "case": "div_brc_fp16_h_left_5x256",
+      "golden": {
+        "passed": true,
+        "elements_checked": 1280,
+        "mismatches": 0,
+        "guard_bytes_checked": 30208,
+        "guard_passed": true,
+        "nonfinite_expected": 678
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "d5aed9298b50028d33364d185dcde0d8abb88b2f739ee27eb2be5cfbf1dfbfce",
+        "core0.veccore0.instr_log.dump": "1caf43c5de35c1507379293f09b49cac02e1b6921b23286ed69c1e93745045ae",
+        "core0.veccore0.instr_popped_log.dump": "bdde955fd1ffe8c5da2070ae538d4e359c2c154d613ab20bfd36de2a94efe14a"
+      },
+      "scalar_latencies": {
+        "SMOV": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "SMOVK": [
+          1,
+          1
+        ],
+        "SSHLI": [
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SADD": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SMIN": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SSUBI": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SADDI": [
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SZEROEXT": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ]
+      },
+      "max_scalar_issue_per_cycle": 1
+    },
+    {
+      "case": "div_brc_fp16_h_right_5x256",
+      "golden": {
+        "passed": true,
+        "elements_checked": 1280,
+        "mismatches": 0,
+        "guard_bytes_checked": 30208,
+        "guard_passed": true,
+        "nonfinite_expected": 680
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "59c1a72b4d5c48fd9e83e18cffe51df213ec2b3f31e2c58ac16e5009a1f5ec33",
+        "core0.veccore0.instr_log.dump": "05c6606741aa790f3ec306cba7bcad114c3a9383e45878d25ff7bf4d1231dcd1",
+        "core0.veccore0.instr_popped_log.dump": "6b11c792ea9503ffd6010bf974437a33186796390800bb2cf4cc93a93acffe2a"
+      },
+      "scalar_latencies": {
+        "SMOV": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "SMOVK": [
+          1
+        ],
+        "SSHLI": [
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SADD": [
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SMIN": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SSUBI": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SADDI": [
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SZEROEXT": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ]
+      },
+      "max_scalar_issue_per_cycle": 1
+    },
+    {
+      "case": "div_brc_fp16_h_left_8x512",
+      "golden": {
+        "passed": true,
+        "elements_checked": 4096,
+        "mismatches": 0,
+        "guard_bytes_checked": 24576,
+        "guard_passed": true,
+        "nonfinite_expected": 2168
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "8f48635c25195dd61f74c6a10332c0d49456ebe3d67b8e740ad5ca716214e76d",
+        "core0.veccore0.instr_log.dump": "d211807c17dec5d13ea0cb9a4f252616d2db1d0a166e79fda9e1a9271e16604f",
+        "core0.veccore0.instr_popped_log.dump": "4dfad8cd3d0fdf89e433d7acd16664d5c76f61f7bfebcbd93b679e8b9a1952d2"
+      },
+      "scalar_latencies": {
+        "SMOV": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "SMOVK": [
+          1,
+          1
+        ],
+        "SSHLI": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SADD": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SMIN": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SSUBI": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SADDI": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SZEROEXT": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ]
+      },
+      "max_scalar_issue_per_cycle": 1
+    },
+    {
+      "case": "div_brc_fp16_h_right_8x512",
+      "golden": {
+        "passed": true,
+        "elements_checked": 4096,
+        "mismatches": 0,
+        "guard_bytes_checked": 24576,
+        "guard_passed": true,
+        "nonfinite_expected": 2168
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "87412588cfb79eaa4c117dde11c81a10ed1e7c6cce298b768bea4aefa8b4eb0d",
+        "core0.veccore0.instr_log.dump": "a01b2bf63879d695ce647d2c95aa94dd2302d5c67dcbde9309c8856e88b517b5",
+        "core0.veccore0.instr_popped_log.dump": "211f837e4a2d877a5e27777b2f5bb68d627c3051f50cc8a86aca1ee33b130093"
+      },
+      "scalar_latencies": {
+        "SMOV": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "SMOVK": [
+          1
+        ],
+        "SSHLI": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SADD": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SMIN": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SSUBI": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SADDI": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SZEROEXT": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ]
+      },
+      "max_scalar_issue_per_cycle": 1
+    },
+    {
+      "case": "div_brc_fp32_h_left_2x128",
+      "golden": {
+        "passed": true,
+        "elements_checked": 256,
+        "mismatches": 0,
+        "guard_bytes_checked": 31744,
+        "guard_passed": true,
+        "nonfinite_expected": 15
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "e973f24e8a69f55e81297676782dbd4a6db849dff5962308db606f7b085f242c",
+        "core0.veccore0.instr_log.dump": "bc6933a9dc2b02031ca2cfc0e3c10f0ca985a61255f01213f84f2cc3ea209ad6",
+        "core0.veccore0.instr_popped_log.dump": "f57c39c1b2bb8f774bc5337af8a612a9510709615922f14bd9224c7e2e8c56d7"
+      },
+      "scalar_latencies": {
+        "SMOV": [
+          1,
+          1,
+          1
+        ],
+        "SMOVK": [
+          1,
+          1
+        ],
+        "SSHLI": [
+          2,
+          2
+        ],
+        "SADD": [
+          2,
+          2,
+          2,
+          2
+        ],
+        "SMIN": [
+          2,
+          2,
+          2,
+          2
+        ],
+        "SSUBI": [
+          2,
+          2,
+          2,
+          2
+        ],
+        "SADDI": [
+          2,
+          2
+        ],
+        "SZEROEXT": [
+          1,
+          1
+        ]
+      },
+      "max_scalar_issue_per_cycle": 1
+    },
+    {
+      "case": "div_brc_fp32_h_right_2x128",
+      "golden": {
+        "passed": true,
+        "elements_checked": 256,
+        "mismatches": 0,
+        "guard_bytes_checked": 31744,
+        "guard_passed": true,
+        "nonfinite_expected": 16
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "30e5e562373389222998215c4a2e20b08f9334adc84251e80fcc06826feb2749",
+        "core0.veccore0.instr_log.dump": "64b00f283c808ac65d4b7f850e11b4bb90764c3de0ee25ff76cc9f7bc371137f",
+        "core0.veccore0.instr_popped_log.dump": "d574227865f5a5ed6d12b62f74902fe5fc9530b80d8a3fc37e4430e2a5a6d2c6"
+      },
+      "scalar_latencies": {
+        "SMOV": [
+          1,
+          1,
+          1
+        ],
+        "SMOVK": [
+          1
+        ],
+        "SSHLI": [
+          2,
+          2
+        ],
+        "SADD": [
+          2,
+          2
+        ],
+        "SMIN": [
+          2,
+          2,
+          2,
+          2
+        ],
+        "SSUBI": [
+          2,
+          2,
+          2,
+          2
+        ],
+        "SADDI": [
+          2,
+          2
+        ],
+        "SZEROEXT": [
+          1,
+          1
+        ]
+      },
+      "max_scalar_issue_per_cycle": 1
+    },
+    {
+      "case": "div_brc_fp32_h_left_5x256",
+      "golden": {
+        "passed": true,
+        "elements_checked": 1280,
+        "mismatches": 0,
+        "guard_bytes_checked": 27648,
+        "guard_passed": true,
+        "nonfinite_expected": 75
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "c49a31b10a6a5ef3a980528e8419116c968f97cd1730b894c400898965c4df9f",
+        "core0.veccore0.instr_log.dump": "ceb4ae26cb9afe539379aa2ddeb6a97f20bcfb47d0a6cfe44aa778af1c0e2b80",
+        "core0.veccore0.instr_popped_log.dump": "749fb341f1e0bf3e269edb1703493046ac9cf494fb86490c98259e0bb9373860"
+      },
+      "scalar_latencies": {
+        "SMOV": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "SMOVK": [
+          1,
+          1
+        ],
+        "SSHLI": [
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SADD": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SMIN": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SSUBI": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SADDI": [
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SZEROEXT": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ]
+      },
+      "max_scalar_issue_per_cycle": 1
+    },
+    {
+      "case": "div_brc_fp32_h_right_5x256",
+      "golden": {
+        "passed": true,
+        "elements_checked": 1280,
+        "mismatches": 0,
+        "guard_bytes_checked": 27648,
+        "guard_passed": true,
+        "nonfinite_expected": 75
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "9ec56de6323f4827fe400e48062eaf70473aa91ad9ee935aa4921edc3fd77697",
+        "core0.veccore0.instr_log.dump": "c6ce7e8b556b549cc9a42e83e677b26416e0791c8eaba8c563236e9ac3f90687",
+        "core0.veccore0.instr_popped_log.dump": "c143872f2a5c108f18af6d6dcac1b598bed5e795663bc70f7be8f779e2b66fdd"
+      },
+      "scalar_latencies": {
+        "SMOV": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "SMOVK": [
+          1
+        ],
+        "SSHLI": [
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SADD": [
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SMIN": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SSUBI": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SADDI": [
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SZEROEXT": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ]
+      },
+      "max_scalar_issue_per_cycle": 1
+    },
+    {
+      "case": "div_brc_fp32_h_left_8x512",
+      "golden": {
+        "passed": true,
+        "elements_checked": 4096,
+        "mismatches": 0,
+        "guard_bytes_checked": 16384,
+        "guard_passed": true,
+        "nonfinite_expected": 241
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "c9dc01266ea022da5d6715893daa0256f68a630cbd5a939e661bb085185ec8bd",
+        "core0.veccore0.instr_log.dump": "45c5f26c394749989b9df17986630eb7aa3facc2f66b0e52c2b1ef59637de889",
+        "core0.veccore0.instr_popped_log.dump": "fed472fffca600c7d15f51d02d18d4ad562679d9e0bb7bbc82c1828c4e8a795f"
+      },
+      "scalar_latencies": {
+        "SMOV": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "SMOVK": [
+          1,
+          1
+        ],
+        "SSHLI": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SADD": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SMIN": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SSUBI": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SADDI": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SZEROEXT": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ]
+      },
+      "max_scalar_issue_per_cycle": 1
+    },
+    {
+      "case": "div_brc_fp32_h_right_8x512",
+      "golden": {
+        "passed": true,
+        "elements_checked": 4096,
+        "mismatches": 0,
+        "guard_bytes_checked": 16384,
+        "guard_passed": true,
+        "nonfinite_expected": 240
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "d676404b04bff7bf4a0aa42ce36e4baba0a68bcae151ef834242ae27cec90ae8",
+        "core0.veccore0.instr_log.dump": "8c93a3e645193213305d7e14d2b575ad8064e90e80d74fd233ed0584dabfa96e",
+        "core0.veccore0.instr_popped_log.dump": "3e91519a501736f712b55526323a840a25f6e1f59fc0287c89d83c08369452ae"
+      },
+      "scalar_latencies": {
+        "SMOV": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "SMOVK": [
+          1
+        ],
+        "SSHLI": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SADD": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SMIN": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SSUBI": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SADDI": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SZEROEXT": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ]
+      },
+      "max_scalar_issue_per_cycle": 1
+    },
+    {
+      "case": "max_brc_fp16_h_left_2x128",
+      "golden": {
+        "passed": true,
+        "elements_checked": 256,
+        "mismatches": 0,
+        "guard_bytes_checked": 32256,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "601276031a8fe1cb132c6abb4704d75f7db46c1c75d34c92693d9edac747049d",
+        "core0.veccore0.instr_log.dump": "533fa42a637da19341ef45a2ea07a44afe5a07cddc850ac160583b55a83ec86e",
+        "core0.veccore0.instr_popped_log.dump": "cf1f920a2bbeae3e6b70fa107bfc41559453bee01d97154deb20ca9533b68e45"
+      },
+      "scalar_latencies": {
+        "SMOV": [
+          1,
+          1,
+          1
+        ],
+        "SMOVK": [
+          1,
+          1
+        ],
+        "SSHLI": [
+          2,
+          2
+        ],
+        "SADD": [
+          2,
+          2,
+          2,
+          2
+        ],
+        "SMIN": [
+          2,
+          2
+        ],
+        "SSUBI": [
+          2,
+          2
+        ],
+        "SADDI": [
+          2,
+          2
+        ],
+        "SZEROEXT": [
+          1,
+          1
+        ]
+      },
+      "max_scalar_issue_per_cycle": 1
+    },
+    {
+      "case": "max_brc_fp16_h_right_2x128",
+      "golden": {
+        "passed": true,
+        "elements_checked": 256,
+        "mismatches": 0,
+        "guard_bytes_checked": 32256,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "1236cec1e4f94ac58af9c09313627704ce681a3282693a397e3b5c347ccd2aaf",
+        "core0.veccore0.instr_log.dump": "204a668d277d5ba71947a27c696373729d481d5ada7213781f311f3e6a95358e",
+        "core0.veccore0.instr_popped_log.dump": "29608895449d5f354b4d406357a8e74f6a7d0b97c6f20dbe5d32237da12d38b9"
+      },
+      "scalar_latencies": {
+        "SMOV": [
+          1,
+          1,
+          1
+        ],
+        "SMOVK": [
+          1
+        ],
+        "SSHLI": [
+          2,
+          2
+        ],
+        "SADD": [
+          2,
+          2
+        ],
+        "SMIN": [
+          2,
+          2
+        ],
+        "SSUBI": [
+          2,
+          2
+        ],
+        "SADDI": [
+          2,
+          2
+        ],
+        "SZEROEXT": [
+          1,
+          1
+        ]
+      },
+      "max_scalar_issue_per_cycle": 1
+    },
+    {
+      "case": "max_brc_fp16_h_left_5x256",
+      "golden": {
+        "passed": true,
+        "elements_checked": 1280,
+        "mismatches": 0,
+        "guard_bytes_checked": 30208,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "707e73a8284c95cbed06a66292df45ee8953582f5cdeddfce7cc221e9488e990",
+        "core0.veccore0.instr_log.dump": "a8ba492dcbeebd7ddd4a14aff11432d8a458ec12058f74ff7b64e0a1ab795ff7",
+        "core0.veccore0.instr_popped_log.dump": "ce6f337816dbed81307431ac737758268f8e61effc7d0c37309422c917cbe207"
+      },
+      "scalar_latencies": {
+        "SMOV": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "SMOVK": [
+          1,
+          1
+        ],
+        "SSHLI": [
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SADD": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SMIN": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SSUBI": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SADDI": [
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SZEROEXT": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ]
+      },
+      "max_scalar_issue_per_cycle": 1
+    },
+    {
+      "case": "max_brc_fp16_h_right_5x256",
+      "golden": {
+        "passed": true,
+        "elements_checked": 1280,
+        "mismatches": 0,
+        "guard_bytes_checked": 30208,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "859d890605d2eb0b74afc349607b50dc6c24047f3726a4e51dd5041137e3a324",
+        "core0.veccore0.instr_log.dump": "0db98dcf3732bd45036db176f9d9629803adb387828c16894def5cbd5f5ca1ba",
+        "core0.veccore0.instr_popped_log.dump": "3fe0907e13c32dd08d52d6321946c02f6b0b0b73b2248dd8437dd09bd5cfb5aa"
+      },
+      "scalar_latencies": {
+        "SMOV": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "SMOVK": [
+          1
+        ],
+        "SSHLI": [
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SADD": [
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SMIN": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SSUBI": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SADDI": [
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SZEROEXT": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ]
+      },
+      "max_scalar_issue_per_cycle": 1
+    },
+    {
+      "case": "max_brc_fp16_h_left_8x512",
+      "golden": {
+        "passed": true,
+        "elements_checked": 4096,
+        "mismatches": 0,
+        "guard_bytes_checked": 24576,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "fb140c597703c40279587579a64834325fef019866bff35ee1218cc2ce861ccf",
+        "core0.veccore0.instr_log.dump": "5c91f2c4cef5414ede9c6d3250941b657004d0bedcbcc8c79af29448143744b9",
+        "core0.veccore0.instr_popped_log.dump": "4bc71b201933ffe64e972e5fde5ccffa47caf65a6f53308c53f1affd2f9332f5"
+      },
+      "scalar_latencies": {
+        "SMOV": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "SMOVK": [
+          1,
+          1
+        ],
+        "SSHLI": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SADD": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SMIN": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SSUBI": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SADDI": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SZEROEXT": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ]
+      },
+      "max_scalar_issue_per_cycle": 1
+    },
+    {
+      "case": "max_brc_fp16_h_right_8x512",
+      "golden": {
+        "passed": true,
+        "elements_checked": 4096,
+        "mismatches": 0,
+        "guard_bytes_checked": 24576,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "73dfe931993e572702a2eb2f32fd97aaeefc9850483b9cbcac0931c6f5bad069",
+        "core0.veccore0.instr_log.dump": "720e9d9eea9a31e5cf4b3789feca6a53193993d01d32be2fb9ed07243c7b5eb4",
+        "core0.veccore0.instr_popped_log.dump": "4cd84674bcb71e4072706bb0cfe7bc752f243d92a75a5640b3292cc425312dc5"
+      },
+      "scalar_latencies": {
+        "SMOV": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "SMOVK": [
+          1
+        ],
+        "SSHLI": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SADD": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SMIN": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SSUBI": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SADDI": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SZEROEXT": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ]
+      },
+      "max_scalar_issue_per_cycle": 1
+    },
+    {
+      "case": "max_brc_fp32_h_left_2x128",
+      "golden": {
+        "passed": true,
+        "elements_checked": 256,
+        "mismatches": 0,
+        "guard_bytes_checked": 31744,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "cb7c0e94b58cfb471b3bd987b918821eff367dc2c41ab1d5d2e9149458308fb3",
+        "core0.veccore0.instr_log.dump": "efa7c81ec310ad3b04826e9697afb126c8fcbdec7b4080613e9bb39386394670",
+        "core0.veccore0.instr_popped_log.dump": "ec671aefd9e2b34d84b76dfd6b1932fe6ad0ecbc5f0f12db53352fcf04d18016"
+      },
+      "scalar_latencies": {
+        "SMOV": [
+          1,
+          1,
+          1
+        ],
+        "SMOVK": [
+          1,
+          1
+        ],
+        "SSHLI": [
+          2,
+          2
+        ],
+        "SADD": [
+          2,
+          2,
+          2,
+          2
+        ],
+        "SMIN": [
+          2,
+          2,
+          2,
+          2
+        ],
+        "SSUBI": [
+          2,
+          2,
+          2,
+          2
+        ],
+        "SADDI": [
+          2,
+          2
+        ],
+        "SZEROEXT": [
+          1,
+          1
+        ]
+      },
+      "max_scalar_issue_per_cycle": 1
+    },
+    {
+      "case": "max_brc_fp32_h_right_2x128",
+      "golden": {
+        "passed": true,
+        "elements_checked": 256,
+        "mismatches": 0,
+        "guard_bytes_checked": 31744,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "c4cd45a42624af4279d8cf61e9796737184ae29fefb9c9159cb34f8f12ff486a",
+        "core0.veccore0.instr_log.dump": "741e686499d1e8ac129f7adc45668ad3f635dd8f1b696fa1304dccc1a65ecdde",
+        "core0.veccore0.instr_popped_log.dump": "64ea178e47cf477c47a67acb53e941cf496fc689e48f94236fec7ce9eedbff4f"
+      },
+      "scalar_latencies": {
+        "SMOV": [
+          1,
+          1,
+          1
+        ],
+        "SMOVK": [
+          1
+        ],
+        "SSHLI": [
+          2,
+          2
+        ],
+        "SADD": [
+          2,
+          2
+        ],
+        "SMIN": [
+          2,
+          2,
+          2,
+          2
+        ],
+        "SSUBI": [
+          2,
+          2,
+          2,
+          2
+        ],
+        "SADDI": [
+          2,
+          2
+        ],
+        "SZEROEXT": [
+          1,
+          1
+        ]
+      },
+      "max_scalar_issue_per_cycle": 1
+    },
+    {
+      "case": "max_brc_fp32_h_left_5x256",
+      "golden": {
+        "passed": true,
+        "elements_checked": 1280,
+        "mismatches": 0,
+        "guard_bytes_checked": 27648,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "c1f6f141af842ac6fe9c50ea274a56dabde6882bc4de697a53d88d744603b5b2",
+        "core0.veccore0.instr_log.dump": "28477e0ef694aabb73c8157b09f497dabb371a5c3de6e34befa835c4128725b3",
+        "core0.veccore0.instr_popped_log.dump": "eab5c5d0b35a4a8a9cb059cc526c7d84bc36f3ac9b496665afa1c3f9d242d332"
+      },
+      "scalar_latencies": {
+        "SMOV": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "SMOVK": [
+          1,
+          1
+        ],
+        "SSHLI": [
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SADD": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SMIN": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SSUBI": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SADDI": [
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SZEROEXT": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ]
+      },
+      "max_scalar_issue_per_cycle": 1
+    },
+    {
+      "case": "max_brc_fp32_h_right_5x256",
+      "golden": {
+        "passed": true,
+        "elements_checked": 1280,
+        "mismatches": 0,
+        "guard_bytes_checked": 27648,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "5abb790facf24067f78de91b414a1a90ead6eca71b7cf93ebb2cac0316ddf286",
+        "core0.veccore0.instr_log.dump": "996a223b9efb98b41d7fc3d8a74b4085e4f9458f2378bc7fd65393ec7700427f",
+        "core0.veccore0.instr_popped_log.dump": "0af11630928f170e82e4face27259e43a59f1fa1651e299f25c201c8c6bab5f8"
+      },
+      "scalar_latencies": {
+        "SMOV": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "SMOVK": [
+          1
+        ],
+        "SSHLI": [
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SADD": [
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SMIN": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SSUBI": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SADDI": [
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SZEROEXT": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ]
+      },
+      "max_scalar_issue_per_cycle": 1
+    },
+    {
+      "case": "max_brc_fp32_h_left_8x512",
+      "golden": {
+        "passed": true,
+        "elements_checked": 4096,
+        "mismatches": 0,
+        "guard_bytes_checked": 16384,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "09b43c7921a7fdb68fa8aaff073a82d9479275882acafea0e9ccbecab59ec59e",
+        "core0.veccore0.instr_log.dump": "19663e07425e54ebf488dd60487d9f38c23a31f70b823b5fd288dbcb270746ee",
+        "core0.veccore0.instr_popped_log.dump": "db672972d9adce217ac75cbefab98f6f5a865b7b265cab0663cf114f8ae60de6"
+      },
+      "scalar_latencies": {
+        "SMOV": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "SMOVK": [
+          1,
+          1
+        ],
+        "SSHLI": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SADD": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SMIN": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SSUBI": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SADDI": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SZEROEXT": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ]
+      },
+      "max_scalar_issue_per_cycle": 1
+    },
+    {
+      "case": "max_brc_fp32_h_right_8x512",
+      "golden": {
+        "passed": true,
+        "elements_checked": 4096,
+        "mismatches": 0,
+        "guard_bytes_checked": 16384,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "3465ae1d774cdc7450edaf91c9405c9d0f421fe376d24ad686fc4658f701e926",
+        "core0.veccore0.instr_log.dump": "1f8631509f66773017c51976a59e726174fc7c5352dd0fce28747315bc39bfb4",
+        "core0.veccore0.instr_popped_log.dump": "bf3ad4fb0cfce9c48c435639991f936c35ae5549f3b50f7fa96e28aa953bc5d6"
+      },
+      "scalar_latencies": {
+        "SMOV": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "SMOVK": [
+          1
+        ],
+        "SSHLI": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SADD": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SMIN": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SSUBI": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SADDI": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SZEROEXT": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ]
+      },
+      "max_scalar_issue_per_cycle": 1
+    },
+    {
+      "case": "min_brc_fp16_h_left_2x128",
+      "golden": {
+        "passed": true,
+        "elements_checked": 256,
+        "mismatches": 0,
+        "guard_bytes_checked": 32256,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "4fe031850acc9f2b17e452512b7f2ccaed1308ca6da8fe430cb19f811773a6aa",
+        "core0.veccore0.instr_log.dump": "a99cded4c29c60acf5f27471ac1c0294c7f49b208522a2c4fe4fa2da6ed25b65",
+        "core0.veccore0.instr_popped_log.dump": "d39074e0673b0834ea6ccfe36ea432918e97600305eb9df6e45b7a5cd787be15"
+      },
+      "scalar_latencies": {
+        "SMOV": [
+          1,
+          1,
+          1
+        ],
+        "SMOVK": [
+          1,
+          1
+        ],
+        "SSHLI": [
+          2,
+          2
+        ],
+        "SADD": [
+          2,
+          2,
+          2,
+          2
+        ],
+        "SMIN": [
+          2,
+          2
+        ],
+        "SSUBI": [
+          2,
+          2
+        ],
+        "SADDI": [
+          2,
+          2
+        ],
+        "SZEROEXT": [
+          1,
+          1
+        ]
+      },
+      "max_scalar_issue_per_cycle": 1
+    },
+    {
+      "case": "min_brc_fp16_h_right_2x128",
+      "golden": {
+        "passed": true,
+        "elements_checked": 256,
+        "mismatches": 0,
+        "guard_bytes_checked": 32256,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "b6a8d357619640dc169099b9c28db4a906e84ff61505ec0087576c6e827616d7",
+        "core0.veccore0.instr_log.dump": "6225ba7345ee4b47ad6fff22abe072489ec788bdc9a5988efbfbefc89a138e0d",
+        "core0.veccore0.instr_popped_log.dump": "f43dd7e065e9ef6a9c6690c6097e077c1608519580b30a8b5008a75b2909cc10"
+      },
+      "scalar_latencies": {
+        "SMOV": [
+          1,
+          1,
+          1
+        ],
+        "SMOVK": [
+          1
+        ],
+        "SSHLI": [
+          2,
+          2
+        ],
+        "SADD": [
+          2,
+          2
+        ],
+        "SMIN": [
+          2,
+          2
+        ],
+        "SSUBI": [
+          2,
+          2
+        ],
+        "SADDI": [
+          2,
+          2
+        ],
+        "SZEROEXT": [
+          1,
+          1
+        ]
+      },
+      "max_scalar_issue_per_cycle": 1
+    },
+    {
+      "case": "min_brc_fp16_h_left_5x256",
+      "golden": {
+        "passed": true,
+        "elements_checked": 1280,
+        "mismatches": 0,
+        "guard_bytes_checked": 30208,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "3141eb3999b1957dd6355981ebb22f980c611fcb03b7349d039b52cff9371b3a",
+        "core0.veccore0.instr_log.dump": "c3ccdacd87a947177b2701f2df6209adf59c0a474f3c20915620e40db2b33d78",
+        "core0.veccore0.instr_popped_log.dump": "838fcfdc759014b63a62ff1689c555a0f33f56f00178886d1f0b566f927844e3"
+      },
+      "scalar_latencies": {
+        "SMOV": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "SMOVK": [
+          1,
+          1
+        ],
+        "SSHLI": [
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SADD": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SMIN": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SSUBI": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SADDI": [
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SZEROEXT": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ]
+      },
+      "max_scalar_issue_per_cycle": 1
+    },
+    {
+      "case": "min_brc_fp16_h_right_5x256",
+      "golden": {
+        "passed": true,
+        "elements_checked": 1280,
+        "mismatches": 0,
+        "guard_bytes_checked": 30208,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "1124d4078e5c1ae0c8d8694a5cc1e930e8b0b8fc8ebed2c9f6d960e2c7d4faa7",
+        "core0.veccore0.instr_log.dump": "d0c7a92549d1a1945342498c978491b50d1e9f5f682c9cc097b778b157c42d23",
+        "core0.veccore0.instr_popped_log.dump": "ba9ddb0d0964c1d6b6dbdee9fdf5bda6c05ef4b82938ac6d66f51e2125f021da"
+      },
+      "scalar_latencies": {
+        "SMOV": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "SMOVK": [
+          1
+        ],
+        "SSHLI": [
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SADD": [
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SMIN": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SSUBI": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SADDI": [
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SZEROEXT": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ]
+      },
+      "max_scalar_issue_per_cycle": 1
+    },
+    {
+      "case": "min_brc_fp16_h_left_8x512",
+      "golden": {
+        "passed": true,
+        "elements_checked": 4096,
+        "mismatches": 0,
+        "guard_bytes_checked": 24576,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "6082137778b57c5db8e2983a5ba17257c3c2b76974d359ec79496c10553c24bb",
+        "core0.veccore0.instr_log.dump": "b95e7c494dad87b3473ff0f6767ad7a4651fc9336973ec5a7f4ee44183416870",
+        "core0.veccore0.instr_popped_log.dump": "f0a5b476ed169df79811010b949b0ca3a51e5bea8ee52a5ecd3ae001ba9eaa36"
+      },
+      "scalar_latencies": {
+        "SMOV": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "SMOVK": [
+          1,
+          1
+        ],
+        "SSHLI": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SADD": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SMIN": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SSUBI": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SADDI": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SZEROEXT": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ]
+      },
+      "max_scalar_issue_per_cycle": 1
+    },
+    {
+      "case": "min_brc_fp16_h_right_8x512",
+      "golden": {
+        "passed": true,
+        "elements_checked": 4096,
+        "mismatches": 0,
+        "guard_bytes_checked": 24576,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "5731ceceea1efd3f078d617bbd51842a7ddb08f7f1188f81527252fb8abb96ec",
+        "core0.veccore0.instr_log.dump": "f67730eb6b85569ee74065179e15b187b5b329ecdbc9bf75f574fd46f20e3280",
+        "core0.veccore0.instr_popped_log.dump": "161836088ff19629081db84caa4ef0fa421b3d95ccdde44f11fc747198aa84fc"
+      },
+      "scalar_latencies": {
+        "SMOV": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "SMOVK": [
+          1
+        ],
+        "SSHLI": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SADD": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SMIN": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SSUBI": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SADDI": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SZEROEXT": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ]
+      },
+      "max_scalar_issue_per_cycle": 1
+    },
+    {
+      "case": "min_brc_fp32_h_left_2x128",
+      "golden": {
+        "passed": true,
+        "elements_checked": 256,
+        "mismatches": 0,
+        "guard_bytes_checked": 31744,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "09323fadf4068de9a703f84ee6b74d9faa58c7e59bfab82cb70779af4f0a3def",
+        "core0.veccore0.instr_log.dump": "2d19d9e0865704878e6d244503986609d9f63d8aae684977c251d160ef51c388",
+        "core0.veccore0.instr_popped_log.dump": "1620b845f98a925552ac5e733005670e7f846a19fb19d7a7f80b0c0db3fd7cde"
+      },
+      "scalar_latencies": {
+        "SMOV": [
+          1,
+          1,
+          1
+        ],
+        "SMOVK": [
+          1,
+          1
+        ],
+        "SSHLI": [
+          2,
+          2
+        ],
+        "SADD": [
+          2,
+          2,
+          2,
+          2
+        ],
+        "SMIN": [
+          2,
+          2,
+          2,
+          2
+        ],
+        "SSUBI": [
+          2,
+          2,
+          2,
+          2
+        ],
+        "SADDI": [
+          2,
+          2
+        ],
+        "SZEROEXT": [
+          1,
+          1
+        ]
+      },
+      "max_scalar_issue_per_cycle": 1
+    },
+    {
+      "case": "min_brc_fp32_h_right_2x128",
+      "golden": {
+        "passed": true,
+        "elements_checked": 256,
+        "mismatches": 0,
+        "guard_bytes_checked": 31744,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "12b90c15f54fa81cbb491066627d5aac3c24588eb3b049a2bc017687b94b4c6e",
+        "core0.veccore0.instr_log.dump": "02874b3ef26e222275a59e4a5e5d920c80025c8a78a9294ad8d54b3dc08f2ee4",
+        "core0.veccore0.instr_popped_log.dump": "6516e3056b0b2778e8ddd721294beb66a4b3b1a0baec9f7255d04078125f08da"
+      },
+      "scalar_latencies": {
+        "SMOV": [
+          1,
+          1,
+          1
+        ],
+        "SMOVK": [
+          1
+        ],
+        "SSHLI": [
+          2,
+          2
+        ],
+        "SADD": [
+          2,
+          2
+        ],
+        "SMIN": [
+          2,
+          2,
+          2,
+          2
+        ],
+        "SSUBI": [
+          2,
+          2,
+          2,
+          2
+        ],
+        "SADDI": [
+          2,
+          2
+        ],
+        "SZEROEXT": [
+          1,
+          1
+        ]
+      },
+      "max_scalar_issue_per_cycle": 1
+    },
+    {
+      "case": "min_brc_fp32_h_left_5x256",
+      "golden": {
+        "passed": true,
+        "elements_checked": 1280,
+        "mismatches": 0,
+        "guard_bytes_checked": 27648,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "b9acba70b17e5691a5db436146499fc8a514cf53286e6198b5c29b28307befa3",
+        "core0.veccore0.instr_log.dump": "b3cfabcd5d051ab158ca5a91e21432f91f66d52964a0953531e83322573271cb",
+        "core0.veccore0.instr_popped_log.dump": "a5db18f8c65edeab481dcc2444ecdc28e9dda36cd4fc226db60674d79ed47728"
+      },
+      "scalar_latencies": {
+        "SMOV": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "SMOVK": [
+          1,
+          1
+        ],
+        "SSHLI": [
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SADD": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SMIN": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SSUBI": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SADDI": [
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SZEROEXT": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ]
+      },
+      "max_scalar_issue_per_cycle": 1
+    },
+    {
+      "case": "min_brc_fp32_h_right_5x256",
+      "golden": {
+        "passed": true,
+        "elements_checked": 1280,
+        "mismatches": 0,
+        "guard_bytes_checked": 27648,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "99fcb6f3634b8dee27f36ce82c9b65262dd5d2a658a596adf05435ec6efa31a2",
+        "core0.veccore0.instr_log.dump": "96ee7846a34eac70db5942fe01b17fa8e7252e1fa71cc68aec9a774b63d69b11",
+        "core0.veccore0.instr_popped_log.dump": "60327f7891ca361cde848b759e0ffa178b50646fd321421ee53f64e89d13a5bc"
+      },
+      "scalar_latencies": {
+        "SMOV": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "SMOVK": [
+          1
+        ],
+        "SSHLI": [
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SADD": [
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SMIN": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SSUBI": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SADDI": [
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SZEROEXT": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ]
+      },
+      "max_scalar_issue_per_cycle": 1
+    },
+    {
+      "case": "min_brc_fp32_h_left_8x512",
+      "golden": {
+        "passed": true,
+        "elements_checked": 4096,
+        "mismatches": 0,
+        "guard_bytes_checked": 16384,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "ded6d83f7342ad77fa0a4215b03de16c57cecda54f8f0cd7ca9136f5c98ba555",
+        "core0.veccore0.instr_log.dump": "e1af4064769bfb41f7a8786d2e94ee8fc12334d320acb5faebb6caf98ced9789",
+        "core0.veccore0.instr_popped_log.dump": "374f925d484baad1a94b98550e38f27e43d0f0cdca56e44e7c03bf0ea2f3ab77"
+      },
+      "scalar_latencies": {
+        "SMOV": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "SMOVK": [
+          1,
+          1
+        ],
+        "SSHLI": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SADD": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SMIN": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SSUBI": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SADDI": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SZEROEXT": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ]
+      },
+      "max_scalar_issue_per_cycle": 1
+    },
+    {
+      "case": "min_brc_fp32_h_right_8x512",
+      "golden": {
+        "passed": true,
+        "elements_checked": 4096,
+        "mismatches": 0,
+        "guard_bytes_checked": 16384,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "edb643f9ebb11e7c380ea825e99f8987ccd14865027dee86d07645d1ecaec8de",
+        "core0.veccore0.instr_log.dump": "5b10c88106d02bbcf5e3bedad3044dc9c8c7e280401d2a41f243cc1d0efecb3b",
+        "core0.veccore0.instr_popped_log.dump": "472cbc33b080fbaffdbf3823bd024e5800dffaefc9a56f85b3d0f9f0fe619290"
+      },
+      "scalar_latencies": {
+        "SMOV": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "SMOVK": [
+          1
+        ],
+        "SSHLI": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SADD": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SMIN": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SSUBI": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SADDI": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SZEROEXT": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ]
+      },
+      "max_scalar_issue_per_cycle": 1
+    }
+  ],
+  "scope": "Native RVECSU popped-to-done timing; scalar unit is separate from RVECEX. SMOVI immediates and duplicate SEND events excluded. No total-cycle fitting."
+}

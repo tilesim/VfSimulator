@@ -32,7 +32,7 @@ from __future__ import annotations
 import json
 import os
 from copy import deepcopy
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from typing import Any, Dict, Optional
 
 from core.instruction_profile import InstructionProfile
@@ -164,6 +164,8 @@ class ParamDB:
         self._inst_param_cache: Dict[tuple[str, str, str, bool], Dict[str, Any]] = {}
         self._profile_cache: Dict[tuple[str, str, str], InstructionProfile] = {}
         self._profiles_by_id: Dict[int, InstructionProfile] = {}
+        self._indexed_profile_cache: Dict[tuple[int, int], InstructionProfile] = {}
+        self._mode_profile_cache = {}
         self._forwarding_profile_cache: Dict[tuple[int, int], int] = {}
         self._ii_profile_cache: Dict[tuple[int, int], int] = {}
         self._next_profile_id = 0
@@ -603,7 +605,7 @@ class ParamDB:
         self._profile_cache_misses += 1
         params = self.get_inst_form(opu, form=requested_form, dtype=normalized_dtype)
         op_class = str(params.get("op_class", "")).upper()
-        if op_class not in ("LOAD", "STORE", "COMPUTE"):
+        if op_class not in ("LOAD", "STORE", "COMPUTE", "SCALAR"):
             unit = str(params.get("unit", "")).upper()
             lsu_op = str(params.get("lsu_op", "")).upper()
             if unit == "LSU" and lsu_op in ("LOAD", "STORE"):
@@ -613,8 +615,11 @@ class ParamDB:
             else:
                 op_class = self._fallback_op_class(opu)
         fu_type = str(params.get("EXU", "ALU")).upper()
-        if fu_type not in ("ALU", "SFU"):
+        if fu_type not in ("ALU", "SFU", "SCALAR"):
             fu_type = "ALU"
+        ii_scope = str(params.get("initiation_interval_scope", "exu")).lower()
+        if ii_scope not in ("exu", "fu"):
+            raise ValueError(f"Invalid initiation_interval_scope for {opu}.{requested_form}: {ii_scope}")
         profile = InstructionProfile(
             profile_id=self._next_profile_id,
             op=opu,
@@ -625,10 +630,39 @@ class ParamDB:
             fu_type=fu_type,
             dispatch_exu=str(params.get("dispatch_exu", "")).upper(),
             latency=int(params.get("latency", 1)),
+            initiation_interval_scope=ii_scope,
         )
         self._next_profile_id += 1
         self._profile_cache[key] = profile
         self._profiles_by_id[profile.profile_id] = profile
+        return profile
+
+    def resolve_indexed_inst(self, op: str, form: str, dtype: str, attributes: dict):
+        from core.indexed_memory import indexed_memory_timing
+        timing = indexed_memory_timing(op, form, attributes)
+        base = self.resolve_inst(op, form, dtype)
+        key = (base.profile_id, timing.latency)
+        profile = self._indexed_profile_cache.get(key)
+        if profile is None:
+            profile = replace(base, profile_id=self._next_profile_id, latency=timing.latency)
+            self._next_profile_id += 1
+            self._indexed_profile_cache[key] = profile
+            self._profiles_by_id[profile.profile_id] = profile
+        return profile, timing
+
+    def resolve_memory_mode_inst(self, op, form, dtype, mode):
+        base = self.resolve_inst(op, form, dtype)
+        params = self.get_inst_form(op, form=form, dtype=dtype)
+        latency = params.get("mode_latencies", {}).get(mode)
+        if type(latency) is not int or latency <= 0:
+            raise ValueError(f"Unmeasured memory instruction mode: {op}.{form} {mode}")
+        key = (base.profile_id, mode, latency)
+        profile = self._mode_profile_cache.get(key)
+        if profile is None:
+            profile = replace(base, profile_id=self._next_profile_id, latency=latency)
+            self._next_profile_id += 1
+            self._mode_profile_cache[key] = profile
+            self._profiles_by_id[profile.profile_id] = profile
         return profile
 
     def get_profile_cache_stats(self) -> Dict[str, int]:

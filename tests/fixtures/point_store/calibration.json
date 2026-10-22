@@ -1,0 +1,57 @@
+{
+  "scope": "CANN9.2dav3510, complete PTO row reduction with one row; native point store mode matched source, scalar loop excluded from single-instruction latency",
+  "samples": [
+    {
+      "case": "rowsum_single_fp16_1x64",
+      "dtype": "fp16",
+      "golden": {
+        "case": "rowsum_single_fp16_1x64",
+        "passed": true,
+        "elements_checked": 1,
+        "guard_bytes_checked": 32766,
+        "guard_passed": true,
+        "mismatches": 0
+      },
+      "latencies": {
+        "RV_VMOV": {
+          "6": 1
+        },
+        "RV_VSTI": {
+          "13": 1
+        }
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "7e3c286d3a5b6a7aed9e80b726c53a09a4c6013dacbdeaec5c85e29c6e3d8679",
+        "core0.veccore0.instr_log.dump": "8263eb1c8b6723ea7774e209fa260b5a795fda767c741887a908ffd429f5bc25",
+        "core0.veccore0.instr_popped_log.dump": "3ea42a0dfd6828a101dd4924dbd80f152f05a233396b22f20df694e18c5e366a"
+      }
+    },
+    {
+      "case": "rowsum_single_fp32_1x64",
+      "dtype": "fp32",
+      "golden": {
+        "case": "rowsum_single_fp32_1x64",
+        "passed": true,
+        "elements_checked": 1,
+        "guard_bytes_checked": 32764,
+        "guard_passed": true,
+        "mismatches": 0
+      },
+      "latencies": {
+        "RV_VMOV": {
+          "6": 1
+        },
+        "RV_VSTI": {
+          "9": 1
+        }
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "f6ce4b46314179b8c8d3e936679347773e62f4a09f065d509a03e0fad777b45c",
+        "core0.veccore0.instr_log.dump": "e1bee564e64cc3e4263304f400348b53d6aef715b7f6581292404da240a4e8bc",
+        "core0.veccore0.instr_popped_log.dump": "d2eec08957fcfebc669b84fb9a17c6274ac628da2f0835e76d5f23d566fbbc3f"
+      }
+    }
+  ]
+}

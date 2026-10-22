@@ -1,0 +1,3244 @@
+{
+  "cases": [
+    {
+      "case": "cmp_fp32_eq_n64",
+      "dtype": "fp32",
+      "op": "VCMP_EQ",
+      "golden": {
+        "passed": true,
+        "elements_checked": 64,
+        "mismatches": 0,
+        "guard_bytes_checked": 32752,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "76c3453ea7be17a2d75173fc111c1d5e0a50daf9ff3b30166a79c87efd593ec6",
+        "core0.veccore0.instr_log.dump": "d4a64dba813890adf0d953900ed6e4691077c22f76816521ca9ecab2c72d3847",
+        "core0.veccore0.instr_popped_log.dump": "90c2a0e5765205f3ae4abeeff3c123e63a4e3f41c0212d63de2d209e999dcfc5"
+      },
+      "compare_latency": [
+        6,
+        6
+      ],
+      "store_latency": [
+        9
+      ],
+      "interleave_latency": [
+        11
+      ],
+      "load_to_compare": [
+        7,
+        7
+      ],
+      "compare_to_store": [],
+      "compare_to_interleave": [
+        3
+      ],
+      "interleave_to_store": [
+        9
+      ]
+    },
+    {
+      "case": "cmp_fp32_eq_n129",
+      "dtype": "fp32",
+      "op": "VCMP_EQ",
+      "golden": {
+        "passed": true,
+        "elements_checked": 129,
+        "mismatches": 0,
+        "guard_bytes_checked": 32736,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "61b1545996866a4f6c32483d4ba937a5cfb01b3cb299b124399612ed56283dad",
+        "core0.veccore0.instr_log.dump": "d84c673b9eeb997060420ee76241dbf68e62dee8cad21dbee736ab1c87582521",
+        "core0.veccore0.instr_popped_log.dump": "d2e078ae57e7a119d810851065eef683773f76aa57a7bcba24aa55b24e463df3"
+      },
+      "compare_latency": [
+        6,
+        6,
+        6,
+        6
+      ],
+      "store_latency": [
+        9,
+        9
+      ],
+      "interleave_latency": [
+        11,
+        11
+      ],
+      "load_to_compare": [
+        7,
+        7,
+        6,
+        8
+      ],
+      "compare_to_store": [],
+      "compare_to_interleave": [
+        3,
+        3
+      ],
+      "interleave_to_store": [
+        9,
+        9
+      ]
+    },
+    {
+      "case": "cmp_fp32_eq_n512",
+      "dtype": "fp32",
+      "op": "VCMP_EQ",
+      "golden": {
+        "passed": true,
+        "elements_checked": 512,
+        "mismatches": 0,
+        "guard_bytes_checked": 32704,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "68669fe6b98b5ce536175541b245e0c25cde71c9af958814fbfa97c54b988729",
+        "core0.veccore0.instr_log.dump": "f22a9f2b881422116e47f780f943fdab8fdbcf9330de601f7b9f1226c58c8775",
+        "core0.veccore0.instr_popped_log.dump": "228d4ab2a98bdc3ab2eba9e5f406abae5edb310225f6e4a110baf1b5ed820a94"
+      },
+      "compare_latency": [
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6
+      ],
+      "store_latency": [
+        9,
+        9,
+        9,
+        9
+      ],
+      "interleave_latency": [
+        11,
+        11,
+        11,
+        11
+      ],
+      "load_to_compare": [
+        7,
+        7,
+        6,
+        8,
+        7,
+        8,
+        7,
+        9
+      ],
+      "compare_to_store": [],
+      "compare_to_interleave": [
+        3,
+        3,
+        3,
+        3
+      ],
+      "interleave_to_store": [
+        9,
+        9,
+        9,
+        9
+      ]
+    },
+    {
+      "case": "cmp_fp32_ne_n64",
+      "dtype": "fp32",
+      "op": "VCMP_NE",
+      "golden": {
+        "passed": true,
+        "elements_checked": 64,
+        "mismatches": 0,
+        "guard_bytes_checked": 32752,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "b25e7e5c9ad9fc7b7268854ae2c5e5f571754c33fa85f8996ca20f1d2977fde8",
+        "core0.veccore0.instr_log.dump": "789ce5e111d64cd3ad6f0dcfad676a2f01e527d649284f9b73ed40d9c9519340",
+        "core0.veccore0.instr_popped_log.dump": "d13a10dfa8d1ee5b468bae8261763203283ec810f74a40dd2466f0b6703fbee4"
+      },
+      "compare_latency": [
+        6,
+        6
+      ],
+      "store_latency": [
+        9
+      ],
+      "interleave_latency": [
+        11
+      ],
+      "load_to_compare": [
+        7,
+        7
+      ],
+      "compare_to_store": [],
+      "compare_to_interleave": [
+        3
+      ],
+      "interleave_to_store": [
+        9
+      ]
+    },
+    {
+      "case": "cmp_fp32_ne_n129",
+      "dtype": "fp32",
+      "op": "VCMP_NE",
+      "golden": {
+        "passed": true,
+        "elements_checked": 129,
+        "mismatches": 0,
+        "guard_bytes_checked": 32736,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "d8821f8109720ced32dc99e79e9428d44b1bafd8e1150ff3d780d71fdd884a99",
+        "core0.veccore0.instr_log.dump": "22186259279db117e04eefa6b62d4f0744c7fea4a5d7e95bcd2c26433c572161",
+        "core0.veccore0.instr_popped_log.dump": "e56cafd0ac61ecb1e99031d1eab5f470429ee15d4896b5afcf83a214a7ac91af"
+      },
+      "compare_latency": [
+        6,
+        6,
+        6,
+        6
+      ],
+      "store_latency": [
+        9,
+        9
+      ],
+      "interleave_latency": [
+        11,
+        11
+      ],
+      "load_to_compare": [
+        7,
+        7,
+        6,
+        8
+      ],
+      "compare_to_store": [],
+      "compare_to_interleave": [
+        3,
+        3
+      ],
+      "interleave_to_store": [
+        9,
+        9
+      ]
+    },
+    {
+      "case": "cmp_fp32_ne_n512",
+      "dtype": "fp32",
+      "op": "VCMP_NE",
+      "golden": {
+        "passed": true,
+        "elements_checked": 512,
+        "mismatches": 0,
+        "guard_bytes_checked": 32704,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "77b281ddb64ec4eae211123fac31a42a9c038e2affcc38c30e2c6a3572ded929",
+        "core0.veccore0.instr_log.dump": "964c75fa3cff84a91fa9fb38fa6d409e28997f9d7e0cfb19c007fd05a6b56135",
+        "core0.veccore0.instr_popped_log.dump": "7679bb7e84bd7f5744ccb2fc8794cddb27151ac2c029a911c6ee1b0a08343c21"
+      },
+      "compare_latency": [
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6
+      ],
+      "store_latency": [
+        9,
+        9,
+        9,
+        9
+      ],
+      "interleave_latency": [
+        11,
+        11,
+        11,
+        11
+      ],
+      "load_to_compare": [
+        7,
+        7,
+        6,
+        8,
+        7,
+        8,
+        7,
+        9
+      ],
+      "compare_to_store": [],
+      "compare_to_interleave": [
+        3,
+        3,
+        3,
+        3
+      ],
+      "interleave_to_store": [
+        9,
+        9,
+        9,
+        9
+      ]
+    },
+    {
+      "case": "cmp_fp32_lt_n64",
+      "dtype": "fp32",
+      "op": "VCMP_LT",
+      "golden": {
+        "passed": true,
+        "elements_checked": 64,
+        "mismatches": 0,
+        "guard_bytes_checked": 32752,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "8f0be439d939b58c9da188cc9d4b56e837b878f0cd53e09dc33bfea4c438dd0d",
+        "core0.veccore0.instr_log.dump": "7bdb8d3378ef30ff62570506fd48695fe2376c0dc28d9d017ad8d5be8a39e6f5",
+        "core0.veccore0.instr_popped_log.dump": "6401317f0176e1dd5aa81eecbf498d230529a9f10cdd158f6d785666a42aab1d"
+      },
+      "compare_latency": [
+        6,
+        6
+      ],
+      "store_latency": [
+        9
+      ],
+      "interleave_latency": [
+        11
+      ],
+      "load_to_compare": [
+        7,
+        7
+      ],
+      "compare_to_store": [],
+      "compare_to_interleave": [
+        3
+      ],
+      "interleave_to_store": [
+        9
+      ]
+    },
+    {
+      "case": "cmp_fp32_lt_n129",
+      "dtype": "fp32",
+      "op": "VCMP_LT",
+      "golden": {
+        "passed": true,
+        "elements_checked": 129,
+        "mismatches": 0,
+        "guard_bytes_checked": 32736,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "321c23c85293c0df98d1e710155b54d10472b6deaca82795bc5f2faccfd50791",
+        "core0.veccore0.instr_log.dump": "4ce82eef78688a9b3a222b15012ece605b1343be2b060c03c14bb78547d01c7c",
+        "core0.veccore0.instr_popped_log.dump": "a349d331ac2c310f8310069a487378dcbf79c2aaffcfd989e5a0b9d80c100c37"
+      },
+      "compare_latency": [
+        6,
+        6,
+        6,
+        6
+      ],
+      "store_latency": [
+        9,
+        9
+      ],
+      "interleave_latency": [
+        11,
+        11
+      ],
+      "load_to_compare": [
+        7,
+        7,
+        6,
+        8
+      ],
+      "compare_to_store": [],
+      "compare_to_interleave": [
+        3,
+        3
+      ],
+      "interleave_to_store": [
+        9,
+        9
+      ]
+    },
+    {
+      "case": "cmp_fp32_lt_n512",
+      "dtype": "fp32",
+      "op": "VCMP_LT",
+      "golden": {
+        "passed": true,
+        "elements_checked": 512,
+        "mismatches": 0,
+        "guard_bytes_checked": 32704,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "95c882121d7f36223bdbffe29ea0dba20d9b3e55c276d1aacd333109a50627a5",
+        "core0.veccore0.instr_log.dump": "53dae53e62a559938c95a0d75c6e93d6da6f646e4ed42da8bb2d382014b805d4",
+        "core0.veccore0.instr_popped_log.dump": "09dc55c76a2a1232cc0426db490e61a5507503125d62f7b16444beb0f195a585"
+      },
+      "compare_latency": [
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6
+      ],
+      "store_latency": [
+        9,
+        9,
+        9,
+        9
+      ],
+      "interleave_latency": [
+        11,
+        11,
+        11,
+        11
+      ],
+      "load_to_compare": [
+        7,
+        7,
+        6,
+        8,
+        7,
+        8,
+        7,
+        9
+      ],
+      "compare_to_store": [],
+      "compare_to_interleave": [
+        3,
+        3,
+        3,
+        3
+      ],
+      "interleave_to_store": [
+        9,
+        9,
+        9,
+        9
+      ]
+    },
+    {
+      "case": "cmp_fp32_le_n64",
+      "dtype": "fp32",
+      "op": "VCMP_LE",
+      "golden": {
+        "passed": true,
+        "elements_checked": 64,
+        "mismatches": 0,
+        "guard_bytes_checked": 32752,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "df10871094c33a95caa6f0ce121fec0cd7b70284168c9273430c83af54e097f7",
+        "core0.veccore0.instr_log.dump": "27c9ccfb1f66d515c87de0c9a3ef11ac00ad3e2ec9bd073b2c90f0edb7cdc1c0",
+        "core0.veccore0.instr_popped_log.dump": "255d1a81557fbf7c8373067848f671a092395d18899923a430b4d0b69d4a0cbc"
+      },
+      "compare_latency": [
+        6,
+        6
+      ],
+      "store_latency": [
+        9
+      ],
+      "interleave_latency": [
+        11
+      ],
+      "load_to_compare": [
+        7,
+        7
+      ],
+      "compare_to_store": [],
+      "compare_to_interleave": [
+        3
+      ],
+      "interleave_to_store": [
+        9
+      ]
+    },
+    {
+      "case": "cmp_fp32_le_n129",
+      "dtype": "fp32",
+      "op": "VCMP_LE",
+      "golden": {
+        "passed": true,
+        "elements_checked": 129,
+        "mismatches": 0,
+        "guard_bytes_checked": 32736,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "58b433e6cdd80c7ea170b9ac009761c7e9f7a3ee4fe300f96ac9955b08a00bea",
+        "core0.veccore0.instr_log.dump": "581a0524034b6fa06d6a67181cc1d1da5c71581bee36fe7df6b5529a197712f6",
+        "core0.veccore0.instr_popped_log.dump": "80686a9ee4f2cdd040982917c47c5f784e0d85bd15a5c37df1beedd3483ca1f3"
+      },
+      "compare_latency": [
+        6,
+        6,
+        6,
+        6
+      ],
+      "store_latency": [
+        9,
+        9
+      ],
+      "interleave_latency": [
+        11,
+        11
+      ],
+      "load_to_compare": [
+        7,
+        7,
+        6,
+        8
+      ],
+      "compare_to_store": [],
+      "compare_to_interleave": [
+        3,
+        3
+      ],
+      "interleave_to_store": [
+        9,
+        9
+      ]
+    },
+    {
+      "case": "cmp_fp32_le_n512",
+      "dtype": "fp32",
+      "op": "VCMP_LE",
+      "golden": {
+        "passed": true,
+        "elements_checked": 512,
+        "mismatches": 0,
+        "guard_bytes_checked": 32704,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "c6b88209fdee58e794f1a37b8b68ba5c0ecbad4d149f7d844caf4b310aaf369e",
+        "core0.veccore0.instr_log.dump": "59a5341f2c47a888c6dff4f83a7ec9f54bd2933da6f420a47e3b2dda18b3b2bb",
+        "core0.veccore0.instr_popped_log.dump": "8ff205c759458a6331948742499acbd56df4b6249485b92d9ee2f60f0726c5c1"
+      },
+      "compare_latency": [
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6
+      ],
+      "store_latency": [
+        9,
+        9,
+        9,
+        9
+      ],
+      "interleave_latency": [
+        11,
+        11,
+        11,
+        11
+      ],
+      "load_to_compare": [
+        7,
+        7,
+        6,
+        8,
+        7,
+        8,
+        7,
+        9
+      ],
+      "compare_to_store": [],
+      "compare_to_interleave": [
+        3,
+        3,
+        3,
+        3
+      ],
+      "interleave_to_store": [
+        9,
+        9,
+        9,
+        9
+      ]
+    },
+    {
+      "case": "cmp_fp32_gt_n64",
+      "dtype": "fp32",
+      "op": "VCMP_GT",
+      "golden": {
+        "passed": true,
+        "elements_checked": 64,
+        "mismatches": 0,
+        "guard_bytes_checked": 32752,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "aacc545c1062b940e47bd5aa78826b52cae64716f0285f04bfdb7c1cde50e83b",
+        "core0.veccore0.instr_log.dump": "511205bde5de95a88a352b05590c2dae809aa2376901d9b83ed9607cfdb634f6",
+        "core0.veccore0.instr_popped_log.dump": "e674389adef8de16a27ed94e7bec54f8af8f33b1963ae1bf38f43e18677312ba"
+      },
+      "compare_latency": [
+        6,
+        6
+      ],
+      "store_latency": [
+        9
+      ],
+      "interleave_latency": [
+        11
+      ],
+      "load_to_compare": [
+        7,
+        7
+      ],
+      "compare_to_store": [],
+      "compare_to_interleave": [
+        3
+      ],
+      "interleave_to_store": [
+        9
+      ]
+    },
+    {
+      "case": "cmp_fp32_gt_n129",
+      "dtype": "fp32",
+      "op": "VCMP_GT",
+      "golden": {
+        "passed": true,
+        "elements_checked": 129,
+        "mismatches": 0,
+        "guard_bytes_checked": 32736,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "9b5836f9269a6228e5c852bf1c8713136cfb629e4c14ea745df0aa17fdc05f85",
+        "core0.veccore0.instr_log.dump": "cca48c5b415e6fbbb033a1d51deb05378bb4ef9144ee5750eb85088fa2ff2797",
+        "core0.veccore0.instr_popped_log.dump": "86e7db2c179d4219989ba4e204e1c2dc70a0aa690745ec1cc40f0b07a4ed1556"
+      },
+      "compare_latency": [
+        6,
+        6,
+        6,
+        6
+      ],
+      "store_latency": [
+        9,
+        9
+      ],
+      "interleave_latency": [
+        11,
+        11
+      ],
+      "load_to_compare": [
+        7,
+        7,
+        6,
+        8
+      ],
+      "compare_to_store": [],
+      "compare_to_interleave": [
+        3,
+        3
+      ],
+      "interleave_to_store": [
+        9,
+        9
+      ]
+    },
+    {
+      "case": "cmp_fp32_gt_n512",
+      "dtype": "fp32",
+      "op": "VCMP_GT",
+      "golden": {
+        "passed": true,
+        "elements_checked": 512,
+        "mismatches": 0,
+        "guard_bytes_checked": 32704,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "b18ebfd12522a8175a8619709108d97592c4e8fd3064fcb1a3a016ab4301a569",
+        "core0.veccore0.instr_log.dump": "283d8e1b0799b9d29e1b8ac129520e0be163b70ab4611abff4c988399ec2fba6",
+        "core0.veccore0.instr_popped_log.dump": "695fd2d274709d6198e3ca2d976281d652b1c514454187fdf77fb1332ef94c55"
+      },
+      "compare_latency": [
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6
+      ],
+      "store_latency": [
+        9,
+        9,
+        9,
+        9
+      ],
+      "interleave_latency": [
+        11,
+        11,
+        11,
+        11
+      ],
+      "load_to_compare": [
+        7,
+        7,
+        6,
+        8,
+        7,
+        8,
+        7,
+        9
+      ],
+      "compare_to_store": [],
+      "compare_to_interleave": [
+        3,
+        3,
+        3,
+        3
+      ],
+      "interleave_to_store": [
+        9,
+        9,
+        9,
+        9
+      ]
+    },
+    {
+      "case": "cmp_fp32_ge_n64",
+      "dtype": "fp32",
+      "op": "VCMP_GE",
+      "golden": {
+        "passed": true,
+        "elements_checked": 64,
+        "mismatches": 0,
+        "guard_bytes_checked": 32752,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "918d7c64c7f806055a4795a58967ef7e5183e0ba87eb93aa20d282a58a2a206c",
+        "core0.veccore0.instr_log.dump": "f422edf42a4fcbeba7e5a08ccc201ddc604d253ec60e6c847e1f8f019dce2b2f",
+        "core0.veccore0.instr_popped_log.dump": "13b030a35f831fa8f22b554f16f9d9c2c0144cc419bb718c7ababa5acc1b5619"
+      },
+      "compare_latency": [
+        6,
+        6
+      ],
+      "store_latency": [
+        9
+      ],
+      "interleave_latency": [
+        11
+      ],
+      "load_to_compare": [
+        7,
+        7
+      ],
+      "compare_to_store": [],
+      "compare_to_interleave": [
+        3
+      ],
+      "interleave_to_store": [
+        9
+      ]
+    },
+    {
+      "case": "cmp_fp32_ge_n129",
+      "dtype": "fp32",
+      "op": "VCMP_GE",
+      "golden": {
+        "passed": true,
+        "elements_checked": 129,
+        "mismatches": 0,
+        "guard_bytes_checked": 32736,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "b71b0a46b4d554cd4db7609b1ca9a54a2ffbd4991f8e84e7985b19dca26be6ca",
+        "core0.veccore0.instr_log.dump": "a8b505657a681a7fbd84ff8f4ac9508b7dab33a988d8f5bd12b69ee5e81fffac",
+        "core0.veccore0.instr_popped_log.dump": "bfa14db8d57f76ffdf32e27d11e8e48642263d45e0f687514c39191f57d14ce6"
+      },
+      "compare_latency": [
+        6,
+        6,
+        6,
+        6
+      ],
+      "store_latency": [
+        9,
+        9
+      ],
+      "interleave_latency": [
+        11,
+        11
+      ],
+      "load_to_compare": [
+        7,
+        7,
+        6,
+        8
+      ],
+      "compare_to_store": [],
+      "compare_to_interleave": [
+        3,
+        3
+      ],
+      "interleave_to_store": [
+        9,
+        9
+      ]
+    },
+    {
+      "case": "cmp_fp32_ge_n512",
+      "dtype": "fp32",
+      "op": "VCMP_GE",
+      "golden": {
+        "passed": true,
+        "elements_checked": 512,
+        "mismatches": 0,
+        "guard_bytes_checked": 32704,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "06c9c36e0decff0e137fbf9188b655c7dd10151e9bacd4830168d64a6664fd79",
+        "core0.veccore0.instr_log.dump": "41b3876db636b7b6b46c74323d8d64225c6f15adfd4e50b0847085c94a894124",
+        "core0.veccore0.instr_popped_log.dump": "ee3c9a246f6000a2e367f4c15b997d797366208f9656c99b94dfc87165c45329"
+      },
+      "compare_latency": [
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6
+      ],
+      "store_latency": [
+        9,
+        9,
+        9,
+        9
+      ],
+      "interleave_latency": [
+        11,
+        11,
+        11,
+        11
+      ],
+      "load_to_compare": [
+        7,
+        7,
+        6,
+        8,
+        7,
+        8,
+        7,
+        9
+      ],
+      "compare_to_store": [],
+      "compare_to_interleave": [
+        3,
+        3,
+        3,
+        3
+      ],
+      "interleave_to_store": [
+        9,
+        9,
+        9,
+        9
+      ]
+    },
+    {
+      "case": "cmp_fp16_eq_n64",
+      "dtype": "fp16",
+      "op": "VCMP_EQ",
+      "golden": {
+        "passed": true,
+        "elements_checked": 64,
+        "mismatches": 0,
+        "guard_bytes_checked": 32752,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "417f2eceaa97ac98f3aa41184d8a8bdc0da3cb46908ca47c414a8e4fce9d688b",
+        "core0.veccore0.instr_log.dump": "3058e8280feed4d7e85e06d620ecd6354decff44486b0437a7316ebc8bb09a0a",
+        "core0.veccore0.instr_popped_log.dump": "9de1d300cd2e8686b54b821c939947d5c15d260bae1d5410095abba76bc37591"
+      },
+      "compare_latency": [
+        6
+      ],
+      "store_latency": [
+        9
+      ],
+      "interleave_latency": [],
+      "load_to_compare": [
+        7
+      ],
+      "compare_to_store": [
+        4
+      ],
+      "compare_to_interleave": [],
+      "interleave_to_store": []
+    },
+    {
+      "case": "cmp_fp16_eq_n129",
+      "dtype": "fp16",
+      "op": "VCMP_EQ",
+      "golden": {
+        "passed": true,
+        "elements_checked": 129,
+        "mismatches": 0,
+        "guard_bytes_checked": 32736,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "29cb500e7b212debff53afe285102db783dd0c6c19283ad6a8a189c13739646c",
+        "core0.veccore0.instr_log.dump": "46f579f7ff036d889923cb217493b7481c4f3e41be798f51171b3c3fd6a929d4",
+        "core0.veccore0.instr_popped_log.dump": "67af7b076f116b2b9379b2dfdcc5638a374589c8492ae4ae85f6a64c524cf5b4"
+      },
+      "compare_latency": [
+        6,
+        6
+      ],
+      "store_latency": [
+        9,
+        9
+      ],
+      "interleave_latency": [],
+      "load_to_compare": [
+        7,
+        7
+      ],
+      "compare_to_store": [
+        4,
+        4
+      ],
+      "compare_to_interleave": [],
+      "interleave_to_store": []
+    },
+    {
+      "case": "cmp_fp16_eq_n512",
+      "dtype": "fp16",
+      "op": "VCMP_EQ",
+      "golden": {
+        "passed": true,
+        "elements_checked": 512,
+        "mismatches": 0,
+        "guard_bytes_checked": 32704,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "8c4749ef0782f08164508c4187fecee9fa5dc496d073914675a979f02862e736",
+        "core0.veccore0.instr_log.dump": "1aacbb38c2b0dd0b652f5dcaaf8fa4cd404dcac8b0295c38658dbd53848621aa",
+        "core0.veccore0.instr_popped_log.dump": "0e4061a8f692ba0d35befe6d69c834f61f7a87b4664afe0e8f0dae02c4e96cc6"
+      },
+      "compare_latency": [
+        6,
+        6,
+        6,
+        6
+      ],
+      "store_latency": [
+        9,
+        9,
+        9,
+        9
+      ],
+      "interleave_latency": [],
+      "load_to_compare": [
+        7,
+        7,
+        6,
+        6
+      ],
+      "compare_to_store": [
+        4,
+        4,
+        4,
+        4
+      ],
+      "compare_to_interleave": [],
+      "interleave_to_store": []
+    },
+    {
+      "case": "cmp_fp16_ne_n64",
+      "dtype": "fp16",
+      "op": "VCMP_NE",
+      "golden": {
+        "passed": true,
+        "elements_checked": 64,
+        "mismatches": 0,
+        "guard_bytes_checked": 32752,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "c320b39ba5065e3a734a2c63b31c7439cacaa6602dcf55be42caaf127c90b2fd",
+        "core0.veccore0.instr_log.dump": "cf82460825acc4e82597c4e934257c527d3a604b75e5e1ccd214cd202a0aaa3b",
+        "core0.veccore0.instr_popped_log.dump": "d86d282bad001ace9a44d39fde62327fd74dbc6866431d75c12d0f84c35d8091"
+      },
+      "compare_latency": [
+        6
+      ],
+      "store_latency": [
+        9
+      ],
+      "interleave_latency": [],
+      "load_to_compare": [
+        7
+      ],
+      "compare_to_store": [
+        4
+      ],
+      "compare_to_interleave": [],
+      "interleave_to_store": []
+    },
+    {
+      "case": "cmp_fp16_ne_n129",
+      "dtype": "fp16",
+      "op": "VCMP_NE",
+      "golden": {
+        "passed": true,
+        "elements_checked": 129,
+        "mismatches": 0,
+        "guard_bytes_checked": 32736,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "1ed4c846e9409c404942f9131eaa2b493f38186c343c24b1c25ff8d6a0889c31",
+        "core0.veccore0.instr_log.dump": "5d3060fbfbf99f89d176e326e9b8f2184aacada7195f6fa2dce3c230ac5d72bf",
+        "core0.veccore0.instr_popped_log.dump": "68ce7d2c311fd8895ab4135f7edda74f1ac4ea703d04807dc441d84dac9d4694"
+      },
+      "compare_latency": [
+        6,
+        6
+      ],
+      "store_latency": [
+        9,
+        9
+      ],
+      "interleave_latency": [],
+      "load_to_compare": [
+        7,
+        7
+      ],
+      "compare_to_store": [
+        4,
+        4
+      ],
+      "compare_to_interleave": [],
+      "interleave_to_store": []
+    },
+    {
+      "case": "cmp_fp16_ne_n512",
+      "dtype": "fp16",
+      "op": "VCMP_NE",
+      "golden": {
+        "passed": true,
+        "elements_checked": 512,
+        "mismatches": 0,
+        "guard_bytes_checked": 32704,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "54badd99234d8ec6654779697f0897ec829dfa4542ad1eb9a270a16f2b616d42",
+        "core0.veccore0.instr_log.dump": "c2548ba39f6d57d1e3592f0e479473039d0b96c0b1ba45aa1745bd35c511c8e5",
+        "core0.veccore0.instr_popped_log.dump": "28984f9c2992ed5074265643042245271263105a22f322a1f7595346b54bced3"
+      },
+      "compare_latency": [
+        6,
+        6,
+        6,
+        6
+      ],
+      "store_latency": [
+        9,
+        9,
+        9,
+        9
+      ],
+      "interleave_latency": [],
+      "load_to_compare": [
+        7,
+        7,
+        6,
+        6
+      ],
+      "compare_to_store": [
+        4,
+        4,
+        4,
+        4
+      ],
+      "compare_to_interleave": [],
+      "interleave_to_store": []
+    },
+    {
+      "case": "cmp_fp16_lt_n64",
+      "dtype": "fp16",
+      "op": "VCMP_LT",
+      "golden": {
+        "passed": true,
+        "elements_checked": 64,
+        "mismatches": 0,
+        "guard_bytes_checked": 32752,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "79df47819969fd756a5d11dfc2e2424dba392c3bfb6dadb2e88abe6170b901f8",
+        "core0.veccore0.instr_log.dump": "76f2e98a9d4cd18f00fe9cb900cab6e6878501f268877be90c2fd7acc94cb2ab",
+        "core0.veccore0.instr_popped_log.dump": "24603faea5900cd376cc2753db0a03cb8d714445b479e9080b1883078d556fe3"
+      },
+      "compare_latency": [
+        6
+      ],
+      "store_latency": [
+        9
+      ],
+      "interleave_latency": [],
+      "load_to_compare": [
+        7
+      ],
+      "compare_to_store": [
+        4
+      ],
+      "compare_to_interleave": [],
+      "interleave_to_store": []
+    },
+    {
+      "case": "cmp_fp16_lt_n129",
+      "dtype": "fp16",
+      "op": "VCMP_LT",
+      "golden": {
+        "passed": true,
+        "elements_checked": 129,
+        "mismatches": 0,
+        "guard_bytes_checked": 32736,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "33fc6d4c002f17bdf421617c0718df09ffaaaa6bcaf79c3871b19727246bf7b2",
+        "core0.veccore0.instr_log.dump": "a496adf0fd8b413fca3c29646009f8dfa5889d61b5e40c4c94f9437a822fc482",
+        "core0.veccore0.instr_popped_log.dump": "8a002685a60fc062a15e6d9287c1bf513e14300de24ed4e7a3eeefa57d9f44a0"
+      },
+      "compare_latency": [
+        6,
+        6
+      ],
+      "store_latency": [
+        9,
+        9
+      ],
+      "interleave_latency": [],
+      "load_to_compare": [
+        7,
+        7
+      ],
+      "compare_to_store": [
+        4,
+        4
+      ],
+      "compare_to_interleave": [],
+      "interleave_to_store": []
+    },
+    {
+      "case": "cmp_fp16_lt_n512",
+      "dtype": "fp16",
+      "op": "VCMP_LT",
+      "golden": {
+        "passed": true,
+        "elements_checked": 512,
+        "mismatches": 0,
+        "guard_bytes_checked": 32704,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "d8a68797a66a9409dc001ff2841c4e014b47ce229ac0c2dde87478ec56e4634e",
+        "core0.veccore0.instr_log.dump": "950b83093c456b7ff4df065471e3a7c7cc412ca12d62677db614535003ddeea6",
+        "core0.veccore0.instr_popped_log.dump": "5449f76cbe2515f6f11b3ad244f40ec713cfa3ae61d5cbc9ccc5f7793718a911"
+      },
+      "compare_latency": [
+        6,
+        6,
+        6,
+        6
+      ],
+      "store_latency": [
+        9,
+        9,
+        9,
+        9
+      ],
+      "interleave_latency": [],
+      "load_to_compare": [
+        7,
+        7,
+        6,
+        6
+      ],
+      "compare_to_store": [
+        4,
+        4,
+        4,
+        4
+      ],
+      "compare_to_interleave": [],
+      "interleave_to_store": []
+    },
+    {
+      "case": "cmp_fp16_le_n64",
+      "dtype": "fp16",
+      "op": "VCMP_LE",
+      "golden": {
+        "passed": true,
+        "elements_checked": 64,
+        "mismatches": 0,
+        "guard_bytes_checked": 32752,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "e5d8fa8ad8f675813d48b4dbb6ac9adc7c85419cd8d5b7e41c31416d5b056aee",
+        "core0.veccore0.instr_log.dump": "49a5abb609087947a6c3bd4c84035d403dfe8cbfdcb3e74b3cfcab0c211488be",
+        "core0.veccore0.instr_popped_log.dump": "4488a7dd8abb18f5e3e9c37b8bc158a1d23145bc6a69717b07a6ceb23846812c"
+      },
+      "compare_latency": [
+        6
+      ],
+      "store_latency": [
+        9
+      ],
+      "interleave_latency": [],
+      "load_to_compare": [
+        7
+      ],
+      "compare_to_store": [
+        4
+      ],
+      "compare_to_interleave": [],
+      "interleave_to_store": []
+    },
+    {
+      "case": "cmp_fp16_le_n129",
+      "dtype": "fp16",
+      "op": "VCMP_LE",
+      "golden": {
+        "passed": true,
+        "elements_checked": 129,
+        "mismatches": 0,
+        "guard_bytes_checked": 32736,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "61117bd964df6c9794c185b6ec36f89122aeea0e3d2ff9d5d2a254390aebd956",
+        "core0.veccore0.instr_log.dump": "cb90a4e9785d54da0befe16162b674277abea4cfb1617dfc0344f904e39509d5",
+        "core0.veccore0.instr_popped_log.dump": "38c6c695ae84052b73f0ee3b500c808a65be68b4a286d17846401f3f94646e28"
+      },
+      "compare_latency": [
+        6,
+        6
+      ],
+      "store_latency": [
+        9,
+        9
+      ],
+      "interleave_latency": [],
+      "load_to_compare": [
+        7,
+        7
+      ],
+      "compare_to_store": [
+        4,
+        4
+      ],
+      "compare_to_interleave": [],
+      "interleave_to_store": []
+    },
+    {
+      "case": "cmp_fp16_le_n512",
+      "dtype": "fp16",
+      "op": "VCMP_LE",
+      "golden": {
+        "passed": true,
+        "elements_checked": 512,
+        "mismatches": 0,
+        "guard_bytes_checked": 32704,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "2cbaafb4ec7b4258cd9fa200f6ae3f3d86ed5608b213387d22795bf56ca8d6a8",
+        "core0.veccore0.instr_log.dump": "cc7004fef558da80e8a00bba3bf7425c68a5c27b2ab25af6b04eb0b3e2b41679",
+        "core0.veccore0.instr_popped_log.dump": "4e579ed84bc92812bf5aca3852f76235d6ba8af15a5ed34e546bf6bef9ce7ca0"
+      },
+      "compare_latency": [
+        6,
+        6,
+        6,
+        6
+      ],
+      "store_latency": [
+        9,
+        9,
+        9,
+        9
+      ],
+      "interleave_latency": [],
+      "load_to_compare": [
+        7,
+        7,
+        6,
+        6
+      ],
+      "compare_to_store": [
+        4,
+        4,
+        4,
+        4
+      ],
+      "compare_to_interleave": [],
+      "interleave_to_store": []
+    },
+    {
+      "case": "cmp_fp16_gt_n64",
+      "dtype": "fp16",
+      "op": "VCMP_GT",
+      "golden": {
+        "passed": true,
+        "elements_checked": 64,
+        "mismatches": 0,
+        "guard_bytes_checked": 32752,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "fa5c3d7075c35a546f573884aa7ad54211860a24305b38ab3e19215146e235f3",
+        "core0.veccore0.instr_log.dump": "4dd5971dbae3f123be30a51243beecfefcfe2ad0e3bffb5a03ae2faeb132ab51",
+        "core0.veccore0.instr_popped_log.dump": "53c2b9282873be76741de3fc425f137cb7387792eea3eb3fbbf23518e3fce4f1"
+      },
+      "compare_latency": [
+        6
+      ],
+      "store_latency": [
+        9
+      ],
+      "interleave_latency": [],
+      "load_to_compare": [
+        7
+      ],
+      "compare_to_store": [
+        4
+      ],
+      "compare_to_interleave": [],
+      "interleave_to_store": []
+    },
+    {
+      "case": "cmp_fp16_gt_n129",
+      "dtype": "fp16",
+      "op": "VCMP_GT",
+      "golden": {
+        "passed": true,
+        "elements_checked": 129,
+        "mismatches": 0,
+        "guard_bytes_checked": 32736,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "77aac9d688d7378bb67e75a71379c2d7aa93135ec61bf2cce73a7259edfc0327",
+        "core0.veccore0.instr_log.dump": "ce2922f6c2bff27fc8fcf61dbc3cb3da867a1ed0ba0354d81531e5c571a8049f",
+        "core0.veccore0.instr_popped_log.dump": "baf0c9d25a0c6afd8a5728ecd737631c4da364bfe8b263f1345e722ae1fb0102"
+      },
+      "compare_latency": [
+        6,
+        6
+      ],
+      "store_latency": [
+        9,
+        9
+      ],
+      "interleave_latency": [],
+      "load_to_compare": [
+        7,
+        7
+      ],
+      "compare_to_store": [
+        4,
+        4
+      ],
+      "compare_to_interleave": [],
+      "interleave_to_store": []
+    },
+    {
+      "case": "cmp_fp16_gt_n512",
+      "dtype": "fp16",
+      "op": "VCMP_GT",
+      "golden": {
+        "passed": true,
+        "elements_checked": 512,
+        "mismatches": 0,
+        "guard_bytes_checked": 32704,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "173b604dda08a2987b43194b13a11509b9ec7a9afaf3ebd9b7635463663a4511",
+        "core0.veccore0.instr_log.dump": "2ca28f2ee9e83c59f35811c5e95621dd62e684c66c24e8b64a80b5f741a304ac",
+        "core0.veccore0.instr_popped_log.dump": "7c28530ea2327acf1aa83cc14a858e91f214eaa56b29599610c73b8dec06824f"
+      },
+      "compare_latency": [
+        6,
+        6,
+        6,
+        6
+      ],
+      "store_latency": [
+        9,
+        9,
+        9,
+        9
+      ],
+      "interleave_latency": [],
+      "load_to_compare": [
+        7,
+        7,
+        6,
+        6
+      ],
+      "compare_to_store": [
+        4,
+        4,
+        4,
+        4
+      ],
+      "compare_to_interleave": [],
+      "interleave_to_store": []
+    },
+    {
+      "case": "cmp_fp16_ge_n64",
+      "dtype": "fp16",
+      "op": "VCMP_GE",
+      "golden": {
+        "passed": true,
+        "elements_checked": 64,
+        "mismatches": 0,
+        "guard_bytes_checked": 32752,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "3f9d2f7ae27b1f3ce198c5475e5a9e78f641221303af3b5d66cfdd9ae3e17b5e",
+        "core0.veccore0.instr_log.dump": "88aca550f7de518ccaec865d3f625a735784d703071ef4dc5f3195578be7c288",
+        "core0.veccore0.instr_popped_log.dump": "ef0fb2f93f7a702b76867f6669e29e26e753f3450fda6b4708461946a0882768"
+      },
+      "compare_latency": [
+        6
+      ],
+      "store_latency": [
+        9
+      ],
+      "interleave_latency": [],
+      "load_to_compare": [
+        7
+      ],
+      "compare_to_store": [
+        4
+      ],
+      "compare_to_interleave": [],
+      "interleave_to_store": []
+    },
+    {
+      "case": "cmp_fp16_ge_n129",
+      "dtype": "fp16",
+      "op": "VCMP_GE",
+      "golden": {
+        "passed": true,
+        "elements_checked": 129,
+        "mismatches": 0,
+        "guard_bytes_checked": 32736,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "0a30c27f39f63c5aa293092498e4f08b8937a3308c5c8e01dcc135fc37a0ccbd",
+        "core0.veccore0.instr_log.dump": "e3a9d462dcdfcb7f25c27a0bff47340050158e1f2e713e429b9f6cd91a2f81f8",
+        "core0.veccore0.instr_popped_log.dump": "79d197c0ceadf97237925e58912ed6bef8035feb7d8c02cb389293e35c9b6304"
+      },
+      "compare_latency": [
+        6,
+        6
+      ],
+      "store_latency": [
+        9,
+        9
+      ],
+      "interleave_latency": [],
+      "load_to_compare": [
+        7,
+        7
+      ],
+      "compare_to_store": [
+        4,
+        4
+      ],
+      "compare_to_interleave": [],
+      "interleave_to_store": []
+    },
+    {
+      "case": "cmp_fp16_ge_n512",
+      "dtype": "fp16",
+      "op": "VCMP_GE",
+      "golden": {
+        "passed": true,
+        "elements_checked": 512,
+        "mismatches": 0,
+        "guard_bytes_checked": 32704,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "071c3ebb54fa82e6fa11f5f75d19ca5733e5cf40ce84ea3807f3d9f7c55c6cf4",
+        "core0.veccore0.instr_log.dump": "fa752572e01a7a14c379922190b5019a428518259c9664a6af348b99991b4e96",
+        "core0.veccore0.instr_popped_log.dump": "3304546cb2c235e18dfdebea826544df01c109857cb53ba55c8b48b48d3e9ea8"
+      },
+      "compare_latency": [
+        6,
+        6,
+        6,
+        6
+      ],
+      "store_latency": [
+        9,
+        9,
+        9,
+        9
+      ],
+      "interleave_latency": [],
+      "load_to_compare": [
+        7,
+        7,
+        6,
+        6
+      ],
+      "compare_to_store": [
+        4,
+        4,
+        4,
+        4
+      ],
+      "compare_to_interleave": [],
+      "interleave_to_store": []
+    },
+    {
+      "case": "cmps_fp32_eq_n64",
+      "dtype": "fp32",
+      "op": "VCMPS_EQ",
+      "golden": {
+        "passed": true,
+        "elements_checked": 64,
+        "mismatches": 0,
+        "guard_bytes_checked": 32752,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "439e34e5b41d0242a07c2684a3215c9cd1ed629fe8c1a78576d36f6683d57cd6",
+        "core0.veccore0.instr_log.dump": "2052293762f23e4d6875055f438d1da898ba6e82f706c2cf0e47b07246b3e94f",
+        "core0.veccore0.instr_popped_log.dump": "757b46d16c111bf3c11bcf98818714d42e006bcad876a4134848969f5b080547"
+      },
+      "compare_latency": [
+        6,
+        6
+      ],
+      "store_latency": [
+        9
+      ],
+      "interleave_latency": [
+        11
+      ],
+      "load_to_compare": [
+        6,
+        6
+      ],
+      "compare_to_store": [],
+      "compare_to_interleave": [
+        3
+      ],
+      "interleave_to_store": [
+        9
+      ]
+    },
+    {
+      "case": "cmps_fp32_eq_n129",
+      "dtype": "fp32",
+      "op": "VCMPS_EQ",
+      "golden": {
+        "passed": true,
+        "elements_checked": 129,
+        "mismatches": 0,
+        "guard_bytes_checked": 32736,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "395a6f712da935783e0bb04e307a3c87afe62e7a8ebc9bfd82f5097707c0dc26",
+        "core0.veccore0.instr_log.dump": "5e7fd62e914ae1fab147c4a05c447bb427fa6ba92bffa6b248df931a8c1d0f16",
+        "core0.veccore0.instr_popped_log.dump": "011452808167c96c44f672b1357e72af7234b72ac624633339ac9dba1e40fc77"
+      },
+      "compare_latency": [
+        6,
+        6,
+        6,
+        6
+      ],
+      "store_latency": [
+        9,
+        9
+      ],
+      "interleave_latency": [
+        11,
+        11
+      ],
+      "load_to_compare": [
+        6,
+        6,
+        6,
+        8
+      ],
+      "compare_to_store": [],
+      "compare_to_interleave": [
+        3,
+        3
+      ],
+      "interleave_to_store": [
+        9,
+        9
+      ]
+    },
+    {
+      "case": "cmps_fp32_eq_n512",
+      "dtype": "fp32",
+      "op": "VCMPS_EQ",
+      "golden": {
+        "passed": true,
+        "elements_checked": 512,
+        "mismatches": 0,
+        "guard_bytes_checked": 32704,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "5c9a824c4d4442e069d8227065a56209d0a9588380fab92b18db1b4dae12e4fa",
+        "core0.veccore0.instr_log.dump": "118e18866ce1b0876a62d3e1b8bf3742653b97cb3488bd1e6d4ab89c34818ffd",
+        "core0.veccore0.instr_popped_log.dump": "10d3e398a341e23711336ef16cea8443fc6272712db8092a9de03e681d9ac768"
+      },
+      "compare_latency": [
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6
+      ],
+      "store_latency": [
+        9,
+        9,
+        9,
+        9
+      ],
+      "interleave_latency": [
+        11,
+        11,
+        11,
+        11
+      ],
+      "load_to_compare": [
+        6,
+        6,
+        6,
+        8,
+        6,
+        7,
+        6,
+        16
+      ],
+      "compare_to_store": [],
+      "compare_to_interleave": [
+        3,
+        3,
+        4,
+        3
+      ],
+      "interleave_to_store": [
+        9,
+        9,
+        9,
+        9
+      ]
+    },
+    {
+      "case": "cmps_fp32_ne_n64",
+      "dtype": "fp32",
+      "op": "VCMPS_NE",
+      "golden": {
+        "passed": true,
+        "elements_checked": 64,
+        "mismatches": 0,
+        "guard_bytes_checked": 32752,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "0fee3d49f2f7416b2a88aea192fb0e800519f781e059cd69cb6ccd043217a7ee",
+        "core0.veccore0.instr_log.dump": "78a2a4458e93dd5de299df38e2eddc89fc2f21a2c7bfafe411a5cbf4a08b608f",
+        "core0.veccore0.instr_popped_log.dump": "5f3151d91f880751243dfe334dacc1c5e02b006a58421e5a261d3b6871008bbc"
+      },
+      "compare_latency": [
+        6,
+        6
+      ],
+      "store_latency": [
+        9
+      ],
+      "interleave_latency": [
+        11
+      ],
+      "load_to_compare": [
+        6,
+        6
+      ],
+      "compare_to_store": [],
+      "compare_to_interleave": [
+        3
+      ],
+      "interleave_to_store": [
+        9
+      ]
+    },
+    {
+      "case": "cmps_fp32_ne_n129",
+      "dtype": "fp32",
+      "op": "VCMPS_NE",
+      "golden": {
+        "passed": true,
+        "elements_checked": 129,
+        "mismatches": 0,
+        "guard_bytes_checked": 32736,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "4f39dae4f3cece7bb0713f4df4201df282f93cb839faad2ecfc2fda3784841de",
+        "core0.veccore0.instr_log.dump": "64f05f710adf2e7f9ea69319366bacaee43dd08b4c977ab6bb2d8d2f9513b737",
+        "core0.veccore0.instr_popped_log.dump": "bc6401822f7421517dbcbff52e902b3f6b396fe485b45b23855c5a9ae172e141"
+      },
+      "compare_latency": [
+        6,
+        6,
+        6,
+        6
+      ],
+      "store_latency": [
+        9,
+        9
+      ],
+      "interleave_latency": [
+        11,
+        11
+      ],
+      "load_to_compare": [
+        6,
+        6,
+        6,
+        8
+      ],
+      "compare_to_store": [],
+      "compare_to_interleave": [
+        3,
+        3
+      ],
+      "interleave_to_store": [
+        9,
+        9
+      ]
+    },
+    {
+      "case": "cmps_fp32_ne_n512",
+      "dtype": "fp32",
+      "op": "VCMPS_NE",
+      "golden": {
+        "passed": true,
+        "elements_checked": 512,
+        "mismatches": 0,
+        "guard_bytes_checked": 32704,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "bd3d5c877642fbda5fc94220203a639fe7bc548aade4feb520c0c23036349a2f",
+        "core0.veccore0.instr_log.dump": "9df6fcdff96909219c52e9bfb8a805e59cc666e7c43d985e7ab260f48a7bd6b3",
+        "core0.veccore0.instr_popped_log.dump": "2c49719eeb33f10016fab63d90491e38fd9aa6214a9d87e5f5b963768c5b7771"
+      },
+      "compare_latency": [
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6
+      ],
+      "store_latency": [
+        9,
+        9,
+        9,
+        9
+      ],
+      "interleave_latency": [
+        11,
+        11,
+        11,
+        11
+      ],
+      "load_to_compare": [
+        6,
+        6,
+        6,
+        8,
+        6,
+        7,
+        6,
+        16
+      ],
+      "compare_to_store": [],
+      "compare_to_interleave": [
+        3,
+        3,
+        4,
+        3
+      ],
+      "interleave_to_store": [
+        9,
+        9,
+        9,
+        9
+      ]
+    },
+    {
+      "case": "cmps_fp32_lt_n64",
+      "dtype": "fp32",
+      "op": "VCMPS_LT",
+      "golden": {
+        "passed": true,
+        "elements_checked": 64,
+        "mismatches": 0,
+        "guard_bytes_checked": 32752,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "2aab7cb9540e79b70bc7178c10196a9ffa38cb0b298fbe2c48a1720f1a6d71e4",
+        "core0.veccore0.instr_log.dump": "decabcd6ea3fa211332c28091eee3eb27224f9a2a19ce16d864e499176036077",
+        "core0.veccore0.instr_popped_log.dump": "08c00ad2d166a08750b53fdb5be9cf1307b298b82441a2a464152e2c0ea3350d"
+      },
+      "compare_latency": [
+        6,
+        6
+      ],
+      "store_latency": [
+        9
+      ],
+      "interleave_latency": [
+        11
+      ],
+      "load_to_compare": [
+        6,
+        6
+      ],
+      "compare_to_store": [],
+      "compare_to_interleave": [
+        3
+      ],
+      "interleave_to_store": [
+        9
+      ]
+    },
+    {
+      "case": "cmps_fp32_lt_n129",
+      "dtype": "fp32",
+      "op": "VCMPS_LT",
+      "golden": {
+        "passed": true,
+        "elements_checked": 129,
+        "mismatches": 0,
+        "guard_bytes_checked": 32736,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "196ed9bfe1f1480d377b38741d71e6cf0b2dcf2f7961953632f588ff16a0820f",
+        "core0.veccore0.instr_log.dump": "46b9cbac8b5f80849d829ba2d98c799e268051c465c85a35445b64b7b561b865",
+        "core0.veccore0.instr_popped_log.dump": "3cb6eb6dd7eab9e8618506d063948a354f211138cbd07e85938446fafa87554a"
+      },
+      "compare_latency": [
+        6,
+        6,
+        6,
+        6
+      ],
+      "store_latency": [
+        9,
+        9
+      ],
+      "interleave_latency": [
+        11,
+        11
+      ],
+      "load_to_compare": [
+        6,
+        6,
+        6,
+        8
+      ],
+      "compare_to_store": [],
+      "compare_to_interleave": [
+        3,
+        3
+      ],
+      "interleave_to_store": [
+        9,
+        9
+      ]
+    },
+    {
+      "case": "cmps_fp32_lt_n512",
+      "dtype": "fp32",
+      "op": "VCMPS_LT",
+      "golden": {
+        "passed": true,
+        "elements_checked": 512,
+        "mismatches": 0,
+        "guard_bytes_checked": 32704,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "541123f9f336255cc8870b107d720fc3c1ea4e256db6e9fea760b28ff77918c8",
+        "core0.veccore0.instr_log.dump": "79325a199cae0986369aeed92b63ec332155b26074971c43364ebc2edd99591d",
+        "core0.veccore0.instr_popped_log.dump": "402b08cf0e36176f062264cb719c1d22e9b8438bb42885cc8be17a160729b924"
+      },
+      "compare_latency": [
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6
+      ],
+      "store_latency": [
+        9,
+        9,
+        9,
+        9
+      ],
+      "interleave_latency": [
+        11,
+        11,
+        11,
+        11
+      ],
+      "load_to_compare": [
+        6,
+        6,
+        6,
+        8,
+        6,
+        7,
+        6,
+        16
+      ],
+      "compare_to_store": [],
+      "compare_to_interleave": [
+        3,
+        3,
+        4,
+        3
+      ],
+      "interleave_to_store": [
+        9,
+        9,
+        9,
+        9
+      ]
+    },
+    {
+      "case": "cmps_fp32_le_n64",
+      "dtype": "fp32",
+      "op": "VCMPS_LE",
+      "golden": {
+        "passed": true,
+        "elements_checked": 64,
+        "mismatches": 0,
+        "guard_bytes_checked": 32752,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "dc2a89ea5766d73cc379cc6051177f7b3f5175187790492373396dd6e9c62225",
+        "core0.veccore0.instr_log.dump": "9235318bb28fd766bbd4bf5bc65e16c0acc68c551ec69411b4611551759c5d4c",
+        "core0.veccore0.instr_popped_log.dump": "59a7a5a6729dd52255339b29eda1712b8f114707657eb98944ab51b6e4f18448"
+      },
+      "compare_latency": [
+        6,
+        6
+      ],
+      "store_latency": [
+        9
+      ],
+      "interleave_latency": [
+        11
+      ],
+      "load_to_compare": [
+        6,
+        6
+      ],
+      "compare_to_store": [],
+      "compare_to_interleave": [
+        3
+      ],
+      "interleave_to_store": [
+        9
+      ]
+    },
+    {
+      "case": "cmps_fp32_le_n129",
+      "dtype": "fp32",
+      "op": "VCMPS_LE",
+      "golden": {
+        "passed": true,
+        "elements_checked": 129,
+        "mismatches": 0,
+        "guard_bytes_checked": 32736,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "6df0cf32cd74e892847aa8db88cecbd8b287af9456a9a78a7d2078700dd34f8b",
+        "core0.veccore0.instr_log.dump": "f883d35ec6a41cfbd89106993ba322237d060ad75e13a2c6a743c5fc1c2ff8b5",
+        "core0.veccore0.instr_popped_log.dump": "cc1ceae7c1efd6f5b8d11f6e9984182dc5e2e758187e9f60cabb95366669ea8b"
+      },
+      "compare_latency": [
+        6,
+        6,
+        6,
+        6
+      ],
+      "store_latency": [
+        9,
+        9
+      ],
+      "interleave_latency": [
+        11,
+        11
+      ],
+      "load_to_compare": [
+        6,
+        6,
+        6,
+        8
+      ],
+      "compare_to_store": [],
+      "compare_to_interleave": [
+        3,
+        3
+      ],
+      "interleave_to_store": [
+        9,
+        9
+      ]
+    },
+    {
+      "case": "cmps_fp32_le_n512",
+      "dtype": "fp32",
+      "op": "VCMPS_LE",
+      "golden": {
+        "passed": true,
+        "elements_checked": 512,
+        "mismatches": 0,
+        "guard_bytes_checked": 32704,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "594546c92d2ce007ce1e08662b7373f75ddfa701c7c2479f60d0f3bf60982a5e",
+        "core0.veccore0.instr_log.dump": "f32f431887bff9fbe3f3d968b99f2ad3025a84be576d7185b39eb4eff690f94c",
+        "core0.veccore0.instr_popped_log.dump": "805ee69f349de7ff4fb2af5711826beb0ea4064bb9b203819748709477c792b9"
+      },
+      "compare_latency": [
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6
+      ],
+      "store_latency": [
+        9,
+        9,
+        9,
+        9
+      ],
+      "interleave_latency": [
+        11,
+        11,
+        11,
+        11
+      ],
+      "load_to_compare": [
+        6,
+        6,
+        6,
+        8,
+        6,
+        7,
+        6,
+        16
+      ],
+      "compare_to_store": [],
+      "compare_to_interleave": [
+        3,
+        3,
+        4,
+        3
+      ],
+      "interleave_to_store": [
+        9,
+        9,
+        9,
+        9
+      ]
+    },
+    {
+      "case": "cmps_fp32_gt_n64",
+      "dtype": "fp32",
+      "op": "VCMPS_GT",
+      "golden": {
+        "passed": true,
+        "elements_checked": 64,
+        "mismatches": 0,
+        "guard_bytes_checked": 32752,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "036329a5d15dccdee41cf78a25bec11d57ad5218d76fbce5e3aaf22bc3933edf",
+        "core0.veccore0.instr_log.dump": "61d1ffdc53f49974e7f03abdfadfdf0e373e0e0e18fcea58e55786dae5ac2049",
+        "core0.veccore0.instr_popped_log.dump": "2066a64123b7a3bf85a4ebc210520851313bb7323a6f3672c4e8af02ec4093e2"
+      },
+      "compare_latency": [
+        6,
+        6
+      ],
+      "store_latency": [
+        9
+      ],
+      "interleave_latency": [
+        11
+      ],
+      "load_to_compare": [
+        6,
+        6
+      ],
+      "compare_to_store": [],
+      "compare_to_interleave": [
+        3
+      ],
+      "interleave_to_store": [
+        9
+      ]
+    },
+    {
+      "case": "cmps_fp32_gt_n129",
+      "dtype": "fp32",
+      "op": "VCMPS_GT",
+      "golden": {
+        "passed": true,
+        "elements_checked": 129,
+        "mismatches": 0,
+        "guard_bytes_checked": 32736,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "cba17d789248a13647ea775889676142199451aea793ff7a6547bb44740e22da",
+        "core0.veccore0.instr_log.dump": "8dbf09bee46ef6cb13f252f6addf8884d4479e9f408df5ccc1d0354049392412",
+        "core0.veccore0.instr_popped_log.dump": "05a4dff960370980ebdc925b55688feb084db75990956972f86441f62321d438"
+      },
+      "compare_latency": [
+        6,
+        6,
+        6,
+        6
+      ],
+      "store_latency": [
+        9,
+        9
+      ],
+      "interleave_latency": [
+        11,
+        11
+      ],
+      "load_to_compare": [
+        6,
+        6,
+        6,
+        8
+      ],
+      "compare_to_store": [],
+      "compare_to_interleave": [
+        3,
+        3
+      ],
+      "interleave_to_store": [
+        9,
+        9
+      ]
+    },
+    {
+      "case": "cmps_fp32_gt_n512",
+      "dtype": "fp32",
+      "op": "VCMPS_GT",
+      "golden": {
+        "passed": true,
+        "elements_checked": 512,
+        "mismatches": 0,
+        "guard_bytes_checked": 32704,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "2b86fe58fc022b17f8a8e982447dad470bd481ac768d7350e7498424b39b9efa",
+        "core0.veccore0.instr_log.dump": "8e4ceb5c30d2a6421cb21ddc5585caed36398f6a0e3ac1a8f9c61b719d88de19",
+        "core0.veccore0.instr_popped_log.dump": "6d52ea973d93a94998232d67136c20964638f31872fd23e096eb3c1a68b18d76"
+      },
+      "compare_latency": [
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6
+      ],
+      "store_latency": [
+        9,
+        9,
+        9,
+        9
+      ],
+      "interleave_latency": [
+        11,
+        11,
+        11,
+        11
+      ],
+      "load_to_compare": [
+        6,
+        6,
+        6,
+        8,
+        6,
+        7,
+        6,
+        16
+      ],
+      "compare_to_store": [],
+      "compare_to_interleave": [
+        3,
+        3,
+        4,
+        3
+      ],
+      "interleave_to_store": [
+        9,
+        9,
+        9,
+        9
+      ]
+    },
+    {
+      "case": "cmps_fp32_ge_n64",
+      "dtype": "fp32",
+      "op": "VCMPS_GE",
+      "golden": {
+        "passed": true,
+        "elements_checked": 64,
+        "mismatches": 0,
+        "guard_bytes_checked": 32752,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "9c8e9c4987a89be49ebacd8672fa7953966c27e3e5741cea6be4211dc6940406",
+        "core0.veccore0.instr_log.dump": "919dcb2646f5d6b73371b5fe81f969c0d027d0a82a520c905318609ef178823c",
+        "core0.veccore0.instr_popped_log.dump": "bd060d5626d7d511de69218aaf1174fc3d597b1ea3aeac217826c3fbdf998ebb"
+      },
+      "compare_latency": [
+        6,
+        6
+      ],
+      "store_latency": [
+        9
+      ],
+      "interleave_latency": [
+        11
+      ],
+      "load_to_compare": [
+        6,
+        6
+      ],
+      "compare_to_store": [],
+      "compare_to_interleave": [
+        3
+      ],
+      "interleave_to_store": [
+        9
+      ]
+    },
+    {
+      "case": "cmps_fp32_ge_n129",
+      "dtype": "fp32",
+      "op": "VCMPS_GE",
+      "golden": {
+        "passed": true,
+        "elements_checked": 129,
+        "mismatches": 0,
+        "guard_bytes_checked": 32736,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "69bc86af21d267228b77ca07b31962cf6e714795424756ea8ae4130cebd10ec4",
+        "core0.veccore0.instr_log.dump": "62f28ed66623bb11b49580a5961bf60af666909b4d5b63e7e1ad5712ab4778dc",
+        "core0.veccore0.instr_popped_log.dump": "a0b29deac8d9c775b945a6cef3fd18abbc076d6babcb94f0cc5808aa84260f5e"
+      },
+      "compare_latency": [
+        6,
+        6,
+        6,
+        6
+      ],
+      "store_latency": [
+        9,
+        9
+      ],
+      "interleave_latency": [
+        11,
+        11
+      ],
+      "load_to_compare": [
+        6,
+        6,
+        6,
+        8
+      ],
+      "compare_to_store": [],
+      "compare_to_interleave": [
+        3,
+        3
+      ],
+      "interleave_to_store": [
+        9,
+        9
+      ]
+    },
+    {
+      "case": "cmps_fp32_ge_n512",
+      "dtype": "fp32",
+      "op": "VCMPS_GE",
+      "golden": {
+        "passed": true,
+        "elements_checked": 512,
+        "mismatches": 0,
+        "guard_bytes_checked": 32704,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "84bc47b6c17728636f04747341aa5fd4484e20804b9edc90b840d8e271d1a972",
+        "core0.veccore0.instr_log.dump": "2a97b6aad28a562e260b1ad2a1619c36fb3ad765ca5276524f667589782e7695",
+        "core0.veccore0.instr_popped_log.dump": "2775dd263a86c9a7fb81f1601ab045887d5903b647324c2f81455d58f017a951"
+      },
+      "compare_latency": [
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6
+      ],
+      "store_latency": [
+        9,
+        9,
+        9,
+        9
+      ],
+      "interleave_latency": [
+        11,
+        11,
+        11,
+        11
+      ],
+      "load_to_compare": [
+        6,
+        6,
+        6,
+        8,
+        6,
+        7,
+        6,
+        16
+      ],
+      "compare_to_store": [],
+      "compare_to_interleave": [
+        3,
+        3,
+        4,
+        3
+      ],
+      "interleave_to_store": [
+        9,
+        9,
+        9,
+        9
+      ]
+    },
+    {
+      "case": "cmps_fp16_eq_n64",
+      "dtype": "fp16",
+      "op": "VCMPS_EQ",
+      "golden": {
+        "passed": true,
+        "elements_checked": 64,
+        "mismatches": 0,
+        "guard_bytes_checked": 32752,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "0fdb0ba6fd76a599abf86ab2d2d7b126cbdae7467b596a2e5b43ac3dbb2f866f",
+        "core0.veccore0.instr_log.dump": "a23fb7a5116cf38161107f59ffc9496f0bae830cb2a96875cf6fbc7398840a00",
+        "core0.veccore0.instr_popped_log.dump": "588ad66fde16bf09172d3cf20932dc686d3005417467e77bc81c9116fd7d29ef"
+      },
+      "compare_latency": [
+        6
+      ],
+      "store_latency": [
+        9
+      ],
+      "interleave_latency": [],
+      "load_to_compare": [
+        6
+      ],
+      "compare_to_store": [
+        4
+      ],
+      "compare_to_interleave": [],
+      "interleave_to_store": []
+    },
+    {
+      "case": "cmps_fp16_eq_n129",
+      "dtype": "fp16",
+      "op": "VCMPS_EQ",
+      "golden": {
+        "passed": true,
+        "elements_checked": 129,
+        "mismatches": 0,
+        "guard_bytes_checked": 32736,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "2acb294f5e722b41a07efb0792b409d6cba68ff0bc987d3620c6c65fe6e93ef7",
+        "core0.veccore0.instr_log.dump": "ef6c569136fac38e01bf0112e42f5f8e930459229325c4da71edca1b6f2813ba",
+        "core0.veccore0.instr_popped_log.dump": "b13fbec042fe521399c2444264966944571113354a7f0e65f45b78104c02e4a6"
+      },
+      "compare_latency": [
+        6,
+        6
+      ],
+      "store_latency": [
+        9,
+        9
+      ],
+      "interleave_latency": [],
+      "load_to_compare": [
+        6,
+        6
+      ],
+      "compare_to_store": [
+        4,
+        4
+      ],
+      "compare_to_interleave": [],
+      "interleave_to_store": []
+    },
+    {
+      "case": "cmps_fp16_eq_n512",
+      "dtype": "fp16",
+      "op": "VCMPS_EQ",
+      "golden": {
+        "passed": true,
+        "elements_checked": 512,
+        "mismatches": 0,
+        "guard_bytes_checked": 32704,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "4b87809c400e9d68bd096a84d7a2ec90aa40435ca1f1426416ea423c405313cd",
+        "core0.veccore0.instr_log.dump": "5ba15fda082defc7ee61938df33c5e515ef740feedb6f2b0f47c2263d5224a33",
+        "core0.veccore0.instr_popped_log.dump": "af1c9ea92f2460983c58c330f085941ff3651bb3d27b9f4b1ec0de0b0f182d10"
+      },
+      "compare_latency": [
+        6,
+        6,
+        6,
+        6
+      ],
+      "store_latency": [
+        9,
+        9,
+        9,
+        9
+      ],
+      "interleave_latency": [],
+      "load_to_compare": [
+        6,
+        6,
+        6,
+        6
+      ],
+      "compare_to_store": [
+        4,
+        4,
+        4,
+        4
+      ],
+      "compare_to_interleave": [],
+      "interleave_to_store": []
+    },
+    {
+      "case": "cmps_fp16_ne_n64",
+      "dtype": "fp16",
+      "op": "VCMPS_NE",
+      "golden": {
+        "passed": true,
+        "elements_checked": 64,
+        "mismatches": 0,
+        "guard_bytes_checked": 32752,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "7bafe7d9aba423483f1367e4a0030474165c30e5793f735a534737214b251439",
+        "core0.veccore0.instr_log.dump": "ad9c60da3ddc6584c4b238d8a21e679295d211652ef3e26f0f1f48e1fdc5934c",
+        "core0.veccore0.instr_popped_log.dump": "a82743a1f32c45509410076e98df3161fa7e2cbb6a2124c3ba0804e9cbd1c3a9"
+      },
+      "compare_latency": [
+        6
+      ],
+      "store_latency": [
+        9
+      ],
+      "interleave_latency": [],
+      "load_to_compare": [
+        6
+      ],
+      "compare_to_store": [
+        4
+      ],
+      "compare_to_interleave": [],
+      "interleave_to_store": []
+    },
+    {
+      "case": "cmps_fp16_ne_n129",
+      "dtype": "fp16",
+      "op": "VCMPS_NE",
+      "golden": {
+        "passed": true,
+        "elements_checked": 129,
+        "mismatches": 0,
+        "guard_bytes_checked": 32736,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "ceecf139c95210d948884a10a2909c1e3867dfd346191766111569d85bc6c4b8",
+        "core0.veccore0.instr_log.dump": "ef47fcebf8006e725fa445907e01c3d58d14e444ee4f0e547d709607dd78f062",
+        "core0.veccore0.instr_popped_log.dump": "619375bbfd2629a2857cdb11d4c9944be9e78fc25952376ee5fe0de0eccb02ac"
+      },
+      "compare_latency": [
+        6,
+        6
+      ],
+      "store_latency": [
+        9,
+        9
+      ],
+      "interleave_latency": [],
+      "load_to_compare": [
+        6,
+        6
+      ],
+      "compare_to_store": [
+        4,
+        4
+      ],
+      "compare_to_interleave": [],
+      "interleave_to_store": []
+    },
+    {
+      "case": "cmps_fp16_ne_n512",
+      "dtype": "fp16",
+      "op": "VCMPS_NE",
+      "golden": {
+        "passed": true,
+        "elements_checked": 512,
+        "mismatches": 0,
+        "guard_bytes_checked": 32704,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "f5d281b0e82c9688b7d2a88849471305451bc47fcc8b79f489bdc4fae7754c82",
+        "core0.veccore0.instr_log.dump": "df62d88b22fe5d4c7043906ff6ed02a241966713c56ea2dbb4396a6a19384b8b",
+        "core0.veccore0.instr_popped_log.dump": "fde684266b00757cdfbb2060f66f9c69b2a4e90e291465a948ced87e1cd43519"
+      },
+      "compare_latency": [
+        6,
+        6,
+        6,
+        6
+      ],
+      "store_latency": [
+        9,
+        9,
+        9,
+        9
+      ],
+      "interleave_latency": [],
+      "load_to_compare": [
+        6,
+        6,
+        6,
+        6
+      ],
+      "compare_to_store": [
+        4,
+        4,
+        4,
+        4
+      ],
+      "compare_to_interleave": [],
+      "interleave_to_store": []
+    },
+    {
+      "case": "cmps_fp16_lt_n64",
+      "dtype": "fp16",
+      "op": "VCMPS_LT",
+      "golden": {
+        "passed": true,
+        "elements_checked": 64,
+        "mismatches": 0,
+        "guard_bytes_checked": 32752,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "3f8dedfcb5094a42ec885881e3c9364e8d6ebf39290c9ecdec5021696e8b5ea7",
+        "core0.veccore0.instr_log.dump": "9f4833301005fb78795fae242f7b759affe017edb12e707585faae8f98f989d9",
+        "core0.veccore0.instr_popped_log.dump": "486d85330ae1008d76d85d62f07d219b31da8267c1b1c061051bfd568a131d52"
+      },
+      "compare_latency": [
+        6
+      ],
+      "store_latency": [
+        9
+      ],
+      "interleave_latency": [],
+      "load_to_compare": [
+        6
+      ],
+      "compare_to_store": [
+        4
+      ],
+      "compare_to_interleave": [],
+      "interleave_to_store": []
+    },
+    {
+      "case": "cmps_fp16_lt_n129",
+      "dtype": "fp16",
+      "op": "VCMPS_LT",
+      "golden": {
+        "passed": true,
+        "elements_checked": 129,
+        "mismatches": 0,
+        "guard_bytes_checked": 32736,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "cffca19931385495ec7469b31968d5eb71df50ac0dec03c65a23e3571aa27be8",
+        "core0.veccore0.instr_log.dump": "18357801d047a461d75f525c39de31581046fb77284e3d32e2a4a70d7761d74b",
+        "core0.veccore0.instr_popped_log.dump": "efd87ca709a0e22f9121aa8502cd953535fcbace3ddde96c76317908b073cce8"
+      },
+      "compare_latency": [
+        6,
+        6
+      ],
+      "store_latency": [
+        9,
+        9
+      ],
+      "interleave_latency": [],
+      "load_to_compare": [
+        6,
+        6
+      ],
+      "compare_to_store": [
+        4,
+        4
+      ],
+      "compare_to_interleave": [],
+      "interleave_to_store": []
+    },
+    {
+      "case": "cmps_fp16_lt_n512",
+      "dtype": "fp16",
+      "op": "VCMPS_LT",
+      "golden": {
+        "passed": true,
+        "elements_checked": 512,
+        "mismatches": 0,
+        "guard_bytes_checked": 32704,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "7015b31223f258f0880e3f5fff8332c950fd3d2b55d6ceff2254592d47063d05",
+        "core0.veccore0.instr_log.dump": "b8d915ae1545dcfae3570c492e60f1214f809a5a2bbde2e8438448b676e4672d",
+        "core0.veccore0.instr_popped_log.dump": "d1cc65fe2c7c0789de9d17a6d5e25960b60459cf4a789a82618cd02c68458d25"
+      },
+      "compare_latency": [
+        6,
+        6,
+        6,
+        6
+      ],
+      "store_latency": [
+        9,
+        9,
+        9,
+        9
+      ],
+      "interleave_latency": [],
+      "load_to_compare": [
+        6,
+        6,
+        6,
+        6
+      ],
+      "compare_to_store": [
+        4,
+        4,
+        4,
+        4
+      ],
+      "compare_to_interleave": [],
+      "interleave_to_store": []
+    },
+    {
+      "case": "cmps_fp16_le_n64",
+      "dtype": "fp16",
+      "op": "VCMPS_LE",
+      "golden": {
+        "passed": true,
+        "elements_checked": 64,
+        "mismatches": 0,
+        "guard_bytes_checked": 32752,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "3f8dedfcb5094a42ec885881e3c9364e8d6ebf39290c9ecdec5021696e8b5ea7",
+        "core0.veccore0.instr_log.dump": "c2597326f5aabc0d2fbfe11cade5eeff253da599ae92213229d1df8d02e19eca",
+        "core0.veccore0.instr_popped_log.dump": "5e9d4d63a8c71ea30bd835111f8812ec78414804bb600611b5231f4a1a385017"
+      },
+      "compare_latency": [
+        6
+      ],
+      "store_latency": [
+        9
+      ],
+      "interleave_latency": [],
+      "load_to_compare": [
+        6
+      ],
+      "compare_to_store": [
+        4
+      ],
+      "compare_to_interleave": [],
+      "interleave_to_store": []
+    },
+    {
+      "case": "cmps_fp16_le_n129",
+      "dtype": "fp16",
+      "op": "VCMPS_LE",
+      "golden": {
+        "passed": true,
+        "elements_checked": 129,
+        "mismatches": 0,
+        "guard_bytes_checked": 32736,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "cffca19931385495ec7469b31968d5eb71df50ac0dec03c65a23e3571aa27be8",
+        "core0.veccore0.instr_log.dump": "ef9eb9e716dbed6c217bbfab0cbe8de8910ec09fb3fb56d3307909c56d4819fe",
+        "core0.veccore0.instr_popped_log.dump": "60383e15f5211338211a637b36ef5697205df3aabb58dc429e39e92dbd1c9664"
+      },
+      "compare_latency": [
+        6,
+        6
+      ],
+      "store_latency": [
+        9,
+        9
+      ],
+      "interleave_latency": [],
+      "load_to_compare": [
+        6,
+        6
+      ],
+      "compare_to_store": [
+        4,
+        4
+      ],
+      "compare_to_interleave": [],
+      "interleave_to_store": []
+    },
+    {
+      "case": "cmps_fp16_le_n512",
+      "dtype": "fp16",
+      "op": "VCMPS_LE",
+      "golden": {
+        "passed": true,
+        "elements_checked": 512,
+        "mismatches": 0,
+        "guard_bytes_checked": 32704,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "7015b31223f258f0880e3f5fff8332c950fd3d2b55d6ceff2254592d47063d05",
+        "core0.veccore0.instr_log.dump": "5bf79ef31b705d50a7410833a42834a14f1c8c262e594e93814f458a9b011a8e",
+        "core0.veccore0.instr_popped_log.dump": "9a093151f17ce1f065178c6055f6f689965097e379dcd81d8bd15afa93773d3d"
+      },
+      "compare_latency": [
+        6,
+        6,
+        6,
+        6
+      ],
+      "store_latency": [
+        9,
+        9,
+        9,
+        9
+      ],
+      "interleave_latency": [],
+      "load_to_compare": [
+        6,
+        6,
+        6,
+        6
+      ],
+      "compare_to_store": [
+        4,
+        4,
+        4,
+        4
+      ],
+      "compare_to_interleave": [],
+      "interleave_to_store": []
+    },
+    {
+      "case": "cmps_fp16_gt_n64",
+      "dtype": "fp16",
+      "op": "VCMPS_GT",
+      "golden": {
+        "passed": true,
+        "elements_checked": 64,
+        "mismatches": 0,
+        "guard_bytes_checked": 32752,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "89fd831bb11a60e11859ff0b8c9ae934a3445592dca18dd9841dc3b2ab6e60fd",
+        "core0.veccore0.instr_log.dump": "c6f6b9edf2dd0583b897e3c0ca3ac94771bb6341e41cc6854b93ab624c78b882",
+        "core0.veccore0.instr_popped_log.dump": "59727a176ba36b43739a85d04557ef67d80790e28b5f9271909b2838aedc34f1"
+      },
+      "compare_latency": [
+        6
+      ],
+      "store_latency": [
+        9
+      ],
+      "interleave_latency": [],
+      "load_to_compare": [
+        6
+      ],
+      "compare_to_store": [
+        4
+      ],
+      "compare_to_interleave": [],
+      "interleave_to_store": []
+    },
+    {
+      "case": "cmps_fp16_gt_n129",
+      "dtype": "fp16",
+      "op": "VCMPS_GT",
+      "golden": {
+        "passed": true,
+        "elements_checked": 129,
+        "mismatches": 0,
+        "guard_bytes_checked": 32736,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "731857a589b2dff5c9a50a64a2b2870ac548cf4ecdb2c1b9cf91ae75f46e2462",
+        "core0.veccore0.instr_log.dump": "6f9a0bf24a30cdcb350be92972ff433269eff0727a8d96ebce23c35415a4b358",
+        "core0.veccore0.instr_popped_log.dump": "f9004052de4dcbc3a7b0947cfd0f6e4caab93d5a766824176496d64f954f64d4"
+      },
+      "compare_latency": [
+        6,
+        6
+      ],
+      "store_latency": [
+        9,
+        9
+      ],
+      "interleave_latency": [],
+      "load_to_compare": [
+        6,
+        6
+      ],
+      "compare_to_store": [
+        4,
+        4
+      ],
+      "compare_to_interleave": [],
+      "interleave_to_store": []
+    },
+    {
+      "case": "cmps_fp16_gt_n512",
+      "dtype": "fp16",
+      "op": "VCMPS_GT",
+      "golden": {
+        "passed": true,
+        "elements_checked": 512,
+        "mismatches": 0,
+        "guard_bytes_checked": 32704,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "2b67529e093b5fe68422987e1afa62ca009b4cfc76e6c135e660ebfd3dcfeea9",
+        "core0.veccore0.instr_log.dump": "e5fb0e69e8e6e5e994198e77838246a26d1abaa631852e5e1ee0b0701b9af3c5",
+        "core0.veccore0.instr_popped_log.dump": "2282c198055514d3ace4453e3a428c278bc0a4a3eb3a007014d860dd034c24fc"
+      },
+      "compare_latency": [
+        6,
+        6,
+        6,
+        6
+      ],
+      "store_latency": [
+        9,
+        9,
+        9,
+        9
+      ],
+      "interleave_latency": [],
+      "load_to_compare": [
+        6,
+        6,
+        6,
+        6
+      ],
+      "compare_to_store": [
+        4,
+        4,
+        4,
+        4
+      ],
+      "compare_to_interleave": [],
+      "interleave_to_store": []
+    },
+    {
+      "case": "cmps_fp16_ge_n64",
+      "dtype": "fp16",
+      "op": "VCMPS_GE",
+      "golden": {
+        "passed": true,
+        "elements_checked": 64,
+        "mismatches": 0,
+        "guard_bytes_checked": 32752,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "89fd831bb11a60e11859ff0b8c9ae934a3445592dca18dd9841dc3b2ab6e60fd",
+        "core0.veccore0.instr_log.dump": "1b285826d71e08a09cd91f3a2d9eff4205b09ea631ca6824b755d0e3e81b7da3",
+        "core0.veccore0.instr_popped_log.dump": "fde42625d09f239f4a67010257ac074a71484af20a38cc985b72b7a971308443"
+      },
+      "compare_latency": [
+        6
+      ],
+      "store_latency": [
+        9
+      ],
+      "interleave_latency": [],
+      "load_to_compare": [
+        6
+      ],
+      "compare_to_store": [
+        4
+      ],
+      "compare_to_interleave": [],
+      "interleave_to_store": []
+    },
+    {
+      "case": "cmps_fp16_ge_n129",
+      "dtype": "fp16",
+      "op": "VCMPS_GE",
+      "golden": {
+        "passed": true,
+        "elements_checked": 129,
+        "mismatches": 0,
+        "guard_bytes_checked": 32736,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "731857a589b2dff5c9a50a64a2b2870ac548cf4ecdb2c1b9cf91ae75f46e2462",
+        "core0.veccore0.instr_log.dump": "1a4617ca9bb43d661f8afd7b7111a3bc84182585fd5f57904fc2fe162828aca9",
+        "core0.veccore0.instr_popped_log.dump": "9b88a808e3ea7c7ca128bc94d4ed0f6fea187621bc4be1d6e5ef88700f874d51"
+      },
+      "compare_latency": [
+        6,
+        6
+      ],
+      "store_latency": [
+        9,
+        9
+      ],
+      "interleave_latency": [],
+      "load_to_compare": [
+        6,
+        6
+      ],
+      "compare_to_store": [
+        4,
+        4
+      ],
+      "compare_to_interleave": [],
+      "interleave_to_store": []
+    },
+    {
+      "case": "cmps_fp16_ge_n512",
+      "dtype": "fp16",
+      "op": "VCMPS_GE",
+      "golden": {
+        "passed": true,
+        "elements_checked": 512,
+        "mismatches": 0,
+        "guard_bytes_checked": 32704,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "2b67529e093b5fe68422987e1afa62ca009b4cfc76e6c135e660ebfd3dcfeea9",
+        "core0.veccore0.instr_log.dump": "0a2509247795fe1b0f5d44844927d335405503a508b3a3b4d9618fa8f5f29d07",
+        "core0.veccore0.instr_popped_log.dump": "a7c96f8342a0d9fd2c5a5a341c5186e84472abf4fe03d9225d5ddce85428670b"
+      },
+      "compare_latency": [
+        6,
+        6,
+        6,
+        6
+      ],
+      "store_latency": [
+        9,
+        9,
+        9,
+        9
+      ],
+      "interleave_latency": [],
+      "load_to_compare": [
+        6,
+        6,
+        6,
+        6
+      ],
+      "compare_to_store": [
+        4,
+        4,
+        4,
+        4
+      ],
+      "compare_to_interleave": [],
+      "interleave_to_store": []
+    }
+  ]
+}

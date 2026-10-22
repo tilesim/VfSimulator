@@ -36,7 +36,7 @@ def main():
             differences.append(str(path.relative_to(ROOT)))
             if not args.check:
                 path.parent.mkdir(parents=True, exist_ok=True)
-                path.write_text(content, encoding='utf-8')
+                path.write_text(content, encoding='utf-8', newline='\n')
     if args.check and differences:
         parser.exit(1, 'Package is out of sync:\n' + '\n'.join(differences) + '\n')
     print(f'Package {"checked" if args.check else "synchronized"}: {len(expected)} files')

@@ -18,6 +18,7 @@ class DType(_StrEnum):
     INT32 = "int32"
     UINT32 = "uint32"
     UINT16 = "uint16"
+    INT16 = "int16"
     INT8 = "int8"
     UINT8 = "uint8"
     BOOL = "bool"
@@ -33,6 +34,7 @@ class StorageKind(_StrEnum):
 class MembarType(_StrEnum):
     VST_VLD = "VST_VLD"
     VLD_VST = "VLD_VST"
+    VST_VST = "VST_VST"
 
 
 OpCode = _StrEnum(
@@ -56,6 +58,8 @@ DTYPE_ALIASES = {
     "int32": DType.INT32,
     "u32": DType.UINT32,
     "uint32": DType.UINT32,
+    "s16": DType.INT16,
+    "int16": DType.INT16,
     "u16": DType.UINT16,
     "uint16": DType.UINT16,
     "s8": DType.INT8,
@@ -68,6 +72,8 @@ DTYPE_ALIASES = {
 }
 
 FORM_DTYPE_ALIASES = {
+    "s16": DType.INT16,
+    "int16": DType.INT16,
     "u16": DType.UINT16,
     "f32": DType.FP32,
     "f16": DType.FP16,
@@ -80,6 +86,7 @@ FORM_DTYPE_ALIASES = {
 }
 
 DTYPE_TO_COMPACT = {
+    DType.INT16.value: "s16",
     DType.UINT16.value: "u16",
     DType.FP32.value: "f32",
     DType.FP16.value: "f16",
@@ -112,6 +119,7 @@ STORAGE_ALIASES = {
 MEMBAR_ALIASES = {
     "vst_vld": MembarType.VST_VLD,
     "vld_vst": MembarType.VLD_VST,
+    "vst_vst": MembarType.VST_VST,
 }
 
 

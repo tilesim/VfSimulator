@@ -5,24 +5,508 @@
     "vf_drain_cost": 12
   },
   "instructions": {
+    "VSHR": {
+      "op_class": "COMPUTE",
+      "forms": {
+        "int32": {
+          "latency": 6,
+          "dtype": "int32",
+          "EXU": "ALU",
+          "dispatch_exu": "EXU01"
+        }
+      }
+    },
+    "VSHL": {
+      "op_class": "COMPUTE",
+      "forms": {
+        "int32": {
+          "latency": 6,
+          "dtype": "int32",
+          "EXU": "ALU",
+          "dispatch_exu": "EXU01"
+        }
+      }
+    },
+    "PUNPACK_LOWER": {
+      "op_class": "COMPUTE",
+      "forms": {
+        "b8": {
+          "latency": 11,
+          "dtype": "bool",
+          "EXU": "ALU",
+          "dispatch_exu": "EXU01"
+        }
+      }
+    },
+    "PINTLV_B16": {
+      "op_class": "COMPUTE",
+      "forms": {
+        "b16": {
+          "latency": 11,
+          "dtype": "bool",
+          "EXU": "ALU",
+          "dispatch_exu": "EXU01"
+        }
+      }
+    },
+    "PLDS_US": {
+      "op_class": "LOAD",
+      "forms": {
+        "uint8": {
+          "latency": 9,
+          "dtype": "bool"
+        }
+      }
+    },
+    "VAXPY": {
+      "op_class": "COMPUTE",
+      "forms": {
+        "fp16": {
+          "latency": 9,
+          "dtype": "fp16",
+          "EXU": "ALU",
+          "dispatch_exu": "EXU01"
+        },
+        "fp32": {
+          "latency": 9,
+          "dtype": "fp32",
+          "EXU": "ALU",
+          "dispatch_exu": "EXU01"
+        }
+      }
+    },
+    "SZEROEXT": {
+      "op_class": "SCALAR",
+      "forms": {
+        "b16_to_b32": {
+          "latency": 1,
+          "dtype": "uint32",
+          "EXU": "SCALAR",
+          "dispatch_exu": "SCALAR"
+        }
+      }
+    },
+    "SADDI": {
+      "op_class": "SCALAR",
+      "forms": {
+        "b16": {
+          "latency": 2,
+          "dtype": "uint16",
+          "EXU": "SCALAR",
+          "dispatch_exu": "SCALAR"
+        }
+      }
+    },
+    "SSUBI": {
+      "op_class": "SCALAR",
+      "forms": {
+        "b32": {
+          "latency": 2,
+          "dtype": "uint32",
+          "EXU": "SCALAR",
+          "dispatch_exu": "SCALAR"
+        }
+      }
+    },
+    "SMIN": {
+      "op_class": "SCALAR",
+      "forms": {
+        "uint32": {
+          "latency": 2,
+          "dtype": "uint32",
+          "EXU": "SCALAR",
+          "dispatch_exu": "SCALAR"
+        }
+      }
+    },
+    "SADD": {
+      "op_class": "SCALAR",
+      "forms": {
+        "b32": {
+          "latency": 2,
+          "dtype": "uint32",
+          "EXU": "SCALAR",
+          "dispatch_exu": "SCALAR"
+        }
+      }
+    },
+    "SSHLI": {
+      "op_class": "SCALAR",
+      "forms": {
+        "b32": {
+          "latency": 2,
+          "dtype": "uint32",
+          "EXU": "SCALAR",
+          "dispatch_exu": "SCALAR"
+        }
+      }
+    },
+    "SMOVK": {
+      "op_class": "SCALAR",
+      "forms": {
+        "b32": {
+          "latency": 1,
+          "dtype": "uint32",
+          "EXU": "SCALAR",
+          "dispatch_exu": "SCALAR"
+        }
+      }
+    },
+    "SMOV": {
+      "op_class": "SCALAR",
+      "forms": {
+        "b32": {
+          "latency": 1,
+          "dtype": "uint32",
+          "EXU": "SCALAR",
+          "dispatch_exu": "SCALAR"
+        }
+      }
+    },
+    "VCVT_F16_TO_S8": {
+      "op_class": "COMPUTE",
+      "forms": {
+        "f16_to_s8": {
+          "latency": 8,
+          "dtype": "int8",
+          "EXU": "ALU",
+          "dispatch_exu": "EXU01"
+        }
+      }
+    },
+    "VCVT_S16_TO_F16": {
+      "op_class": "COMPUTE",
+      "forms": {
+        "s16_to_f16": {
+          "latency": 8,
+          "dtype": "fp16",
+          "EXU": "ALU",
+          "dispatch_exu": "EXU01"
+        }
+      }
+    },
+    "VCVT_F16_TO_S16": {
+      "op_class": "COMPUTE",
+      "forms": {
+        "f16_to_s16": {
+          "latency": 8,
+          "dtype": "int16",
+          "EXU": "ALU",
+          "dispatch_exu": "EXU01"
+        }
+      }
+    },
+    "VTRC": {
+      "op_class": "COMPUTE",
+      "forms": {
+        "fp32": {
+          "latency": 8,
+          "dtype": "fp32",
+          "EXU": "ALU",
+          "dispatch_exu": "EXU01"
+        }
+      }
+    },
+    "PSTS": {
+      "op_class": "STORE",
+      "forms": {
+        "uint8": {
+          "latency": 9,
+          "dtype": "uint8"
+        }
+      }
+    },
+    "PDINTLV_B8": {
+      "op_class": "COMPUTE",
+      "forms": {
+        "b8": {
+          "latency": 11,
+          "dtype": "bool",
+          "EXU": "ALU",
+          "dispatch_exu": "EXU01"
+        }
+      }
+    },
+    "VSHRI": {
+      "op_class": "COMPUTE",
+      "forms": {
+        "int32": {
+          "latency": 6,
+          "dtype": "int32",
+          "EXU": "ALU",
+          "dispatch_exu": "EXU01"
+        }
+      }
+    },
+    "VNOT": {
+      "op_class": "COMPUTE",
+      "forms": {
+        "b32": {
+          "latency": 6,
+          "dtype": "int32",
+          "EXU": "ALU",
+          "dispatch_exu": "EXU01"
+        }
+      }
+    },
+    "VXOR": {
+      "op_class": "COMPUTE",
+      "forms": {
+        "b32": {
+          "latency": 6,
+          "dtype": "uint32",
+          "EXU": "ALU",
+          "dispatch_exu": "EXU01"
+        }
+      }
+    },
+    "VLRELU":{"op_class":"COMPUTE","forms":{"fp32":{"latency":8,"dtype":"fp32","EXU":"ALU","dispatch_exu":"EXU01"},"fp16":{"latency":8,"dtype":"fp16","EXU":"ALU","dispatch_exu":"EXU01"}}},
+    "VMOV":{
+      "op_class": "COMPUTE",
+      "forms": {
+        "fp32": {
+          "latency": 6,
+          "dtype": "fp32",
+          "EXU": "ALU",
+          "dispatch_exu": "EXU01"
+        },
+        "fp16": {
+          "latency": 6,
+          "dtype": "fp16",
+          "EXU": "ALU",
+          "dispatch_exu": "EXU01"
+        },
+        "b32": {
+          "latency": 6,
+          "dtype": "uint32",
+          "EXU": "ALU",
+          "dispatch_exu": "EXU01"
+        }
+      }
+    },
+    "SPRCLR": {"op_class":"COMPUTE","forms":{"b32":{"latency":8,"dtype":"bool","EXU":"ALU"}}},
+    "VGATHER2":{"op_class":"LOAD","forms":{"fp16":{"latency":147,"dtype":"fp16"}}},
+    "VSCATTER":{"op_class":"STORE","forms":{"fp16":{"latency":651,"dtype":"fp16"}}},
+    "VSQZ": {"op_class":"COMPUTE","forms":{"fp32":{"latency":18,"dtype":"fp32","EXU":"ALU"}}},
+    "VSTUR": {"op_class":"STORE","forms":{"fp32":{"latency":9,"dtype":"fp32"}}},
+    "VSTAR": {"op_class":"STORE","forms":{"fp32":{"latency":8,"dtype":"fp32"}}},
+    "PINTLV_B32": {"op_class":"COMPUTE","forms":{"b32":{"latency":11,"dtype":"bool","EXU":"ALU"}}},
     "MOVP_B16": {"op_class":"COMPUTE","forms":{"b16":{"latency":6,"EXU":"ALU","dispatch_exu":"EXU01","dtype":"bool"}}},
     "MOVP_B32": {"op_class":"COMPUTE","forms":{"b32":{"latency":6,"EXU":"ALU","dispatch_exu":"EXU01","dtype":"bool"}}},
-    "VINTLV": {"op_class":"COMPUTE","forms":{"fp32":{"latency":11,"EXU":"ALU","dispatch_exu":"EXU0_ONLY","dtype":"fp32"},"b32":{"latency":11,"EXU":"ALU","dispatch_exu":"EXU0_ONLY","dtype":"fp32"}}},
+    "VINTLV": {
+      "op_class": "COMPUTE",
+      "forms": {
+        "fp32": {
+          "latency": 11,
+          "EXU": "ALU",
+          "dispatch_exu": "EXU0_ONLY",
+          "dtype": "fp32"
+        },
+        "b32": {
+          "latency": 11,
+          "EXU": "ALU",
+          "dispatch_exu": "EXU0_ONLY",
+          "dtype": "fp32"
+        },
+        "fp16": {
+          "latency": 11,
+          "EXU": "ALU",
+          "dispatch_exu": "EXU0_ONLY",
+          "dtype": "fp16"
+        }
+      }
+    },
     "VDINTLV": {"op_class":"COMPUTE","forms":{"fp32":{"latency":11,"EXU":"ALU","dispatch_exu":"EXU0_ONLY","dtype":"fp32"},"b32":{"latency":11,"EXU":"ALU","dispatch_exu":"EXU0_ONLY","dtype":"fp32"}}},
     "MOVVP": {"op_class":"COMPUTE","forms":{"b16":{"latency":16,"EXU":"ALU","dispatch_exu":"EXU01","dtype":"uint16"},"b32":{"latency":16,"EXU":"ALU","dispatch_exu":"EXU01","dtype":"uint32"},"uint16":{"latency":16,"EXU":"ALU","dispatch_exu":"EXU01","dtype":"uint16"},"uint32":{"latency":16,"EXU":"ALU","dispatch_exu":"EXU01","dtype":"uint32"}}},
     "PAND": {"op_class":"COMPUTE","forms":{"b8":{"latency":7,"EXU":"ALU","dispatch_exu":"EXU01","dtype":"bool"}}},
     "POR": {"op_class":"COMPUTE","forms":{"b8":{"latency":7,"EXU":"ALU","dispatch_exu":"EXU01","dtype":"bool"}}},
-    "VCMP_NE": {"op_class":"COMPUTE","forms":{"fp32":{"latency":6,"EXU":"ALU","dispatch_exu":"EXU01","dtype":"fp32"}}},
-    "VCMP_GT": {"op_class":"COMPUTE","forms":{"fp32":{"latency":6,"EXU":"ALU","dispatch_exu":"EXU01","dtype":"fp32"}}},
-    "VCMP_GE": {"op_class":"COMPUTE","forms":{"fp32":{"latency":6,"EXU":"ALU","dispatch_exu":"EXU01","dtype":"fp32"}}},
-    "VCMP_LT": {"op_class":"COMPUTE","forms":{"fp32":{"latency":6,"EXU":"ALU","dispatch_exu":"EXU01","dtype":"fp32"}}},
-    "VCMP_LE": {"op_class":"COMPUTE","forms":{"fp32":{"latency":6,"EXU":"ALU","dispatch_exu":"EXU01","dtype":"fp32"}}},
-    "VCMPS_EQ": {"op_class":"COMPUTE","forms":{"fp32":{"latency":6,"EXU":"ALU","dispatch_exu":"EXU01","dtype":"fp32"}}},
-    "VCMPS_NE": {"op_class":"COMPUTE","forms":{"fp32":{"latency":6,"EXU":"ALU","dispatch_exu":"EXU01","dtype":"fp32"}}},
-    "VCMPS_GT": {"op_class":"COMPUTE","forms":{"fp32":{"latency":6,"EXU":"ALU","dispatch_exu":"EXU01","dtype":"fp32"}}},
-    "VCMPS_GE": {"op_class":"COMPUTE","forms":{"fp32":{"latency":6,"EXU":"ALU","dispatch_exu":"EXU01","dtype":"fp32"}}},
-    "VCMPS_LT": {"op_class":"COMPUTE","forms":{"fp32":{"latency":6,"EXU":"ALU","dispatch_exu":"EXU01","dtype":"fp32"}}},
-    "VCMPS_LE": {"op_class":"COMPUTE","forms":{"fp32":{"latency":6,"EXU":"ALU","dispatch_exu":"EXU01","dtype":"fp32"}}},
+    "VCMP_NE": {
+      "op_class": "COMPUTE",
+      "forms": {
+        "fp32": {
+          "latency": 6,
+          "EXU": "ALU",
+          "dispatch_exu": "EXU01",
+          "dtype": "fp32"
+        },
+        "fp16": {
+          "latency": 6,
+          "dtype": "fp16",
+          "EXU": "ALU",
+          "dispatch_exu": "EXU01"
+        }
+      }
+    },
+    "VCMP_GT": {
+      "op_class": "COMPUTE",
+      "forms": {
+        "fp32": {
+          "latency": 6,
+          "EXU": "ALU",
+          "dispatch_exu": "EXU01",
+          "dtype": "fp32"
+        },
+        "fp16": {
+          "latency": 6,
+          "dtype": "fp16",
+          "EXU": "ALU",
+          "dispatch_exu": "EXU01"
+        }
+      }
+    },
+    "VCMP_GE": {
+      "op_class": "COMPUTE",
+      "forms": {
+        "fp32": {
+          "latency": 6,
+          "EXU": "ALU",
+          "dispatch_exu": "EXU01",
+          "dtype": "fp32"
+        },
+        "fp16": {
+          "latency": 6,
+          "dtype": "fp16",
+          "EXU": "ALU",
+          "dispatch_exu": "EXU01"
+        }
+      }
+    },
+    "VCMP_LT": {
+      "op_class": "COMPUTE",
+      "forms": {
+        "fp32": {
+          "latency": 6,
+          "EXU": "ALU",
+          "dispatch_exu": "EXU01",
+          "dtype": "fp32"
+        },
+        "fp16": {
+          "latency": 6,
+          "dtype": "fp16",
+          "EXU": "ALU",
+          "dispatch_exu": "EXU01"
+        }
+      }
+    },
+    "VCMP_LE": {
+      "op_class": "COMPUTE",
+      "forms": {
+        "fp32": {
+          "latency": 6,
+          "EXU": "ALU",
+          "dispatch_exu": "EXU01",
+          "dtype": "fp32"
+        },
+        "fp16": {
+          "latency": 6,
+          "dtype": "fp16",
+          "EXU": "ALU",
+          "dispatch_exu": "EXU01"
+        }
+      }
+    },
+    "VCMPS_EQ": {
+      "op_class": "COMPUTE",
+      "forms": {
+        "fp32": {
+          "latency": 6,
+          "EXU": "ALU",
+          "dispatch_exu": "EXU01",
+          "dtype": "fp32"
+        },
+        "fp16": {
+          "latency": 6,
+          "dtype": "fp16",
+          "EXU": "ALU",
+          "dispatch_exu": "EXU01"
+        }
+      }
+    },
+    "VCMPS_NE": {
+      "op_class": "COMPUTE",
+      "forms": {
+        "fp32": {
+          "latency": 6,
+          "EXU": "ALU",
+          "dispatch_exu": "EXU01",
+          "dtype": "fp32"
+        },
+        "fp16": {
+          "latency": 6,
+          "dtype": "fp16",
+          "EXU": "ALU",
+          "dispatch_exu": "EXU01"
+        }
+      }
+    },
+    "VCMPS_GT": {
+      "op_class": "COMPUTE",
+      "forms": {
+        "fp32": {
+          "latency": 6,
+          "EXU": "ALU",
+          "dispatch_exu": "EXU01",
+          "dtype": "fp32"
+        },
+        "fp16": {
+          "latency": 6,
+          "dtype": "fp16",
+          "EXU": "ALU",
+          "dispatch_exu": "EXU01"
+        }
+      }
+    },
+    "VCMPS_GE": {
+      "op_class": "COMPUTE",
+      "forms": {
+        "fp32": {
+          "latency": 6,
+          "EXU": "ALU",
+          "dispatch_exu": "EXU01",
+          "dtype": "fp32"
+        },
+        "fp16": {
+          "latency": 6,
+          "dtype": "fp16",
+          "EXU": "ALU",
+          "dispatch_exu": "EXU01"
+        }
+      }
+    },
+    "VCMPS_LT": {
+      "op_class": "COMPUTE",
+      "forms": {
+        "fp32": {
+          "latency": 6,
+          "EXU": "ALU",
+          "dispatch_exu": "EXU01",
+          "dtype": "fp32"
+        },
+        "fp16": {
+          "latency": 6,
+          "dtype": "fp16",
+          "EXU": "ALU",
+          "dispatch_exu": "EXU01"
+        }
+      }
+    },
+    "VCMPS_LE": {
+      "op_class": "COMPUTE",
+      "forms": {
+        "fp32": {
+          "latency": 6,
+          "EXU": "ALU",
+          "dispatch_exu": "EXU01",
+          "dtype": "fp32"
+        },
+        "fp16": {
+          "latency": 6,
+          "dtype": "fp16",
+          "EXU": "ALU",
+          "dispatch_exu": "EXU01"
+        }
+      }
+    },
     "PSTU":{"op_class":"STORE","forms":{"b16":{"latency":8,"dtype":"uint16"},"b32":{"latency":8,"dtype":"uint32"},"uint16":{"latency":8,"dtype":"uint16"},"uint32":{"latency":8,"dtype":"uint32"}}},
     "VLDAS": {"op_class":"LOAD", "forms":{"fp32":{"latency":9,"dtype":"fp32"},"fp16":{"latency":9,"dtype":"fp16"},"int32":{"latency":9,"dtype":"int32"}}},
     "VLDUS": {"op_class":"LOAD", "forms":{"fp32":{"latency":9,"dtype":"fp32"},"fp16":{"latency":9,"dtype":"fp16"},"int32":{"latency":9,"dtype":"int32"}}},
@@ -54,6 +538,7 @@
     "VCI": {
       "op_class": "COMPUTE",
       "forms": {
+        "int16": {"latency":7,"EXU":"ALU","dtype":"int16"},
         "int32": {
           "latency": 7,
           "EXU": "ALU",
@@ -67,32 +552,73 @@
     "VSQRT": {
       "op_class": "COMPUTE",
       "forms": {
+        "fp16": {
+          "latency": 22,
+          "EXU": "SFU",
+          "dispatch_exu": "EXU01",
+          "src_dtypes": [
+            "fp16"
+          ],
+          "dst_dtypes": [
+            "fp16"
+          ],
+          "dtype": "fp16",
+          "initiation_interval_scope": "fu"
+        },
         "fp32": {
           "latency": 17,
           "EXU": "SFU",
           "dispatch_exu": "EXU01",
-          "src_dtypes": ["fp32"],
-          "dst_dtypes": ["fp32"],
-          "dtype": "fp32"
+          "src_dtypes": [
+            "fp32"
+          ],
+          "dst_dtypes": [
+            "fp32"
+          ],
+          "dtype": "fp32",
+          "initiation_interval_scope": "fu"
         }
       }
     },
     "VLN": {
       "op_class": "COMPUTE",
       "forms": {
+        "fp16": {
+          "latency": 23,
+          "EXU": "SFU",
+          "dispatch_exu": "EXU01",
+          "src_dtypes": [
+            "fp16"
+          ],
+          "dst_dtypes": [
+            "fp16"
+          ],
+          "dtype": "fp16",
+          "initiation_interval_scope": "fu"
+        },
         "fp32": {
           "latency": 18,
           "EXU": "SFU",
           "dispatch_exu": "EXU01",
-          "src_dtypes": ["fp32"],
-          "dst_dtypes": ["fp32"],
-          "dtype": "fp32"
+          "src_dtypes": [
+            "fp32"
+          ],
+          "dst_dtypes": [
+            "fp32"
+          ],
+          "dtype": "fp32",
+          "initiation_interval_scope": "fu"
         }
       }
     },
     "VADDS": {
       "op_class": "COMPUTE",
       "forms": {
+        "uint16": {
+          "latency": 6,
+          "EXU": "ALU",
+          "dtype": "uint16"
+        },
         "fp32": {
           "pipeline_startup_cost": 6,
           "latency": 7,
@@ -126,6 +652,12 @@
             "fp16"
           ],
           "dtype": "fp16"
+        },
+        "int32": {
+          "latency": 7,
+          "dtype": "int32",
+          "EXU": "ALU",
+          "dispatch_exu": "EXU01"
         }
       }
     },
@@ -204,12 +736,19 @@
             "fp16"
           ],
           "dtype": "fp16"
+        },
+        "int32": {
+          "latency": 7,
+          "dtype": "int32",
+          "EXU": "ALU",
+          "dispatch_exu": "EXU01"
         }
       }
     },
     "VMULS": {
       "op_class": "COMPUTE",
       "forms": {
+        "uint16": {"latency":8,"EXU":"ALU","dtype":"uint16"},
         "fp32": {
           "pipeline_startup_cost": 6,
           "latency": 8,
@@ -360,6 +899,12 @@
             "fp16"
           ],
           "dtype": "fp16"
+        },
+        "int32": {
+          "latency": 7,
+          "dtype": "int32",
+          "EXU": "ALU",
+          "dispatch_exu": "EXU01"
         }
       }
     },
@@ -438,12 +983,23 @@
             "fp16"
           ],
           "dtype": "fp16"
+        },
+        "int32": {
+          "latency": 6,
+          "dtype": "int32",
+          "EXU": "ALU",
+          "dispatch_exu": "EXU01"
         }
       }
     },
     "VMINS": {
       "op_class": "COMPUTE",
       "forms": {
+        "uint16": {
+          "latency": 6,
+          "EXU": "ALU",
+          "dtype": "uint16"
+        },
         "fp32": {
           "pipeline_startup_cost": 6,
           "latency": 6,
@@ -477,6 +1033,12 @@
             "fp16"
           ],
           "dtype": "fp16"
+        },
+        "int32": {
+          "latency": 6,
+          "dtype": "int32",
+          "EXU": "ALU",
+          "dispatch_exu": "EXU01"
         }
       }
     },
@@ -709,6 +1271,10 @@
             "fp16"
           ],
           "dtype": "fp16"
+        },
+        "int32": {
+          "latency": 9,
+          "dtype": "int32"
         }
       }
     },
@@ -716,6 +1282,9 @@
       "op_class": "STORE",
       "forms": {
         "fp32": {
+          "mode_latencies": {
+            "ONEPT_B32": 9
+          },
           "op_class": "STORE",
           "pipeline_startup_cost": 0,
           "latency": 9,
@@ -732,6 +1301,9 @@
           "dtype": "fp32"
         },
         "fp16": {
+          "mode_latencies": {
+            "ONEPT_B16": 13
+          },
           "op_class": "STORE",
           "pipeline_startup_cost": 0,
           "latency": 9,
@@ -762,6 +1334,17 @@
             "ub"
           ],
           "dtype": "bf16"
+        },
+        "int32": {
+          "latency": 9,
+          "dtype": "int32",
+          "mode_latencies": {
+            "ONEPT_B32": 9
+          }
+        },
+        "int8": {
+          "latency": 9,
+          "dtype": "int8"
         }
       }
     },
@@ -878,9 +1461,31 @@
           "latency": 6,
           "EXU": "ALU",
           "dispatch_exu": "EXU01",
-          "src_dtypes": ["int8"],
-          "dst_dtypes": ["int8"],
+          "src_dtypes": [
+            "int8"
+          ],
+          "dst_dtypes": [
+            "int8"
+          ],
           "dtype": "int8"
+        },
+        "int16": {
+          "latency": 6,
+          "dtype": "int16",
+          "EXU": "ALU",
+          "dispatch_exu": "EXU01"
+        },
+        "int32": {
+          "latency": 6,
+          "dtype": "int32",
+          "EXU": "ALU",
+          "dispatch_exu": "EXU01"
+        },
+        "b32": {
+          "latency": 6,
+          "dtype": "uint32",
+          "EXU": "ALU",
+          "dispatch_exu": "EXU01"
         }
       }
     },
@@ -920,6 +1525,18 @@
             "fp16"
           ],
           "dtype": "fp16"
+        },
+        "b32": {
+          "latency": 6,
+          "dtype": "uint32",
+          "EXU": "ALU",
+          "dispatch_exu": "EXU01"
+        },
+        "b16": {
+          "latency": 6,
+          "dtype": "uint16",
+          "EXU": "ALU",
+          "dispatch_exu": "EXU01"
         }
       }
     },
@@ -1173,6 +1790,12 @@
             "fp16"
           ],
           "dtype": "fp16"
+        },
+        "b32": {
+          "latency": 6,
+          "dtype": "uint32",
+          "EXU": "ALU",
+          "dispatch_exu": "EXU01"
         }
       }
     },
@@ -1212,6 +1835,12 @@
             "fp16"
           ],
           "dtype": "fp16"
+        },
+        "int32": {
+          "latency": 6,
+          "dtype": "int32",
+          "EXU": "ALU",
+          "dispatch_exu": "EXU01"
         }
       }
     },
@@ -1295,9 +1924,19 @@
           "latency": 6,
           "EXU": "ALU",
           "dispatch_exu": "EXU01",
-          "src_dtypes": ["int8"],
-          "dst_dtypes": ["int8"],
+          "src_dtypes": [
+            "int8"
+          ],
+          "dst_dtypes": [
+            "int8"
+          ],
           "dtype": "int8"
+        },
+        "int32": {
+          "latency": 6,
+          "dtype": "int32",
+          "EXU": "ALU",
+          "dispatch_exu": "EXU01"
         }
       }
     },

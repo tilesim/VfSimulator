@@ -68,6 +68,21 @@ class UbSharedIssueSlotsTest(unittest.TestCase):
         self.assertTrue(all(u.state == "running" for u in loads))
         self.assertEqual(store.state, "ready")
 
+    def test_indexed_load_waits_for_both_index_and_predicate_producers(self):
+        load = self._uop(2, "LOAD", state="blocked")
+        load.preg_src = ["p0", "q0"]
+        self.core.preg_pending.update(load.preg_src)
+        self.assertGreater(self.core._load_ready_cycle(load), 1000000)
+        self.core.preg_producer["p0"] = ("VCI", "int32", 100, "COMPUTE")
+        self.core.preg_pending.discard("p0")
+        self.assertGreater(self.core._load_ready_cycle(load), 1000000)
+        self.core.preg_producer["q0"] = ("PSET_B32", "b32", 150, "COMPUTE")
+        self.core.preg_pending.discard("q0")
+        ready = self.core._load_ready_cycle(load)
+        self.assertGreaterEqual(ready, 152)
+        load.lsq_ready_cycle = ready + 10
+        self.assertEqual(self.core._load_ready_cycle(load), ready + 10)
+
     def test_byte_budget_is_independent_of_destination_count(self):
         first, second = self._uop(0, "LOAD"), self._uop(1, "LOAD")
         first.preg_dst = ["v0", "v1"]

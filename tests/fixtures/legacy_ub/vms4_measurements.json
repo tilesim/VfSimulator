@@ -1,0 +1,58 @@
+{
+  "calibration": "CANN 9.2.0-beta.1, Ascend950PR_9599, dav-c310-vec",
+  "verification": "All sorted proposals, index association, output guards checked. Scalar initialization fenced after MTE2 and before VEC.",
+  "measurements": [
+    {
+      "case": "mrgsort_fenced_10_r1",
+      "list_lengths": [
+        10,
+        10
+      ],
+      "hardware_repeat": 1,
+      "cycles": 48,
+      "raw_completion_line": "[info] [00004319] (PC: 0x10d0d2d4) PUSHQ    : (Binary: 0x15032900) (ID: 000182) VMS4V2  XD:X3=0x10000, XN:X5=0x2000000, XM:X4=0xa000a, XT:X0=0x301, Id:182, vf_execute_time: 48, vf_real_execute_time: 48",
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "950040b32c044ce92503797ca7b3b357900092b2abbd5fff2e4cab49cc2e3d21",
+        "core0.veccore0.instr_log.dump": "e3dabe52c66c73ef1c039f40b06bf9b856ec7b01f5970d4dfb4dc26fdc0dc039",
+        "core0.veccore0.instr_popped_log.dump": "866f980e30b05e46a7a6ff3dec2d48e37ee1fa2184c918dae3d4ebc3b48169d9"
+      }
+    },
+    {
+      "case": "mrgsort_fenced_128_r2",
+      "list_lengths": [
+        128,
+        128,
+        128,
+        128
+      ],
+      "hardware_repeat": 2,
+      "cycles": 552,
+      "raw_completion_line": "[info] [00013615] (PC: 0x10d0d2d8) PUSHQ    : (Binary: 0x15041880) (ID: 012031) VMS4V2  XD:X4=0x10000, XN:X3=0x180010000800000, XM:X2=0x80008000800080, XT:X1=0xf02, Id:12031, vf_execute_time: 552, vf_real_execute_time: 552",
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "7fb5b2e2c7f4bc326f8bc8c5cd1f2761cb2b39fe6c9546755c0ebde18f86767a",
+        "core0.veccore0.instr_log.dump": "47f0d42c02bcdd8c54ecc4117b8706e57189da51d9bfcac2e04008a0b8a6981b",
+        "core0.veccore0.instr_popped_log.dump": "559612a4b23dede5946726976bab9f64beb035f1604105868b9d443f1d7cf078"
+      }
+    },
+    {
+      "case": "mrgsort_fenced_32_r8",
+      "list_lengths": [
+        32,
+        32,
+        32,
+        32
+      ],
+      "hardware_repeat": 8,
+      "cycles": 552,
+      "raw_completion_line": "[info] [00012493] (PC: 0x10d0d1f4) PUSHQ    : (Binary: 0x15041880) (ID: 011499) VMS4V2  XD:X4=0x10000, XN:X3=0x60004000200000, XM:X2=0x20002000200020, XT:X1=0xf08, Id:11499, vf_execute_time: 552, vf_real_execute_time: 552",
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "7fb5b2e2c7f4bc326f8bc8c5cd1f2761cb2b39fe6c9546755c0ebde18f86767a",
+        "core0.veccore0.instr_log.dump": "6aa188e8dbf9787d29dde5e62f1376f86b098d287dcaf2529de52449ed881fee",
+        "core0.veccore0.instr_popped_log.dump": "e7ed87fd17b70a12cd2125d5a84ce892a562c285162d77fd322e8b95644452d9"
+      }
+    }
+  ]
+}

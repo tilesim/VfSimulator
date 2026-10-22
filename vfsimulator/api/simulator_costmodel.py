@@ -137,6 +137,8 @@ class CoreVfCostModel(VfCostModel):
         result["linear_inst_count"] = len(linear)
         result["normalization_stats"] = norm_stats
         result["canonicalization_stats"] = canonicalization_stats
+        # API callers need these diagnostics even when artifact dumping is off.
+        result["instruction_warnings"] = db.get_warnings()
         if self.include_param_cache_stats and hasattr(db, "get_profile_cache_stats"):
             result["param_cache_stats"] = db.get_profile_cache_stats()
         return result

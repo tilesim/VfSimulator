@@ -1,0 +1,51 @@
+{
+  "scope": "PTO native one-repeat n64 latency calibration. n512 initiation-interval evidence is archived separately in tests/fixtures/sfu_scope/calibration.json; larger n2048 cases diagnosed scheduler history loss.",
+  "samples": [
+    {
+      "case": "ln_fp16_n64",
+      "golden": {
+        "passed": true,
+        "elements_checked": 64,
+        "mismatches": 0,
+        "guard_bytes_checked": 32640,
+        "guard_passed": true,
+        "nonfinite_expected": 50
+      },
+      "dynamic_counts_match": true,
+      "latency_histograms": {
+        "RV_VLN": {
+          "23": 1
+        }
+      },
+      "raw_sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "4208caeae0e1d2db8357324e3ec0962c419b3a704b9a52b19078dfb6a0850f21",
+        "core0.veccore0.instr_log.dump": "a5d2ddc3638b6a02eef4a158b5bfc4bd2e87596c1e3367bf9d62abc867db26c4",
+        "core0.veccore0.instr_popped_log.dump": "9aa134405ed98abfb00ceb8137f5b7b2ddd201811779453ec2c623d610a37ed1"
+      }
+    },
+    {
+      "case": "sqrt_fp16_n64",
+      "golden": {
+        "passed": true,
+        "elements_checked": 64,
+        "mismatches": 0,
+        "guard_bytes_checked": 32640,
+        "guard_passed": true,
+        "nonfinite_expected": 17
+      },
+      "dynamic_counts_match": true,
+      "latency_histograms": {
+        "RV_VSQRT": {
+          "22": 1
+        }
+      },
+      "raw_sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "fa6922f6e53f509e33851978d7841afd16bd34fdd60ec9576baf94664ac80734",
+        "core0.veccore0.instr_log.dump": "791d83b393790b98d6cece8714d4db950b784d61fee82bbb717cdd49a6ce799c",
+        "core0.veccore0.instr_popped_log.dump": "e422ecda9c66be43472ef506ec8282225d3fcceef92a97cac158255de88fc6f9"
+      }
+    }
+  ]
+}

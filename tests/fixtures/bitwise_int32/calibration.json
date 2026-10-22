@@ -1,0 +1,1525 @@
+{
+  "cases": [
+    {
+      "case": "bitwiseand_int32_n64",
+      "opcode": "BITWISEAND",
+      "native_op": "RV_VAND",
+      "golden": {
+        "passed": true,
+        "elements_checked": 64,
+        "mismatches": 0,
+        "guard_bytes_checked": 32512,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "f7a79cc32b7154f35940e4917325cba2cf54b30c30563ffa11a22b8d523a53d7",
+        "core0.veccore0.instr_log.dump": "9056b5101e1faa503c0885d6b08ccfa1bee9e7e20a1f77c86b17dc1de8365da4",
+        "core0.veccore0.instr_popped_log.dump": "154c23059ca0951e05e88d4d6e99cf63ffd6fc7cdc50ddb409d8f2f7102d3f4b"
+      },
+      "compute_latency": [
+        6
+      ],
+      "load_latency": [
+        9,
+        10
+      ],
+      "store_latency": [
+        9
+      ],
+      "compute_pop": [
+        4822
+      ],
+      "load_to_compute": [
+        7
+      ],
+      "compute_to_store": [
+        4
+      ]
+    },
+    {
+      "case": "bitwiseand_int32_n129",
+      "opcode": "BITWISEAND",
+      "native_op": "RV_VAND",
+      "golden": {
+        "passed": true,
+        "elements_checked": 129,
+        "mismatches": 0,
+        "guard_bytes_checked": 32252,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "c77f3c52df497da9d8a56ea0a4537d3fd69f6b238deefb91b302a46e7b59fd8c",
+        "core0.veccore0.instr_log.dump": "ae8423ab12eb3afa30f0aede8fa3e50fe7288540e1b950473b5361729bf74be5",
+        "core0.veccore0.instr_popped_log.dump": "07fa5fe4460ac54bc877d09d7627164b875d4d9742dbeb6a3238caeb7693638c"
+      },
+      "compute_latency": [
+        6,
+        6,
+        6
+      ],
+      "load_latency": [
+        9,
+        10,
+        9,
+        10,
+        9,
+        9
+      ],
+      "store_latency": [
+        9,
+        9,
+        9
+      ],
+      "compute_pop": [
+        4822,
+        4823,
+        4824
+      ],
+      "load_to_compute": [
+        7,
+        7,
+        6
+      ],
+      "compute_to_store": [
+        4,
+        4,
+        4
+      ]
+    },
+    {
+      "case": "bitwiseand_int32_n512",
+      "opcode": "BITWISEAND",
+      "native_op": "RV_VAND",
+      "golden": {
+        "passed": true,
+        "elements_checked": 512,
+        "mismatches": 0,
+        "guard_bytes_checked": 30720,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "ce376381e06bd78549e00c50fe683cc336be7512881761b9fd2ea3d0cbc5ce17",
+        "core0.veccore0.instr_log.dump": "0c788a4e3e009fd01ad6545dc172e99b088d6a3997352be790145c2b9615bd5b",
+        "core0.veccore0.instr_popped_log.dump": "0f4dd4d9ccb7921eb8bd5f873a34fb3dd7a45dafb9c5ee29b8b60ed15dff313e"
+      },
+      "compute_latency": [
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6
+      ],
+      "load_latency": [
+        9,
+        10,
+        9,
+        10,
+        9,
+        9,
+        9,
+        9,
+        9,
+        9,
+        9,
+        9,
+        9,
+        9,
+        9,
+        9
+      ],
+      "store_latency": [
+        9,
+        9,
+        9,
+        9,
+        9,
+        9,
+        9,
+        9
+      ],
+      "compute_pop": [
+        4822,
+        4823,
+        4824,
+        4825,
+        4826,
+        4827,
+        4828,
+        4829
+      ],
+      "load_to_compute": [
+        7,
+        7,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6
+      ],
+      "compute_to_store": [
+        4,
+        4,
+        4,
+        4,
+        4,
+        4,
+        4,
+        4
+      ]
+    },
+    {
+      "case": "bitwiseor_int32_n64",
+      "opcode": "BITWISEOR",
+      "native_op": "RV_VOR",
+      "golden": {
+        "passed": true,
+        "elements_checked": 64,
+        "mismatches": 0,
+        "guard_bytes_checked": 32512,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "79f7faae8d72fbb0cf86203c24f5d6dbc1d3183eea76df6ac500086a03c15c22",
+        "core0.veccore0.instr_log.dump": "a6a51823f68b2ab9fee04d8fcf1f43ec2289c5ba7eb376716a738a1476a2011e",
+        "core0.veccore0.instr_popped_log.dump": "2d5d67cad0354274ade4de4cb55f43e47b26d9288da9027fc9801f33015fe7e0"
+      },
+      "compute_latency": [
+        6
+      ],
+      "load_latency": [
+        9,
+        10
+      ],
+      "store_latency": [
+        9
+      ],
+      "compute_pop": [
+        4822
+      ],
+      "load_to_compute": [
+        7
+      ],
+      "compute_to_store": [
+        4
+      ]
+    },
+    {
+      "case": "bitwiseor_int32_n129",
+      "opcode": "BITWISEOR",
+      "native_op": "RV_VOR",
+      "golden": {
+        "passed": true,
+        "elements_checked": 129,
+        "mismatches": 0,
+        "guard_bytes_checked": 32252,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "dab9954f85abaecd29dc408291902859a3ecdf8b34c6fe39c98be853f9395066",
+        "core0.veccore0.instr_log.dump": "317ffb49f0892724896e09c6e56c76eb8503ad0a7cd225e81dc6075e37e18e28",
+        "core0.veccore0.instr_popped_log.dump": "98aa2fa9681ff5dc2a3dd0ac6751ca067251c57d9787c943017e13e4f75492de"
+      },
+      "compute_latency": [
+        6,
+        6,
+        6
+      ],
+      "load_latency": [
+        9,
+        10,
+        9,
+        10,
+        9,
+        9
+      ],
+      "store_latency": [
+        9,
+        9,
+        9
+      ],
+      "compute_pop": [
+        4822,
+        4823,
+        4824
+      ],
+      "load_to_compute": [
+        7,
+        7,
+        6
+      ],
+      "compute_to_store": [
+        4,
+        4,
+        4
+      ]
+    },
+    {
+      "case": "bitwiseor_int32_n512",
+      "opcode": "BITWISEOR",
+      "native_op": "RV_VOR",
+      "golden": {
+        "passed": true,
+        "elements_checked": 512,
+        "mismatches": 0,
+        "guard_bytes_checked": 30720,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "ece3e596fc56de3aaf50e61a8869b78f4fd1e7cb960e0bbb325002310d2bc442",
+        "core0.veccore0.instr_log.dump": "9d904c98a22364a818ac584a45f7988d16175ddd6f10b588313ffc61dce4d207",
+        "core0.veccore0.instr_popped_log.dump": "7f1f248fa9e94985c961bdda9d3efcebabe72237fbe06018125810532a22124d"
+      },
+      "compute_latency": [
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6
+      ],
+      "load_latency": [
+        9,
+        10,
+        9,
+        10,
+        9,
+        9,
+        9,
+        9,
+        9,
+        9,
+        9,
+        9,
+        9,
+        9,
+        9,
+        9
+      ],
+      "store_latency": [
+        9,
+        9,
+        9,
+        9,
+        9,
+        9,
+        9,
+        9
+      ],
+      "compute_pop": [
+        4822,
+        4823,
+        4824,
+        4825,
+        4826,
+        4827,
+        4828,
+        4829
+      ],
+      "load_to_compute": [
+        7,
+        7,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6
+      ],
+      "compute_to_store": [
+        4,
+        4,
+        4,
+        4,
+        4,
+        4,
+        4,
+        4
+      ]
+    },
+    {
+      "case": "bitwisexor_int32_n64",
+      "opcode": "BITWISEXOR",
+      "native_op": "RV_VXOR",
+      "golden": {
+        "passed": true,
+        "elements_checked": 64,
+        "mismatches": 0,
+        "guard_bytes_checked": 32512,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "b879bd3957d2950cffbb5b76976a9db90d58357f22748843712f6c17716ba549",
+        "core0.veccore0.instr_log.dump": "442101051127c54a8602f1f3240be4f8510aa8a59f958296b6ac283286b18512",
+        "core0.veccore0.instr_popped_log.dump": "a5fcacfe7fc4c36bae25195987f5500cdff1106f0f9299004ea404c72772d0ba"
+      },
+      "compute_latency": [
+        6
+      ],
+      "load_latency": [
+        9,
+        10
+      ],
+      "store_latency": [
+        9
+      ],
+      "compute_pop": [
+        4822
+      ],
+      "load_to_compute": [
+        7
+      ],
+      "compute_to_store": [
+        4
+      ]
+    },
+    {
+      "case": "bitwisexor_int32_n129",
+      "opcode": "BITWISEXOR",
+      "native_op": "RV_VXOR",
+      "golden": {
+        "passed": true,
+        "elements_checked": 129,
+        "mismatches": 0,
+        "guard_bytes_checked": 32252,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "d5a3c7802217ce438110be285ff47de149af5e890ce58fd4c45c410d892e6d2d",
+        "core0.veccore0.instr_log.dump": "4f626b81359f3bc84515fca07f210418866e36095af465ec50d062fd54de25b0",
+        "core0.veccore0.instr_popped_log.dump": "7ac3212fb20049fa75de71bf4847a1ab847312b71e865b5568327b82fe99656e"
+      },
+      "compute_latency": [
+        6,
+        6,
+        6
+      ],
+      "load_latency": [
+        9,
+        10,
+        9,
+        10,
+        9,
+        9
+      ],
+      "store_latency": [
+        9,
+        9,
+        9
+      ],
+      "compute_pop": [
+        4822,
+        4823,
+        4824
+      ],
+      "load_to_compute": [
+        7,
+        7,
+        6
+      ],
+      "compute_to_store": [
+        4,
+        4,
+        4
+      ]
+    },
+    {
+      "case": "bitwisexor_int32_n512",
+      "opcode": "BITWISEXOR",
+      "native_op": "RV_VXOR",
+      "golden": {
+        "passed": true,
+        "elements_checked": 512,
+        "mismatches": 0,
+        "guard_bytes_checked": 30720,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "90814943e30461c26026daa898c4e5b9873fffa1e0c80ac096be7714e5119cfa",
+        "core0.veccore0.instr_log.dump": "0d2c991c9c46c92d60122270632afa9ce73146114c4806d8f4386426ed5d0f4b",
+        "core0.veccore0.instr_popped_log.dump": "222110262f3ecb60e5bdf9c3f12db596a57dd5deff03c74bf62ad932d5c9af4a"
+      },
+      "compute_latency": [
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6
+      ],
+      "load_latency": [
+        9,
+        10,
+        9,
+        10,
+        9,
+        9,
+        9,
+        9,
+        9,
+        9,
+        9,
+        9,
+        9,
+        9,
+        9,
+        9
+      ],
+      "store_latency": [
+        9,
+        9,
+        9,
+        9,
+        9,
+        9,
+        9,
+        9
+      ],
+      "compute_pop": [
+        4825,
+        4826,
+        4827,
+        4828,
+        4829,
+        4830,
+        4831,
+        4832
+      ],
+      "load_to_compute": [
+        7,
+        7,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6
+      ],
+      "compute_to_store": [
+        4,
+        4,
+        4,
+        4,
+        4,
+        4,
+        4,
+        4
+      ]
+    },
+    {
+      "case": "bitwiseands_int32_n64",
+      "opcode": "BITWISEANDS",
+      "native_op": "RV_VAND",
+      "golden": {
+        "passed": true,
+        "elements_checked": 64,
+        "mismatches": 0,
+        "guard_bytes_checked": 32512,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "06d772ce966e5d64ceba228ef2c364f14e3727a7e8a0dd6d1b4568e23a4d2e1b",
+        "core0.veccore0.instr_log.dump": "d148d706517161f1583dd3e9aebd65f34d634e6d768f40857ea1e1e80ac4d4d6",
+        "core0.veccore0.instr_popped_log.dump": "5c0e659d764f20859de505d08448e512d5265739b0073acda504ce7516664804"
+      },
+      "compute_latency": [
+        6
+      ],
+      "load_latency": [
+        9
+      ],
+      "store_latency": [
+        9
+      ],
+      "compute_pop": [
+        4820
+      ],
+      "load_to_compute": [
+        6
+      ],
+      "compute_to_store": [
+        4
+      ]
+    },
+    {
+      "case": "bitwiseands_int32_n129",
+      "opcode": "BITWISEANDS",
+      "native_op": "RV_VAND",
+      "golden": {
+        "passed": true,
+        "elements_checked": 129,
+        "mismatches": 0,
+        "guard_bytes_checked": 32252,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "61e726cac0ff25673c3f3319103a13c198ac77b016cb35f938994787296e3bec",
+        "core0.veccore0.instr_log.dump": "0172564f82dc91d9349addf164879080e0e35666347a815912877d2456c63df4",
+        "core0.veccore0.instr_popped_log.dump": "b981a39637bac6e6d1c0aba8b4aad7286a08f8764aeb36da46b9bb4aec91a225"
+      },
+      "compute_latency": [
+        6,
+        6,
+        6
+      ],
+      "load_latency": [
+        9,
+        9,
+        9
+      ],
+      "store_latency": [
+        9,
+        9,
+        9
+      ],
+      "compute_pop": [
+        4834,
+        4835,
+        4836
+      ],
+      "load_to_compute": [
+        6,
+        6,
+        6
+      ],
+      "compute_to_store": [
+        4,
+        4,
+        4
+      ]
+    },
+    {
+      "case": "bitwiseands_int32_n512",
+      "opcode": "BITWISEANDS",
+      "native_op": "RV_VAND",
+      "golden": {
+        "passed": true,
+        "elements_checked": 512,
+        "mismatches": 0,
+        "guard_bytes_checked": 30720,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "6711ab6888ca8764ebe4bf9cd9b51ee009d25be267f0f0ebbaf54c314e1b6b0b",
+        "core0.veccore0.instr_log.dump": "cf3e76c28ffe23bdc60865c9f8021ecfaee70c180523bc1bbd1fcfb52420f137",
+        "core0.veccore0.instr_popped_log.dump": "d668f38745365eb2768f432b1fba415905a3e1f350b61fb2298fc8b01c2beb3a"
+      },
+      "compute_latency": [
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6
+      ],
+      "load_latency": [
+        9,
+        9,
+        9,
+        9,
+        9,
+        9,
+        9,
+        9
+      ],
+      "store_latency": [
+        9,
+        9,
+        9,
+        9,
+        9,
+        9,
+        9,
+        9
+      ],
+      "compute_pop": [
+        4835,
+        4836,
+        4837,
+        4838,
+        4839,
+        4840,
+        4841,
+        4842
+      ],
+      "load_to_compute": [
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6
+      ],
+      "compute_to_store": [
+        4,
+        4,
+        4,
+        4,
+        4,
+        4,
+        4,
+        4
+      ]
+    },
+    {
+      "case": "bitwiseors_int32_n64",
+      "opcode": "BITWISEORS",
+      "native_op": "RV_VOR",
+      "golden": {
+        "passed": true,
+        "elements_checked": 64,
+        "mismatches": 0,
+        "guard_bytes_checked": 32512,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "b6f0140cc820a6b26d0ec68d389e5ae9871f83618047702136ee1571b9bdff9a",
+        "core0.veccore0.instr_log.dump": "f03bfefe23fd158e13ff49b58da474d12a95c71ae93971cbee9632a852990935",
+        "core0.veccore0.instr_popped_log.dump": "8c546c73992b103a874a075231a1a2651f8c347c5611e900e727e4e7f4e57e65"
+      },
+      "compute_latency": [
+        6
+      ],
+      "load_latency": [
+        9
+      ],
+      "store_latency": [
+        9
+      ],
+      "compute_pop": [
+        4820
+      ],
+      "load_to_compute": [
+        6
+      ],
+      "compute_to_store": [
+        4
+      ]
+    },
+    {
+      "case": "bitwiseors_int32_n129",
+      "opcode": "BITWISEORS",
+      "native_op": "RV_VOR",
+      "golden": {
+        "passed": true,
+        "elements_checked": 129,
+        "mismatches": 0,
+        "guard_bytes_checked": 32252,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "cf8bf50d99a5a074e144f833a690b958b9e81df0022e55a7a80a3069b4759985",
+        "core0.veccore0.instr_log.dump": "78d2ed29742a65900d8bd426c98f9f1e0a4e48182a6543deb7682542d5dda45b",
+        "core0.veccore0.instr_popped_log.dump": "c500060982ce32aec37d181222118c339d671cdb6f9e71a47832d3bb182916da"
+      },
+      "compute_latency": [
+        6,
+        6,
+        6
+      ],
+      "load_latency": [
+        9,
+        9,
+        9
+      ],
+      "store_latency": [
+        9,
+        9,
+        9
+      ],
+      "compute_pop": [
+        4834,
+        4835,
+        4836
+      ],
+      "load_to_compute": [
+        6,
+        6,
+        6
+      ],
+      "compute_to_store": [
+        4,
+        4,
+        4
+      ]
+    },
+    {
+      "case": "bitwiseors_int32_n512",
+      "opcode": "BITWISEORS",
+      "native_op": "RV_VOR",
+      "golden": {
+        "passed": true,
+        "elements_checked": 512,
+        "mismatches": 0,
+        "guard_bytes_checked": 30720,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "f6fe4ddc8e162dcfe8949f70a7c340ed400a312b24db5f10887339af636b9738",
+        "core0.veccore0.instr_log.dump": "f48ecb0b90b8241ee9010f5bc999930b2194bcc0ab56d2ebcb2a4ff5213aa147",
+        "core0.veccore0.instr_popped_log.dump": "6e2a70d138a8f03d7b2a333e32bc26deea1a12cadc2fb42c6241669987a28a5e"
+      },
+      "compute_latency": [
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6
+      ],
+      "load_latency": [
+        9,
+        9,
+        9,
+        9,
+        9,
+        9,
+        9,
+        9
+      ],
+      "store_latency": [
+        9,
+        9,
+        9,
+        9,
+        9,
+        9,
+        9,
+        9
+      ],
+      "compute_pop": [
+        4834,
+        4835,
+        4836,
+        4837,
+        4838,
+        4839,
+        4840,
+        4841
+      ],
+      "load_to_compute": [
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6
+      ],
+      "compute_to_store": [
+        4,
+        4,
+        4,
+        4,
+        4,
+        4,
+        4,
+        4
+      ]
+    },
+    {
+      "case": "bitwisexors_int32_n64",
+      "opcode": "BITWISEXORS",
+      "native_op": "RV_VXOR",
+      "golden": {
+        "passed": true,
+        "elements_checked": 64,
+        "mismatches": 0,
+        "guard_bytes_checked": 32512,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "b6f0140cc820a6b26d0ec68d389e5ae9871f83618047702136ee1571b9bdff9a",
+        "core0.veccore0.instr_log.dump": "a6c9269c9dc7d2e2367cbb2bb4d2f7093a0b6faf1c932c3bcf3949b49e2823af",
+        "core0.veccore0.instr_popped_log.dump": "ee0bc452fadf3d75aa8d3b6bde75fe591da784cd378e7da7332e26a50b3afb17"
+      },
+      "compute_latency": [
+        6
+      ],
+      "load_latency": [
+        9
+      ],
+      "store_latency": [
+        9
+      ],
+      "compute_pop": [
+        4820
+      ],
+      "load_to_compute": [
+        6
+      ],
+      "compute_to_store": [
+        4
+      ]
+    },
+    {
+      "case": "bitwisexors_int32_n129",
+      "opcode": "BITWISEXORS",
+      "native_op": "RV_VXOR",
+      "golden": {
+        "passed": true,
+        "elements_checked": 129,
+        "mismatches": 0,
+        "guard_bytes_checked": 32252,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "cf8bf50d99a5a074e144f833a690b958b9e81df0022e55a7a80a3069b4759985",
+        "core0.veccore0.instr_log.dump": "64e3b25d2098517010dda32b5004f57543d65483a2b6d0d678c39a72def68ab8",
+        "core0.veccore0.instr_popped_log.dump": "684f7b748327ef41bb0cad8365321eb58b9b6d8bfa8c72d2ec8e298e3776b8e0"
+      },
+      "compute_latency": [
+        6,
+        6,
+        6
+      ],
+      "load_latency": [
+        9,
+        9,
+        9
+      ],
+      "store_latency": [
+        9,
+        9,
+        9
+      ],
+      "compute_pop": [
+        4834,
+        4835,
+        4836
+      ],
+      "load_to_compute": [
+        6,
+        6,
+        6
+      ],
+      "compute_to_store": [
+        4,
+        4,
+        4
+      ]
+    },
+    {
+      "case": "bitwisexors_int32_n512",
+      "opcode": "BITWISEXORS",
+      "native_op": "RV_VXOR",
+      "golden": {
+        "passed": true,
+        "elements_checked": 512,
+        "mismatches": 0,
+        "guard_bytes_checked": 30720,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "f6fe4ddc8e162dcfe8949f70a7c340ed400a312b24db5f10887339af636b9738",
+        "core0.veccore0.instr_log.dump": "5b9749b54a0f6ea22ced8603d4702697984cf287de479bc554fb9371904130bc",
+        "core0.veccore0.instr_popped_log.dump": "6f3662dde4541ae2ba50c9c12ba1ddadcce248578da3211c6f02030907a6b4c0"
+      },
+      "compute_latency": [
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6
+      ],
+      "load_latency": [
+        9,
+        9,
+        9,
+        9,
+        9,
+        9,
+        9,
+        9
+      ],
+      "store_latency": [
+        9,
+        9,
+        9,
+        9,
+        9,
+        9,
+        9,
+        9
+      ],
+      "compute_pop": [
+        4834,
+        4835,
+        4836,
+        4837,
+        4838,
+        4839,
+        4840,
+        4841
+      ],
+      "load_to_compute": [
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6
+      ],
+      "compute_to_store": [
+        4,
+        4,
+        4,
+        4,
+        4,
+        4,
+        4,
+        4
+      ]
+    },
+    {
+      "case": "bitwisenot_int32_n64",
+      "opcode": "BITWISENOT",
+      "native_op": "RV_VNOT",
+      "golden": {
+        "passed": true,
+        "elements_checked": 64,
+        "mismatches": 0,
+        "guard_bytes_checked": 32512,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "7baa19fdef241115a95e282af50de512a1405e38e85ffe0e71a7d84da128d9e4",
+        "core0.veccore0.instr_log.dump": "342f64c9f69fbacfb750ab9342c6b77cb56d8d1177463a1d22d422dd39a5e2e2",
+        "core0.veccore0.instr_popped_log.dump": "0e42af5b9ba2383b681ae58f697350891b58e4c9345ebd0ee5a9699a37b46afc"
+      },
+      "compute_latency": [
+        6
+      ],
+      "load_latency": [
+        9
+      ],
+      "store_latency": [
+        9
+      ],
+      "compute_pop": [
+        4820
+      ],
+      "load_to_compute": [
+        6
+      ],
+      "compute_to_store": [
+        4
+      ]
+    },
+    {
+      "case": "bitwisenot_int32_n129",
+      "opcode": "BITWISENOT",
+      "native_op": "RV_VNOT",
+      "golden": {
+        "passed": true,
+        "elements_checked": 129,
+        "mismatches": 0,
+        "guard_bytes_checked": 32252,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "18c4bdb18f141f6e07795f75671cb643abc7674df4eaa8dfad152abb45b5e7d2",
+        "core0.veccore0.instr_log.dump": "a2e944b310dcaaf41bdbb0458696c2f64c7fa5496b4dc7e2d4c12f0d958b73cf",
+        "core0.veccore0.instr_popped_log.dump": "00cc2e5dffb8d14e641a598261d19296c9d04aa7756c6ff7db2ece5763a388a3"
+      },
+      "compute_latency": [
+        6,
+        6,
+        6
+      ],
+      "load_latency": [
+        9,
+        9,
+        9
+      ],
+      "store_latency": [
+        9,
+        9,
+        9
+      ],
+      "compute_pop": [
+        4820,
+        4821,
+        4822
+      ],
+      "load_to_compute": [
+        6,
+        6,
+        6
+      ],
+      "compute_to_store": [
+        4,
+        4,
+        4
+      ]
+    },
+    {
+      "case": "bitwisenot_int32_n512",
+      "opcode": "BITWISENOT",
+      "native_op": "RV_VNOT",
+      "golden": {
+        "passed": true,
+        "elements_checked": 512,
+        "mismatches": 0,
+        "guard_bytes_checked": 30720,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "29cf68a864b0f28930a722271377d9f52ffab01ca4f4a5575cd6a238c4551241",
+        "core0.veccore0.instr_log.dump": "a6a11a93f5124e660f83ef8eb48f57bf2b6ff776c8f91a3ff90b1c7a918447a1",
+        "core0.veccore0.instr_popped_log.dump": "78bab513f6ee5b575241533a1a2221dfdb2217c37d008485d6ed0fce9548ed77"
+      },
+      "compute_latency": [
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6
+      ],
+      "load_latency": [
+        9,
+        9,
+        9,
+        9,
+        9,
+        9,
+        9,
+        9
+      ],
+      "store_latency": [
+        9,
+        9,
+        9,
+        9,
+        9,
+        9,
+        9,
+        9
+      ],
+      "compute_pop": [
+        4820,
+        4821,
+        4822,
+        4823,
+        4824,
+        4825,
+        4826,
+        4827
+      ],
+      "load_to_compute": [
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6
+      ],
+      "compute_to_store": [
+        4,
+        4,
+        4,
+        4,
+        4,
+        4,
+        4,
+        4
+      ]
+    },
+    {
+      "case": "bitwiseleftshifts_int32_n64",
+      "opcode": "BITWISELEFTSHIFTS",
+      "native_op": "RV_VSHLS",
+      "golden": {
+        "passed": true,
+        "elements_checked": 64,
+        "mismatches": 0,
+        "guard_bytes_checked": 32512,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "1aef4c2de24cd652b8a01ca181461c915ae3120c76c87f200265b7a7230db504",
+        "core0.veccore0.instr_log.dump": "17829210802bb902e757bcdcf3b99b5b1ac26b311fd14060e0a6051d61e28da9",
+        "core0.veccore0.instr_popped_log.dump": "ca4d6975dc706ab0443b197960a66f23aac99302e7037cc0c97ec2d86885c4c2"
+      },
+      "compute_latency": [
+        6
+      ],
+      "load_latency": [
+        9
+      ],
+      "store_latency": [
+        9
+      ],
+      "compute_pop": [
+        4822
+      ],
+      "load_to_compute": [
+        6
+      ],
+      "compute_to_store": [
+        4
+      ]
+    },
+    {
+      "case": "bitwiseleftshifts_int32_n129",
+      "opcode": "BITWISELEFTSHIFTS",
+      "native_op": "RV_VSHLS",
+      "golden": {
+        "passed": true,
+        "elements_checked": 129,
+        "mismatches": 0,
+        "guard_bytes_checked": 32252,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "c8a4ce44bde14f717118d52069b8be86ba61da8c341a7926d7d7dc39a815b71e",
+        "core0.veccore0.instr_log.dump": "69dc422e2a67ab0c784c0138f4dbd15879f6bfa438faa0ec8b1b9bf61b262cd6",
+        "core0.veccore0.instr_popped_log.dump": "abfcf6b91b002e8e7f68b9d98deeb28d7d13ba8e30cd6a2da19898e773be1fd9"
+      },
+      "compute_latency": [
+        6,
+        6,
+        6
+      ],
+      "load_latency": [
+        9,
+        9,
+        9
+      ],
+      "store_latency": [
+        9,
+        9,
+        9
+      ],
+      "compute_pop": [
+        4820,
+        4821,
+        4822
+      ],
+      "load_to_compute": [
+        6,
+        6,
+        6
+      ],
+      "compute_to_store": [
+        4,
+        4,
+        4
+      ]
+    },
+    {
+      "case": "bitwiseleftshifts_int32_n512",
+      "opcode": "BITWISELEFTSHIFTS",
+      "native_op": "RV_VSHLS",
+      "golden": {
+        "passed": true,
+        "elements_checked": 512,
+        "mismatches": 0,
+        "guard_bytes_checked": 30720,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "661172fb64a846b9197befb9418260dba00e690915b9051dd9f9058bca9c35d2",
+        "core0.veccore0.instr_log.dump": "f9638493231f6c28ec2afcc16abd26971b8d635852dfb26f715acd3c162d26d7",
+        "core0.veccore0.instr_popped_log.dump": "d4ffc2ebcdbae1c39158be0bc7f088194af4d30a2d2bfbea33251236c024cd10"
+      },
+      "compute_latency": [
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6
+      ],
+      "load_latency": [
+        9,
+        9,
+        9,
+        9,
+        9,
+        9,
+        9,
+        9
+      ],
+      "store_latency": [
+        9,
+        9,
+        9,
+        9,
+        9,
+        9,
+        9,
+        9
+      ],
+      "compute_pop": [
+        4820,
+        4821,
+        4822,
+        4823,
+        4824,
+        4825,
+        4826,
+        4827
+      ],
+      "load_to_compute": [
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6
+      ],
+      "compute_to_store": [
+        4,
+        4,
+        4,
+        4,
+        4,
+        4,
+        4,
+        4
+      ]
+    },
+    {
+      "case": "bitwiserightshifts_int32_n64",
+      "opcode": "BITWISERIGHTSHIFTS",
+      "native_op": "RV_VSHRI",
+      "golden": {
+        "passed": true,
+        "elements_checked": 64,
+        "mismatches": 0,
+        "guard_bytes_checked": 32512,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "fec048e6a1257358e48e5d6be4c44afcfab252d07115f60a6af2658ee75495f2",
+        "core0.veccore0.instr_log.dump": "77ba8695d09882d28386248f317f6024c200258c231feb78877de874f47e8c72",
+        "core0.veccore0.instr_popped_log.dump": "de19852446566c711f4e814e9edbfe572a5cdaebf204e270ebbb8b46d7acb874"
+      },
+      "compute_latency": [
+        6
+      ],
+      "load_latency": [
+        9
+      ],
+      "store_latency": [
+        9
+      ],
+      "compute_pop": [
+        4820
+      ],
+      "load_to_compute": [
+        6
+      ],
+      "compute_to_store": [
+        4
+      ]
+    },
+    {
+      "case": "bitwiserightshifts_int32_n129",
+      "opcode": "BITWISERIGHTSHIFTS",
+      "native_op": "RV_VSHRI",
+      "golden": {
+        "passed": true,
+        "elements_checked": 129,
+        "mismatches": 0,
+        "guard_bytes_checked": 32252,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "dff525b820a800aa3cac1724f374f84af43cfd2e25d02703602bfb2d5be1f310",
+        "core0.veccore0.instr_log.dump": "8c962709c5e91cc4a6014d2de979eb3727ae04b360d0fe9c28a2e90f6b728219",
+        "core0.veccore0.instr_popped_log.dump": "7ff24e62dd9f515ef2ba300dfba508b111bf67b720cb9dd2f3ac34931dedee48"
+      },
+      "compute_latency": [
+        6,
+        6,
+        6
+      ],
+      "load_latency": [
+        9,
+        9,
+        9
+      ],
+      "store_latency": [
+        9,
+        9,
+        9
+      ],
+      "compute_pop": [
+        4820,
+        4821,
+        4822
+      ],
+      "load_to_compute": [
+        6,
+        6,
+        6
+      ],
+      "compute_to_store": [
+        4,
+        4,
+        4
+      ]
+    },
+    {
+      "case": "bitwiserightshifts_int32_n512",
+      "opcode": "BITWISERIGHTSHIFTS",
+      "native_op": "RV_VSHRI",
+      "golden": {
+        "passed": true,
+        "elements_checked": 512,
+        "mismatches": 0,
+        "guard_bytes_checked": 30720,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "0dbd457f1737497e7e81136d112f75671c6a2dadaa1c5038ab363e45759fedc1",
+        "core0.veccore0.instr_log.dump": "6730029a94a455614adcac3d27fcbb19aa2cf44b956772042db514bf2c86d7e7",
+        "core0.veccore0.instr_popped_log.dump": "c482fb5ac1c7c0de4ad2e85b1c6f82c206d41de879125856ff7f1e0639677218"
+      },
+      "compute_latency": [
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6
+      ],
+      "load_latency": [
+        9,
+        9,
+        9,
+        9,
+        9,
+        9,
+        9,
+        9
+      ],
+      "store_latency": [
+        9,
+        9,
+        9,
+        9,
+        9,
+        9,
+        9,
+        9
+      ],
+      "compute_pop": [
+        4820,
+        4821,
+        4822,
+        4823,
+        4824,
+        4825,
+        4826,
+        4827
+      ],
+      "load_to_compute": [
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6
+      ],
+      "compute_to_store": [
+        4,
+        4,
+        4,
+        4,
+        4,
+        4,
+        4,
+        4
+      ]
+    }
+  ]
+}

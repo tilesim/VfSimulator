@@ -1,0 +1,237 @@
+{
+  "source_campaign": "repro\\compute_tileops_20261019\\next_campaign",
+  "cases": [
+    {
+      "case": "lrelu_fp32_n64",
+      "dtype": "fp32",
+      "golden": {
+        "passed": true,
+        "elements_checked": 64,
+        "mismatches": 0,
+        "guard_bytes_checked": 32512,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "e97c000a54412696ecbb039baa120e3e17994e45b47e0e1b43c1b9a371a733c9",
+        "core0.veccore0.instr_log.dump": "d7fc36772a84dbac52c9572c66afaf29abdb057e897cb8b6c638f04c8b7cdc3d",
+        "core0.veccore0.instr_popped_log.dump": "5e9782effb8fe4f242dd92f43845a3b857cd83e651b3db4813c158e8674ac966"
+      },
+      "latencies": [
+        8
+      ],
+      "load_to_compute": [
+        6
+      ],
+      "compute_to_store": [
+        6
+      ],
+      "compute_pop_cycles": [
+        3737
+      ]
+    },
+    {
+      "case": "lrelu_fp32_n129",
+      "dtype": "fp32",
+      "golden": {
+        "passed": true,
+        "elements_checked": 129,
+        "mismatches": 0,
+        "guard_bytes_checked": 32252,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "258353ab61b44ff05ad837304a4b1494dae7593eaa934846cfb6bee148f53177",
+        "core0.veccore0.instr_log.dump": "bb913f73d07a3904e2cb862316e7eaf042acba88a41aad8a39bce0d5b6a038fa",
+        "core0.veccore0.instr_popped_log.dump": "1cbc86bc49a048a0fe0d7f12f96aa12a98c1f95b550645aa5036ba7aa8117921"
+      },
+      "latencies": [
+        8,
+        8,
+        8
+      ],
+      "load_to_compute": [
+        6,
+        6,
+        6
+      ],
+      "compute_to_store": [
+        6,
+        6,
+        6
+      ],
+      "compute_pop_cycles": [
+        3737,
+        3738,
+        3739
+      ]
+    },
+    {
+      "case": "lrelu_fp32_n512",
+      "dtype": "fp32",
+      "golden": {
+        "passed": true,
+        "elements_checked": 512,
+        "mismatches": 0,
+        "guard_bytes_checked": 30720,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "9c9ca7eb964ef6d9fb8e6424cca408af5f37a313dee6251832aefa7fd89a1485",
+        "core0.veccore0.instr_log.dump": "54af8363e32b314790cb5ef38eb8ee49976da1edbd974c704e5347487679feb7",
+        "core0.veccore0.instr_popped_log.dump": "e401de8a6028347961efcd92ad379e7d2d7689d105cf1c5db2c80dece56a1741"
+      },
+      "latencies": [
+        8,
+        8,
+        8,
+        8,
+        8,
+        8,
+        8,
+        8
+      ],
+      "load_to_compute": [
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6
+      ],
+      "compute_to_store": [
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6
+      ],
+      "compute_pop_cycles": [
+        3737,
+        3738,
+        3739,
+        3740,
+        3741,
+        3742,
+        3743,
+        3744
+      ]
+    },
+    {
+      "case": "lrelu_fp16_n64",
+      "dtype": "fp16",
+      "golden": {
+        "passed": true,
+        "elements_checked": 64,
+        "mismatches": 0,
+        "guard_bytes_checked": 32640,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "d4aa9a9cee26019c7bab572c28279589fedffbd23650016411f018479f26f715",
+        "core0.veccore0.instr_log.dump": "154d1ac079130f0b68c0fa23d2501d96d4fc73472588b6b13c21a2f314aa6d2f",
+        "core0.veccore0.instr_popped_log.dump": "d7519e479e5ad2c830c072c5ae21be89548830c60a733df8cfbb95f5b396ac55"
+      },
+      "latencies": [
+        8
+      ],
+      "load_to_compute": [
+        6
+      ],
+      "compute_to_store": [
+        6
+      ],
+      "compute_pop_cycles": [
+        3737
+      ]
+    },
+    {
+      "case": "lrelu_fp16_n129",
+      "dtype": "fp16",
+      "golden": {
+        "passed": true,
+        "elements_checked": 129,
+        "mismatches": 0,
+        "guard_bytes_checked": 32510,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "7d6169694301db0eaa259eb4b995b41a90aa2678d0ee588e8aeea2db3f0d463d",
+        "core0.veccore0.instr_log.dump": "55c715c7c6491cff06b5db4808e2ff94731373a9012abf2cb0e699c65e424e63",
+        "core0.veccore0.instr_popped_log.dump": "3e02e151b5ca22ac424ae86f6324d3ae5dad98021036048355e174e4e911370f"
+      },
+      "latencies": [
+        8,
+        8
+      ],
+      "load_to_compute": [
+        6,
+        6
+      ],
+      "compute_to_store": [
+        6,
+        6
+      ],
+      "compute_pop_cycles": [
+        3737,
+        3738
+      ]
+    },
+    {
+      "case": "lrelu_fp16_n512",
+      "dtype": "fp16",
+      "golden": {
+        "passed": true,
+        "elements_checked": 512,
+        "mismatches": 0,
+        "guard_bytes_checked": 31744,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "output0.bin": "bef4953c17f069df21eed05daf17ca4e3d045fd3130e7b06049c83371486e1a4",
+        "core0.veccore0.instr_log.dump": "2253b0bf2f3163652d7bccde04916dcc9cb8006e6c2b300f8ff4e639f6d1431f",
+        "core0.veccore0.instr_popped_log.dump": "f770f70ac4d87e2b626d6cbf1c9b23f148bd206e436aa367d996aa23f29730fc"
+      },
+      "latencies": [
+        8,
+        8,
+        8,
+        8
+      ],
+      "load_to_compute": [
+        6,
+        6,
+        6,
+        6
+      ],
+      "compute_to_store": [
+        6,
+        6,
+        6,
+        6
+      ],
+      "compute_pop_cycles": [
+        3737,
+        3738,
+        3739,
+        3740
+      ]
+    }
+  ]
+}

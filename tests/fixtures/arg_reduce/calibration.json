@@ -1,0 +1,2726 @@
+{
+  "forms": {
+    "VADD": {
+      "form": "int32",
+      "latency": 7,
+      "dtype": "int32",
+      "EXU": "ALU",
+      "dispatch_exu": "EXU01"
+    },
+    "VADDS": {
+      "form": "int32",
+      "latency": 7,
+      "dtype": "int32",
+      "EXU": "ALU",
+      "dispatch_exu": "EXU01"
+    },
+    "VDUP": {
+      "form": "b32",
+      "latency": 6,
+      "dtype": "uint32",
+      "EXU": "ALU",
+      "dispatch_exu": "EXU01"
+    },
+    "VSEL": {
+      "form": "b32",
+      "latency": 6,
+      "dtype": "uint32",
+      "EXU": "ALU",
+      "dispatch_exu": "EXU01"
+    },
+    "VMOV": {
+      "form": "b32",
+      "latency": 6,
+      "dtype": "uint32",
+      "EXU": "ALU",
+      "dispatch_exu": "EXU01"
+    }
+  },
+  "cases": [
+    {
+      "case": "rowargmaxwithvalue_single_fp32_1x64",
+      "opcode": "ROWARGMAXWITHVALUE_SINGLE",
+      "dtype": "fp32",
+      "shape": [
+        1,
+        64
+      ],
+      "arity": 1,
+      "outputs": 2,
+      "expected_vf_calls": 1,
+      "input_encoding": "fp32",
+      "source": "PyPTO reduce.h::ArgReduceLastAxisCompute -> PTO TRowReduceIdxProc/UpdateIdxValue; FP32 values and INT32 indices",
+      "golden": {
+        "passed": true,
+        "guard_passed": true,
+        "value_guard_passed": true,
+        "index_guard_passed": true,
+        "guard_bytes_checked": 65528,
+        "value_mismatches": 0,
+        "index_mismatches": 0,
+        "expected_indices": [
+          6
+        ],
+        "actual_indices": [
+          6
+        ]
+      },
+      "sha256": {
+        "input0.bin": "8b4d98bd9607fad8e33997e802b81cea5454fc30fe2194cd428afdf0768ca7d7",
+        "output0.bin": "55b968da5295777e293bc6d490c3d615da79d4e1c29ee27d5a9fc983bccce3c4",
+        "output1.bin": "fc61fd6791ac99f39360e285ad2fbe2d1a2b4001a750dc46afe34c4d84052a37",
+        "core0.veccore0.instr_log.dump": "df7728697ec019a3cc431607aa7d67c45d9a322b04c68bc4af35c05bccfc1219",
+        "core0.veccore0.instr_popped_log.dump": "b250acd4bb8104e4aafeec068927fd5c4482c76a13d61f2049c0f9f2f83035cc"
+      },
+      "instruction_counts": {
+        "MOV_XD_SPR": 6,
+        "MOVK": 9,
+        "MOV_XD_IMM": 12,
+        "ADD": 2,
+        "SHR": 1,
+        "AND": 1,
+        "ADD_IMM": 3,
+        "SHL": 3,
+        "MADD": 1,
+        "DC_PRELOAD_XN_IMM": 1,
+        "LD_XD_XN_IMM": 1,
+        "LDP_XI_XJ_XN": 1,
+        "INSERT_XD_XN": 3,
+        "NOP": 2,
+        "PUSH_PB": 1,
+        "MOV_SRC_TO_DST_ALIGNv2": 5,
+        "SET_FLAG": 2,
+        "WAIT_FLAG": 2,
+        "RV_SMOVI": 2,
+        "RV_VLOOPv2": 1,
+        "RV_SMOV": 3,
+        "RV_PLT": 2,
+        "RV_VBR": 2,
+        "RV_VDUPS": 1,
+        "RV_SEND": 3,
+        "RV_VLDI": 1,
+        "RV_VCMAX": 1,
+        "RV_VDINTLV": 1,
+        "RV_VCMP_LT": 1,
+        "RV_VSEL": 2,
+        "RV_VADD": 1,
+        "RV_VSTI": 2,
+        "VF": 1,
+        "BAR": 1,
+        "END": 1,
+        "DCCI": 2,
+        "END_LABEL": 1
+      },
+      "instruction_elapsed_histograms": {
+        "RV_SMOVI": {
+          "0": 2
+        },
+        "RV_VLOOPv2": {
+          "0": 1
+        },
+        "RV_SMOV": {
+          "1": 3
+        },
+        "RV_PLT": {
+          "6": 2
+        },
+        "RV_VBR": {
+          "6": 2
+        },
+        "RV_VDUPS": {
+          "6": 1
+        },
+        "RV_SEND": {
+          "-33": 1,
+          "9": 2
+        },
+        "RV_VLDI": {
+          "9": 1
+        },
+        "RV_VCMAX": {
+          "16": 1
+        },
+        "RV_VDINTLV": {
+          "11": 1
+        },
+        "RV_VCMP_LT": {
+          "6": 1
+        },
+        "RV_VSEL": {
+          "6": 2
+        },
+        "RV_VADD": {
+          "7": 1
+        },
+        "RV_VSTI": {
+          "9": 2
+        }
+      },
+      "manual_source_counts": {
+        "RV_VBR": 2,
+        "RV_VDUP": 1,
+        "RV_PLT": 2,
+        "RV_VLD": 1,
+        "RV_VCMAX": 1,
+        "RV_VDINTLV": 1,
+        "RV_VADD": 1,
+        "RV_VCMP_LT": 1,
+        "RV_VSEL": 2,
+        "RV_VST": 2
+      },
+      "manual_counts_match": true,
+      "vf_cycles": [
+        82
+      ],
+      "state": "native_verified"
+    },
+    {
+      "case": "rowargmaxwithvalue_single_fp32_1x128",
+      "opcode": "ROWARGMAXWITHVALUE_SINGLE",
+      "dtype": "fp32",
+      "shape": [
+        1,
+        128
+      ],
+      "arity": 1,
+      "outputs": 2,
+      "expected_vf_calls": 1,
+      "input_encoding": "fp32",
+      "source": "PyPTO reduce.h::ArgReduceLastAxisCompute -> PTO TRowReduceIdxProc/UpdateIdxValue; FP32 values and INT32 indices",
+      "golden": {
+        "passed": true,
+        "guard_passed": true,
+        "value_guard_passed": true,
+        "index_guard_passed": true,
+        "guard_bytes_checked": 65528,
+        "value_mismatches": 0,
+        "index_mismatches": 0,
+        "expected_indices": [
+          6
+        ],
+        "actual_indices": [
+          6
+        ]
+      },
+      "sha256": {
+        "input0.bin": "8b4d98bd9607fad8e33997e802b81cea5454fc30fe2194cd428afdf0768ca7d7",
+        "output0.bin": "55b968da5295777e293bc6d490c3d615da79d4e1c29ee27d5a9fc983bccce3c4",
+        "output1.bin": "fc61fd6791ac99f39360e285ad2fbe2d1a2b4001a750dc46afe34c4d84052a37",
+        "core0.veccore0.instr_log.dump": "87904defe6aaa9f01a53160d64127cf45a81e684ec9ef835fd6f06f676fb54ae",
+        "core0.veccore0.instr_popped_log.dump": "b023a8681771f11a01a565fcd29d106ea2bc6d8710b8e41f5dc0fddd0833ef3c"
+      },
+      "instruction_counts": {
+        "MOV_XD_SPR": 6,
+        "MOVK": 10,
+        "MOV_XD_IMM": 14,
+        "ADD": 2,
+        "SHR": 1,
+        "AND": 1,
+        "ADD_IMM": 3,
+        "SHL": 3,
+        "MADD": 1,
+        "DC_PRELOAD_XN_IMM": 1,
+        "LD_XD_XN_IMM": 1,
+        "LDP_XI_XJ_XN": 1,
+        "INSERT_XD_XN": 4,
+        "NOP": 2,
+        "PUSH_PB": 1,
+        "MOV_SRC_TO_DST_ALIGNv2": 5,
+        "SET_FLAG": 2,
+        "WAIT_FLAG": 2,
+        "RV_SMOVI": 2,
+        "RV_VLOOPv2": 2,
+        "RV_SMOV": 4,
+        "RV_PLT": 3,
+        "RV_VBR": 2,
+        "RV_VDUPS": 1,
+        "RV_VMOV": 3,
+        "RV_SEND": 3,
+        "RV_VLDI": 2,
+        "RV_VADDS": 2,
+        "RV_VCMAX": 2,
+        "RV_VDINTLV": 2,
+        "RV_VCMP_LT": 2,
+        "RV_VADD": 2,
+        "RV_VSEL": 4,
+        "RV_VSTI": 2,
+        "VF": 1,
+        "BAR": 1,
+        "END": 1,
+        "DCCI": 2,
+        "END_LABEL": 1
+      },
+      "instruction_elapsed_histograms": {
+        "RV_SMOVI": {
+          "0": 2
+        },
+        "RV_VLOOPv2": {
+          "0": 2
+        },
+        "RV_SMOV": {
+          "1": 4
+        },
+        "RV_PLT": {
+          "6": 3
+        },
+        "RV_VBR": {
+          "6": 2
+        },
+        "RV_VDUPS": {
+          "6": 1
+        },
+        "RV_VMOV": {
+          "6": 3
+        },
+        "RV_SEND": {
+          "-40": 1,
+          "9": 2
+        },
+        "RV_VLDI": {
+          "9": 2
+        },
+        "RV_VADDS": {
+          "7": 2
+        },
+        "RV_VCMAX": {
+          "16": 2
+        },
+        "RV_VDINTLV": {
+          "11": 2
+        },
+        "RV_VCMP_LT": {
+          "6": 2
+        },
+        "RV_VADD": {
+          "7": 2
+        },
+        "RV_VSEL": {
+          "6": 4
+        },
+        "RV_VSTI": {
+          "9": 2
+        }
+      },
+      "manual_source_counts": {
+        "RV_VBR": 2,
+        "RV_VDUP": 1,
+        "RV_PLT": 3,
+        "RV_VLD": 2,
+        "RV_VCMAX": 2,
+        "RV_VDINTLV": 2,
+        "RV_VADD": 2,
+        "RV_VCMP_LT": 2,
+        "RV_VSEL": 4,
+        "RV_VST": 2,
+        "RV_VMOV": 3,
+        "RV_VADDS": 2
+      },
+      "manual_counts_match": true,
+      "vf_cycles": [
+        90
+      ],
+      "state": "native_verified"
+    },
+    {
+      "case": "rowargmaxwithvalue_single_fp32_1x512",
+      "opcode": "ROWARGMAXWITHVALUE_SINGLE",
+      "dtype": "fp32",
+      "shape": [
+        1,
+        512
+      ],
+      "arity": 1,
+      "outputs": 2,
+      "expected_vf_calls": 1,
+      "input_encoding": "fp32",
+      "source": "PyPTO reduce.h::ArgReduceLastAxisCompute -> PTO TRowReduceIdxProc/UpdateIdxValue; FP32 values and INT32 indices",
+      "golden": {
+        "passed": true,
+        "guard_passed": true,
+        "value_guard_passed": true,
+        "index_guard_passed": true,
+        "guard_bytes_checked": 65528,
+        "value_mismatches": 0,
+        "index_mismatches": 0,
+        "expected_indices": [
+          6
+        ],
+        "actual_indices": [
+          6
+        ]
+      },
+      "sha256": {
+        "input0.bin": "8b4d98bd9607fad8e33997e802b81cea5454fc30fe2194cd428afdf0768ca7d7",
+        "output0.bin": "55b968da5295777e293bc6d490c3d615da79d4e1c29ee27d5a9fc983bccce3c4",
+        "output1.bin": "fc61fd6791ac99f39360e285ad2fbe2d1a2b4001a750dc46afe34c4d84052a37",
+        "core0.veccore0.instr_log.dump": "fd43aa33a7b44e6ee5bca25a2276bd6930b52361ea543e2c2b7b6b23f6db40e8",
+        "core0.veccore0.instr_popped_log.dump": "760bebab2cd7be7756b7ad75164243426d452d4ed2c4a20c1a8334ce7cea2845"
+      },
+      "instruction_counts": {
+        "MOV_XD_SPR": 6,
+        "MOVK": 10,
+        "MOV_XD_IMM": 14,
+        "ADD": 2,
+        "SHR": 1,
+        "AND": 1,
+        "ADD_IMM": 3,
+        "SHL": 3,
+        "MADD": 1,
+        "DC_PRELOAD_XN_IMM": 1,
+        "LD_XD_XN_IMM": 1,
+        "LDP_XI_XJ_XN": 1,
+        "INSERT_XD_XN": 4,
+        "NOP": 2,
+        "PUSH_PB": 1,
+        "MOV_SRC_TO_DST_ALIGNv2": 5,
+        "SET_FLAG": 2,
+        "WAIT_FLAG": 2,
+        "RV_SMOVI": 2,
+        "RV_VLOOPv2": 2,
+        "RV_SMOV": 4,
+        "RV_PLT": 9,
+        "RV_VBR": 2,
+        "RV_VDUPS": 1,
+        "RV_VMOV": 3,
+        "RV_VLDI": 8,
+        "RV_VADDS": 8,
+        "RV_SEND": 3,
+        "RV_VCMAX": 8,
+        "RV_VDINTLV": 8,
+        "RV_VCMP_LT": 8,
+        "RV_VADD": 8,
+        "RV_VSEL": 16,
+        "RV_VSTI": 2,
+        "VF": 1,
+        "BAR": 1,
+        "END": 1,
+        "DCCI": 2,
+        "END_LABEL": 1
+      },
+      "instruction_elapsed_histograms": {
+        "RV_SMOVI": {
+          "0": 2
+        },
+        "RV_VLOOPv2": {
+          "0": 2
+        },
+        "RV_SMOV": {
+          "1": 4
+        },
+        "RV_PLT": {
+          "6": 9
+        },
+        "RV_VBR": {
+          "6": 2
+        },
+        "RV_VDUPS": {
+          "6": 1
+        },
+        "RV_VMOV": {
+          "6": 3
+        },
+        "RV_VLDI": {
+          "9": 8
+        },
+        "RV_VADDS": {
+          "7": 8
+        },
+        "RV_SEND": {
+          "-69": 1,
+          "9": 2
+        },
+        "RV_VCMAX": {
+          "16": 8
+        },
+        "RV_VDINTLV": {
+          "11": 8
+        },
+        "RV_VCMP_LT": {
+          "6": 8
+        },
+        "RV_VADD": {
+          "7": 8
+        },
+        "RV_VSEL": {
+          "6": 16
+        },
+        "RV_VSTI": {
+          "9": 2
+        }
+      },
+      "manual_source_counts": {
+        "RV_VBR": 2,
+        "RV_VDUP": 1,
+        "RV_PLT": 9,
+        "RV_VLD": 8,
+        "RV_VCMAX": 8,
+        "RV_VDINTLV": 8,
+        "RV_VADD": 8,
+        "RV_VCMP_LT": 8,
+        "RV_VSEL": 16,
+        "RV_VST": 2,
+        "RV_VMOV": 3,
+        "RV_VADDS": 8
+      },
+      "manual_counts_match": true,
+      "vf_cycles": [
+        131
+      ],
+      "state": "native_verified"
+    },
+    {
+      "case": "rowargmaxwithvalue_single_fp32_2x64",
+      "opcode": "ROWARGMAXWITHVALUE_SINGLE",
+      "dtype": "fp32",
+      "shape": [
+        2,
+        64
+      ],
+      "arity": 1,
+      "outputs": 2,
+      "expected_vf_calls": 1,
+      "input_encoding": "fp32",
+      "source": "PyPTO reduce.h::ArgReduceLastAxisCompute -> PTO TRowReduceIdxProc/UpdateIdxValue; FP32 values and INT32 indices",
+      "golden": {
+        "passed": true,
+        "guard_passed": true,
+        "value_guard_passed": true,
+        "index_guard_passed": true,
+        "guard_bytes_checked": 65520,
+        "value_mismatches": 0,
+        "index_mismatches": 0,
+        "expected_indices": [
+          6,
+          5
+        ],
+        "actual_indices": [
+          6,
+          5
+        ]
+      },
+      "sha256": {
+        "input0.bin": "8b4d98bd9607fad8e33997e802b81cea5454fc30fe2194cd428afdf0768ca7d7",
+        "output0.bin": "ff36209673ddd5034d530291af0668b34117b4883d036ef41cb718ad760692dc",
+        "output1.bin": "693d06b5c3c2dcd42a16bef6a9efe239d0a248ee2090e0ab050a00d26fd3940d",
+        "core0.veccore0.instr_log.dump": "47859706dcdc7f93181b31c08a0076524982d8655f998f67993fa32339f37e55",
+        "core0.veccore0.instr_popped_log.dump": "d4595f738afd8dbb18b7983710a66b9cbffc04c1d894a46e8c8cfcf18154e718"
+      },
+      "instruction_counts": {
+        "MOV_XD_SPR": 6,
+        "MOVK": 9,
+        "MOV_XD_IMM": 12,
+        "ADD": 2,
+        "SHR": 1,
+        "AND": 1,
+        "ADD_IMM": 3,
+        "SHL": 3,
+        "MADD": 1,
+        "DC_PRELOAD_XN_IMM": 1,
+        "LD_XD_XN_IMM": 1,
+        "LDP_XI_XJ_XN": 1,
+        "INSERT_XD_XN": 3,
+        "NOP": 2,
+        "PUSH_PB": 1,
+        "MOV_SRC_TO_DST_ALIGNv2": 5,
+        "SET_FLAG": 2,
+        "WAIT_FLAG": 2,
+        "RV_SMOVI": 2,
+        "RV_VLOOPv2": 1,
+        "RV_SMOV": 3,
+        "RV_PLT": 2,
+        "RV_VBR": 2,
+        "RV_VDUPS": 1,
+        "RV_SEND": 3,
+        "RV_VLDI": 2,
+        "RV_VCMAX": 2,
+        "RV_VDINTLV": 2,
+        "RV_VCMP_LT": 2,
+        "RV_VSEL": 4,
+        "RV_VADD": 2,
+        "RV_VSTI": 4,
+        "VF": 1,
+        "BAR": 1,
+        "END": 1,
+        "DCCI": 2,
+        "END_LABEL": 1
+      },
+      "instruction_elapsed_histograms": {
+        "RV_SMOVI": {
+          "0": 2
+        },
+        "RV_VLOOPv2": {
+          "0": 1
+        },
+        "RV_SMOV": {
+          "1": 3
+        },
+        "RV_PLT": {
+          "6": 2
+        },
+        "RV_VBR": {
+          "6": 2
+        },
+        "RV_VDUPS": {
+          "6": 1
+        },
+        "RV_SEND": {
+          "-36": 1,
+          "9": 2
+        },
+        "RV_VLDI": {
+          "9": 2
+        },
+        "RV_VCMAX": {
+          "16": 2
+        },
+        "RV_VDINTLV": {
+          "11": 2
+        },
+        "RV_VCMP_LT": {
+          "6": 2
+        },
+        "RV_VSEL": {
+          "6": 4
+        },
+        "RV_VADD": {
+          "7": 2
+        },
+        "RV_VSTI": {
+          "9": 4
+        }
+      },
+      "manual_source_counts": {
+        "RV_VBR": 2,
+        "RV_VDUP": 1,
+        "RV_PLT": 2,
+        "RV_VLD": 2,
+        "RV_VCMAX": 2,
+        "RV_VDINTLV": 2,
+        "RV_VADD": 2,
+        "RV_VCMP_LT": 2,
+        "RV_VSEL": 4,
+        "RV_VST": 4
+      },
+      "manual_counts_match": true,
+      "vf_cycles": [
+        85
+      ],
+      "state": "native_verified"
+    },
+    {
+      "case": "rowargmaxwithvalue_single_fp32_2x128",
+      "opcode": "ROWARGMAXWITHVALUE_SINGLE",
+      "dtype": "fp32",
+      "shape": [
+        2,
+        128
+      ],
+      "arity": 1,
+      "outputs": 2,
+      "expected_vf_calls": 1,
+      "input_encoding": "fp32",
+      "source": "PyPTO reduce.h::ArgReduceLastAxisCompute -> PTO TRowReduceIdxProc/UpdateIdxValue; FP32 values and INT32 indices",
+      "golden": {
+        "passed": true,
+        "guard_passed": true,
+        "value_guard_passed": true,
+        "index_guard_passed": true,
+        "guard_bytes_checked": 65520,
+        "value_mismatches": 0,
+        "index_mismatches": 0,
+        "expected_indices": [
+          6,
+          4
+        ],
+        "actual_indices": [
+          6,
+          4
+        ]
+      },
+      "sha256": {
+        "input0.bin": "8b4d98bd9607fad8e33997e802b81cea5454fc30fe2194cd428afdf0768ca7d7",
+        "output0.bin": "ff36209673ddd5034d530291af0668b34117b4883d036ef41cb718ad760692dc",
+        "output1.bin": "f7c5c4d864ba3e9fe2a48713c67ab2527b1427286ef7334676433a3a873e8657",
+        "core0.veccore0.instr_log.dump": "aa4c62cb4ec0236782f0e31060975283a29fc6234d097e2c51ff31015171f202",
+        "core0.veccore0.instr_popped_log.dump": "3a96cb4d862b8fbdd31de3eb21f08916e48f8dd8471a4efb9f9c6f027f4a7c65"
+      },
+      "instruction_counts": {
+        "MOV_XD_SPR": 6,
+        "MOVK": 10,
+        "MOV_XD_IMM": 13,
+        "ADD": 2,
+        "SHR": 1,
+        "AND": 1,
+        "ADD_IMM": 3,
+        "SHL": 3,
+        "MADD": 1,
+        "DC_PRELOAD_XN_IMM": 1,
+        "LD_XD_XN_IMM": 1,
+        "LDP_XI_XJ_XN": 1,
+        "INSERT_XD_XN": 4,
+        "NOP": 2,
+        "PUSH_PB": 1,
+        "MOV_SRC_TO_DST_ALIGNv2": 5,
+        "SET_FLAG": 2,
+        "WAIT_FLAG": 2,
+        "RV_SMOVI": 2,
+        "RV_VLOOPv2": 3,
+        "RV_SMOV": 5,
+        "RV_PLT": 5,
+        "RV_VBR": 2,
+        "RV_VDUPS": 1,
+        "RV_VMOV": 6,
+        "RV_VLDI": 4,
+        "RV_VADDS": 4,
+        "RV_SEND": 3,
+        "RV_VCMAX": 4,
+        "RV_VDINTLV": 4,
+        "RV_VCMP_LT": 4,
+        "RV_VADD": 4,
+        "RV_VSEL": 8,
+        "RV_VSTI": 4,
+        "VF": 1,
+        "BAR": 1,
+        "END": 1,
+        "DCCI": 2,
+        "END_LABEL": 1
+      },
+      "instruction_elapsed_histograms": {
+        "RV_SMOVI": {
+          "0": 2
+        },
+        "RV_VLOOPv2": {
+          "0": 3
+        },
+        "RV_SMOV": {
+          "1": 5
+        },
+        "RV_PLT": {
+          "6": 5
+        },
+        "RV_VBR": {
+          "6": 2
+        },
+        "RV_VDUPS": {
+          "6": 1
+        },
+        "RV_VMOV": {
+          "6": 6
+        },
+        "RV_VLDI": {
+          "9": 4
+        },
+        "RV_VADDS": {
+          "7": 4
+        },
+        "RV_SEND": {
+          "-40": 1,
+          "9": 2
+        },
+        "RV_VCMAX": {
+          "16": 4
+        },
+        "RV_VDINTLV": {
+          "11": 4
+        },
+        "RV_VCMP_LT": {
+          "6": 4
+        },
+        "RV_VADD": {
+          "7": 4
+        },
+        "RV_VSEL": {
+          "6": 8
+        },
+        "RV_VSTI": {
+          "9": 4
+        }
+      },
+      "manual_source_counts": {
+        "RV_VBR": 2,
+        "RV_VDUP": 1,
+        "RV_PLT": 5,
+        "RV_VLD": 4,
+        "RV_VCMAX": 4,
+        "RV_VDINTLV": 4,
+        "RV_VADD": 4,
+        "RV_VCMP_LT": 4,
+        "RV_VSEL": 8,
+        "RV_VST": 4,
+        "RV_VMOV": 6,
+        "RV_VADDS": 4
+      },
+      "manual_counts_match": true,
+      "vf_cycles": [
+        99
+      ],
+      "state": "native_verified"
+    },
+    {
+      "case": "rowargmaxwithvalue_single_fp32_2x512",
+      "opcode": "ROWARGMAXWITHVALUE_SINGLE",
+      "dtype": "fp32",
+      "shape": [
+        2,
+        512
+      ],
+      "arity": 1,
+      "outputs": 2,
+      "expected_vf_calls": 1,
+      "input_encoding": "fp32",
+      "source": "PyPTO reduce.h::ArgReduceLastAxisCompute -> PTO TRowReduceIdxProc/UpdateIdxValue; FP32 values and INT32 indices",
+      "golden": {
+        "passed": true,
+        "guard_passed": true,
+        "value_guard_passed": true,
+        "index_guard_passed": true,
+        "guard_bytes_checked": 65520,
+        "value_mismatches": 0,
+        "index_mismatches": 0,
+        "expected_indices": [
+          6,
+          5
+        ],
+        "actual_indices": [
+          6,
+          5
+        ]
+      },
+      "sha256": {
+        "input0.bin": "8b4d98bd9607fad8e33997e802b81cea5454fc30fe2194cd428afdf0768ca7d7",
+        "output0.bin": "ff36209673ddd5034d530291af0668b34117b4883d036ef41cb718ad760692dc",
+        "output1.bin": "693d06b5c3c2dcd42a16bef6a9efe239d0a248ee2090e0ab050a00d26fd3940d",
+        "core0.veccore0.instr_log.dump": "a2539fd02c703d0c5201a1821de59d7cfe633d37d6be66616b86b5c90e763274",
+        "core0.veccore0.instr_popped_log.dump": "74ba1b17a450c63ef6de1374f49940e0e086128308f0ae81bdead08a65c7e69d"
+      },
+      "instruction_counts": {
+        "MOV_XD_SPR": 6,
+        "MOVK": 10,
+        "MOV_XD_IMM": 14,
+        "ADD": 2,
+        "SHR": 1,
+        "AND": 1,
+        "ADD_IMM": 3,
+        "SHL": 3,
+        "MADD": 1,
+        "DC_PRELOAD_XN_IMM": 1,
+        "LD_XD_XN_IMM": 1,
+        "LDP_XI_XJ_XN": 1,
+        "INSERT_XD_XN": 4,
+        "NOP": 2,
+        "PUSH_PB": 1,
+        "MOV_SRC_TO_DST_ALIGNv2": 5,
+        "SET_FLAG": 2,
+        "WAIT_FLAG": 2,
+        "RV_SMOVI": 2,
+        "RV_VLOOPv2": 3,
+        "RV_SMOV": 5,
+        "RV_PLT": 17,
+        "RV_VBR": 2,
+        "RV_VDUPS": 1,
+        "RV_VMOV": 6,
+        "RV_VLDI": 16,
+        "RV_VADDS": 16,
+        "RV_VCMAX": 16,
+        "RV_VDINTLV": 16,
+        "RV_VADD": 16,
+        "RV_VCMP_LT": 16,
+        "RV_VSEL": 32,
+        "RV_SEND": 3,
+        "RV_VSTI": 4,
+        "VF": 1,
+        "BAR": 1,
+        "END": 1,
+        "DCCI": 2,
+        "END_LABEL": 1
+      },
+      "instruction_elapsed_histograms": {
+        "RV_SMOVI": {
+          "0": 2
+        },
+        "RV_VLOOPv2": {
+          "0": 3
+        },
+        "RV_SMOV": {
+          "1": 5
+        },
+        "RV_PLT": {
+          "6": 17
+        },
+        "RV_VBR": {
+          "6": 2
+        },
+        "RV_VDUPS": {
+          "6": 1
+        },
+        "RV_VMOV": {
+          "6": 6
+        },
+        "RV_VLDI": {
+          "9": 16
+        },
+        "RV_VADDS": {
+          "7": 16
+        },
+        "RV_VCMAX": {
+          "16": 16
+        },
+        "RV_VDINTLV": {
+          "11": 16
+        },
+        "RV_VADD": {
+          "7": 16
+        },
+        "RV_VCMP_LT": {
+          "6": 16
+        },
+        "RV_VSEL": {
+          "6": 32
+        },
+        "RV_SEND": {
+          "-55": 1,
+          "9": 2
+        },
+        "RV_VSTI": {
+          "9": 4
+        }
+      },
+      "manual_source_counts": {
+        "RV_VBR": 2,
+        "RV_VDUP": 1,
+        "RV_PLT": 17,
+        "RV_VLD": 16,
+        "RV_VCMAX": 16,
+        "RV_VDINTLV": 16,
+        "RV_VADD": 16,
+        "RV_VCMP_LT": 16,
+        "RV_VSEL": 32,
+        "RV_VST": 4,
+        "RV_VMOV": 6,
+        "RV_VADDS": 16
+      },
+      "manual_counts_match": true,
+      "vf_cycles": [
+        184
+      ],
+      "state": "native_verified"
+    },
+    {
+      "case": "rowargmaxwithvalue_single_fp32_8x64",
+      "opcode": "ROWARGMAXWITHVALUE_SINGLE",
+      "dtype": "fp32",
+      "shape": [
+        8,
+        64
+      ],
+      "arity": 1,
+      "outputs": 2,
+      "expected_vf_calls": 1,
+      "input_encoding": "fp32",
+      "source": "PyPTO reduce.h::ArgReduceLastAxisCompute -> PTO TRowReduceIdxProc/UpdateIdxValue; FP32 values and INT32 indices",
+      "golden": {
+        "passed": true,
+        "guard_passed": true,
+        "value_guard_passed": true,
+        "index_guard_passed": true,
+        "guard_bytes_checked": 65472,
+        "value_mismatches": 0,
+        "index_mismatches": 0,
+        "expected_indices": [
+          6,
+          5,
+          4,
+          3,
+          2,
+          1,
+          0,
+          6
+        ],
+        "actual_indices": [
+          6,
+          5,
+          4,
+          3,
+          2,
+          1,
+          0,
+          6
+        ]
+      },
+      "sha256": {
+        "input0.bin": "8b4d98bd9607fad8e33997e802b81cea5454fc30fe2194cd428afdf0768ca7d7",
+        "output0.bin": "bb436a78d171a3bbaa25c167295e8bce24204a09520331b0f8f1138be7095da7",
+        "output1.bin": "f9545b2b888c175ef4f9d3bc4fa25e79fa1830668d46e2a929ac52669f1edb8a",
+        "core0.veccore0.instr_log.dump": "dc383704c43cc1a5e0abf08d1abbfa5768521fe545b015cb76a84d3b1c03f513",
+        "core0.veccore0.instr_popped_log.dump": "15b61e71c1f336c07076cd79dba6a2a0f08942855eb125165c0cae9607f4e948"
+      },
+      "instruction_counts": {
+        "MOV_XD_SPR": 6,
+        "MOVK": 9,
+        "MOV_XD_IMM": 12,
+        "ADD": 2,
+        "SHR": 1,
+        "AND": 1,
+        "ADD_IMM": 3,
+        "SHL": 3,
+        "MADD": 1,
+        "DC_PRELOAD_XN_IMM": 1,
+        "LD_XD_XN_IMM": 1,
+        "LDP_XI_XJ_XN": 1,
+        "INSERT_XD_XN": 3,
+        "NOP": 2,
+        "PUSH_PB": 1,
+        "MOV_SRC_TO_DST_ALIGNv2": 5,
+        "SET_FLAG": 2,
+        "WAIT_FLAG": 2,
+        "RV_SMOVI": 2,
+        "RV_VLOOPv2": 1,
+        "RV_SMOV": 3,
+        "RV_PLT": 2,
+        "RV_VBR": 2,
+        "RV_VDUPS": 1,
+        "RV_VLDI": 8,
+        "RV_SEND": 3,
+        "RV_VCMAX": 8,
+        "RV_VDINTLV": 8,
+        "RV_VCMP_LT": 8,
+        "RV_VADD": 8,
+        "RV_VSEL": 16,
+        "RV_VSTI": 16,
+        "VF": 1,
+        "BAR": 1,
+        "END": 1,
+        "DCCI": 2,
+        "END_LABEL": 1
+      },
+      "instruction_elapsed_histograms": {
+        "RV_SMOVI": {
+          "0": 2
+        },
+        "RV_VLOOPv2": {
+          "0": 1
+        },
+        "RV_SMOV": {
+          "1": 3
+        },
+        "RV_PLT": {
+          "6": 2
+        },
+        "RV_VBR": {
+          "6": 2
+        },
+        "RV_VDUPS": {
+          "6": 1
+        },
+        "RV_VLDI": {
+          "9": 8
+        },
+        "RV_SEND": {
+          "-48": 1,
+          "9": 2
+        },
+        "RV_VCMAX": {
+          "16": 8
+        },
+        "RV_VDINTLV": {
+          "11": 8
+        },
+        "RV_VCMP_LT": {
+          "6": 8
+        },
+        "RV_VADD": {
+          "7": 8
+        },
+        "RV_VSEL": {
+          "6": 16
+        },
+        "RV_VSTI": {
+          "9": 16
+        }
+      },
+      "manual_source_counts": {
+        "RV_VBR": 2,
+        "RV_VDUP": 1,
+        "RV_PLT": 2,
+        "RV_VLD": 8,
+        "RV_VCMAX": 8,
+        "RV_VDINTLV": 8,
+        "RV_VADD": 8,
+        "RV_VCMP_LT": 8,
+        "RV_VSEL": 16,
+        "RV_VST": 16
+      },
+      "manual_counts_match": true,
+      "vf_cycles": [
+        111
+      ],
+      "state": "native_verified"
+    },
+    {
+      "case": "rowargmaxwithvalue_single_fp32_8x128",
+      "opcode": "ROWARGMAXWITHVALUE_SINGLE",
+      "dtype": "fp32",
+      "shape": [
+        8,
+        128
+      ],
+      "arity": 1,
+      "outputs": 2,
+      "expected_vf_calls": 1,
+      "input_encoding": "fp32",
+      "source": "PyPTO reduce.h::ArgReduceLastAxisCompute -> PTO TRowReduceIdxProc/UpdateIdxValue; FP32 values and INT32 indices",
+      "golden": {
+        "passed": true,
+        "guard_passed": true,
+        "value_guard_passed": true,
+        "index_guard_passed": true,
+        "guard_bytes_checked": 65472,
+        "value_mismatches": 0,
+        "index_mismatches": 0,
+        "expected_indices": [
+          6,
+          4,
+          2,
+          0,
+          5,
+          3,
+          1,
+          6
+        ],
+        "actual_indices": [
+          6,
+          4,
+          2,
+          0,
+          5,
+          3,
+          1,
+          6
+        ]
+      },
+      "sha256": {
+        "input0.bin": "8b4d98bd9607fad8e33997e802b81cea5454fc30fe2194cd428afdf0768ca7d7",
+        "output0.bin": "bb436a78d171a3bbaa25c167295e8bce24204a09520331b0f8f1138be7095da7",
+        "output1.bin": "de0843babb38ed0b74a4d42f7ce68ca15457f7ea0ece69a05ce32f44e83897a7",
+        "core0.veccore0.instr_log.dump": "6ecb9467f449b1d15f5dcc5309f880cf5e47a3365a50bc6a2fa8e104685037f5",
+        "core0.veccore0.instr_popped_log.dump": "be5f5fc600170d0c308636e043e6e5a4ca3cb89ff29f4630a7e71d5ae80bda49"
+      },
+      "instruction_counts": {
+        "MOV_XD_SPR": 6,
+        "MOVK": 10,
+        "MOV_XD_IMM": 14,
+        "ADD": 2,
+        "SHR": 1,
+        "AND": 1,
+        "ADD_IMM": 3,
+        "SHL": 3,
+        "MADD": 1,
+        "DC_PRELOAD_XN_IMM": 1,
+        "LD_XD_XN_IMM": 1,
+        "LDP_XI_XJ_XN": 1,
+        "INSERT_XD_XN": 4,
+        "NOP": 2,
+        "PUSH_PB": 1,
+        "MOV_SRC_TO_DST_ALIGNv2": 5,
+        "SET_FLAG": 2,
+        "WAIT_FLAG": 2,
+        "RV_SMOVI": 2,
+        "RV_VLOOPv2": 9,
+        "RV_SMOV": 11,
+        "RV_PLT": 17,
+        "RV_VBR": 2,
+        "RV_VDUPS": 1,
+        "RV_VMOV": 24,
+        "RV_VLDI": 16,
+        "RV_VADDS": 16,
+        "RV_VCMAX": 16,
+        "RV_VDINTLV": 16,
+        "RV_VADD": 16,
+        "RV_VCMP_LT": 16,
+        "RV_VSEL": 32,
+        "RV_VSTI": 16,
+        "RV_SEND": 3,
+        "VF": 1,
+        "BAR": 1,
+        "END": 1,
+        "DCCI": 2,
+        "END_LABEL": 1
+      },
+      "instruction_elapsed_histograms": {
+        "RV_SMOVI": {
+          "0": 2
+        },
+        "RV_VLOOPv2": {
+          "0": 9
+        },
+        "RV_SMOV": {
+          "1": 11
+        },
+        "RV_PLT": {
+          "6": 17
+        },
+        "RV_VBR": {
+          "6": 2
+        },
+        "RV_VDUPS": {
+          "6": 1
+        },
+        "RV_VMOV": {
+          "6": 24
+        },
+        "RV_VLDI": {
+          "9": 16
+        },
+        "RV_VADDS": {
+          "7": 16
+        },
+        "RV_VCMAX": {
+          "16": 16
+        },
+        "RV_VDINTLV": {
+          "11": 16
+        },
+        "RV_VADD": {
+          "7": 16
+        },
+        "RV_VCMP_LT": {
+          "6": 16
+        },
+        "RV_VSEL": {
+          "6": 32
+        },
+        "RV_VSTI": {
+          "9": 16
+        },
+        "RV_SEND": {
+          "-49": 1,
+          "9": 2
+        }
+      },
+      "manual_source_counts": {
+        "RV_VBR": 2,
+        "RV_VDUP": 1,
+        "RV_PLT": 17,
+        "RV_VLD": 16,
+        "RV_VCMAX": 16,
+        "RV_VDINTLV": 16,
+        "RV_VADD": 16,
+        "RV_VCMP_LT": 16,
+        "RV_VSEL": 32,
+        "RV_VST": 16,
+        "RV_VMOV": 24,
+        "RV_VADDS": 16
+      },
+      "manual_counts_match": true,
+      "vf_cycles": [
+        184
+      ],
+      "state": "native_verified"
+    },
+    {
+      "case": "rowargmaxwithvalue_single_fp32_8x512",
+      "opcode": "ROWARGMAXWITHVALUE_SINGLE",
+      "dtype": "fp32",
+      "shape": [
+        8,
+        512
+      ],
+      "arity": 1,
+      "outputs": 2,
+      "expected_vf_calls": 1,
+      "input_encoding": "fp32",
+      "source": "PyPTO reduce.h::ArgReduceLastAxisCompute -> PTO TRowReduceIdxProc/UpdateIdxValue; FP32 values and INT32 indices",
+      "golden": {
+        "passed": true,
+        "guard_passed": true,
+        "value_guard_passed": true,
+        "index_guard_passed": true,
+        "guard_bytes_checked": 65472,
+        "value_mismatches": 0,
+        "index_mismatches": 0,
+        "expected_indices": [
+          6,
+          5,
+          4,
+          3,
+          2,
+          1,
+          0,
+          6
+        ],
+        "actual_indices": [
+          6,
+          5,
+          4,
+          3,
+          2,
+          1,
+          0,
+          6
+        ]
+      },
+      "sha256": {
+        "input0.bin": "8b4d98bd9607fad8e33997e802b81cea5454fc30fe2194cd428afdf0768ca7d7",
+        "output0.bin": "bb436a78d171a3bbaa25c167295e8bce24204a09520331b0f8f1138be7095da7",
+        "output1.bin": "f9545b2b888c175ef4f9d3bc4fa25e79fa1830668d46e2a929ac52669f1edb8a",
+        "core0.veccore0.instr_log.dump": "d8aa02f282f4b5c761c4a46bada633151975fb79ee35201b4895b0e6384a2070",
+        "core0.veccore0.instr_popped_log.dump": "924e41561f2cacdb5f0809167b777e620ca9e2d0c55c6d01bdec1527cee7910d"
+      },
+      "instruction_counts": {
+        "MOV_XD_SPR": 6,
+        "MOVK": 10,
+        "MOV_XD_IMM": 13,
+        "ADD": 2,
+        "SHR": 1,
+        "AND": 1,
+        "ADD_IMM": 3,
+        "SHL": 3,
+        "MADD": 1,
+        "DC_PRELOAD_XN_IMM": 1,
+        "LD_XD_XN_IMM": 1,
+        "LDP_XI_XJ_XN": 1,
+        "INSERT_XD_XN": 4,
+        "NOP": 2,
+        "PUSH_PB": 1,
+        "MOV_SRC_TO_DST_ALIGNv2": 5,
+        "SET_FLAG": 2,
+        "WAIT_FLAG": 2,
+        "RV_SMOVI": 2,
+        "RV_VLOOPv2": 9,
+        "RV_SMOV": 11,
+        "RV_PLT": 65,
+        "RV_VBR": 2,
+        "RV_VDUPS": 1,
+        "RV_VMOV": 24,
+        "RV_VLDI": 64,
+        "RV_VADDS": 64,
+        "RV_VCMAX": 64,
+        "RV_VDINTLV": 64,
+        "RV_VADD": 64,
+        "RV_VCMP_LT": 64,
+        "RV_VSEL": 128,
+        "RV_VSTI": 16,
+        "RV_SEND": 3,
+        "VF": 1,
+        "BAR": 1,
+        "END": 1,
+        "DCCI": 2,
+        "END_LABEL": 1
+      },
+      "instruction_elapsed_histograms": {
+        "RV_SMOVI": {
+          "0": 2
+        },
+        "RV_VLOOPv2": {
+          "0": 9
+        },
+        "RV_SMOV": {
+          "1": 11
+        },
+        "RV_PLT": {
+          "6": 65
+        },
+        "RV_VBR": {
+          "6": 2
+        },
+        "RV_VDUPS": {
+          "6": 1
+        },
+        "RV_VMOV": {
+          "6": 24
+        },
+        "RV_VLDI": {
+          "9": 64
+        },
+        "RV_VADDS": {
+          "7": 64
+        },
+        "RV_VCMAX": {
+          "16": 64
+        },
+        "RV_VDINTLV": {
+          "11": 64
+        },
+        "RV_VADD": {
+          "7": 64
+        },
+        "RV_VCMP_LT": {
+          "6": 64
+        },
+        "RV_VSEL": {
+          "6": 128
+        },
+        "RV_VSTI": {
+          "9": 11,
+          "10": 5
+        },
+        "RV_SEND": {
+          "-49": 1,
+          "9": 2
+        }
+      },
+      "manual_source_counts": {
+        "RV_VBR": 2,
+        "RV_VDUP": 1,
+        "RV_PLT": 65,
+        "RV_VLD": 64,
+        "RV_VCMAX": 64,
+        "RV_VDINTLV": 64,
+        "RV_VADD": 64,
+        "RV_VCMP_LT": 64,
+        "RV_VSEL": 128,
+        "RV_VST": 16,
+        "RV_VMOV": 24,
+        "RV_VADDS": 64
+      },
+      "manual_counts_match": true,
+      "vf_cycles": [
+        492
+      ],
+      "state": "native_verified"
+    },
+    {
+      "case": "rowargminwithvalue_single_fp32_1x64",
+      "opcode": "ROWARGMINWITHVALUE_SINGLE",
+      "dtype": "fp32",
+      "shape": [
+        1,
+        64
+      ],
+      "arity": 1,
+      "outputs": 2,
+      "expected_vf_calls": 1,
+      "input_encoding": "fp32",
+      "source": "PyPTO reduce.h::ArgReduceLastAxisCompute -> PTO TRowReduceIdxProc/UpdateIdxValue; FP32 values and INT32 indices",
+      "golden": {
+        "passed": true,
+        "guard_passed": true,
+        "value_guard_passed": true,
+        "index_guard_passed": true,
+        "guard_bytes_checked": 65528,
+        "value_mismatches": 0,
+        "index_mismatches": 0,
+        "expected_indices": [
+          0
+        ],
+        "actual_indices": [
+          0
+        ]
+      },
+      "sha256": {
+        "input0.bin": "8b4d98bd9607fad8e33997e802b81cea5454fc30fe2194cd428afdf0768ca7d7",
+        "output0.bin": "8b4d98bd9607fad8e33997e802b81cea5454fc30fe2194cd428afdf0768ca7d7",
+        "output1.bin": "caeccdb1656778a3d365f9b8b23f1eba6d20d08053ebbe2d96efb6efd5f307c6",
+        "core0.veccore0.instr_log.dump": "fc7c47a5517c0e00059c9f96f1f498cac4e5162808dbb560fb61bd3e1643f6d1",
+        "core0.veccore0.instr_popped_log.dump": "378ace53879159989d2a8700ed0bf50e2453d8e2f31d683f4ce8bd307f7e02b4"
+      },
+      "instruction_counts": {
+        "MOV_XD_SPR": 6,
+        "MOVK": 9,
+        "MOV_XD_IMM": 12,
+        "ADD": 2,
+        "SHR": 1,
+        "AND": 1,
+        "ADD_IMM": 3,
+        "SHL": 3,
+        "MADD": 1,
+        "DC_PRELOAD_XN_IMM": 1,
+        "LD_XD_XN_IMM": 1,
+        "LDP_XI_XJ_XN": 1,
+        "INSERT_XD_XN": 3,
+        "NOP": 2,
+        "PUSH_PB": 1,
+        "MOV_SRC_TO_DST_ALIGNv2": 5,
+        "SET_FLAG": 2,
+        "WAIT_FLAG": 2,
+        "RV_SMOVI": 2,
+        "RV_VLOOPv2": 1,
+        "RV_SMOV": 3,
+        "RV_PLT": 2,
+        "RV_VBR": 2,
+        "RV_VDUPS": 1,
+        "RV_SEND": 3,
+        "RV_VLDI": 1,
+        "RV_VCMIN": 1,
+        "RV_VDINTLV": 1,
+        "RV_VCMP_GT": 1,
+        "RV_VSEL": 2,
+        "RV_VADD": 1,
+        "RV_VSTI": 2,
+        "VF": 1,
+        "BAR": 1,
+        "END": 1,
+        "DCCI": 2,
+        "END_LABEL": 1
+      },
+      "instruction_elapsed_histograms": {
+        "RV_SMOVI": {
+          "0": 2
+        },
+        "RV_VLOOPv2": {
+          "0": 1
+        },
+        "RV_SMOV": {
+          "1": 3
+        },
+        "RV_PLT": {
+          "6": 2
+        },
+        "RV_VBR": {
+          "6": 2
+        },
+        "RV_VDUPS": {
+          "6": 1
+        },
+        "RV_SEND": {
+          "-33": 1,
+          "9": 2
+        },
+        "RV_VLDI": {
+          "9": 1
+        },
+        "RV_VCMIN": {
+          "16": 1
+        },
+        "RV_VDINTLV": {
+          "11": 1
+        },
+        "RV_VCMP_GT": {
+          "6": 1
+        },
+        "RV_VSEL": {
+          "6": 2
+        },
+        "RV_VADD": {
+          "7": 1
+        },
+        "RV_VSTI": {
+          "9": 2
+        }
+      },
+      "manual_source_counts": {
+        "RV_VBR": 2,
+        "RV_VDUP": 1,
+        "RV_PLT": 2,
+        "RV_VLD": 1,
+        "RV_VCMIN": 1,
+        "RV_VDINTLV": 1,
+        "RV_VADD": 1,
+        "RV_VCMP_GT": 1,
+        "RV_VSEL": 2,
+        "RV_VST": 2
+      },
+      "manual_counts_match": true,
+      "vf_cycles": [
+        82
+      ],
+      "state": "native_verified"
+    },
+    {
+      "case": "rowargminwithvalue_single_fp32_1x128",
+      "opcode": "ROWARGMINWITHVALUE_SINGLE",
+      "dtype": "fp32",
+      "shape": [
+        1,
+        128
+      ],
+      "arity": 1,
+      "outputs": 2,
+      "expected_vf_calls": 1,
+      "input_encoding": "fp32",
+      "source": "PyPTO reduce.h::ArgReduceLastAxisCompute -> PTO TRowReduceIdxProc/UpdateIdxValue; FP32 values and INT32 indices",
+      "golden": {
+        "passed": true,
+        "guard_passed": true,
+        "value_guard_passed": true,
+        "index_guard_passed": true,
+        "guard_bytes_checked": 65528,
+        "value_mismatches": 0,
+        "index_mismatches": 0,
+        "expected_indices": [
+          0
+        ],
+        "actual_indices": [
+          0
+        ]
+      },
+      "sha256": {
+        "input0.bin": "8b4d98bd9607fad8e33997e802b81cea5454fc30fe2194cd428afdf0768ca7d7",
+        "output0.bin": "8b4d98bd9607fad8e33997e802b81cea5454fc30fe2194cd428afdf0768ca7d7",
+        "output1.bin": "caeccdb1656778a3d365f9b8b23f1eba6d20d08053ebbe2d96efb6efd5f307c6",
+        "core0.veccore0.instr_log.dump": "052650c6a2537ecfe7ba0d2f641bc2b906e3c2adfd3f857e6d685efe65577b6f",
+        "core0.veccore0.instr_popped_log.dump": "282f9258f7de52f66a6343ae36199a16e83e03653f5a63aba939a86bc8f20d2a"
+      },
+      "instruction_counts": {
+        "MOV_XD_SPR": 6,
+        "MOVK": 10,
+        "MOV_XD_IMM": 14,
+        "ADD": 2,
+        "SHR": 1,
+        "AND": 1,
+        "ADD_IMM": 3,
+        "SHL": 3,
+        "MADD": 1,
+        "DC_PRELOAD_XN_IMM": 1,
+        "LD_XD_XN_IMM": 1,
+        "LDP_XI_XJ_XN": 1,
+        "INSERT_XD_XN": 4,
+        "NOP": 2,
+        "PUSH_PB": 1,
+        "MOV_SRC_TO_DST_ALIGNv2": 5,
+        "SET_FLAG": 2,
+        "WAIT_FLAG": 2,
+        "RV_SMOVI": 2,
+        "RV_VLOOPv2": 2,
+        "RV_SMOV": 4,
+        "RV_PLT": 3,
+        "RV_VBR": 2,
+        "RV_VDUPS": 1,
+        "RV_VMOV": 3,
+        "RV_SEND": 3,
+        "RV_VLDI": 2,
+        "RV_VADDS": 2,
+        "RV_VCMIN": 2,
+        "RV_VDINTLV": 2,
+        "RV_VCMP_GT": 2,
+        "RV_VADD": 2,
+        "RV_VSEL": 4,
+        "RV_VSTI": 2,
+        "VF": 1,
+        "BAR": 1,
+        "END": 1,
+        "DCCI": 2,
+        "END_LABEL": 1
+      },
+      "instruction_elapsed_histograms": {
+        "RV_SMOVI": {
+          "0": 2
+        },
+        "RV_VLOOPv2": {
+          "0": 2
+        },
+        "RV_SMOV": {
+          "1": 4
+        },
+        "RV_PLT": {
+          "6": 3
+        },
+        "RV_VBR": {
+          "6": 2
+        },
+        "RV_VDUPS": {
+          "6": 1
+        },
+        "RV_VMOV": {
+          "6": 3
+        },
+        "RV_SEND": {
+          "-40": 1,
+          "9": 2
+        },
+        "RV_VLDI": {
+          "9": 2
+        },
+        "RV_VADDS": {
+          "7": 2
+        },
+        "RV_VCMIN": {
+          "16": 2
+        },
+        "RV_VDINTLV": {
+          "11": 2
+        },
+        "RV_VCMP_GT": {
+          "6": 2
+        },
+        "RV_VADD": {
+          "7": 2
+        },
+        "RV_VSEL": {
+          "6": 4
+        },
+        "RV_VSTI": {
+          "9": 2
+        }
+      },
+      "manual_source_counts": {
+        "RV_VBR": 2,
+        "RV_VDUP": 1,
+        "RV_PLT": 3,
+        "RV_VLD": 2,
+        "RV_VCMIN": 2,
+        "RV_VDINTLV": 2,
+        "RV_VADD": 2,
+        "RV_VCMP_GT": 2,
+        "RV_VSEL": 4,
+        "RV_VST": 2,
+        "RV_VMOV": 3,
+        "RV_VADDS": 2
+      },
+      "manual_counts_match": true,
+      "vf_cycles": [
+        90
+      ],
+      "state": "native_verified"
+    },
+    {
+      "case": "rowargminwithvalue_single_fp32_1x512",
+      "opcode": "ROWARGMINWITHVALUE_SINGLE",
+      "dtype": "fp32",
+      "shape": [
+        1,
+        512
+      ],
+      "arity": 1,
+      "outputs": 2,
+      "expected_vf_calls": 1,
+      "input_encoding": "fp32",
+      "source": "PyPTO reduce.h::ArgReduceLastAxisCompute -> PTO TRowReduceIdxProc/UpdateIdxValue; FP32 values and INT32 indices",
+      "golden": {
+        "passed": true,
+        "guard_passed": true,
+        "value_guard_passed": true,
+        "index_guard_passed": true,
+        "guard_bytes_checked": 65528,
+        "value_mismatches": 0,
+        "index_mismatches": 0,
+        "expected_indices": [
+          0
+        ],
+        "actual_indices": [
+          0
+        ]
+      },
+      "sha256": {
+        "input0.bin": "8b4d98bd9607fad8e33997e802b81cea5454fc30fe2194cd428afdf0768ca7d7",
+        "output0.bin": "8b4d98bd9607fad8e33997e802b81cea5454fc30fe2194cd428afdf0768ca7d7",
+        "output1.bin": "caeccdb1656778a3d365f9b8b23f1eba6d20d08053ebbe2d96efb6efd5f307c6",
+        "core0.veccore0.instr_log.dump": "b0a48ff731ffb2eb7aa19511c2242bb4b59d31b2d64eb0305ce7129dd1ba86a1",
+        "core0.veccore0.instr_popped_log.dump": "bb43e78f9a49bb9ea2aaa23aca7a35923cc0728068011415a1aa493d84f2a6fe"
+      },
+      "instruction_counts": {
+        "MOV_XD_SPR": 6,
+        "MOVK": 10,
+        "MOV_XD_IMM": 14,
+        "ADD": 2,
+        "SHR": 1,
+        "AND": 1,
+        "ADD_IMM": 3,
+        "SHL": 3,
+        "MADD": 1,
+        "DC_PRELOAD_XN_IMM": 1,
+        "LD_XD_XN_IMM": 1,
+        "LDP_XI_XJ_XN": 1,
+        "INSERT_XD_XN": 4,
+        "NOP": 2,
+        "PUSH_PB": 1,
+        "MOV_SRC_TO_DST_ALIGNv2": 5,
+        "SET_FLAG": 2,
+        "WAIT_FLAG": 2,
+        "RV_SMOVI": 2,
+        "RV_VLOOPv2": 2,
+        "RV_SMOV": 4,
+        "RV_PLT": 9,
+        "RV_VBR": 2,
+        "RV_VDUPS": 1,
+        "RV_VMOV": 3,
+        "RV_VLDI": 8,
+        "RV_VADDS": 8,
+        "RV_SEND": 3,
+        "RV_VCMIN": 8,
+        "RV_VDINTLV": 8,
+        "RV_VCMP_GT": 8,
+        "RV_VADD": 8,
+        "RV_VSEL": 16,
+        "RV_VSTI": 2,
+        "VF": 1,
+        "BAR": 1,
+        "END": 1,
+        "DCCI": 2,
+        "END_LABEL": 1
+      },
+      "instruction_elapsed_histograms": {
+        "RV_SMOVI": {
+          "0": 2
+        },
+        "RV_VLOOPv2": {
+          "0": 2
+        },
+        "RV_SMOV": {
+          "1": 4
+        },
+        "RV_PLT": {
+          "6": 9
+        },
+        "RV_VBR": {
+          "6": 2
+        },
+        "RV_VDUPS": {
+          "6": 1
+        },
+        "RV_VMOV": {
+          "6": 3
+        },
+        "RV_VLDI": {
+          "9": 8
+        },
+        "RV_VADDS": {
+          "7": 8
+        },
+        "RV_SEND": {
+          "-69": 1,
+          "9": 2
+        },
+        "RV_VCMIN": {
+          "16": 8
+        },
+        "RV_VDINTLV": {
+          "11": 8
+        },
+        "RV_VCMP_GT": {
+          "6": 8
+        },
+        "RV_VADD": {
+          "7": 8
+        },
+        "RV_VSEL": {
+          "6": 16
+        },
+        "RV_VSTI": {
+          "9": 2
+        }
+      },
+      "manual_source_counts": {
+        "RV_VBR": 2,
+        "RV_VDUP": 1,
+        "RV_PLT": 9,
+        "RV_VLD": 8,
+        "RV_VCMIN": 8,
+        "RV_VDINTLV": 8,
+        "RV_VADD": 8,
+        "RV_VCMP_GT": 8,
+        "RV_VSEL": 16,
+        "RV_VST": 2,
+        "RV_VMOV": 3,
+        "RV_VADDS": 8
+      },
+      "manual_counts_match": true,
+      "vf_cycles": [
+        131
+      ],
+      "state": "native_verified"
+    },
+    {
+      "case": "rowargminwithvalue_single_fp32_2x64",
+      "opcode": "ROWARGMINWITHVALUE_SINGLE",
+      "dtype": "fp32",
+      "shape": [
+        2,
+        64
+      ],
+      "arity": 1,
+      "outputs": 2,
+      "expected_vf_calls": 1,
+      "input_encoding": "fp32",
+      "source": "PyPTO reduce.h::ArgReduceLastAxisCompute -> PTO TRowReduceIdxProc/UpdateIdxValue; FP32 values and INT32 indices",
+      "golden": {
+        "passed": true,
+        "guard_passed": true,
+        "value_guard_passed": true,
+        "index_guard_passed": true,
+        "guard_bytes_checked": 65520,
+        "value_mismatches": 0,
+        "index_mismatches": 0,
+        "expected_indices": [
+          0,
+          6
+        ],
+        "actual_indices": [
+          0,
+          6
+        ]
+      },
+      "sha256": {
+        "input0.bin": "8b4d98bd9607fad8e33997e802b81cea5454fc30fe2194cd428afdf0768ca7d7",
+        "output0.bin": "a02c4415d8a2793f40de81f07190758db1f26b4b2cd0fc58b46c693db30d7921",
+        "output1.bin": "b2365aa051d46acd318d204e2bd720d740049c842c86a2736d5efcf8f1b0c1ec",
+        "core0.veccore0.instr_log.dump": "8b2584ccd9676ca063273e8c965ef82bb553fa906384072d0e90bd3d54bcea20",
+        "core0.veccore0.instr_popped_log.dump": "6d3dec633bfbd56933cf42eaa390b4196c94ac01bafd16ff4b44604508ef9f5d"
+      },
+      "instruction_counts": {
+        "MOV_XD_SPR": 6,
+        "MOVK": 9,
+        "MOV_XD_IMM": 12,
+        "ADD": 2,
+        "SHR": 1,
+        "AND": 1,
+        "ADD_IMM": 3,
+        "SHL": 3,
+        "MADD": 1,
+        "DC_PRELOAD_XN_IMM": 1,
+        "LD_XD_XN_IMM": 1,
+        "LDP_XI_XJ_XN": 1,
+        "INSERT_XD_XN": 3,
+        "NOP": 2,
+        "PUSH_PB": 1,
+        "MOV_SRC_TO_DST_ALIGNv2": 5,
+        "SET_FLAG": 2,
+        "WAIT_FLAG": 2,
+        "RV_SMOVI": 2,
+        "RV_VLOOPv2": 1,
+        "RV_SMOV": 3,
+        "RV_PLT": 2,
+        "RV_VBR": 2,
+        "RV_VDUPS": 1,
+        "RV_SEND": 3,
+        "RV_VLDI": 2,
+        "RV_VCMIN": 2,
+        "RV_VDINTLV": 2,
+        "RV_VCMP_GT": 2,
+        "RV_VSEL": 4,
+        "RV_VADD": 2,
+        "RV_VSTI": 4,
+        "VF": 1,
+        "BAR": 1,
+        "END": 1,
+        "DCCI": 2,
+        "END_LABEL": 1
+      },
+      "instruction_elapsed_histograms": {
+        "RV_SMOVI": {
+          "0": 2
+        },
+        "RV_VLOOPv2": {
+          "0": 1
+        },
+        "RV_SMOV": {
+          "1": 3
+        },
+        "RV_PLT": {
+          "6": 2
+        },
+        "RV_VBR": {
+          "6": 2
+        },
+        "RV_VDUPS": {
+          "6": 1
+        },
+        "RV_SEND": {
+          "-36": 1,
+          "9": 2
+        },
+        "RV_VLDI": {
+          "9": 2
+        },
+        "RV_VCMIN": {
+          "16": 2
+        },
+        "RV_VDINTLV": {
+          "11": 2
+        },
+        "RV_VCMP_GT": {
+          "6": 2
+        },
+        "RV_VSEL": {
+          "6": 4
+        },
+        "RV_VADD": {
+          "7": 2
+        },
+        "RV_VSTI": {
+          "9": 4
+        }
+      },
+      "manual_source_counts": {
+        "RV_VBR": 2,
+        "RV_VDUP": 1,
+        "RV_PLT": 2,
+        "RV_VLD": 2,
+        "RV_VCMIN": 2,
+        "RV_VDINTLV": 2,
+        "RV_VADD": 2,
+        "RV_VCMP_GT": 2,
+        "RV_VSEL": 4,
+        "RV_VST": 4
+      },
+      "manual_counts_match": true,
+      "vf_cycles": [
+        85
+      ],
+      "state": "native_verified"
+    },
+    {
+      "case": "rowargminwithvalue_single_fp32_2x128",
+      "opcode": "ROWARGMINWITHVALUE_SINGLE",
+      "dtype": "fp32",
+      "shape": [
+        2,
+        128
+      ],
+      "arity": 1,
+      "outputs": 2,
+      "expected_vf_calls": 1,
+      "input_encoding": "fp32",
+      "source": "PyPTO reduce.h::ArgReduceLastAxisCompute -> PTO TRowReduceIdxProc/UpdateIdxValue; FP32 values and INT32 indices",
+      "golden": {
+        "passed": true,
+        "guard_passed": true,
+        "value_guard_passed": true,
+        "index_guard_passed": true,
+        "guard_bytes_checked": 65520,
+        "value_mismatches": 0,
+        "index_mismatches": 0,
+        "expected_indices": [
+          0,
+          5
+        ],
+        "actual_indices": [
+          0,
+          5
+        ]
+      },
+      "sha256": {
+        "input0.bin": "8b4d98bd9607fad8e33997e802b81cea5454fc30fe2194cd428afdf0768ca7d7",
+        "output0.bin": "a02c4415d8a2793f40de81f07190758db1f26b4b2cd0fc58b46c693db30d7921",
+        "output1.bin": "b07e54059732f100f209231c1a7d537eedcba51f6798497c1c52072fafca9171",
+        "core0.veccore0.instr_log.dump": "e06be2eedc2bc043521042c1cebf4577d21a8b41e54f2bb72e7d16b639c35ab9",
+        "core0.veccore0.instr_popped_log.dump": "6db54864742f355a7a2ec5890328e02337b742c94498bb90ac74889f74252e56"
+      },
+      "instruction_counts": {
+        "MOV_XD_SPR": 6,
+        "MOVK": 10,
+        "MOV_XD_IMM": 13,
+        "ADD": 2,
+        "SHR": 1,
+        "AND": 1,
+        "ADD_IMM": 3,
+        "SHL": 3,
+        "MADD": 1,
+        "DC_PRELOAD_XN_IMM": 1,
+        "LD_XD_XN_IMM": 1,
+        "LDP_XI_XJ_XN": 1,
+        "INSERT_XD_XN": 4,
+        "NOP": 2,
+        "PUSH_PB": 1,
+        "MOV_SRC_TO_DST_ALIGNv2": 5,
+        "SET_FLAG": 2,
+        "WAIT_FLAG": 2,
+        "RV_SMOVI": 2,
+        "RV_VLOOPv2": 3,
+        "RV_SMOV": 5,
+        "RV_PLT": 5,
+        "RV_VBR": 2,
+        "RV_VDUPS": 1,
+        "RV_VMOV": 6,
+        "RV_VLDI": 4,
+        "RV_VADDS": 4,
+        "RV_SEND": 3,
+        "RV_VCMIN": 4,
+        "RV_VDINTLV": 4,
+        "RV_VCMP_GT": 4,
+        "RV_VADD": 4,
+        "RV_VSEL": 8,
+        "RV_VSTI": 4,
+        "VF": 1,
+        "BAR": 1,
+        "END": 1,
+        "DCCI": 2,
+        "END_LABEL": 1
+      },
+      "instruction_elapsed_histograms": {
+        "RV_SMOVI": {
+          "0": 2
+        },
+        "RV_VLOOPv2": {
+          "0": 3
+        },
+        "RV_SMOV": {
+          "1": 5
+        },
+        "RV_PLT": {
+          "6": 5
+        },
+        "RV_VBR": {
+          "6": 2
+        },
+        "RV_VDUPS": {
+          "6": 1
+        },
+        "RV_VMOV": {
+          "6": 6
+        },
+        "RV_VLDI": {
+          "9": 4
+        },
+        "RV_VADDS": {
+          "7": 4
+        },
+        "RV_SEND": {
+          "-40": 1,
+          "9": 2
+        },
+        "RV_VCMIN": {
+          "16": 4
+        },
+        "RV_VDINTLV": {
+          "11": 4
+        },
+        "RV_VCMP_GT": {
+          "6": 4
+        },
+        "RV_VADD": {
+          "7": 4
+        },
+        "RV_VSEL": {
+          "6": 8
+        },
+        "RV_VSTI": {
+          "9": 4
+        }
+      },
+      "manual_source_counts": {
+        "RV_VBR": 2,
+        "RV_VDUP": 1,
+        "RV_PLT": 5,
+        "RV_VLD": 4,
+        "RV_VCMIN": 4,
+        "RV_VDINTLV": 4,
+        "RV_VADD": 4,
+        "RV_VCMP_GT": 4,
+        "RV_VSEL": 8,
+        "RV_VST": 4,
+        "RV_VMOV": 6,
+        "RV_VADDS": 4
+      },
+      "manual_counts_match": true,
+      "vf_cycles": [
+        99
+      ],
+      "state": "native_verified"
+    },
+    {
+      "case": "rowargminwithvalue_single_fp32_2x512",
+      "opcode": "ROWARGMINWITHVALUE_SINGLE",
+      "dtype": "fp32",
+      "shape": [
+        2,
+        512
+      ],
+      "arity": 1,
+      "outputs": 2,
+      "expected_vf_calls": 1,
+      "input_encoding": "fp32",
+      "source": "PyPTO reduce.h::ArgReduceLastAxisCompute -> PTO TRowReduceIdxProc/UpdateIdxValue; FP32 values and INT32 indices",
+      "golden": {
+        "passed": true,
+        "guard_passed": true,
+        "value_guard_passed": true,
+        "index_guard_passed": true,
+        "guard_bytes_checked": 65520,
+        "value_mismatches": 0,
+        "index_mismatches": 0,
+        "expected_indices": [
+          0,
+          6
+        ],
+        "actual_indices": [
+          0,
+          6
+        ]
+      },
+      "sha256": {
+        "input0.bin": "8b4d98bd9607fad8e33997e802b81cea5454fc30fe2194cd428afdf0768ca7d7",
+        "output0.bin": "a02c4415d8a2793f40de81f07190758db1f26b4b2cd0fc58b46c693db30d7921",
+        "output1.bin": "b2365aa051d46acd318d204e2bd720d740049c842c86a2736d5efcf8f1b0c1ec",
+        "core0.veccore0.instr_log.dump": "9c08ca68204e1cbc5c75610bb8a38c26bf49bed73ee53c79c8324ce9bcddaaa3",
+        "core0.veccore0.instr_popped_log.dump": "99b97573bb019c5dbcdc1dc7cf748c46fab1bffedc9d3c2ec12a9d7555b14bb3"
+      },
+      "instruction_counts": {
+        "MOV_XD_SPR": 6,
+        "MOVK": 10,
+        "MOV_XD_IMM": 14,
+        "ADD": 2,
+        "SHR": 1,
+        "AND": 1,
+        "ADD_IMM": 3,
+        "SHL": 3,
+        "MADD": 1,
+        "DC_PRELOAD_XN_IMM": 1,
+        "LD_XD_XN_IMM": 1,
+        "LDP_XI_XJ_XN": 1,
+        "INSERT_XD_XN": 4,
+        "NOP": 2,
+        "PUSH_PB": 1,
+        "MOV_SRC_TO_DST_ALIGNv2": 5,
+        "SET_FLAG": 2,
+        "WAIT_FLAG": 2,
+        "RV_SMOVI": 2,
+        "RV_VLOOPv2": 3,
+        "RV_SMOV": 5,
+        "RV_PLT": 17,
+        "RV_VBR": 2,
+        "RV_VDUPS": 1,
+        "RV_VMOV": 6,
+        "RV_VLDI": 16,
+        "RV_VADDS": 16,
+        "RV_VCMIN": 16,
+        "RV_VDINTLV": 16,
+        "RV_VADD": 16,
+        "RV_VCMP_GT": 16,
+        "RV_VSEL": 32,
+        "RV_SEND": 3,
+        "RV_VSTI": 4,
+        "VF": 1,
+        "BAR": 1,
+        "END": 1,
+        "DCCI": 2,
+        "END_LABEL": 1
+      },
+      "instruction_elapsed_histograms": {
+        "RV_SMOVI": {
+          "0": 2
+        },
+        "RV_VLOOPv2": {
+          "0": 3
+        },
+        "RV_SMOV": {
+          "1": 5
+        },
+        "RV_PLT": {
+          "6": 17
+        },
+        "RV_VBR": {
+          "6": 2
+        },
+        "RV_VDUPS": {
+          "6": 1
+        },
+        "RV_VMOV": {
+          "6": 6
+        },
+        "RV_VLDI": {
+          "9": 16
+        },
+        "RV_VADDS": {
+          "7": 16
+        },
+        "RV_VCMIN": {
+          "16": 16
+        },
+        "RV_VDINTLV": {
+          "11": 16
+        },
+        "RV_VADD": {
+          "7": 16
+        },
+        "RV_VCMP_GT": {
+          "6": 16
+        },
+        "RV_VSEL": {
+          "6": 32
+        },
+        "RV_SEND": {
+          "-55": 1,
+          "9": 2
+        },
+        "RV_VSTI": {
+          "9": 4
+        }
+      },
+      "manual_source_counts": {
+        "RV_VBR": 2,
+        "RV_VDUP": 1,
+        "RV_PLT": 17,
+        "RV_VLD": 16,
+        "RV_VCMIN": 16,
+        "RV_VDINTLV": 16,
+        "RV_VADD": 16,
+        "RV_VCMP_GT": 16,
+        "RV_VSEL": 32,
+        "RV_VST": 4,
+        "RV_VMOV": 6,
+        "RV_VADDS": 16
+      },
+      "manual_counts_match": true,
+      "vf_cycles": [
+        184
+      ],
+      "state": "native_verified"
+    },
+    {
+      "case": "rowargminwithvalue_single_fp32_8x64",
+      "opcode": "ROWARGMINWITHVALUE_SINGLE",
+      "dtype": "fp32",
+      "shape": [
+        8,
+        64
+      ],
+      "arity": 1,
+      "outputs": 2,
+      "expected_vf_calls": 1,
+      "input_encoding": "fp32",
+      "source": "PyPTO reduce.h::ArgReduceLastAxisCompute -> PTO TRowReduceIdxProc/UpdateIdxValue; FP32 values and INT32 indices",
+      "golden": {
+        "passed": true,
+        "guard_passed": true,
+        "value_guard_passed": true,
+        "index_guard_passed": true,
+        "guard_bytes_checked": 65472,
+        "value_mismatches": 0,
+        "index_mismatches": 0,
+        "expected_indices": [
+          0,
+          6,
+          5,
+          4,
+          3,
+          2,
+          1,
+          0
+        ],
+        "actual_indices": [
+          0,
+          6,
+          5,
+          4,
+          3,
+          2,
+          1,
+          0
+        ]
+      },
+      "sha256": {
+        "input0.bin": "8b4d98bd9607fad8e33997e802b81cea5454fc30fe2194cd428afdf0768ca7d7",
+        "output0.bin": "c8c000d1b3b01de80c437a05bd889cbb9b7f925c51bbfdc5ae259c84c0c60ee8",
+        "output1.bin": "4fb20011406783cd5cd612ba5c835028f9e523b441aba527a0ffc0f0e56097a5",
+        "core0.veccore0.instr_log.dump": "d627386495b0f9a7dc245c6493656e316563addefce16f68d9373caf868c8d84",
+        "core0.veccore0.instr_popped_log.dump": "ca3541990049e7a02c58b3ee99d336790823ec87fa5c7bbf593309ddc8eace92"
+      },
+      "instruction_counts": {
+        "MOV_XD_SPR": 6,
+        "MOVK": 9,
+        "MOV_XD_IMM": 12,
+        "ADD": 2,
+        "SHR": 1,
+        "AND": 1,
+        "ADD_IMM": 3,
+        "SHL": 3,
+        "MADD": 1,
+        "DC_PRELOAD_XN_IMM": 1,
+        "LD_XD_XN_IMM": 1,
+        "LDP_XI_XJ_XN": 1,
+        "INSERT_XD_XN": 3,
+        "NOP": 2,
+        "PUSH_PB": 1,
+        "MOV_SRC_TO_DST_ALIGNv2": 5,
+        "SET_FLAG": 2,
+        "WAIT_FLAG": 2,
+        "RV_SMOVI": 2,
+        "RV_VLOOPv2": 1,
+        "RV_SMOV": 3,
+        "RV_PLT": 2,
+        "RV_VBR": 2,
+        "RV_VDUPS": 1,
+        "RV_VLDI": 8,
+        "RV_SEND": 3,
+        "RV_VCMIN": 8,
+        "RV_VDINTLV": 8,
+        "RV_VCMP_GT": 8,
+        "RV_VADD": 8,
+        "RV_VSEL": 16,
+        "RV_VSTI": 16,
+        "VF": 1,
+        "BAR": 1,
+        "END": 1,
+        "DCCI": 2,
+        "END_LABEL": 1
+      },
+      "instruction_elapsed_histograms": {
+        "RV_SMOVI": {
+          "0": 2
+        },
+        "RV_VLOOPv2": {
+          "0": 1
+        },
+        "RV_SMOV": {
+          "1": 3
+        },
+        "RV_PLT": {
+          "6": 2
+        },
+        "RV_VBR": {
+          "6": 2
+        },
+        "RV_VDUPS": {
+          "6": 1
+        },
+        "RV_VLDI": {
+          "9": 8
+        },
+        "RV_SEND": {
+          "-48": 1,
+          "9": 2
+        },
+        "RV_VCMIN": {
+          "16": 8
+        },
+        "RV_VDINTLV": {
+          "11": 8
+        },
+        "RV_VCMP_GT": {
+          "6": 8
+        },
+        "RV_VADD": {
+          "7": 8
+        },
+        "RV_VSEL": {
+          "6": 16
+        },
+        "RV_VSTI": {
+          "9": 16
+        }
+      },
+      "manual_source_counts": {
+        "RV_VBR": 2,
+        "RV_VDUP": 1,
+        "RV_PLT": 2,
+        "RV_VLD": 8,
+        "RV_VCMIN": 8,
+        "RV_VDINTLV": 8,
+        "RV_VADD": 8,
+        "RV_VCMP_GT": 8,
+        "RV_VSEL": 16,
+        "RV_VST": 16
+      },
+      "manual_counts_match": true,
+      "vf_cycles": [
+        111
+      ],
+      "state": "native_verified"
+    },
+    {
+      "case": "rowargminwithvalue_single_fp32_8x128",
+      "opcode": "ROWARGMINWITHVALUE_SINGLE",
+      "dtype": "fp32",
+      "shape": [
+        8,
+        128
+      ],
+      "arity": 1,
+      "outputs": 2,
+      "expected_vf_calls": 1,
+      "input_encoding": "fp32",
+      "source": "PyPTO reduce.h::ArgReduceLastAxisCompute -> PTO TRowReduceIdxProc/UpdateIdxValue; FP32 values and INT32 indices",
+      "golden": {
+        "passed": true,
+        "guard_passed": true,
+        "value_guard_passed": true,
+        "index_guard_passed": true,
+        "guard_bytes_checked": 65472,
+        "value_mismatches": 0,
+        "index_mismatches": 0,
+        "expected_indices": [
+          0,
+          5,
+          3,
+          1,
+          6,
+          4,
+          2,
+          0
+        ],
+        "actual_indices": [
+          0,
+          5,
+          3,
+          1,
+          6,
+          4,
+          2,
+          0
+        ]
+      },
+      "sha256": {
+        "input0.bin": "8b4d98bd9607fad8e33997e802b81cea5454fc30fe2194cd428afdf0768ca7d7",
+        "output0.bin": "c8c000d1b3b01de80c437a05bd889cbb9b7f925c51bbfdc5ae259c84c0c60ee8",
+        "output1.bin": "390393debfdd7f5cdca62ee3b7ab8401d8a66646b58c8b47eefc1dc661babfe2",
+        "core0.veccore0.instr_log.dump": "f7be0cb49bba869573701f6e5bf8d4e391838225772708a210fab1242fb42980",
+        "core0.veccore0.instr_popped_log.dump": "80809cd6f5e520371235d1a760edfb6cffd31a5bf84edf305c491d478e7117c4"
+      },
+      "instruction_counts": {
+        "MOV_XD_SPR": 6,
+        "MOVK": 10,
+        "MOV_XD_IMM": 14,
+        "ADD": 2,
+        "SHR": 1,
+        "AND": 1,
+        "ADD_IMM": 3,
+        "SHL": 3,
+        "MADD": 1,
+        "DC_PRELOAD_XN_IMM": 1,
+        "LD_XD_XN_IMM": 1,
+        "LDP_XI_XJ_XN": 1,
+        "INSERT_XD_XN": 4,
+        "NOP": 2,
+        "PUSH_PB": 1,
+        "MOV_SRC_TO_DST_ALIGNv2": 5,
+        "SET_FLAG": 2,
+        "WAIT_FLAG": 2,
+        "RV_SMOVI": 2,
+        "RV_VLOOPv2": 9,
+        "RV_SMOV": 11,
+        "RV_PLT": 17,
+        "RV_VBR": 2,
+        "RV_VDUPS": 1,
+        "RV_VMOV": 24,
+        "RV_VLDI": 16,
+        "RV_VADDS": 16,
+        "RV_VCMIN": 16,
+        "RV_VDINTLV": 16,
+        "RV_VADD": 16,
+        "RV_VCMP_GT": 16,
+        "RV_VSEL": 32,
+        "RV_VSTI": 16,
+        "RV_SEND": 3,
+        "VF": 1,
+        "BAR": 1,
+        "END": 1,
+        "DCCI": 2,
+        "END_LABEL": 1
+      },
+      "instruction_elapsed_histograms": {
+        "RV_SMOVI": {
+          "0": 2
+        },
+        "RV_VLOOPv2": {
+          "0": 9
+        },
+        "RV_SMOV": {
+          "1": 11
+        },
+        "RV_PLT": {
+          "6": 17
+        },
+        "RV_VBR": {
+          "6": 2
+        },
+        "RV_VDUPS": {
+          "6": 1
+        },
+        "RV_VMOV": {
+          "6": 24
+        },
+        "RV_VLDI": {
+          "9": 16
+        },
+        "RV_VADDS": {
+          "7": 16
+        },
+        "RV_VCMIN": {
+          "16": 16
+        },
+        "RV_VDINTLV": {
+          "11": 16
+        },
+        "RV_VADD": {
+          "7": 16
+        },
+        "RV_VCMP_GT": {
+          "6": 16
+        },
+        "RV_VSEL": {
+          "6": 32
+        },
+        "RV_VSTI": {
+          "9": 16
+        },
+        "RV_SEND": {
+          "-49": 1,
+          "9": 2
+        }
+      },
+      "manual_source_counts": {
+        "RV_VBR": 2,
+        "RV_VDUP": 1,
+        "RV_PLT": 17,
+        "RV_VLD": 16,
+        "RV_VCMIN": 16,
+        "RV_VDINTLV": 16,
+        "RV_VADD": 16,
+        "RV_VCMP_GT": 16,
+        "RV_VSEL": 32,
+        "RV_VST": 16,
+        "RV_VMOV": 24,
+        "RV_VADDS": 16
+      },
+      "manual_counts_match": true,
+      "vf_cycles": [
+        184
+      ],
+      "state": "native_verified"
+    },
+    {
+      "case": "rowargminwithvalue_single_fp32_8x512",
+      "opcode": "ROWARGMINWITHVALUE_SINGLE",
+      "dtype": "fp32",
+      "shape": [
+        8,
+        512
+      ],
+      "arity": 1,
+      "outputs": 2,
+      "expected_vf_calls": 1,
+      "input_encoding": "fp32",
+      "source": "PyPTO reduce.h::ArgReduceLastAxisCompute -> PTO TRowReduceIdxProc/UpdateIdxValue; FP32 values and INT32 indices",
+      "golden": {
+        "passed": true,
+        "guard_passed": true,
+        "value_guard_passed": true,
+        "index_guard_passed": true,
+        "guard_bytes_checked": 65472,
+        "value_mismatches": 0,
+        "index_mismatches": 0,
+        "expected_indices": [
+          0,
+          6,
+          5,
+          4,
+          3,
+          2,
+          1,
+          0
+        ],
+        "actual_indices": [
+          0,
+          6,
+          5,
+          4,
+          3,
+          2,
+          1,
+          0
+        ]
+      },
+      "sha256": {
+        "input0.bin": "8b4d98bd9607fad8e33997e802b81cea5454fc30fe2194cd428afdf0768ca7d7",
+        "output0.bin": "c8c000d1b3b01de80c437a05bd889cbb9b7f925c51bbfdc5ae259c84c0c60ee8",
+        "output1.bin": "4fb20011406783cd5cd612ba5c835028f9e523b441aba527a0ffc0f0e56097a5",
+        "core0.veccore0.instr_log.dump": "6dbee36116ee2fb471cfe66ad8058df422860766aa7a231b3e1122fbf923c65c",
+        "core0.veccore0.instr_popped_log.dump": "747edc951a23762a2fdd4bff6d965c4dde8b689583e98ea0e0e3fbd78a4c48c8"
+      },
+      "instruction_counts": {
+        "MOV_XD_SPR": 6,
+        "MOVK": 10,
+        "MOV_XD_IMM": 13,
+        "ADD": 2,
+        "SHR": 1,
+        "AND": 1,
+        "ADD_IMM": 3,
+        "SHL": 3,
+        "MADD": 1,
+        "DC_PRELOAD_XN_IMM": 1,
+        "LD_XD_XN_IMM": 1,
+        "LDP_XI_XJ_XN": 1,
+        "INSERT_XD_XN": 4,
+        "NOP": 2,
+        "PUSH_PB": 1,
+        "MOV_SRC_TO_DST_ALIGNv2": 5,
+        "SET_FLAG": 2,
+        "WAIT_FLAG": 2,
+        "RV_SMOVI": 2,
+        "RV_VLOOPv2": 9,
+        "RV_SMOV": 11,
+        "RV_PLT": 65,
+        "RV_VBR": 2,
+        "RV_VDUPS": 1,
+        "RV_VMOV": 24,
+        "RV_VLDI": 64,
+        "RV_VADDS": 64,
+        "RV_VCMIN": 64,
+        "RV_VDINTLV": 64,
+        "RV_VADD": 64,
+        "RV_VCMP_GT": 64,
+        "RV_VSEL": 128,
+        "RV_VSTI": 16,
+        "RV_SEND": 3,
+        "VF": 1,
+        "BAR": 1,
+        "END": 1,
+        "DCCI": 2,
+        "END_LABEL": 1
+      },
+      "instruction_elapsed_histograms": {
+        "RV_SMOVI": {
+          "0": 2
+        },
+        "RV_VLOOPv2": {
+          "0": 9
+        },
+        "RV_SMOV": {
+          "1": 11
+        },
+        "RV_PLT": {
+          "6": 65
+        },
+        "RV_VBR": {
+          "6": 2
+        },
+        "RV_VDUPS": {
+          "6": 1
+        },
+        "RV_VMOV": {
+          "6": 24
+        },
+        "RV_VLDI": {
+          "9": 64
+        },
+        "RV_VADDS": {
+          "7": 64
+        },
+        "RV_VCMIN": {
+          "16": 64
+        },
+        "RV_VDINTLV": {
+          "11": 64
+        },
+        "RV_VADD": {
+          "7": 64
+        },
+        "RV_VCMP_GT": {
+          "6": 64
+        },
+        "RV_VSEL": {
+          "6": 128
+        },
+        "RV_VSTI": {
+          "9": 11,
+          "10": 5
+        },
+        "RV_SEND": {
+          "-49": 1,
+          "9": 2
+        }
+      },
+      "manual_source_counts": {
+        "RV_VBR": 2,
+        "RV_VDUP": 1,
+        "RV_PLT": 65,
+        "RV_VLD": 64,
+        "RV_VCMIN": 64,
+        "RV_VDINTLV": 64,
+        "RV_VADD": 64,
+        "RV_VCMP_GT": 64,
+        "RV_VSEL": 128,
+        "RV_VST": 16,
+        "RV_VMOV": 24,
+        "RV_VADDS": 64
+      },
+      "manual_counts_match": true,
+      "vf_cycles": [
+        492
+      ],
+      "state": "native_verified"
+    }
+  ],
+  "scope": "18 FP32 value+INT32 index native cases, independent first-index-on-tie goldens, both full guards, hand-derived exact source instruction counts. Popped-to-done instruction latency only; isolated issue capacity and forwarding not calibrated; no TileOp total fitting."
+}

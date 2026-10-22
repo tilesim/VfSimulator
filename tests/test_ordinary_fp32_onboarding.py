@@ -21,7 +21,7 @@ class OrdinaryFp32OnboardingTest(unittest.TestCase):
         db = ParamDB(base_dir=str(ROOT))
         isa = json.loads((ROOT/'configs/isa.json').read_text())
         for op, (latency, _, _) in OPS.items():
-            self.assertEqual(set(isa['instructions'][op]['forms']), {'fp32'})
+            self.assertEqual(set(isa['instructions'][op]['forms']), {'fp32','fp16'})
             profile = db.resolve_inst(op, 'fp32', 'fp32')
             self.assertEqual(profile.latency, latency)
             self.assertEqual(profile.dispatch_exu, 'EXU01')
@@ -58,10 +58,9 @@ class OrdinaryFp32OnboardingTest(unittest.TestCase):
         for op in OPS:
             spec = DEFAULT_INSTRUCTION_CATALOG.lookup(op)
             self.assertEqual(spec.signature, 'unary')
-            self.assertEqual(set(spec.forms), {'fp32'})
+            self.assertEqual(set(spec.forms), {'fp32','fp16'})
             self.assertTrue(spec.timing_optional)
-            with self.assertRaises(ValueError):
-                DEFAULT_INSTRUCTION_CATALOG.resolve_and_validate_form(op, 'fp16')
+            self.assertEqual(DEFAULT_INSTRUCTION_CATALOG.resolve_and_validate_form(op, 'fp16'), (op,'fp16'))
         for soc in ('DV100',):
             isa = json.loads((ROOT/'configs/isa.json').read_text())
             self.assertFalse(DEFAULT_INSTRUCTION_CATALOG.compare_timing_config(isa).has_semantic_conflicts)

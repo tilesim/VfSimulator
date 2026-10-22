@@ -1,0 +1,84 @@
+{
+  "origin": "full PTO TopK8x1024k10, original A5 headers, CANN9.2-beta1 dav3510; independent output validation passed",
+  "golden": {
+    "passed": true,
+    "logical_values_checked": 80,
+    "indices_checked": 80,
+    "guard_bytes_checked": 1024,
+    "physical_row_stride_elements": 16,
+    "logical_k": 10
+  },
+  "trace_sha256": {
+    "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+    "output0.bin": "96fa7ef24a953d805bacb743307493ea5258d5018acc81e66dd4bc6bb79bd201",
+    "output1.bin": "22cf34c7e7b63b05d1c674972074ea017cb3d3644baeb4dc75717afbba2e8f5a",
+    "core0.veccore0.instr_log.dump": "30d01a43ba65d9a8f86624cdfb6786d132da38bf05919b27822e339e0bbc3346",
+    "core0.veccore0.instr_popped_log.dump": "6b607ee08914c9a9fba8d3d843377e21d5034cbdf5541e95c64f55d28b128ae6"
+  },
+  "events": [
+    {
+      "id": 6390,
+      "op": "MOV_UB_TO_UB",
+      "popped": 14570,
+      "start": 14570,
+      "done": 14600,
+      "busy": 30
+    },
+    {
+      "id": 6473,
+      "op": "MOV_UB_TO_UB",
+      "popped": 15973,
+      "start": 15973,
+      "done": 16003,
+      "busy": 30
+    },
+    {
+      "id": 6556,
+      "op": "MOV_UB_TO_UB",
+      "popped": 17375,
+      "start": 17375,
+      "done": 17405,
+      "busy": 30
+    },
+    {
+      "id": 6639,
+      "op": "MOV_UB_TO_UB",
+      "popped": 18777,
+      "start": 18777,
+      "done": 18807,
+      "busy": 30
+    },
+    {
+      "id": 6722,
+      "op": "MOV_UB_TO_UB",
+      "popped": 20179,
+      "start": 20179,
+      "done": 20209,
+      "busy": 30
+    },
+    {
+      "id": 6805,
+      "op": "MOV_UB_TO_UB",
+      "popped": 21583,
+      "start": 21583,
+      "done": 21613,
+      "busy": 30
+    },
+    {
+      "id": 6888,
+      "op": "MOV_UB_TO_UB",
+      "popped": 22985,
+      "start": 22985,
+      "done": 23015,
+      "busy": 30
+    },
+    {
+      "id": 6971,
+      "op": "MOV_UB_TO_UB",
+      "popped": 24388,
+      "start": 24388,
+      "done": 24418,
+      "busy": 30
+    }
+  ]
+}

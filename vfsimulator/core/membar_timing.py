@@ -40,6 +40,10 @@ class TimedControlUnit(ControlUnit):
 
     def __init__(self, pdb, dtype, config, *, issue_floor=0):
         super().__init__(pdb, dtype)
+        # VST_VST has an ordering contract, but no independently calibrated
+        # issue/retire delays. Keep its store fence without borrowing another
+        # direction's timing constants or changing the timed-barrier chain.
+        self.ordering_unit = ControlUnit(pdb, dtype)
 
         def object_field(value, path):
             if not isinstance(value, Mapping):
@@ -59,12 +63,12 @@ class TimedControlUnit(ControlUnit):
         self.start_feedback = {name: integer(feedback, name, path) for name in ('LOAD', 'STORE')}
         directions = object_field(config.get('directions'), 'membar_timing.directions')
         self.rules = {}
-        for name in self._SUPPORTED:
+        for name in ('VST_VLD', 'VLD_VST'):
             path = f'membar_timing.directions.{name}'
             rule = object_field(directions.get(name), path)
             self.rules[name] = {key: integer(rule, key, path) for key in (
                 'release_latency', 'retire_latency', 'consumer_delay', 'next_issue_delay')}
-        for name in self._SUPPORTED:
+        for name in self.rules:
             rule = self.rules[name]
             if rule['retire_latency'] < rule['release_latency']:
                 raise ValueError('membar retirement cannot precede synchronization release')
@@ -93,6 +97,12 @@ class TimedControlUnit(ControlUnit):
 
     def accept_membar(self, node, cycle=0):
         direction = self.normalize_barrier(node.get('barrier', node.get('type')))
+        if direction == 'VST_VST':
+            self.ordering_unit.accept_membar(node, cycle)
+            if hasattr(self.db, 'record_warning'):
+                self.db.record_warning('membar_ordering_only', barrier=direction,
+                    reason='Store ordering represented; issue/retire latency is not calibrated')
+            return
         if direction not in self._SUPPORTED:
             return super().accept_membar(node, cycle)
         wait_class, block_class = self._SUPPORTED[direction]
@@ -115,6 +125,8 @@ class TimedControlUnit(ControlUnit):
 
     def update(self, has_pending_prior, *, cycle=0, has_pending_dispatch=None):
         self.cycle = cycle
+        self.ordering_unit.update(has_pending_prior, cycle=cycle,
+                                  has_pending_dispatch=has_pending_dispatch)
         active = []
         for b in self.barriers:
             rule = self.rules[b.barrier]
@@ -153,6 +165,8 @@ class TimedControlUnit(ControlUnit):
         self.barriers = active
 
     def blocks(self, inst):
+        if self.ordering_unit.blocks(inst):
+            return True
         seq = int(inst.get('stream_seq', -1))
         cls = get_op_class(inst.get('op', ''), self.db, inst.get('form') or self.fallback_dtype)
         for b in self.barriers:
@@ -160,3 +174,6 @@ class TimedControlUnit(ControlUnit):
                 if b.release_cycle is None or self.cycle < b.release_cycle+self.rules[b.barrier]['consumer_delay']:
                     return True
         return False
+
+    def empty(self):
+        return super().empty() and self.ordering_unit.empty()

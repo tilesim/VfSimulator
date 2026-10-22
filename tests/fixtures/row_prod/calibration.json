@@ -1,0 +1,681 @@
+{
+  "cases": [
+    {
+      "case": "rowprod_single_fp32_1x64",
+      "golden": {
+        "passed": true,
+        "elements_checked": 1,
+        "mismatches": 0,
+        "guard_bytes_checked": 32764,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "manual_source_counts": {
+        "RV_VBR": 1,
+        "RV_PLT": 2,
+        "RV_VMOV": 1,
+        "RV_VLD": 1,
+        "RV_VMUL": 7,
+        "RV_VSEL": 1,
+        "RV_VINTLV": 6,
+        "RV_VST": 1
+      },
+      "manual_counts_match": true,
+      "sha256": {
+        "input0.bin": "8b4d98bd9607fad8e33997e802b81cea5454fc30fe2194cd428afdf0768ca7d7",
+        "output0.bin": "1dab7a1751481e13c700fd356dd529ae7f71e49793c489826ed270c6a8717ff0",
+        "core0.veccore0.instr_log.dump": "34e27ed8012bea6d185c3dfcb13c6e650ed7eb83af6fb41489f4f8c22a94cb5b",
+        "core0.veccore0.instr_popped_log.dump": "13de63155f28097efd838d14602ce095bbbca9d0e0df9138665df992a8a4687e"
+      }
+    },
+    {
+      "case": "rowprod_single_fp32_1x128",
+      "golden": {
+        "passed": true,
+        "elements_checked": 1,
+        "mismatches": 0,
+        "guard_bytes_checked": 32764,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "manual_source_counts": {
+        "RV_VBR": 1,
+        "RV_PLT": 3,
+        "RV_VMOV": 1,
+        "RV_VLD": 2,
+        "RV_VMUL": 8,
+        "RV_VSEL": 2,
+        "RV_VINTLV": 6,
+        "RV_VST": 1
+      },
+      "manual_counts_match": true,
+      "sha256": {
+        "input0.bin": "8b4d98bd9607fad8e33997e802b81cea5454fc30fe2194cd428afdf0768ca7d7",
+        "output0.bin": "c0ea812754d5aee23a23a5cb859ffa9b828da27398670b08aefc59043ba77d5a",
+        "core0.veccore0.instr_log.dump": "ea7a501d5462276e9ba40d04579d44687df5d8d4e7c3aedeb353db41bd69a247",
+        "core0.veccore0.instr_popped_log.dump": "0f58e83c39e6e6ee9fed48af6f0a310f125a1b5f15aa01e1b6d47275a113e270"
+      }
+    },
+    {
+      "case": "rowprod_single_fp32_1x256",
+      "golden": {
+        "passed": true,
+        "elements_checked": 1,
+        "mismatches": 0,
+        "guard_bytes_checked": 32764,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "manual_source_counts": {
+        "RV_VBR": 1,
+        "RV_PLT": 5,
+        "RV_VMOV": 1,
+        "RV_VLD": 4,
+        "RV_VMUL": 10,
+        "RV_VSEL": 4,
+        "RV_VINTLV": 6,
+        "RV_VST": 1
+      },
+      "manual_counts_match": true,
+      "sha256": {
+        "input0.bin": "8b4d98bd9607fad8e33997e802b81cea5454fc30fe2194cd428afdf0768ca7d7",
+        "output0.bin": "8c9243a20abe88860207c506eb6ced7db25bca4d7a6fa20d23307ee28bada38b",
+        "core0.veccore0.instr_log.dump": "1333cc8719e1d3b3127638cdea6e686ef3b5aed0f1e764f546a4d0d9e6b3b8f8",
+        "core0.veccore0.instr_popped_log.dump": "e0571140254d90a52410e7b2888854629ab669961871eb622c4f10aa3995e6c7"
+      }
+    },
+    {
+      "case": "rowprod_single_fp32_1x1024",
+      "golden": {
+        "passed": true,
+        "elements_checked": 1,
+        "mismatches": 0,
+        "guard_bytes_checked": 32764,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "manual_source_counts": {
+        "RV_VBR": 1,
+        "RV_PLT": 17,
+        "RV_VMOV": 1,
+        "RV_VLD": 16,
+        "RV_VMUL": 22,
+        "RV_VSEL": 16,
+        "RV_VINTLV": 6,
+        "RV_VST": 1
+      },
+      "manual_counts_match": true,
+      "sha256": {
+        "input0.bin": "8b4d98bd9607fad8e33997e802b81cea5454fc30fe2194cd428afdf0768ca7d7",
+        "output0.bin": "c9a9ec922e2b252f7628f0b036a57b3ed24f70dcd9d3ce534da2caf655880b46",
+        "core0.veccore0.instr_log.dump": "447fd4013287a5b25fb6c8a0faed042b15469de4593578f02a8743585fbcaf0a",
+        "core0.veccore0.instr_popped_log.dump": "8cf40f80ada4e3af7899700ac20b2f232caf501a521a4c1efbe5cd0264110fab"
+      }
+    },
+    {
+      "case": "rowprod_single_fp32_2x64",
+      "golden": {
+        "passed": true,
+        "elements_checked": 2,
+        "mismatches": 0,
+        "guard_bytes_checked": 32760,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "manual_source_counts": {
+        "RV_VBR": 1,
+        "RV_PLT": 3,
+        "RV_VMOV": 2,
+        "RV_VLD": 2,
+        "RV_VMUL": 14,
+        "RV_VSEL": 2,
+        "RV_VINTLV": 12,
+        "RV_VST": 2
+      },
+      "manual_counts_match": true,
+      "sha256": {
+        "input0.bin": "8b4d98bd9607fad8e33997e802b81cea5454fc30fe2194cd428afdf0768ca7d7",
+        "output0.bin": "f2a115cadd2b53dbe5732aa5227e71a9423c75d87cb0a6128f085e9219abc10f",
+        "core0.veccore0.instr_log.dump": "9bcb49c7d7c90b50e9ebfe50f681d78cb247b47a3816a0060719c4afc4ec642e",
+        "core0.veccore0.instr_popped_log.dump": "a1e20ce2e2db8c10a9d5913d1b64e0d5f4d428b89959f6d0358656a5bed05131"
+      }
+    },
+    {
+      "case": "rowprod_single_fp32_2x128",
+      "golden": {
+        "passed": true,
+        "elements_checked": 2,
+        "mismatches": 0,
+        "guard_bytes_checked": 32760,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "manual_source_counts": {
+        "RV_VBR": 1,
+        "RV_PLT": 5,
+        "RV_VMOV": 2,
+        "RV_VLD": 4,
+        "RV_VMUL": 16,
+        "RV_VSEL": 4,
+        "RV_VINTLV": 12,
+        "RV_VST": 2
+      },
+      "manual_counts_match": true,
+      "sha256": {
+        "input0.bin": "8b4d98bd9607fad8e33997e802b81cea5454fc30fe2194cd428afdf0768ca7d7",
+        "output0.bin": "b8fede83efd5575533a81629e519c4fa8030dd5bbb51fd6cb28b468a51200a15",
+        "core0.veccore0.instr_log.dump": "258113efd879bcef5bb82e366df27504a7ea480a2feee1b8ace693d5bdf64208",
+        "core0.veccore0.instr_popped_log.dump": "fdcbba33427f189d4d47ffc95ea74fe71d95b5b17885f6426020b544998bb2b4"
+      }
+    },
+    {
+      "case": "rowprod_single_fp32_2x256",
+      "golden": {
+        "passed": true,
+        "elements_checked": 2,
+        "mismatches": 0,
+        "guard_bytes_checked": 32760,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "manual_source_counts": {
+        "RV_VBR": 1,
+        "RV_PLT": 9,
+        "RV_VMOV": 2,
+        "RV_VLD": 8,
+        "RV_VMUL": 20,
+        "RV_VSEL": 8,
+        "RV_VINTLV": 12,
+        "RV_VST": 2
+      },
+      "manual_counts_match": true,
+      "sha256": {
+        "input0.bin": "8b4d98bd9607fad8e33997e802b81cea5454fc30fe2194cd428afdf0768ca7d7",
+        "output0.bin": "46ebd7b4593c5d17869622188e1c12992e0cb658a7153d78d1e8453fcfbea6b7",
+        "core0.veccore0.instr_log.dump": "9345558227019a5c6ae36a1cc29e31c28346f0d44b3bc982c417d53857c6cd05",
+        "core0.veccore0.instr_popped_log.dump": "c71dfdab9e3acd463838aab49df1d3a58405205c73c04e2831e0ec06f549866e"
+      }
+    },
+    {
+      "case": "rowprod_single_fp32_2x1024",
+      "golden": {
+        "passed": true,
+        "elements_checked": 2,
+        "mismatches": 0,
+        "guard_bytes_checked": 32760,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "manual_source_counts": {
+        "RV_VBR": 1,
+        "RV_PLT": 33,
+        "RV_VMOV": 2,
+        "RV_VLD": 32,
+        "RV_VMUL": 44,
+        "RV_VSEL": 32,
+        "RV_VINTLV": 12,
+        "RV_VST": 2
+      },
+      "manual_counts_match": true,
+      "sha256": {
+        "input0.bin": "8b4d98bd9607fad8e33997e802b81cea5454fc30fe2194cd428afdf0768ca7d7",
+        "output0.bin": "f50451e44edd2023d6b59fa3e101104afc8ab3e645aa9cb3a980d91132dcdb8b",
+        "core0.veccore0.instr_log.dump": "19cc39b106030bf1926a517befb4b22dbc634cedbc6dd8e65e472bceb0d5deb7",
+        "core0.veccore0.instr_popped_log.dump": "281ee10f1f7c0ce361a055e8907cde131d95cac90d3ae0474b0f7ea71ff1c521"
+      }
+    },
+    {
+      "case": "rowprod_single_fp32_8x64",
+      "golden": {
+        "passed": true,
+        "elements_checked": 8,
+        "mismatches": 0,
+        "guard_bytes_checked": 32736,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "manual_source_counts": {
+        "RV_VBR": 1,
+        "RV_PLT": 9,
+        "RV_VMOV": 8,
+        "RV_VLD": 8,
+        "RV_VMUL": 56,
+        "RV_VSEL": 8,
+        "RV_VINTLV": 48,
+        "RV_VST": 8
+      },
+      "manual_counts_match": true,
+      "sha256": {
+        "input0.bin": "8b4d98bd9607fad8e33997e802b81cea5454fc30fe2194cd428afdf0768ca7d7",
+        "output0.bin": "8658237d931fc7a0d683c2cefa774f990f1db7a37b013f17149d786071e7c031",
+        "core0.veccore0.instr_log.dump": "afed0ebc3234bdab7c3c2c433a4d68bc39b5e2b80f68e943f614ceeb94a97e97",
+        "core0.veccore0.instr_popped_log.dump": "4b8d576c3e7f13806cacac834ddbf2727d293c12007258b49a25156845f980bc"
+      }
+    },
+    {
+      "case": "rowprod_single_fp32_8x128",
+      "golden": {
+        "passed": true,
+        "elements_checked": 8,
+        "mismatches": 0,
+        "guard_bytes_checked": 32736,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "manual_source_counts": {
+        "RV_VBR": 1,
+        "RV_PLT": 17,
+        "RV_VMOV": 8,
+        "RV_VLD": 16,
+        "RV_VMUL": 64,
+        "RV_VSEL": 16,
+        "RV_VINTLV": 48,
+        "RV_VST": 8
+      },
+      "manual_counts_match": true,
+      "sha256": {
+        "input0.bin": "8b4d98bd9607fad8e33997e802b81cea5454fc30fe2194cd428afdf0768ca7d7",
+        "output0.bin": "ff0503207997f59c02e2bf0b078bf173f65b3d2af35bcb8c27510823f38558ee",
+        "core0.veccore0.instr_log.dump": "b8a26d07b1307ce54773b3ce4c7b05c79a97319ad0744e4d99e95bfb9f0ffa64",
+        "core0.veccore0.instr_popped_log.dump": "dd34fe5334eef1f7fb1cec739fbfa94ee1d13b631e29423d0012c1c2304c9423"
+      }
+    },
+    {
+      "case": "rowprod_single_fp32_8x256",
+      "golden": {
+        "passed": true,
+        "elements_checked": 8,
+        "mismatches": 0,
+        "guard_bytes_checked": 32736,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "manual_source_counts": {
+        "RV_VBR": 1,
+        "RV_PLT": 33,
+        "RV_VMOV": 8,
+        "RV_VLD": 32,
+        "RV_VMUL": 80,
+        "RV_VSEL": 32,
+        "RV_VINTLV": 48,
+        "RV_VST": 8
+      },
+      "manual_counts_match": true,
+      "sha256": {
+        "input0.bin": "8b4d98bd9607fad8e33997e802b81cea5454fc30fe2194cd428afdf0768ca7d7",
+        "output0.bin": "e3e97437118ccc5a80125cc058f09ef1b9fd756c4c63d8c5827972fb44eef032",
+        "core0.veccore0.instr_log.dump": "d2d32f69fce16f75676706248a0b4500bdc2a03d95b4e0c443bcdf95d300bd85",
+        "core0.veccore0.instr_popped_log.dump": "e768b244a67a64bf5395f5a8a6f953eac12163c1384402b8d8b715410115a3fb"
+      }
+    },
+    {
+      "case": "rowprod_single_fp32_8x1024",
+      "golden": {
+        "passed": true,
+        "elements_checked": 8,
+        "mismatches": 0,
+        "guard_bytes_checked": 32736,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "manual_source_counts": {
+        "RV_VBR": 1,
+        "RV_PLT": 129,
+        "RV_VMOV": 8,
+        "RV_VLD": 128,
+        "RV_VMUL": 176,
+        "RV_VSEL": 128,
+        "RV_VINTLV": 48,
+        "RV_VST": 8
+      },
+      "manual_counts_match": true,
+      "sha256": {
+        "input0.bin": "8b4d98bd9607fad8e33997e802b81cea5454fc30fe2194cd428afdf0768ca7d7",
+        "output0.bin": "ada4dd4bddaec051bfa0a02742faa74ae96a398e55bb0732c30f35ea23684fe7",
+        "core0.veccore0.instr_log.dump": "1e5c3111d750908c1cd9a9b823c6fdf44bc0d9122023239edcbcb577e379112a",
+        "core0.veccore0.instr_popped_log.dump": "101807b0651e7628e73d0b12e8700fe395d71898ea859391a192a5d8ea061339"
+      }
+    },
+    {
+      "case": "rowprod_single_fp16_1x64",
+      "golden": {
+        "passed": true,
+        "elements_checked": 1,
+        "mismatches": 0,
+        "guard_bytes_checked": 32766,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "manual_source_counts": {
+        "RV_VBR": 1,
+        "RV_PLT": 2,
+        "RV_VMOV": 1,
+        "RV_VLD": 1,
+        "RV_VMUL": 8,
+        "RV_VSEL": 1,
+        "RV_VINTLV": 7,
+        "RV_VST": 1
+      },
+      "manual_counts_match": true,
+      "sha256": {
+        "input0.bin": "cfa87ae5b99cc3a0985c8fd1dd57778690e9197a19c041df54764ac31e30e6d2",
+        "output0.bin": "cfa87ae5b99cc3a0985c8fd1dd57778690e9197a19c041df54764ac31e30e6d2",
+        "core0.veccore0.instr_log.dump": "bfe486df3622afeae13d0cec882f63cd8015be26330c1423aed20dcc5a67698a",
+        "core0.veccore0.instr_popped_log.dump": "111df1eb8d0c214d42664d10fe9374355b73d6fd28361e97cb3ec8ed8b5d04e9"
+      }
+    },
+    {
+      "case": "rowprod_single_fp16_1x128",
+      "golden": {
+        "passed": true,
+        "elements_checked": 1,
+        "mismatches": 0,
+        "guard_bytes_checked": 32766,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "manual_source_counts": {
+        "RV_VBR": 1,
+        "RV_PLT": 2,
+        "RV_VMOV": 1,
+        "RV_VLD": 1,
+        "RV_VMUL": 8,
+        "RV_VSEL": 1,
+        "RV_VINTLV": 7,
+        "RV_VST": 1
+      },
+      "manual_counts_match": true,
+      "sha256": {
+        "input0.bin": "cfa87ae5b99cc3a0985c8fd1dd57778690e9197a19c041df54764ac31e30e6d2",
+        "output0.bin": "cfa87ae5b99cc3a0985c8fd1dd57778690e9197a19c041df54764ac31e30e6d2",
+        "core0.veccore0.instr_log.dump": "c064f1c2bb3b81e35d0bc490b21ae2cca85a391fbd63f47d5e9bf55de0284a2a",
+        "core0.veccore0.instr_popped_log.dump": "b13f9d969b37911db91f490ffbedc1ab13cd674dda908cfe7de37cb9acf5d4b0"
+      }
+    },
+    {
+      "case": "rowprod_single_fp16_1x256",
+      "golden": {
+        "passed": true,
+        "elements_checked": 1,
+        "mismatches": 0,
+        "guard_bytes_checked": 32766,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "manual_source_counts": {
+        "RV_VBR": 1,
+        "RV_PLT": 3,
+        "RV_VMOV": 1,
+        "RV_VLD": 2,
+        "RV_VMUL": 9,
+        "RV_VSEL": 2,
+        "RV_VINTLV": 7,
+        "RV_VST": 1
+      },
+      "manual_counts_match": true,
+      "sha256": {
+        "input0.bin": "cfa87ae5b99cc3a0985c8fd1dd57778690e9197a19c041df54764ac31e30e6d2",
+        "output0.bin": "cfa87ae5b99cc3a0985c8fd1dd57778690e9197a19c041df54764ac31e30e6d2",
+        "core0.veccore0.instr_log.dump": "f6a0f438c647a88da00d4a82883a73ea4c317f592519aa62c5609364dfd17081",
+        "core0.veccore0.instr_popped_log.dump": "8b99597e92f00eaa8dc7d70ef8c48e6f7b087aa5b31b4082c1165282bcc9b488"
+      }
+    },
+    {
+      "case": "rowprod_single_fp16_1x1024",
+      "golden": {
+        "passed": true,
+        "elements_checked": 1,
+        "mismatches": 0,
+        "guard_bytes_checked": 32766,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "manual_source_counts": {
+        "RV_VBR": 1,
+        "RV_PLT": 9,
+        "RV_VMOV": 1,
+        "RV_VLD": 8,
+        "RV_VMUL": 15,
+        "RV_VSEL": 8,
+        "RV_VINTLV": 7,
+        "RV_VST": 1
+      },
+      "manual_counts_match": true,
+      "sha256": {
+        "input0.bin": "cfa87ae5b99cc3a0985c8fd1dd57778690e9197a19c041df54764ac31e30e6d2",
+        "output0.bin": "cfa87ae5b99cc3a0985c8fd1dd57778690e9197a19c041df54764ac31e30e6d2",
+        "core0.veccore0.instr_log.dump": "0002312b90be0d0ed13ffc61a646e87938e55ae81d8502ab9627f6a406984709",
+        "core0.veccore0.instr_popped_log.dump": "b7afa7b33f6b48ee01230229745360510ea718a013e37afdae2636c4bc9e4557"
+      }
+    },
+    {
+      "case": "rowprod_single_fp16_2x64",
+      "golden": {
+        "passed": true,
+        "elements_checked": 2,
+        "mismatches": 0,
+        "guard_bytes_checked": 32764,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "manual_source_counts": {
+        "RV_VBR": 1,
+        "RV_PLT": 3,
+        "RV_VMOV": 2,
+        "RV_VLD": 2,
+        "RV_VMUL": 16,
+        "RV_VSEL": 2,
+        "RV_VINTLV": 14,
+        "RV_VST": 2
+      },
+      "manual_counts_match": true,
+      "sha256": {
+        "input0.bin": "cfa87ae5b99cc3a0985c8fd1dd57778690e9197a19c041df54764ac31e30e6d2",
+        "output0.bin": "cfa87ae5b99cc3a0985c8fd1dd57778690e9197a19c041df54764ac31e30e6d2",
+        "core0.veccore0.instr_log.dump": "c0cc5d556334765807c2bbb66d031dc709e32fee88ced1dc53e7ce4b68b90923",
+        "core0.veccore0.instr_popped_log.dump": "5a9c50db78d5ade57e3d7786e6c8ae2eae667f769ec6723d02f87459a8fcfbe4"
+      }
+    },
+    {
+      "case": "rowprod_single_fp16_2x128",
+      "golden": {
+        "passed": true,
+        "elements_checked": 2,
+        "mismatches": 0,
+        "guard_bytes_checked": 32764,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "manual_source_counts": {
+        "RV_VBR": 1,
+        "RV_PLT": 3,
+        "RV_VMOV": 2,
+        "RV_VLD": 2,
+        "RV_VMUL": 16,
+        "RV_VSEL": 2,
+        "RV_VINTLV": 14,
+        "RV_VST": 2
+      },
+      "manual_counts_match": true,
+      "sha256": {
+        "input0.bin": "cfa87ae5b99cc3a0985c8fd1dd57778690e9197a19c041df54764ac31e30e6d2",
+        "output0.bin": "cfa87ae5b99cc3a0985c8fd1dd57778690e9197a19c041df54764ac31e30e6d2",
+        "core0.veccore0.instr_log.dump": "8d102e354a063b0b4821bf96db02e61fda978017d1e82ba21624a566818fa861",
+        "core0.veccore0.instr_popped_log.dump": "223ef428d425d890f570b6b9b9895d383cf7efa51a063223b415fb622528f500"
+      }
+    },
+    {
+      "case": "rowprod_single_fp16_2x256",
+      "golden": {
+        "passed": true,
+        "elements_checked": 2,
+        "mismatches": 0,
+        "guard_bytes_checked": 32764,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "manual_source_counts": {
+        "RV_VBR": 1,
+        "RV_PLT": 5,
+        "RV_VMOV": 2,
+        "RV_VLD": 4,
+        "RV_VMUL": 18,
+        "RV_VSEL": 4,
+        "RV_VINTLV": 14,
+        "RV_VST": 2
+      },
+      "manual_counts_match": true,
+      "sha256": {
+        "input0.bin": "cfa87ae5b99cc3a0985c8fd1dd57778690e9197a19c041df54764ac31e30e6d2",
+        "output0.bin": "cfa87ae5b99cc3a0985c8fd1dd57778690e9197a19c041df54764ac31e30e6d2",
+        "core0.veccore0.instr_log.dump": "2009fc33e89c812c63c2d69d8a2079675b95310a3f2bd0348f636e2abb566b70",
+        "core0.veccore0.instr_popped_log.dump": "a44d5d36c1f2e32320a0155b7d064cc4ebedba481348f1e8d4516b7e1c193661"
+      }
+    },
+    {
+      "case": "rowprod_single_fp16_2x1024",
+      "golden": {
+        "passed": true,
+        "elements_checked": 2,
+        "mismatches": 0,
+        "guard_bytes_checked": 32764,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "manual_source_counts": {
+        "RV_VBR": 1,
+        "RV_PLT": 17,
+        "RV_VMOV": 2,
+        "RV_VLD": 16,
+        "RV_VMUL": 30,
+        "RV_VSEL": 16,
+        "RV_VINTLV": 14,
+        "RV_VST": 2
+      },
+      "manual_counts_match": true,
+      "sha256": {
+        "input0.bin": "cfa87ae5b99cc3a0985c8fd1dd57778690e9197a19c041df54764ac31e30e6d2",
+        "output0.bin": "cfa87ae5b99cc3a0985c8fd1dd57778690e9197a19c041df54764ac31e30e6d2",
+        "core0.veccore0.instr_log.dump": "011088296cc12273da7766f566c5464edd21c27580bceed7117f4be114d63771",
+        "core0.veccore0.instr_popped_log.dump": "f84ed327c1120862942cca9d8538846e2168440d0bc33fbf80f9e3e3384129f0"
+      }
+    },
+    {
+      "case": "rowprod_single_fp16_8x64",
+      "golden": {
+        "passed": true,
+        "elements_checked": 8,
+        "mismatches": 0,
+        "guard_bytes_checked": 32752,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "manual_source_counts": {
+        "RV_VBR": 1,
+        "RV_PLT": 9,
+        "RV_VMOV": 8,
+        "RV_VLD": 8,
+        "RV_VMUL": 64,
+        "RV_VSEL": 8,
+        "RV_VINTLV": 56,
+        "RV_VST": 8
+      },
+      "manual_counts_match": true,
+      "sha256": {
+        "input0.bin": "cfa87ae5b99cc3a0985c8fd1dd57778690e9197a19c041df54764ac31e30e6d2",
+        "output0.bin": "cfa87ae5b99cc3a0985c8fd1dd57778690e9197a19c041df54764ac31e30e6d2",
+        "core0.veccore0.instr_log.dump": "265c97945bb9600e096d1315c6231d8140c5d5a60339f4189b7e8f5a0fde2bb8",
+        "core0.veccore0.instr_popped_log.dump": "326de053204674f967d80127e75171553982b176e4a75e1c3cae30ab9c864592"
+      }
+    },
+    {
+      "case": "rowprod_single_fp16_8x128",
+      "golden": {
+        "passed": true,
+        "elements_checked": 8,
+        "mismatches": 0,
+        "guard_bytes_checked": 32752,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "manual_source_counts": {
+        "RV_VBR": 1,
+        "RV_PLT": 9,
+        "RV_VMOV": 8,
+        "RV_VLD": 8,
+        "RV_VMUL": 64,
+        "RV_VSEL": 8,
+        "RV_VINTLV": 56,
+        "RV_VST": 8
+      },
+      "manual_counts_match": true,
+      "sha256": {
+        "input0.bin": "cfa87ae5b99cc3a0985c8fd1dd57778690e9197a19c041df54764ac31e30e6d2",
+        "output0.bin": "1c1edbe64dc56fbfcd39b1c1bfe5d14edb78d467524e3e55b23aead6a2bd6d31",
+        "core0.veccore0.instr_log.dump": "51e8063c523484d167066f329ef5f54b36c0145f59a7793462f0136067f6d926",
+        "core0.veccore0.instr_popped_log.dump": "2569f2c2adef2073fa8f8d6451a91ea8dca4ef15324db9f81a8aadcc640650ee"
+      }
+    },
+    {
+      "case": "rowprod_single_fp16_8x256",
+      "golden": {
+        "passed": true,
+        "elements_checked": 8,
+        "mismatches": 0,
+        "guard_bytes_checked": 32752,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "manual_source_counts": {
+        "RV_VBR": 1,
+        "RV_PLT": 17,
+        "RV_VMOV": 8,
+        "RV_VLD": 16,
+        "RV_VMUL": 72,
+        "RV_VSEL": 16,
+        "RV_VINTLV": 56,
+        "RV_VST": 8
+      },
+      "manual_counts_match": true,
+      "sha256": {
+        "input0.bin": "cfa87ae5b99cc3a0985c8fd1dd57778690e9197a19c041df54764ac31e30e6d2",
+        "output0.bin": "a5c44c1f7456fd001f15159e7583be0dfaf3d79416c16e0459b696a9979aa8db",
+        "core0.veccore0.instr_log.dump": "c424d01ba4cbbd5cf343cdb6b51a2c9e20fd737657eae2be4e8c25d10504523d",
+        "core0.veccore0.instr_popped_log.dump": "713587b1721406cf602c519e3dc41a63bc1dc750365fcd23ac312b05dc0cc1fa"
+      }
+    },
+    {
+      "case": "rowprod_single_fp16_8x1024",
+      "golden": {
+        "passed": true,
+        "elements_checked": 8,
+        "mismatches": 0,
+        "guard_bytes_checked": 32752,
+        "guard_passed": true,
+        "nonfinite_expected": 0
+      },
+      "manual_source_counts": {
+        "RV_VBR": 1,
+        "RV_PLT": 65,
+        "RV_VMOV": 8,
+        "RV_VLD": 64,
+        "RV_VMUL": 120,
+        "RV_VSEL": 64,
+        "RV_VINTLV": 56,
+        "RV_VST": 8
+      },
+      "manual_counts_match": true,
+      "sha256": {
+        "input0.bin": "cfa87ae5b99cc3a0985c8fd1dd57778690e9197a19c041df54764ac31e30e6d2",
+        "output0.bin": "1c1edbe64dc56fbfcd39b1c1bfe5d14edb78d467524e3e55b23aead6a2bd6d31",
+        "core0.veccore0.instr_log.dump": "556e823a2227332220ddf737abf0c1cbe9dd7e8a475bff342484635b75a0426d",
+        "core0.veccore0.instr_popped_log.dump": "23ffaa432984b76f7daf790ee8f3d4a7285c217384ac6d004bcf5e22519e2adc"
+      }
+    }
+  ],
+  "VINTLV_fp16_latency_histogram": {
+    "11": 308
+  },
+  "VINTLV_to_VMUL_minimum_issue_gap": 9,
+  "scope": "Native latency and source-adjacent register-pair consumer issue minima only; no aggregate fit. Isolated issue capacity not established."
+}

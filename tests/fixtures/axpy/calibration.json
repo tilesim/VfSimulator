@@ -1,0 +1,5362 @@
+{
+  "cases": [
+    {
+      "case": "axpy_fp16_fp16_n64_alpha0p125",
+      "opcode": "AXPY",
+      "dtype": "fp16",
+      "dst_dtype": "fp16",
+      "shape": [
+        1,
+        64
+      ],
+      "arity": 2,
+      "compute_arity": 1,
+      "alpha": 0.125,
+      "output_initial_input": 1,
+      "expected_vf_calls": 1,
+      "source": "PyPTO binary/basic.h::TAxpy -> PTO TAxpy.hpp AxpyInstrSame/AxpyInstrDiff",
+      "golden": {
+        "passed": true,
+        "mismatches": 0,
+        "guard_passed": true,
+        "elements_checked": 64,
+        "guard_bytes_checked": 32640
+      },
+      "instruction_counts": {
+        "MOV_XD_SPR": 6,
+        "MOVK": 8,
+        "MOV_XD_IMM": 13,
+        "ADD": 2,
+        "SHR": 1,
+        "AND": 1,
+        "ADD_IMM": 3,
+        "SHL": 3,
+        "MADD": 1,
+        "DC_PRELOAD_XN_IMM": 1,
+        "LDP_XI_XJ_XN": 1,
+        "LD_XD_XN_IMM": 1,
+        "INSERT_XD_XN": 4,
+        "NOP": 2,
+        "PUSH_PB": 1,
+        "MOV_SRC_TO_DST_ALIGNv2": 3,
+        "SET_FLAG": 2,
+        "WAIT_FLAG": 2,
+        "RV_VLOOPv2": 2,
+        "RV_SMOVI": 1,
+        "RV_SMOV": 1,
+        "RV_SNOP": 1,
+        "RV_SEND": 3,
+        "RV_PLT": 1,
+        "RV_VLD": 2,
+        "RV_VAXPY": 1,
+        "RV_VST": 1,
+        "VF": 1,
+        "BAR": 1,
+        "END": 1,
+        "DCCI": 2,
+        "END_LABEL": 1
+      },
+      "source_expected_data_counts": {
+        "RV_VLD": 2,
+        "RV_PLT": 1,
+        "RV_VAXPY": 1,
+        "RV_VST": 1
+      },
+      "source_data_counts_match": true,
+      "unexpected_vector_instructions": {},
+      "measured_vec_cycles": 59,
+      "vf_cycles": [
+        59
+      ],
+      "instruction_elapsed_histograms": {
+        "MOV_XD_SPR": {
+          "4": 6
+        },
+        "MOVK": {
+          "4": 8
+        },
+        "MOV_XD_IMM": {
+          "4": 13
+        },
+        "ADD": {
+          "4": 2
+        },
+        "SHR": {
+          "4": 1
+        },
+        "AND": {
+          "4": 1
+        },
+        "ADD_IMM": {
+          "4": 3
+        },
+        "SHL": {
+          "4": 3
+        },
+        "MADD": {
+          "5": 1
+        },
+        "DC_PRELOAD_XN_IMM": {
+          "407": 1
+        },
+        "LDP_XI_XJ_XN": {
+          "393": 1
+        },
+        "LD_XD_XN_IMM": {
+          "392": 1
+        },
+        "INSERT_XD_XN": {
+          "4": 4
+        },
+        "NOP": {
+          "0": 2
+        },
+        "PUSH_PB": {
+          "4": 1
+        },
+        "MOV_SRC_TO_DST_ALIGNv2": {
+          "1526": 1,
+          "2608": 1,
+          "1375": 1
+        },
+        "SET_FLAG": {
+          "2609": 1,
+          "2659": 1
+        },
+        "WAIT_FLAG": {
+          "2609": 1,
+          "2658": 1
+        },
+        "RV_VLOOPv2": {
+          "0": 2
+        },
+        "RV_SMOVI": {
+          "0": 1
+        },
+        "RV_SMOV": {
+          "1": 1
+        },
+        "RV_SNOP": {
+          "1": 1
+        },
+        "RV_SEND": {
+          "-16": 1,
+          "9": 2
+        },
+        "RV_PLT": {
+          "6": 1
+        },
+        "RV_VLD": {
+          "9": 1,
+          "10": 1
+        },
+        "RV_VAXPY": {
+          "9": 1
+        },
+        "RV_VST": {
+          "9": 1
+        },
+        "VF": {
+          "59": 1
+        },
+        "END": {
+          "0": 1
+        },
+        "DCCI": {
+          "4": 1,
+          "6": 1
+        },
+        "END_LABEL": {
+          "5": 1
+        }
+      },
+      "forwarding_observations": {
+        "src_load_to_axpy": [
+          7
+        ],
+        "accumulator_load_to_axpy": [
+          7
+        ],
+        "axpy_to_store": [
+          7
+        ],
+        "convert_to_axpy": []
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "input1.bin": "0bef9887cf77e772fcacb5be079e26ab0944bfbbf9da4b1bdd2869c0b9a6654c",
+        "output0.bin": "42e3e814b75338c42a4ee6abfa32e35a696e359d851694708ff09e960e804cd7",
+        "core0.veccore0.instr_popped_log.dump": "706711b47d506186897bcf500bfdd291183c29415a0c76d425477c1582c5e93f",
+        "core0.veccore0.instr_log.dump": "be4a4458db2e399a164af38c1db4bcfab668c974df6021184f14c59ee13dbc67"
+      },
+      "state": "native_verified"
+    },
+    {
+      "case": "axpy_fp16_fp16_n64_alpha2p0",
+      "opcode": "AXPY",
+      "dtype": "fp16",
+      "dst_dtype": "fp16",
+      "shape": [
+        1,
+        64
+      ],
+      "arity": 2,
+      "compute_arity": 1,
+      "alpha": 2.0,
+      "output_initial_input": 1,
+      "expected_vf_calls": 1,
+      "source": "PyPTO binary/basic.h::TAxpy -> PTO TAxpy.hpp AxpyInstrSame/AxpyInstrDiff",
+      "golden": {
+        "passed": true,
+        "mismatches": 0,
+        "guard_passed": true,
+        "elements_checked": 64,
+        "guard_bytes_checked": 32640
+      },
+      "instruction_counts": {
+        "MOV_XD_SPR": 6,
+        "MOVK": 8,
+        "MOV_XD_IMM": 13,
+        "ADD": 2,
+        "SHR": 1,
+        "AND": 1,
+        "ADD_IMM": 3,
+        "SHL": 3,
+        "MADD": 1,
+        "DC_PRELOAD_XN_IMM": 1,
+        "LDP_XI_XJ_XN": 1,
+        "LD_XD_XN_IMM": 1,
+        "INSERT_XD_XN": 4,
+        "NOP": 2,
+        "PUSH_PB": 1,
+        "MOV_SRC_TO_DST_ALIGNv2": 3,
+        "SET_FLAG": 2,
+        "WAIT_FLAG": 2,
+        "RV_VLOOPv2": 2,
+        "RV_SMOVI": 1,
+        "RV_SMOV": 1,
+        "RV_SNOP": 1,
+        "RV_SEND": 3,
+        "RV_PLT": 1,
+        "RV_VLD": 2,
+        "RV_VAXPY": 1,
+        "RV_VST": 1,
+        "VF": 1,
+        "BAR": 1,
+        "END": 1,
+        "DCCI": 2,
+        "END_LABEL": 1
+      },
+      "source_expected_data_counts": {
+        "RV_VLD": 2,
+        "RV_PLT": 1,
+        "RV_VAXPY": 1,
+        "RV_VST": 1
+      },
+      "source_data_counts_match": true,
+      "unexpected_vector_instructions": {},
+      "measured_vec_cycles": 59,
+      "vf_cycles": [
+        59
+      ],
+      "instruction_elapsed_histograms": {
+        "MOV_XD_SPR": {
+          "4": 6
+        },
+        "MOVK": {
+          "4": 8
+        },
+        "MOV_XD_IMM": {
+          "4": 13
+        },
+        "ADD": {
+          "4": 2
+        },
+        "SHR": {
+          "4": 1
+        },
+        "AND": {
+          "4": 1
+        },
+        "ADD_IMM": {
+          "4": 3
+        },
+        "SHL": {
+          "4": 3
+        },
+        "MADD": {
+          "5": 1
+        },
+        "DC_PRELOAD_XN_IMM": {
+          "407": 1
+        },
+        "LDP_XI_XJ_XN": {
+          "393": 1
+        },
+        "LD_XD_XN_IMM": {
+          "392": 1
+        },
+        "INSERT_XD_XN": {
+          "4": 4
+        },
+        "NOP": {
+          "0": 2
+        },
+        "PUSH_PB": {
+          "4": 1
+        },
+        "MOV_SRC_TO_DST_ALIGNv2": {
+          "1526": 1,
+          "2608": 1,
+          "1375": 1
+        },
+        "SET_FLAG": {
+          "2609": 1,
+          "2659": 1
+        },
+        "WAIT_FLAG": {
+          "2609": 1,
+          "2658": 1
+        },
+        "RV_VLOOPv2": {
+          "0": 2
+        },
+        "RV_SMOVI": {
+          "0": 1
+        },
+        "RV_SMOV": {
+          "1": 1
+        },
+        "RV_SNOP": {
+          "1": 1
+        },
+        "RV_SEND": {
+          "-16": 1,
+          "9": 2
+        },
+        "RV_PLT": {
+          "6": 1
+        },
+        "RV_VLD": {
+          "9": 1,
+          "10": 1
+        },
+        "RV_VAXPY": {
+          "9": 1
+        },
+        "RV_VST": {
+          "9": 1
+        },
+        "VF": {
+          "59": 1
+        },
+        "END": {
+          "0": 1
+        },
+        "DCCI": {
+          "4": 1,
+          "6": 1
+        },
+        "END_LABEL": {
+          "5": 1
+        }
+      },
+      "forwarding_observations": {
+        "src_load_to_axpy": [
+          7
+        ],
+        "accumulator_load_to_axpy": [
+          7
+        ],
+        "axpy_to_store": [
+          7
+        ],
+        "convert_to_axpy": []
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "input1.bin": "0bef9887cf77e772fcacb5be079e26ab0944bfbbf9da4b1bdd2869c0b9a6654c",
+        "output0.bin": "35cb0367e58a574a1b939c1cf3bc4c8b645e3d626f858e25a42e1c5d2e1650fa",
+        "core0.veccore0.instr_popped_log.dump": "fbc70bdcde71066f1d94265c0eecb2fc491b1b82dc9918f8480b19eb7441407f",
+        "core0.veccore0.instr_log.dump": "90b49f9c6272181279693b73b34b7bfccd09beb24f096561ae759d29a003b98c"
+      },
+      "state": "native_verified"
+    },
+    {
+      "case": "axpy_fp16_fp16_n129_alpha0p125",
+      "opcode": "AXPY",
+      "dtype": "fp16",
+      "dst_dtype": "fp16",
+      "shape": [
+        1,
+        129
+      ],
+      "arity": 2,
+      "compute_arity": 1,
+      "alpha": 0.125,
+      "output_initial_input": 1,
+      "expected_vf_calls": 1,
+      "source": "PyPTO binary/basic.h::TAxpy -> PTO TAxpy.hpp AxpyInstrSame/AxpyInstrDiff",
+      "golden": {
+        "passed": true,
+        "mismatches": 0,
+        "guard_passed": true,
+        "elements_checked": 129,
+        "guard_bytes_checked": 32510
+      },
+      "instruction_counts": {
+        "MOV_XD_SPR": 6,
+        "MOVK": 8,
+        "MOV_XD_IMM": 14,
+        "ADD": 2,
+        "SHR": 1,
+        "AND": 1,
+        "ADD_IMM": 3,
+        "SHL": 3,
+        "MADD": 1,
+        "DC_PRELOAD_XN_IMM": 1,
+        "LDP_XI_XJ_XN": 1,
+        "LD_XD_XN_IMM": 1,
+        "INSERT_XD_XN": 5,
+        "NOP": 2,
+        "PUSH_PB": 1,
+        "MOV_SRC_TO_DST_ALIGNv2": 3,
+        "SET_FLAG": 2,
+        "WAIT_FLAG": 2,
+        "RV_VLOOPv2": 2,
+        "RV_SMOVI": 1,
+        "RV_SMOV": 1,
+        "RV_SNOP": 1,
+        "RV_SEND": 3,
+        "RV_PLT": 2,
+        "RV_VLD": 4,
+        "RV_VAXPY": 2,
+        "RV_VST": 2,
+        "VF": 1,
+        "BAR": 1,
+        "END": 1,
+        "DCCI": 2,
+        "END_LABEL": 1
+      },
+      "source_expected_data_counts": {
+        "RV_VLD": 4,
+        "RV_PLT": 2,
+        "RV_VAXPY": 2,
+        "RV_VST": 2
+      },
+      "source_data_counts_match": true,
+      "unexpected_vector_instructions": {},
+      "measured_vec_cycles": 60,
+      "vf_cycles": [
+        60
+      ],
+      "instruction_elapsed_histograms": {
+        "MOV_XD_SPR": {
+          "4": 6
+        },
+        "MOVK": {
+          "4": 8
+        },
+        "MOV_XD_IMM": {
+          "4": 14
+        },
+        "ADD": {
+          "4": 2
+        },
+        "SHR": {
+          "4": 1
+        },
+        "AND": {
+          "4": 1
+        },
+        "ADD_IMM": {
+          "4": 3
+        },
+        "SHL": {
+          "4": 3
+        },
+        "MADD": {
+          "5": 1
+        },
+        "DC_PRELOAD_XN_IMM": {
+          "407": 1
+        },
+        "LDP_XI_XJ_XN": {
+          "393": 1
+        },
+        "LD_XD_XN_IMM": {
+          "392": 1
+        },
+        "INSERT_XD_XN": {
+          "4": 5
+        },
+        "NOP": {
+          "0": 2
+        },
+        "PUSH_PB": {
+          "4": 1
+        },
+        "MOV_SRC_TO_DST_ALIGNv2": {
+          "1526": 1,
+          "2608": 1,
+          "1375": 1
+        },
+        "SET_FLAG": {
+          "2609": 1,
+          "2659": 1
+        },
+        "WAIT_FLAG": {
+          "2609": 1,
+          "2658": 1
+        },
+        "RV_VLOOPv2": {
+          "0": 2
+        },
+        "RV_SMOVI": {
+          "0": 1
+        },
+        "RV_SMOV": {
+          "1": 1
+        },
+        "RV_SNOP": {
+          "1": 1
+        },
+        "RV_SEND": {
+          "-16": 1,
+          "9": 2
+        },
+        "RV_PLT": {
+          "6": 2
+        },
+        "RV_VLD": {
+          "9": 2,
+          "10": 2
+        },
+        "RV_VAXPY": {
+          "9": 2
+        },
+        "RV_VST": {
+          "9": 1,
+          "13": 1
+        },
+        "VF": {
+          "60": 1
+        },
+        "END": {
+          "0": 1
+        },
+        "DCCI": {
+          "4": 1,
+          "6": 1
+        },
+        "END_LABEL": {
+          "5": 1
+        }
+      },
+      "forwarding_observations": {
+        "src_load_to_axpy": [
+          7,
+          7
+        ],
+        "accumulator_load_to_axpy": [
+          7,
+          7
+        ],
+        "axpy_to_store": [
+          7,
+          7
+        ],
+        "convert_to_axpy": []
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "input1.bin": "0bef9887cf77e772fcacb5be079e26ab0944bfbbf9da4b1bdd2869c0b9a6654c",
+        "output0.bin": "34879e08aa1305d296df66cf598a255a0e9a1b491d034ccbd0e0bd8858e25413",
+        "core0.veccore0.instr_popped_log.dump": "386e31ab15d75d3574038a3129eb19e39a159e2fb8524728911767891f08b5a8",
+        "core0.veccore0.instr_log.dump": "98a8cce72b1df5c24f202d42aee6a24017e3c7d46ae4207e57f11525a656a52c"
+      },
+      "state": "native_verified"
+    },
+    {
+      "case": "axpy_fp16_fp16_n129_alpha2p0",
+      "opcode": "AXPY",
+      "dtype": "fp16",
+      "dst_dtype": "fp16",
+      "shape": [
+        1,
+        129
+      ],
+      "arity": 2,
+      "compute_arity": 1,
+      "alpha": 2.0,
+      "output_initial_input": 1,
+      "expected_vf_calls": 1,
+      "source": "PyPTO binary/basic.h::TAxpy -> PTO TAxpy.hpp AxpyInstrSame/AxpyInstrDiff",
+      "golden": {
+        "passed": true,
+        "mismatches": 0,
+        "guard_passed": true,
+        "elements_checked": 129,
+        "guard_bytes_checked": 32510
+      },
+      "instruction_counts": {
+        "MOV_XD_SPR": 6,
+        "MOVK": 8,
+        "MOV_XD_IMM": 14,
+        "ADD": 2,
+        "SHR": 1,
+        "AND": 1,
+        "ADD_IMM": 3,
+        "SHL": 3,
+        "MADD": 1,
+        "DC_PRELOAD_XN_IMM": 1,
+        "LDP_XI_XJ_XN": 1,
+        "LD_XD_XN_IMM": 1,
+        "INSERT_XD_XN": 5,
+        "NOP": 2,
+        "PUSH_PB": 1,
+        "MOV_SRC_TO_DST_ALIGNv2": 3,
+        "SET_FLAG": 2,
+        "WAIT_FLAG": 2,
+        "RV_VLOOPv2": 2,
+        "RV_SMOVI": 1,
+        "RV_SMOV": 1,
+        "RV_SNOP": 1,
+        "RV_SEND": 3,
+        "RV_PLT": 2,
+        "RV_VLD": 4,
+        "RV_VAXPY": 2,
+        "RV_VST": 2,
+        "VF": 1,
+        "BAR": 1,
+        "END": 1,
+        "DCCI": 2,
+        "END_LABEL": 1
+      },
+      "source_expected_data_counts": {
+        "RV_VLD": 4,
+        "RV_PLT": 2,
+        "RV_VAXPY": 2,
+        "RV_VST": 2
+      },
+      "source_data_counts_match": true,
+      "unexpected_vector_instructions": {},
+      "measured_vec_cycles": 60,
+      "vf_cycles": [
+        60
+      ],
+      "instruction_elapsed_histograms": {
+        "MOV_XD_SPR": {
+          "4": 6
+        },
+        "MOVK": {
+          "4": 8
+        },
+        "MOV_XD_IMM": {
+          "4": 14
+        },
+        "ADD": {
+          "4": 2
+        },
+        "SHR": {
+          "4": 1
+        },
+        "AND": {
+          "4": 1
+        },
+        "ADD_IMM": {
+          "4": 3
+        },
+        "SHL": {
+          "4": 3
+        },
+        "MADD": {
+          "5": 1
+        },
+        "DC_PRELOAD_XN_IMM": {
+          "407": 1
+        },
+        "LDP_XI_XJ_XN": {
+          "393": 1
+        },
+        "LD_XD_XN_IMM": {
+          "392": 1
+        },
+        "INSERT_XD_XN": {
+          "4": 5
+        },
+        "NOP": {
+          "0": 2
+        },
+        "PUSH_PB": {
+          "4": 1
+        },
+        "MOV_SRC_TO_DST_ALIGNv2": {
+          "1526": 1,
+          "2608": 1,
+          "1375": 1
+        },
+        "SET_FLAG": {
+          "2609": 1,
+          "2659": 1
+        },
+        "WAIT_FLAG": {
+          "2609": 1,
+          "2658": 1
+        },
+        "RV_VLOOPv2": {
+          "0": 2
+        },
+        "RV_SMOVI": {
+          "0": 1
+        },
+        "RV_SMOV": {
+          "1": 1
+        },
+        "RV_SNOP": {
+          "1": 1
+        },
+        "RV_SEND": {
+          "-16": 1,
+          "9": 2
+        },
+        "RV_PLT": {
+          "6": 2
+        },
+        "RV_VLD": {
+          "9": 2,
+          "10": 2
+        },
+        "RV_VAXPY": {
+          "9": 2
+        },
+        "RV_VST": {
+          "9": 1,
+          "13": 1
+        },
+        "VF": {
+          "60": 1
+        },
+        "END": {
+          "0": 1
+        },
+        "DCCI": {
+          "4": 1,
+          "6": 1
+        },
+        "END_LABEL": {
+          "5": 1
+        }
+      },
+      "forwarding_observations": {
+        "src_load_to_axpy": [
+          7,
+          7
+        ],
+        "accumulator_load_to_axpy": [
+          7,
+          7
+        ],
+        "axpy_to_store": [
+          7,
+          7
+        ],
+        "convert_to_axpy": []
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "input1.bin": "0bef9887cf77e772fcacb5be079e26ab0944bfbbf9da4b1bdd2869c0b9a6654c",
+        "output0.bin": "00d0d687445fba0fa30ea49d0042c4d550e4363848c86e88a3e48ce17e3a2382",
+        "core0.veccore0.instr_popped_log.dump": "8207cf97c93f667888db58fd32187f302112b612893a9f2961fe5884d4e7a501",
+        "core0.veccore0.instr_log.dump": "56b2b872c78f7d95942230d7c9f683dc44881e9d478465a94047bd4abaa90c2d"
+      },
+      "state": "native_verified"
+    },
+    {
+      "case": "axpy_fp16_fp16_n512_alpha0p125",
+      "opcode": "AXPY",
+      "dtype": "fp16",
+      "dst_dtype": "fp16",
+      "shape": [
+        1,
+        512
+      ],
+      "arity": 2,
+      "compute_arity": 1,
+      "alpha": 0.125,
+      "output_initial_input": 1,
+      "expected_vf_calls": 1,
+      "source": "PyPTO binary/basic.h::TAxpy -> PTO TAxpy.hpp AxpyInstrSame/AxpyInstrDiff",
+      "golden": {
+        "passed": true,
+        "mismatches": 0,
+        "guard_passed": true,
+        "elements_checked": 512,
+        "guard_bytes_checked": 31744
+      },
+      "instruction_counts": {
+        "MOV_XD_SPR": 6,
+        "MOVK": 8,
+        "MOV_XD_IMM": 14,
+        "ADD": 2,
+        "SHR": 1,
+        "AND": 1,
+        "ADD_IMM": 3,
+        "SHL": 3,
+        "MADD": 1,
+        "DC_PRELOAD_XN_IMM": 1,
+        "LDP_XI_XJ_XN": 1,
+        "LD_XD_XN_IMM": 1,
+        "INSERT_XD_XN": 5,
+        "NOP": 2,
+        "PUSH_PB": 1,
+        "MOV_SRC_TO_DST_ALIGNv2": 3,
+        "SET_FLAG": 2,
+        "WAIT_FLAG": 2,
+        "RV_VLOOPv2": 2,
+        "RV_SMOVI": 1,
+        "RV_SMOV": 1,
+        "RV_SNOP": 1,
+        "RV_SEND": 3,
+        "RV_PLT": 4,
+        "RV_VLD": 8,
+        "RV_VAXPY": 4,
+        "RV_VST": 4,
+        "VF": 1,
+        "BAR": 1,
+        "END": 1,
+        "DCCI": 2,
+        "END_LABEL": 1
+      },
+      "source_expected_data_counts": {
+        "RV_VLD": 8,
+        "RV_PLT": 4,
+        "RV_VAXPY": 4,
+        "RV_VST": 4
+      },
+      "source_data_counts_match": true,
+      "unexpected_vector_instructions": {},
+      "measured_vec_cycles": 62,
+      "vf_cycles": [
+        62
+      ],
+      "instruction_elapsed_histograms": {
+        "MOV_XD_SPR": {
+          "4": 6
+        },
+        "MOVK": {
+          "4": 8
+        },
+        "MOV_XD_IMM": {
+          "4": 14
+        },
+        "ADD": {
+          "4": 2
+        },
+        "SHR": {
+          "4": 1
+        },
+        "AND": {
+          "4": 1
+        },
+        "ADD_IMM": {
+          "4": 3
+        },
+        "SHL": {
+          "4": 3
+        },
+        "MADD": {
+          "5": 1
+        },
+        "DC_PRELOAD_XN_IMM": {
+          "407": 1
+        },
+        "LDP_XI_XJ_XN": {
+          "393": 1
+        },
+        "LD_XD_XN_IMM": {
+          "392": 1
+        },
+        "INSERT_XD_XN": {
+          "4": 5
+        },
+        "NOP": {
+          "0": 2
+        },
+        "PUSH_PB": {
+          "4": 1
+        },
+        "MOV_SRC_TO_DST_ALIGNv2": {
+          "1526": 1,
+          "2608": 1,
+          "1375": 1
+        },
+        "SET_FLAG": {
+          "2609": 1,
+          "2661": 1
+        },
+        "WAIT_FLAG": {
+          "2609": 1,
+          "2660": 1
+        },
+        "RV_VLOOPv2": {
+          "0": 2
+        },
+        "RV_SMOVI": {
+          "0": 1
+        },
+        "RV_SMOV": {
+          "1": 1
+        },
+        "RV_SNOP": {
+          "1": 1
+        },
+        "RV_SEND": {
+          "-16": 1,
+          "9": 2
+        },
+        "RV_PLT": {
+          "6": 4
+        },
+        "RV_VLD": {
+          "9": 6,
+          "10": 2
+        },
+        "RV_VAXPY": {
+          "9": 4
+        },
+        "RV_VST": {
+          "9": 4
+        },
+        "VF": {
+          "62": 1
+        },
+        "END": {
+          "0": 1
+        },
+        "DCCI": {
+          "4": 1,
+          "6": 1
+        },
+        "END_LABEL": {
+          "5": 1
+        }
+      },
+      "forwarding_observations": {
+        "src_load_to_axpy": [
+          7,
+          7,
+          7,
+          7
+        ],
+        "accumulator_load_to_axpy": [
+          7,
+          7,
+          6,
+          6
+        ],
+        "axpy_to_store": [
+          7,
+          7,
+          7,
+          7
+        ],
+        "convert_to_axpy": []
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "input1.bin": "0bef9887cf77e772fcacb5be079e26ab0944bfbbf9da4b1bdd2869c0b9a6654c",
+        "output0.bin": "86ea73b48ba7de1f4be738f61b011346cf24ffe41ceec0b7b7f0d143c0b869c8",
+        "core0.veccore0.instr_popped_log.dump": "fd479e9f92b55853a114ae619b07851a38f7797d4235c0c07bacf2b3bcadb05b",
+        "core0.veccore0.instr_log.dump": "7dceede157104de37f1b51ac6dbf2f7c6754620549267f7a013ddc784621652c"
+      },
+      "state": "native_verified"
+    },
+    {
+      "case": "axpy_fp16_fp16_n512_alpha2p0",
+      "opcode": "AXPY",
+      "dtype": "fp16",
+      "dst_dtype": "fp16",
+      "shape": [
+        1,
+        512
+      ],
+      "arity": 2,
+      "compute_arity": 1,
+      "alpha": 2.0,
+      "output_initial_input": 1,
+      "expected_vf_calls": 1,
+      "source": "PyPTO binary/basic.h::TAxpy -> PTO TAxpy.hpp AxpyInstrSame/AxpyInstrDiff",
+      "golden": {
+        "passed": true,
+        "mismatches": 0,
+        "guard_passed": true,
+        "elements_checked": 512,
+        "guard_bytes_checked": 31744
+      },
+      "instruction_counts": {
+        "MOV_XD_SPR": 6,
+        "MOVK": 8,
+        "MOV_XD_IMM": 14,
+        "ADD": 2,
+        "SHR": 1,
+        "AND": 1,
+        "ADD_IMM": 3,
+        "SHL": 3,
+        "MADD": 1,
+        "DC_PRELOAD_XN_IMM": 1,
+        "LDP_XI_XJ_XN": 1,
+        "LD_XD_XN_IMM": 1,
+        "INSERT_XD_XN": 5,
+        "NOP": 2,
+        "PUSH_PB": 1,
+        "MOV_SRC_TO_DST_ALIGNv2": 3,
+        "SET_FLAG": 2,
+        "WAIT_FLAG": 2,
+        "RV_VLOOPv2": 2,
+        "RV_SMOVI": 1,
+        "RV_SMOV": 1,
+        "RV_SNOP": 1,
+        "RV_SEND": 3,
+        "RV_PLT": 4,
+        "RV_VLD": 8,
+        "RV_VAXPY": 4,
+        "RV_VST": 4,
+        "VF": 1,
+        "BAR": 1,
+        "END": 1,
+        "DCCI": 2,
+        "END_LABEL": 1
+      },
+      "source_expected_data_counts": {
+        "RV_VLD": 8,
+        "RV_PLT": 4,
+        "RV_VAXPY": 4,
+        "RV_VST": 4
+      },
+      "source_data_counts_match": true,
+      "unexpected_vector_instructions": {},
+      "measured_vec_cycles": 62,
+      "vf_cycles": [
+        62
+      ],
+      "instruction_elapsed_histograms": {
+        "MOV_XD_SPR": {
+          "4": 6
+        },
+        "MOVK": {
+          "4": 8
+        },
+        "MOV_XD_IMM": {
+          "4": 14
+        },
+        "ADD": {
+          "4": 2
+        },
+        "SHR": {
+          "4": 1
+        },
+        "AND": {
+          "4": 1
+        },
+        "ADD_IMM": {
+          "4": 3
+        },
+        "SHL": {
+          "4": 3
+        },
+        "MADD": {
+          "5": 1
+        },
+        "DC_PRELOAD_XN_IMM": {
+          "407": 1
+        },
+        "LDP_XI_XJ_XN": {
+          "393": 1
+        },
+        "LD_XD_XN_IMM": {
+          "392": 1
+        },
+        "INSERT_XD_XN": {
+          "4": 5
+        },
+        "NOP": {
+          "0": 2
+        },
+        "PUSH_PB": {
+          "4": 1
+        },
+        "MOV_SRC_TO_DST_ALIGNv2": {
+          "1526": 1,
+          "2608": 1,
+          "1375": 1
+        },
+        "SET_FLAG": {
+          "2609": 1,
+          "2661": 1
+        },
+        "WAIT_FLAG": {
+          "2609": 1,
+          "2660": 1
+        },
+        "RV_VLOOPv2": {
+          "0": 2
+        },
+        "RV_SMOVI": {
+          "0": 1
+        },
+        "RV_SMOV": {
+          "1": 1
+        },
+        "RV_SNOP": {
+          "1": 1
+        },
+        "RV_SEND": {
+          "-16": 1,
+          "9": 2
+        },
+        "RV_PLT": {
+          "6": 4
+        },
+        "RV_VLD": {
+          "9": 6,
+          "10": 2
+        },
+        "RV_VAXPY": {
+          "9": 4
+        },
+        "RV_VST": {
+          "9": 4
+        },
+        "VF": {
+          "62": 1
+        },
+        "END": {
+          "0": 1
+        },
+        "DCCI": {
+          "4": 1,
+          "6": 1
+        },
+        "END_LABEL": {
+          "5": 1
+        }
+      },
+      "forwarding_observations": {
+        "src_load_to_axpy": [
+          7,
+          7,
+          7,
+          7
+        ],
+        "accumulator_load_to_axpy": [
+          7,
+          7,
+          6,
+          6
+        ],
+        "axpy_to_store": [
+          7,
+          7,
+          7,
+          7
+        ],
+        "convert_to_axpy": []
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "input1.bin": "0bef9887cf77e772fcacb5be079e26ab0944bfbbf9da4b1bdd2869c0b9a6654c",
+        "output0.bin": "3b05ab5a94ff9d6df442bc9cd8c89bab322a730ed6abcdd1e9b0eedd334e153e",
+        "core0.veccore0.instr_popped_log.dump": "495c3da557e1b324c3db99d325dcc02f5447fa7453bfa122130b0d36ed23c2a8",
+        "core0.veccore0.instr_log.dump": "ad6909e5efe632130f68a26a1ccf9fbca115ef46f710792e8ef39fe305df2bbe"
+      },
+      "state": "native_verified"
+    },
+    {
+      "case": "axpy_fp16_fp16_n2048_alpha0p125",
+      "opcode": "AXPY",
+      "dtype": "fp16",
+      "dst_dtype": "fp16",
+      "shape": [
+        1,
+        2048
+      ],
+      "arity": 2,
+      "compute_arity": 1,
+      "alpha": 0.125,
+      "output_initial_input": 1,
+      "expected_vf_calls": 1,
+      "source": "PyPTO binary/basic.h::TAxpy -> PTO TAxpy.hpp AxpyInstrSame/AxpyInstrDiff",
+      "golden": {
+        "passed": true,
+        "mismatches": 0,
+        "guard_passed": true,
+        "elements_checked": 2048,
+        "guard_bytes_checked": 28672
+      },
+      "instruction_counts": {
+        "MOV_XD_SPR": 6,
+        "MOVK": 8,
+        "MOV_XD_IMM": 14,
+        "ADD": 2,
+        "SHR": 1,
+        "AND": 1,
+        "ADD_IMM": 3,
+        "SHL": 3,
+        "MADD": 1,
+        "DC_PRELOAD_XN_IMM": 1,
+        "LDP_XI_XJ_XN": 1,
+        "LD_XD_XN_IMM": 1,
+        "INSERT_XD_XN": 5,
+        "NOP": 2,
+        "PUSH_PB": 1,
+        "MOV_SRC_TO_DST_ALIGNv2": 3,
+        "SET_FLAG": 2,
+        "WAIT_FLAG": 2,
+        "RV_VLOOPv2": 2,
+        "RV_SMOVI": 1,
+        "RV_SMOV": 1,
+        "RV_PLT": 16,
+        "RV_VLD": 32,
+        "RV_VAXPY": 16,
+        "RV_SNOP": 1,
+        "RV_SEND": 3,
+        "RV_VST": 16,
+        "VF": 1,
+        "BAR": 1,
+        "END": 1,
+        "DCCI": 2,
+        "END_LABEL": 1
+      },
+      "source_expected_data_counts": {
+        "RV_VLD": 32,
+        "RV_PLT": 16,
+        "RV_VAXPY": 16,
+        "RV_VST": 16
+      },
+      "source_data_counts_match": true,
+      "unexpected_vector_instructions": {},
+      "measured_vec_cycles": 74,
+      "vf_cycles": [
+        74
+      ],
+      "instruction_elapsed_histograms": {
+        "MOV_XD_SPR": {
+          "4": 6
+        },
+        "MOVK": {
+          "4": 8
+        },
+        "MOV_XD_IMM": {
+          "4": 14
+        },
+        "ADD": {
+          "4": 2
+        },
+        "SHR": {
+          "4": 1
+        },
+        "AND": {
+          "4": 1
+        },
+        "ADD_IMM": {
+          "4": 3
+        },
+        "SHL": {
+          "4": 3
+        },
+        "MADD": {
+          "5": 1
+        },
+        "DC_PRELOAD_XN_IMM": {
+          "407": 1
+        },
+        "LDP_XI_XJ_XN": {
+          "393": 1
+        },
+        "LD_XD_XN_IMM": {
+          "392": 1
+        },
+        "INSERT_XD_XN": {
+          "4": 5
+        },
+        "NOP": {
+          "0": 2
+        },
+        "PUSH_PB": {
+          "4": 1
+        },
+        "MOV_SRC_TO_DST_ALIGNv2": {
+          "1526": 1,
+          "2608": 1,
+          "1375": 1
+        },
+        "SET_FLAG": {
+          "2609": 1,
+          "2673": 1
+        },
+        "WAIT_FLAG": {
+          "2609": 1,
+          "2672": 1
+        },
+        "RV_VLOOPv2": {
+          "0": 2
+        },
+        "RV_SMOVI": {
+          "0": 1
+        },
+        "RV_SMOV": {
+          "1": 1
+        },
+        "RV_PLT": {
+          "6": 16
+        },
+        "RV_VLD": {
+          "9": 30,
+          "10": 2
+        },
+        "RV_VAXPY": {
+          "9": 16
+        },
+        "RV_SNOP": {
+          "1": 1
+        },
+        "RV_SEND": {
+          "-16": 1,
+          "9": 2
+        },
+        "RV_VST": {
+          "9": 16
+        },
+        "VF": {
+          "74": 1
+        },
+        "END": {
+          "0": 1
+        },
+        "DCCI": {
+          "4": 1,
+          "6": 1
+        },
+        "END_LABEL": {
+          "5": 1
+        }
+      },
+      "forwarding_observations": {
+        "src_load_to_axpy": [
+          7,
+          7,
+          7,
+          7,
+          7,
+          7,
+          7,
+          7,
+          7,
+          7,
+          7,
+          7,
+          7,
+          7,
+          7,
+          7
+        ],
+        "accumulator_load_to_axpy": [
+          7,
+          7,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6
+        ],
+        "axpy_to_store": [
+          7,
+          7,
+          7,
+          7,
+          7,
+          7,
+          7,
+          7,
+          7,
+          7,
+          7,
+          7,
+          7,
+          7,
+          7,
+          7
+        ],
+        "convert_to_axpy": []
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "input1.bin": "0bef9887cf77e772fcacb5be079e26ab0944bfbbf9da4b1bdd2869c0b9a6654c",
+        "output0.bin": "5cf8e6841a32a582d2a7191b106c952d34054e52d2a5bbd837d25a6d176c8838",
+        "core0.veccore0.instr_popped_log.dump": "ced582c78d592246bbf5958a54611a89685c65eb746e5aac1964bf3598a91edb",
+        "core0.veccore0.instr_log.dump": "01103c10cf942e495bdd5d965f2c2d451275aeea600650243ad051dabd692545"
+      },
+      "state": "native_verified"
+    },
+    {
+      "case": "axpy_fp16_fp16_n2048_alpha2p0",
+      "opcode": "AXPY",
+      "dtype": "fp16",
+      "dst_dtype": "fp16",
+      "shape": [
+        1,
+        2048
+      ],
+      "arity": 2,
+      "compute_arity": 1,
+      "alpha": 2.0,
+      "output_initial_input": 1,
+      "expected_vf_calls": 1,
+      "source": "PyPTO binary/basic.h::TAxpy -> PTO TAxpy.hpp AxpyInstrSame/AxpyInstrDiff",
+      "golden": {
+        "passed": true,
+        "mismatches": 0,
+        "guard_passed": true,
+        "elements_checked": 2048,
+        "guard_bytes_checked": 28672
+      },
+      "instruction_counts": {
+        "MOV_XD_SPR": 6,
+        "MOVK": 8,
+        "MOV_XD_IMM": 14,
+        "ADD": 2,
+        "SHR": 1,
+        "AND": 1,
+        "ADD_IMM": 3,
+        "SHL": 3,
+        "MADD": 1,
+        "DC_PRELOAD_XN_IMM": 1,
+        "LDP_XI_XJ_XN": 1,
+        "LD_XD_XN_IMM": 1,
+        "INSERT_XD_XN": 5,
+        "NOP": 2,
+        "PUSH_PB": 1,
+        "MOV_SRC_TO_DST_ALIGNv2": 3,
+        "SET_FLAG": 2,
+        "WAIT_FLAG": 2,
+        "RV_VLOOPv2": 2,
+        "RV_SMOVI": 1,
+        "RV_SMOV": 1,
+        "RV_PLT": 16,
+        "RV_VLD": 32,
+        "RV_VAXPY": 16,
+        "RV_SNOP": 1,
+        "RV_SEND": 3,
+        "RV_VST": 16,
+        "VF": 1,
+        "BAR": 1,
+        "END": 1,
+        "DCCI": 2,
+        "END_LABEL": 1
+      },
+      "source_expected_data_counts": {
+        "RV_VLD": 32,
+        "RV_PLT": 16,
+        "RV_VAXPY": 16,
+        "RV_VST": 16
+      },
+      "source_data_counts_match": true,
+      "unexpected_vector_instructions": {},
+      "measured_vec_cycles": 74,
+      "vf_cycles": [
+        74
+      ],
+      "instruction_elapsed_histograms": {
+        "MOV_XD_SPR": {
+          "4": 6
+        },
+        "MOVK": {
+          "4": 8
+        },
+        "MOV_XD_IMM": {
+          "4": 14
+        },
+        "ADD": {
+          "4": 2
+        },
+        "SHR": {
+          "4": 1
+        },
+        "AND": {
+          "4": 1
+        },
+        "ADD_IMM": {
+          "4": 3
+        },
+        "SHL": {
+          "4": 3
+        },
+        "MADD": {
+          "5": 1
+        },
+        "DC_PRELOAD_XN_IMM": {
+          "407": 1
+        },
+        "LDP_XI_XJ_XN": {
+          "393": 1
+        },
+        "LD_XD_XN_IMM": {
+          "392": 1
+        },
+        "INSERT_XD_XN": {
+          "4": 5
+        },
+        "NOP": {
+          "0": 2
+        },
+        "PUSH_PB": {
+          "4": 1
+        },
+        "MOV_SRC_TO_DST_ALIGNv2": {
+          "1526": 1,
+          "2608": 1,
+          "1375": 1
+        },
+        "SET_FLAG": {
+          "2609": 1,
+          "2673": 1
+        },
+        "WAIT_FLAG": {
+          "2609": 1,
+          "2672": 1
+        },
+        "RV_VLOOPv2": {
+          "0": 2
+        },
+        "RV_SMOVI": {
+          "0": 1
+        },
+        "RV_SMOV": {
+          "1": 1
+        },
+        "RV_PLT": {
+          "6": 16
+        },
+        "RV_VLD": {
+          "9": 30,
+          "10": 2
+        },
+        "RV_VAXPY": {
+          "9": 16
+        },
+        "RV_SNOP": {
+          "1": 1
+        },
+        "RV_SEND": {
+          "-16": 1,
+          "9": 2
+        },
+        "RV_VST": {
+          "9": 16
+        },
+        "VF": {
+          "74": 1
+        },
+        "END": {
+          "0": 1
+        },
+        "DCCI": {
+          "4": 1,
+          "6": 1
+        },
+        "END_LABEL": {
+          "5": 1
+        }
+      },
+      "forwarding_observations": {
+        "src_load_to_axpy": [
+          7,
+          7,
+          7,
+          7,
+          7,
+          7,
+          7,
+          7,
+          7,
+          7,
+          7,
+          7,
+          7,
+          7,
+          7,
+          7
+        ],
+        "accumulator_load_to_axpy": [
+          7,
+          7,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6
+        ],
+        "axpy_to_store": [
+          7,
+          7,
+          7,
+          7,
+          7,
+          7,
+          7,
+          7,
+          7,
+          7,
+          7,
+          7,
+          7,
+          7,
+          7,
+          7
+        ],
+        "convert_to_axpy": []
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "input1.bin": "0bef9887cf77e772fcacb5be079e26ab0944bfbbf9da4b1bdd2869c0b9a6654c",
+        "output0.bin": "c52c1ff4b2591bbca4190febaa4c57e1c120c6facebeb002e752eaf684eae305",
+        "core0.veccore0.instr_popped_log.dump": "103ac532887ca8d9e84508c5281a430fcfed1ede54604ba6267250e18e4b7d49",
+        "core0.veccore0.instr_log.dump": "77a5a2166d7bee7148e40f1fedd2cb005b310c9fcc6e545eefc5a3b8c8c629af"
+      },
+      "state": "native_verified"
+    },
+    {
+      "case": "axpy_fp32_fp32_n64_alpha0p125",
+      "opcode": "AXPY",
+      "dtype": "fp32",
+      "dst_dtype": "fp32",
+      "shape": [
+        1,
+        64
+      ],
+      "arity": 2,
+      "compute_arity": 1,
+      "alpha": 0.125,
+      "output_initial_input": 1,
+      "expected_vf_calls": 1,
+      "source": "PyPTO binary/basic.h::TAxpy -> PTO TAxpy.hpp AxpyInstrSame/AxpyInstrDiff",
+      "golden": {
+        "passed": true,
+        "mismatches": 0,
+        "guard_passed": true,
+        "elements_checked": 64,
+        "guard_bytes_checked": 32512
+      },
+      "instruction_counts": {
+        "MOV_XD_SPR": 6,
+        "MOVK": 8,
+        "MOV_XD_IMM": 12,
+        "ADD": 2,
+        "SHR": 1,
+        "AND": 1,
+        "ADD_IMM": 3,
+        "SHL": 2,
+        "MADD": 1,
+        "DC_PRELOAD_XN_IMM": 1,
+        "LDP_XI_XJ_XN": 1,
+        "LD_XD_XN_IMM": 1,
+        "INSERT_XD_XN": 4,
+        "NOP": 2,
+        "PUSH_PB": 1,
+        "MOV_SRC_TO_DST_ALIGNv2": 3,
+        "SET_FLAG": 2,
+        "WAIT_FLAG": 2,
+        "RV_VLOOPv2": 2,
+        "RV_SMOVI": 1,
+        "RV_SMOV": 1,
+        "RV_SNOP": 1,
+        "RV_SEND": 3,
+        "RV_PLT": 1,
+        "RV_VLD": 2,
+        "RV_VAXPY": 1,
+        "RV_VST": 1,
+        "VF": 1,
+        "BAR": 1,
+        "END": 1,
+        "DCCI": 2,
+        "END_LABEL": 1
+      },
+      "source_expected_data_counts": {
+        "RV_VLD": 2,
+        "RV_PLT": 1,
+        "RV_VAXPY": 1,
+        "RV_VST": 1
+      },
+      "source_data_counts_match": true,
+      "unexpected_vector_instructions": {},
+      "measured_vec_cycles": 59,
+      "vf_cycles": [
+        59
+      ],
+      "instruction_elapsed_histograms": {
+        "MOV_XD_SPR": {
+          "4": 6
+        },
+        "MOVK": {
+          "4": 8
+        },
+        "MOV_XD_IMM": {
+          "4": 12
+        },
+        "ADD": {
+          "4": 2
+        },
+        "SHR": {
+          "4": 1
+        },
+        "AND": {
+          "4": 1
+        },
+        "ADD_IMM": {
+          "4": 3
+        },
+        "SHL": {
+          "4": 2
+        },
+        "MADD": {
+          "5": 1
+        },
+        "DC_PRELOAD_XN_IMM": {
+          "407": 1
+        },
+        "LDP_XI_XJ_XN": {
+          "393": 1
+        },
+        "LD_XD_XN_IMM": {
+          "392": 1
+        },
+        "INSERT_XD_XN": {
+          "4": 4
+        },
+        "NOP": {
+          "0": 2
+        },
+        "PUSH_PB": {
+          "4": 1
+        },
+        "MOV_SRC_TO_DST_ALIGNv2": {
+          "1526": 1,
+          "2587": 1,
+          "1367": 1
+        },
+        "SET_FLAG": {
+          "2588": 1,
+          "2639": 1
+        },
+        "WAIT_FLAG": {
+          "2588": 1,
+          "2638": 1
+        },
+        "RV_VLOOPv2": {
+          "0": 2
+        },
+        "RV_SMOVI": {
+          "0": 1
+        },
+        "RV_SMOV": {
+          "1": 1
+        },
+        "RV_SNOP": {
+          "1": 1
+        },
+        "RV_SEND": {
+          "-16": 1,
+          "9": 2
+        },
+        "RV_PLT": {
+          "6": 1
+        },
+        "RV_VLD": {
+          "9": 1,
+          "10": 1
+        },
+        "RV_VAXPY": {
+          "9": 1
+        },
+        "RV_VST": {
+          "9": 1
+        },
+        "VF": {
+          "59": 1
+        },
+        "END": {
+          "0": 1
+        },
+        "DCCI": {
+          "4": 1,
+          "6": 1
+        },
+        "END_LABEL": {
+          "5": 1
+        }
+      },
+      "forwarding_observations": {
+        "src_load_to_axpy": [
+          7
+        ],
+        "accumulator_load_to_axpy": [
+          7
+        ],
+        "axpy_to_store": [
+          7
+        ],
+        "convert_to_axpy": []
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "input1.bin": "0bef9887cf77e772fcacb5be079e26ab0944bfbbf9da4b1bdd2869c0b9a6654c",
+        "output0.bin": "7d9cdf144ad9a4e8ee3c1d6f4d91a0f526c2f0c7f3d1a679123dc25cf6ae7e62",
+        "core0.veccore0.instr_popped_log.dump": "f5d566335ad21b96e8058e10d0397b078af02bb714c0b85d94f6b1c0e86f8f30",
+        "core0.veccore0.instr_log.dump": "2eb6b57c5c4b10e98937daeecd5b6edacb26d70d49d1b50cbeb636a8e5b217fe"
+      },
+      "state": "native_verified"
+    },
+    {
+      "case": "axpy_fp32_fp32_n64_alpha2p0",
+      "opcode": "AXPY",
+      "dtype": "fp32",
+      "dst_dtype": "fp32",
+      "shape": [
+        1,
+        64
+      ],
+      "arity": 2,
+      "compute_arity": 1,
+      "alpha": 2.0,
+      "output_initial_input": 1,
+      "expected_vf_calls": 1,
+      "source": "PyPTO binary/basic.h::TAxpy -> PTO TAxpy.hpp AxpyInstrSame/AxpyInstrDiff",
+      "golden": {
+        "passed": true,
+        "mismatches": 0,
+        "guard_passed": true,
+        "elements_checked": 64,
+        "guard_bytes_checked": 32512
+      },
+      "instruction_counts": {
+        "MOV_XD_SPR": 6,
+        "MOVK": 8,
+        "MOV_XD_IMM": 12,
+        "ADD": 2,
+        "SHR": 1,
+        "AND": 1,
+        "ADD_IMM": 3,
+        "SHL": 2,
+        "MADD": 1,
+        "DC_PRELOAD_XN_IMM": 1,
+        "LDP_XI_XJ_XN": 1,
+        "LD_XD_XN_IMM": 1,
+        "INSERT_XD_XN": 4,
+        "NOP": 2,
+        "PUSH_PB": 1,
+        "MOV_SRC_TO_DST_ALIGNv2": 3,
+        "SET_FLAG": 2,
+        "WAIT_FLAG": 2,
+        "RV_VLOOPv2": 2,
+        "RV_SMOVI": 1,
+        "RV_SMOV": 1,
+        "RV_SNOP": 1,
+        "RV_SEND": 3,
+        "RV_PLT": 1,
+        "RV_VLD": 2,
+        "RV_VAXPY": 1,
+        "RV_VST": 1,
+        "VF": 1,
+        "BAR": 1,
+        "END": 1,
+        "DCCI": 2,
+        "END_LABEL": 1
+      },
+      "source_expected_data_counts": {
+        "RV_VLD": 2,
+        "RV_PLT": 1,
+        "RV_VAXPY": 1,
+        "RV_VST": 1
+      },
+      "source_data_counts_match": true,
+      "unexpected_vector_instructions": {},
+      "measured_vec_cycles": 59,
+      "vf_cycles": [
+        59
+      ],
+      "instruction_elapsed_histograms": {
+        "MOV_XD_SPR": {
+          "4": 6
+        },
+        "MOVK": {
+          "4": 8
+        },
+        "MOV_XD_IMM": {
+          "4": 12
+        },
+        "ADD": {
+          "4": 2
+        },
+        "SHR": {
+          "4": 1
+        },
+        "AND": {
+          "4": 1
+        },
+        "ADD_IMM": {
+          "4": 3
+        },
+        "SHL": {
+          "4": 2
+        },
+        "MADD": {
+          "5": 1
+        },
+        "DC_PRELOAD_XN_IMM": {
+          "407": 1
+        },
+        "LDP_XI_XJ_XN": {
+          "393": 1
+        },
+        "LD_XD_XN_IMM": {
+          "392": 1
+        },
+        "INSERT_XD_XN": {
+          "4": 4
+        },
+        "NOP": {
+          "0": 2
+        },
+        "PUSH_PB": {
+          "4": 1
+        },
+        "MOV_SRC_TO_DST_ALIGNv2": {
+          "1526": 1,
+          "2587": 1,
+          "1367": 1
+        },
+        "SET_FLAG": {
+          "2588": 1,
+          "2639": 1
+        },
+        "WAIT_FLAG": {
+          "2588": 1,
+          "2638": 1
+        },
+        "RV_VLOOPv2": {
+          "0": 2
+        },
+        "RV_SMOVI": {
+          "0": 1
+        },
+        "RV_SMOV": {
+          "1": 1
+        },
+        "RV_SNOP": {
+          "1": 1
+        },
+        "RV_SEND": {
+          "-16": 1,
+          "9": 2
+        },
+        "RV_PLT": {
+          "6": 1
+        },
+        "RV_VLD": {
+          "9": 1,
+          "10": 1
+        },
+        "RV_VAXPY": {
+          "9": 1
+        },
+        "RV_VST": {
+          "9": 1
+        },
+        "VF": {
+          "59": 1
+        },
+        "END": {
+          "0": 1
+        },
+        "DCCI": {
+          "4": 1,
+          "6": 1
+        },
+        "END_LABEL": {
+          "5": 1
+        }
+      },
+      "forwarding_observations": {
+        "src_load_to_axpy": [
+          7
+        ],
+        "accumulator_load_to_axpy": [
+          7
+        ],
+        "axpy_to_store": [
+          7
+        ],
+        "convert_to_axpy": []
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "input1.bin": "0bef9887cf77e772fcacb5be079e26ab0944bfbbf9da4b1bdd2869c0b9a6654c",
+        "output0.bin": "94f9f9ca37c7e3970f13a8e76ed9aea5aa387783cf854791ca9b891f46bed379",
+        "core0.veccore0.instr_popped_log.dump": "3a0dd08addcc7e25fff28aef39ee95d7aeeb0b5aa24bcf9d35a474a825f43fcf",
+        "core0.veccore0.instr_log.dump": "d233514402b232408472a7256dad7ca5ae32e4ca402648410556dd241ff263dc"
+      },
+      "state": "native_verified"
+    },
+    {
+      "case": "axpy_fp32_fp32_n129_alpha0p125",
+      "opcode": "AXPY",
+      "dtype": "fp32",
+      "dst_dtype": "fp32",
+      "shape": [
+        1,
+        129
+      ],
+      "arity": 2,
+      "compute_arity": 1,
+      "alpha": 0.125,
+      "output_initial_input": 1,
+      "expected_vf_calls": 1,
+      "source": "PyPTO binary/basic.h::TAxpy -> PTO TAxpy.hpp AxpyInstrSame/AxpyInstrDiff",
+      "golden": {
+        "passed": true,
+        "mismatches": 0,
+        "guard_passed": true,
+        "elements_checked": 129,
+        "guard_bytes_checked": 32252
+      },
+      "instruction_counts": {
+        "MOV_XD_SPR": 6,
+        "MOVK": 9,
+        "MOV_XD_IMM": 14,
+        "ADD": 2,
+        "SHR": 1,
+        "AND": 1,
+        "ADD_IMM": 3,
+        "SHL": 3,
+        "MADD": 1,
+        "DC_PRELOAD_XN_IMM": 1,
+        "LDP_XI_XJ_XN": 1,
+        "LD_XD_XN_IMM": 1,
+        "INSERT_XD_XN": 4,
+        "NOP": 2,
+        "PUSH_PB": 1,
+        "MOV_SRC_TO_DST_ALIGNv2": 3,
+        "SET_FLAG": 2,
+        "WAIT_FLAG": 2,
+        "RV_VLOOPv2": 2,
+        "RV_SMOVI": 1,
+        "RV_SMOV": 1,
+        "RV_SNOP": 1,
+        "RV_SEND": 3,
+        "RV_PLT": 3,
+        "RV_VLD": 6,
+        "RV_VAXPY": 3,
+        "RV_VST": 3,
+        "VF": 1,
+        "BAR": 1,
+        "END": 1,
+        "DCCI": 2,
+        "END_LABEL": 1
+      },
+      "source_expected_data_counts": {
+        "RV_VLD": 6,
+        "RV_PLT": 3,
+        "RV_VAXPY": 3,
+        "RV_VST": 3
+      },
+      "source_data_counts_match": true,
+      "unexpected_vector_instructions": {},
+      "measured_vec_cycles": 61,
+      "vf_cycles": [
+        61
+      ],
+      "instruction_elapsed_histograms": {
+        "MOV_XD_SPR": {
+          "4": 6
+        },
+        "MOVK": {
+          "4": 9
+        },
+        "MOV_XD_IMM": {
+          "4": 14
+        },
+        "ADD": {
+          "4": 2
+        },
+        "SHR": {
+          "4": 1
+        },
+        "AND": {
+          "4": 1
+        },
+        "ADD_IMM": {
+          "4": 3
+        },
+        "SHL": {
+          "4": 3
+        },
+        "MADD": {
+          "5": 1
+        },
+        "DC_PRELOAD_XN_IMM": {
+          "407": 1
+        },
+        "LDP_XI_XJ_XN": {
+          "393": 1
+        },
+        "LD_XD_XN_IMM": {
+          "392": 1
+        },
+        "INSERT_XD_XN": {
+          "4": 4
+        },
+        "NOP": {
+          "0": 2
+        },
+        "PUSH_PB": {
+          "4": 1
+        },
+        "MOV_SRC_TO_DST_ALIGNv2": {
+          "1526": 1,
+          "2608": 1,
+          "1375": 1
+        },
+        "SET_FLAG": {
+          "2609": 1,
+          "2660": 1
+        },
+        "WAIT_FLAG": {
+          "2609": 1,
+          "2659": 1
+        },
+        "RV_VLOOPv2": {
+          "0": 2
+        },
+        "RV_SMOVI": {
+          "0": 1
+        },
+        "RV_SMOV": {
+          "1": 1
+        },
+        "RV_SNOP": {
+          "1": 1
+        },
+        "RV_SEND": {
+          "-16": 1,
+          "9": 2
+        },
+        "RV_PLT": {
+          "6": 3
+        },
+        "RV_VLD": {
+          "9": 4,
+          "10": 2
+        },
+        "RV_VAXPY": {
+          "9": 3
+        },
+        "RV_VST": {
+          "9": 3
+        },
+        "VF": {
+          "61": 1
+        },
+        "END": {
+          "0": 1
+        },
+        "DCCI": {
+          "4": 1,
+          "6": 1
+        },
+        "END_LABEL": {
+          "5": 1
+        }
+      },
+      "forwarding_observations": {
+        "src_load_to_axpy": [
+          7,
+          7,
+          7
+        ],
+        "accumulator_load_to_axpy": [
+          7,
+          7,
+          6
+        ],
+        "axpy_to_store": [
+          7,
+          7,
+          7
+        ],
+        "convert_to_axpy": []
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "input1.bin": "0bef9887cf77e772fcacb5be079e26ab0944bfbbf9da4b1bdd2869c0b9a6654c",
+        "output0.bin": "12e7169cdbe0ce22bd2476899fe5a944cc3c616bace02de7585197b052f1172a",
+        "core0.veccore0.instr_popped_log.dump": "934be4b633d3dd33bab28b954fab8492b7ca6e4c787df0c77319f55eb4f11a1f",
+        "core0.veccore0.instr_log.dump": "e107ee00c7faf0d3cb5fc0196a6a3de9915f9e2cbd0e778e51dbe6cd6d0e37d4"
+      },
+      "state": "native_verified"
+    },
+    {
+      "case": "axpy_fp32_fp32_n129_alpha2p0",
+      "opcode": "AXPY",
+      "dtype": "fp32",
+      "dst_dtype": "fp32",
+      "shape": [
+        1,
+        129
+      ],
+      "arity": 2,
+      "compute_arity": 1,
+      "alpha": 2.0,
+      "output_initial_input": 1,
+      "expected_vf_calls": 1,
+      "source": "PyPTO binary/basic.h::TAxpy -> PTO TAxpy.hpp AxpyInstrSame/AxpyInstrDiff",
+      "golden": {
+        "passed": true,
+        "mismatches": 0,
+        "guard_passed": true,
+        "elements_checked": 129,
+        "guard_bytes_checked": 32252
+      },
+      "instruction_counts": {
+        "MOV_XD_SPR": 6,
+        "MOVK": 9,
+        "MOV_XD_IMM": 14,
+        "ADD": 2,
+        "SHR": 1,
+        "AND": 1,
+        "ADD_IMM": 3,
+        "SHL": 3,
+        "MADD": 1,
+        "DC_PRELOAD_XN_IMM": 1,
+        "LDP_XI_XJ_XN": 1,
+        "LD_XD_XN_IMM": 1,
+        "INSERT_XD_XN": 4,
+        "NOP": 2,
+        "PUSH_PB": 1,
+        "MOV_SRC_TO_DST_ALIGNv2": 3,
+        "SET_FLAG": 2,
+        "WAIT_FLAG": 2,
+        "RV_VLOOPv2": 2,
+        "RV_SMOVI": 1,
+        "RV_SMOV": 1,
+        "RV_SNOP": 1,
+        "RV_SEND": 3,
+        "RV_PLT": 3,
+        "RV_VLD": 6,
+        "RV_VAXPY": 3,
+        "RV_VST": 3,
+        "VF": 1,
+        "BAR": 1,
+        "END": 1,
+        "DCCI": 2,
+        "END_LABEL": 1
+      },
+      "source_expected_data_counts": {
+        "RV_VLD": 6,
+        "RV_PLT": 3,
+        "RV_VAXPY": 3,
+        "RV_VST": 3
+      },
+      "source_data_counts_match": true,
+      "unexpected_vector_instructions": {},
+      "measured_vec_cycles": 61,
+      "vf_cycles": [
+        61
+      ],
+      "instruction_elapsed_histograms": {
+        "MOV_XD_SPR": {
+          "4": 6
+        },
+        "MOVK": {
+          "4": 9
+        },
+        "MOV_XD_IMM": {
+          "4": 14
+        },
+        "ADD": {
+          "4": 2
+        },
+        "SHR": {
+          "4": 1
+        },
+        "AND": {
+          "4": 1
+        },
+        "ADD_IMM": {
+          "4": 3
+        },
+        "SHL": {
+          "4": 3
+        },
+        "MADD": {
+          "5": 1
+        },
+        "DC_PRELOAD_XN_IMM": {
+          "407": 1
+        },
+        "LDP_XI_XJ_XN": {
+          "393": 1
+        },
+        "LD_XD_XN_IMM": {
+          "392": 1
+        },
+        "INSERT_XD_XN": {
+          "4": 4
+        },
+        "NOP": {
+          "0": 2
+        },
+        "PUSH_PB": {
+          "4": 1
+        },
+        "MOV_SRC_TO_DST_ALIGNv2": {
+          "1526": 1,
+          "2608": 1,
+          "1375": 1
+        },
+        "SET_FLAG": {
+          "2609": 1,
+          "2660": 1
+        },
+        "WAIT_FLAG": {
+          "2609": 1,
+          "2659": 1
+        },
+        "RV_VLOOPv2": {
+          "0": 2
+        },
+        "RV_SMOVI": {
+          "0": 1
+        },
+        "RV_SMOV": {
+          "1": 1
+        },
+        "RV_SNOP": {
+          "1": 1
+        },
+        "RV_SEND": {
+          "-16": 1,
+          "9": 2
+        },
+        "RV_PLT": {
+          "6": 3
+        },
+        "RV_VLD": {
+          "9": 4,
+          "10": 2
+        },
+        "RV_VAXPY": {
+          "9": 3
+        },
+        "RV_VST": {
+          "9": 3
+        },
+        "VF": {
+          "61": 1
+        },
+        "END": {
+          "0": 1
+        },
+        "DCCI": {
+          "4": 1,
+          "6": 1
+        },
+        "END_LABEL": {
+          "5": 1
+        }
+      },
+      "forwarding_observations": {
+        "src_load_to_axpy": [
+          7,
+          7,
+          7
+        ],
+        "accumulator_load_to_axpy": [
+          7,
+          7,
+          6
+        ],
+        "axpy_to_store": [
+          7,
+          7,
+          7
+        ],
+        "convert_to_axpy": []
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "input1.bin": "0bef9887cf77e772fcacb5be079e26ab0944bfbbf9da4b1bdd2869c0b9a6654c",
+        "output0.bin": "d77901f78e07ac34534013570be51fc77a8f40316b6afb63e244136a79df0510",
+        "core0.veccore0.instr_popped_log.dump": "94c93890d79cdc04332f35b558884f9d834606bec7a7a826fd5b562368aacfef",
+        "core0.veccore0.instr_log.dump": "ba0b3a7dccb4c1dad5c086b88d2098ddea670b226aa45da73665cc4da934128d"
+      },
+      "state": "native_verified"
+    },
+    {
+      "case": "axpy_fp32_fp32_n512_alpha0p125",
+      "opcode": "AXPY",
+      "dtype": "fp32",
+      "dst_dtype": "fp32",
+      "shape": [
+        1,
+        512
+      ],
+      "arity": 2,
+      "compute_arity": 1,
+      "alpha": 0.125,
+      "output_initial_input": 1,
+      "expected_vf_calls": 1,
+      "source": "PyPTO binary/basic.h::TAxpy -> PTO TAxpy.hpp AxpyInstrSame/AxpyInstrDiff",
+      "golden": {
+        "passed": true,
+        "mismatches": 0,
+        "guard_passed": true,
+        "elements_checked": 512,
+        "guard_bytes_checked": 30720
+      },
+      "instruction_counts": {
+        "MOV_XD_SPR": 6,
+        "MOVK": 9,
+        "MOV_XD_IMM": 14,
+        "ADD": 2,
+        "SHR": 1,
+        "AND": 1,
+        "ADD_IMM": 3,
+        "SHL": 3,
+        "MADD": 1,
+        "DC_PRELOAD_XN_IMM": 1,
+        "LDP_XI_XJ_XN": 1,
+        "LD_XD_XN_IMM": 1,
+        "INSERT_XD_XN": 4,
+        "NOP": 2,
+        "PUSH_PB": 1,
+        "MOV_SRC_TO_DST_ALIGNv2": 3,
+        "SET_FLAG": 2,
+        "WAIT_FLAG": 2,
+        "RV_VLOOPv2": 2,
+        "RV_SMOVI": 1,
+        "RV_SMOV": 1,
+        "RV_PLT": 8,
+        "RV_VLD": 16,
+        "RV_SNOP": 1,
+        "RV_SEND": 3,
+        "RV_VAXPY": 8,
+        "RV_VST": 8,
+        "VF": 1,
+        "BAR": 1,
+        "END": 1,
+        "DCCI": 2,
+        "END_LABEL": 1
+      },
+      "source_expected_data_counts": {
+        "RV_VLD": 16,
+        "RV_PLT": 8,
+        "RV_VAXPY": 8,
+        "RV_VST": 8
+      },
+      "source_data_counts_match": true,
+      "unexpected_vector_instructions": {},
+      "measured_vec_cycles": 66,
+      "vf_cycles": [
+        66
+      ],
+      "instruction_elapsed_histograms": {
+        "MOV_XD_SPR": {
+          "4": 6
+        },
+        "MOVK": {
+          "4": 9
+        },
+        "MOV_XD_IMM": {
+          "4": 14
+        },
+        "ADD": {
+          "4": 2
+        },
+        "SHR": {
+          "4": 1
+        },
+        "AND": {
+          "4": 1
+        },
+        "ADD_IMM": {
+          "4": 3
+        },
+        "SHL": {
+          "4": 3
+        },
+        "MADD": {
+          "5": 1
+        },
+        "DC_PRELOAD_XN_IMM": {
+          "407": 1
+        },
+        "LDP_XI_XJ_XN": {
+          "393": 1
+        },
+        "LD_XD_XN_IMM": {
+          "392": 1
+        },
+        "INSERT_XD_XN": {
+          "4": 4
+        },
+        "NOP": {
+          "0": 2
+        },
+        "PUSH_PB": {
+          "4": 1
+        },
+        "MOV_SRC_TO_DST_ALIGNv2": {
+          "1526": 1,
+          "2608": 1,
+          "1375": 1
+        },
+        "SET_FLAG": {
+          "2609": 1,
+          "2665": 1
+        },
+        "WAIT_FLAG": {
+          "2609": 1,
+          "2664": 1
+        },
+        "RV_VLOOPv2": {
+          "0": 2
+        },
+        "RV_SMOVI": {
+          "0": 1
+        },
+        "RV_SMOV": {
+          "1": 1
+        },
+        "RV_PLT": {
+          "6": 8
+        },
+        "RV_VLD": {
+          "9": 14,
+          "10": 2
+        },
+        "RV_SNOP": {
+          "1": 1
+        },
+        "RV_SEND": {
+          "-16": 1,
+          "9": 2
+        },
+        "RV_VAXPY": {
+          "9": 8
+        },
+        "RV_VST": {
+          "9": 8
+        },
+        "VF": {
+          "66": 1
+        },
+        "END": {
+          "0": 1
+        },
+        "DCCI": {
+          "4": 1,
+          "6": 1
+        },
+        "END_LABEL": {
+          "5": 1
+        }
+      },
+      "forwarding_observations": {
+        "src_load_to_axpy": [
+          7,
+          7,
+          7,
+          7,
+          7,
+          7,
+          7,
+          7
+        ],
+        "accumulator_load_to_axpy": [
+          7,
+          7,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6
+        ],
+        "axpy_to_store": [
+          7,
+          7,
+          7,
+          7,
+          7,
+          7,
+          7,
+          7
+        ],
+        "convert_to_axpy": []
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "input1.bin": "0bef9887cf77e772fcacb5be079e26ab0944bfbbf9da4b1bdd2869c0b9a6654c",
+        "output0.bin": "84e133370691fb90482cb98afc3c0ee0022ade796c35cd4a92e70e953dae164c",
+        "core0.veccore0.instr_popped_log.dump": "9b63a0c370525f44ecb2da242ec45077b5c45d90362d6262c0821f6ee41619ee",
+        "core0.veccore0.instr_log.dump": "1b3c0e8b07d45080fdc27806c668e61d342d97f7149701a3e91b8cebf08504ea"
+      },
+      "state": "native_verified"
+    },
+    {
+      "case": "axpy_fp32_fp32_n512_alpha2p0",
+      "opcode": "AXPY",
+      "dtype": "fp32",
+      "dst_dtype": "fp32",
+      "shape": [
+        1,
+        512
+      ],
+      "arity": 2,
+      "compute_arity": 1,
+      "alpha": 2.0,
+      "output_initial_input": 1,
+      "expected_vf_calls": 1,
+      "source": "PyPTO binary/basic.h::TAxpy -> PTO TAxpy.hpp AxpyInstrSame/AxpyInstrDiff",
+      "golden": {
+        "passed": true,
+        "mismatches": 0,
+        "guard_passed": true,
+        "elements_checked": 512,
+        "guard_bytes_checked": 30720
+      },
+      "instruction_counts": {
+        "MOV_XD_SPR": 6,
+        "MOVK": 9,
+        "MOV_XD_IMM": 14,
+        "ADD": 2,
+        "SHR": 1,
+        "AND": 1,
+        "ADD_IMM": 3,
+        "SHL": 3,
+        "MADD": 1,
+        "DC_PRELOAD_XN_IMM": 1,
+        "LDP_XI_XJ_XN": 1,
+        "LD_XD_XN_IMM": 1,
+        "INSERT_XD_XN": 4,
+        "NOP": 2,
+        "PUSH_PB": 1,
+        "MOV_SRC_TO_DST_ALIGNv2": 3,
+        "SET_FLAG": 2,
+        "WAIT_FLAG": 2,
+        "RV_VLOOPv2": 2,
+        "RV_SMOVI": 1,
+        "RV_SMOV": 1,
+        "RV_PLT": 8,
+        "RV_VLD": 16,
+        "RV_SNOP": 1,
+        "RV_SEND": 3,
+        "RV_VAXPY": 8,
+        "RV_VST": 8,
+        "VF": 1,
+        "BAR": 1,
+        "END": 1,
+        "DCCI": 2,
+        "END_LABEL": 1
+      },
+      "source_expected_data_counts": {
+        "RV_VLD": 16,
+        "RV_PLT": 8,
+        "RV_VAXPY": 8,
+        "RV_VST": 8
+      },
+      "source_data_counts_match": true,
+      "unexpected_vector_instructions": {},
+      "measured_vec_cycles": 66,
+      "vf_cycles": [
+        66
+      ],
+      "instruction_elapsed_histograms": {
+        "MOV_XD_SPR": {
+          "4": 6
+        },
+        "MOVK": {
+          "4": 9
+        },
+        "MOV_XD_IMM": {
+          "4": 14
+        },
+        "ADD": {
+          "4": 2
+        },
+        "SHR": {
+          "4": 1
+        },
+        "AND": {
+          "4": 1
+        },
+        "ADD_IMM": {
+          "4": 3
+        },
+        "SHL": {
+          "4": 3
+        },
+        "MADD": {
+          "5": 1
+        },
+        "DC_PRELOAD_XN_IMM": {
+          "407": 1
+        },
+        "LDP_XI_XJ_XN": {
+          "393": 1
+        },
+        "LD_XD_XN_IMM": {
+          "392": 1
+        },
+        "INSERT_XD_XN": {
+          "4": 4
+        },
+        "NOP": {
+          "0": 2
+        },
+        "PUSH_PB": {
+          "4": 1
+        },
+        "MOV_SRC_TO_DST_ALIGNv2": {
+          "1526": 1,
+          "2608": 1,
+          "1375": 1
+        },
+        "SET_FLAG": {
+          "2609": 1,
+          "2665": 1
+        },
+        "WAIT_FLAG": {
+          "2609": 1,
+          "2664": 1
+        },
+        "RV_VLOOPv2": {
+          "0": 2
+        },
+        "RV_SMOVI": {
+          "0": 1
+        },
+        "RV_SMOV": {
+          "1": 1
+        },
+        "RV_PLT": {
+          "6": 8
+        },
+        "RV_VLD": {
+          "9": 14,
+          "10": 2
+        },
+        "RV_SNOP": {
+          "1": 1
+        },
+        "RV_SEND": {
+          "-16": 1,
+          "9": 2
+        },
+        "RV_VAXPY": {
+          "9": 8
+        },
+        "RV_VST": {
+          "9": 8
+        },
+        "VF": {
+          "66": 1
+        },
+        "END": {
+          "0": 1
+        },
+        "DCCI": {
+          "4": 1,
+          "6": 1
+        },
+        "END_LABEL": {
+          "5": 1
+        }
+      },
+      "forwarding_observations": {
+        "src_load_to_axpy": [
+          7,
+          7,
+          7,
+          7,
+          7,
+          7,
+          7,
+          7
+        ],
+        "accumulator_load_to_axpy": [
+          7,
+          7,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6
+        ],
+        "axpy_to_store": [
+          7,
+          7,
+          7,
+          7,
+          7,
+          7,
+          7,
+          7
+        ],
+        "convert_to_axpy": []
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "input1.bin": "0bef9887cf77e772fcacb5be079e26ab0944bfbbf9da4b1bdd2869c0b9a6654c",
+        "output0.bin": "f6f6ca93779a04f084a7dc50313c6a1d0bf2162e08a1eaf86ff5f867ae394576",
+        "core0.veccore0.instr_popped_log.dump": "66361bf11fa628d3f0e28a5723a547edbd490694b4600f47d6b331ba367279bc",
+        "core0.veccore0.instr_log.dump": "8c6e993d94b95376b3f3f4b93a56b62247d4b2217311f83da1f4050f8b8fe47b"
+      },
+      "state": "native_verified"
+    },
+    {
+      "case": "axpy_fp32_fp32_n2048_alpha0p125",
+      "opcode": "AXPY",
+      "dtype": "fp32",
+      "dst_dtype": "fp32",
+      "shape": [
+        1,
+        2048
+      ],
+      "arity": 2,
+      "compute_arity": 1,
+      "alpha": 0.125,
+      "output_initial_input": 1,
+      "expected_vf_calls": 1,
+      "source": "PyPTO binary/basic.h::TAxpy -> PTO TAxpy.hpp AxpyInstrSame/AxpyInstrDiff",
+      "golden": {
+        "passed": true,
+        "mismatches": 0,
+        "guard_passed": true,
+        "elements_checked": 2048,
+        "guard_bytes_checked": 24576
+      },
+      "instruction_counts": {
+        "MOV_XD_SPR": 6,
+        "MOVK": 9,
+        "MOV_XD_IMM": 14,
+        "ADD": 2,
+        "SHR": 1,
+        "AND": 1,
+        "ADD_IMM": 3,
+        "SHL": 3,
+        "MADD": 1,
+        "DC_PRELOAD_XN_IMM": 1,
+        "LDP_XI_XJ_XN": 1,
+        "LD_XD_XN_IMM": 1,
+        "INSERT_XD_XN": 4,
+        "NOP": 2,
+        "PUSH_PB": 1,
+        "MOV_SRC_TO_DST_ALIGNv2": 3,
+        "SET_FLAG": 2,
+        "WAIT_FLAG": 2,
+        "RV_VLOOPv2": 2,
+        "RV_SMOVI": 1,
+        "RV_SMOV": 1,
+        "RV_PLT": 32,
+        "RV_VLD": 64,
+        "RV_VAXPY": 32,
+        "RV_SNOP": 1,
+        "RV_SEND": 3,
+        "RV_VST": 32,
+        "VF": 1,
+        "BAR": 1,
+        "END": 1,
+        "DCCI": 2,
+        "END_LABEL": 1
+      },
+      "source_expected_data_counts": {
+        "RV_VLD": 64,
+        "RV_PLT": 32,
+        "RV_VAXPY": 32,
+        "RV_VST": 32
+      },
+      "source_data_counts_match": true,
+      "unexpected_vector_instructions": {},
+      "measured_vec_cycles": 103,
+      "vf_cycles": [
+        103
+      ],
+      "instruction_elapsed_histograms": {
+        "MOV_XD_SPR": {
+          "4": 6
+        },
+        "MOVK": {
+          "4": 9
+        },
+        "MOV_XD_IMM": {
+          "4": 14
+        },
+        "ADD": {
+          "4": 2
+        },
+        "SHR": {
+          "4": 1
+        },
+        "AND": {
+          "4": 1
+        },
+        "ADD_IMM": {
+          "4": 3
+        },
+        "SHL": {
+          "4": 3
+        },
+        "MADD": {
+          "5": 1
+        },
+        "DC_PRELOAD_XN_IMM": {
+          "407": 1
+        },
+        "LDP_XI_XJ_XN": {
+          "393": 1
+        },
+        "LD_XD_XN_IMM": {
+          "392": 1
+        },
+        "INSERT_XD_XN": {
+          "4": 4
+        },
+        "NOP": {
+          "0": 2
+        },
+        "PUSH_PB": {
+          "4": 1
+        },
+        "MOV_SRC_TO_DST_ALIGNv2": {
+          "1526": 1,
+          "2608": 1,
+          "1375": 1
+        },
+        "SET_FLAG": {
+          "2609": 1,
+          "2702": 1
+        },
+        "WAIT_FLAG": {
+          "2609": 1,
+          "2701": 1
+        },
+        "RV_VLOOPv2": {
+          "0": 2
+        },
+        "RV_SMOVI": {
+          "0": 1
+        },
+        "RV_SMOV": {
+          "1": 1
+        },
+        "RV_PLT": {
+          "6": 32
+        },
+        "RV_VLD": {
+          "9": 62,
+          "10": 2
+        },
+        "RV_VAXPY": {
+          "9": 32
+        },
+        "RV_SNOP": {
+          "1": 1
+        },
+        "RV_SEND": {
+          "-29": 1,
+          "9": 2
+        },
+        "RV_VST": {
+          "22": 8,
+          "9": 24
+        },
+        "VF": {
+          "103": 1
+        },
+        "END": {
+          "0": 1
+        },
+        "DCCI": {
+          "4": 1,
+          "6": 1
+        },
+        "END_LABEL": {
+          "5": 1
+        }
+      },
+      "forwarding_observations": {
+        "src_load_to_axpy": [
+          7,
+          7,
+          7,
+          7,
+          7,
+          7,
+          7,
+          7,
+          7,
+          7,
+          7,
+          7,
+          7,
+          7,
+          7,
+          7,
+          7,
+          7,
+          7,
+          7,
+          7,
+          7,
+          7,
+          7,
+          7,
+          7,
+          7,
+          7,
+          7,
+          7,
+          7,
+          7
+        ],
+        "accumulator_load_to_axpy": [
+          7,
+          7,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6
+        ],
+        "axpy_to_store": [
+          7,
+          7,
+          7,
+          7,
+          7,
+          7,
+          7,
+          7,
+          20,
+          20,
+          20,
+          20,
+          20,
+          20,
+          20,
+          20,
+          20,
+          20,
+          20,
+          20,
+          20,
+          20,
+          20,
+          20,
+          20,
+          20,
+          20,
+          20,
+          20,
+          20,
+          20,
+          20
+        ],
+        "convert_to_axpy": []
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "input1.bin": "0bef9887cf77e772fcacb5be079e26ab0944bfbbf9da4b1bdd2869c0b9a6654c",
+        "output0.bin": "3686b4d182eef96505613bd84886aa42dbaacbecaab7595f4b243300abbfb4cb",
+        "core0.veccore0.instr_popped_log.dump": "34ccf491f06a812c54c68dabae62b1defec0fba3a4b919b365d295942c4be0d4",
+        "core0.veccore0.instr_log.dump": "0b1e8da01c3bbb5898e2b9614ecec077f0b3ebc6e306a99fc2efdeedaea52924"
+      },
+      "state": "native_verified"
+    },
+    {
+      "case": "axpy_fp32_fp32_n2048_alpha2p0",
+      "opcode": "AXPY",
+      "dtype": "fp32",
+      "dst_dtype": "fp32",
+      "shape": [
+        1,
+        2048
+      ],
+      "arity": 2,
+      "compute_arity": 1,
+      "alpha": 2.0,
+      "output_initial_input": 1,
+      "expected_vf_calls": 1,
+      "source": "PyPTO binary/basic.h::TAxpy -> PTO TAxpy.hpp AxpyInstrSame/AxpyInstrDiff",
+      "golden": {
+        "passed": true,
+        "mismatches": 0,
+        "guard_passed": true,
+        "elements_checked": 2048,
+        "guard_bytes_checked": 24576
+      },
+      "instruction_counts": {
+        "MOV_XD_SPR": 6,
+        "MOVK": 9,
+        "MOV_XD_IMM": 14,
+        "ADD": 2,
+        "SHR": 1,
+        "AND": 1,
+        "ADD_IMM": 3,
+        "SHL": 3,
+        "MADD": 1,
+        "DC_PRELOAD_XN_IMM": 1,
+        "LDP_XI_XJ_XN": 1,
+        "LD_XD_XN_IMM": 1,
+        "INSERT_XD_XN": 4,
+        "NOP": 2,
+        "PUSH_PB": 1,
+        "MOV_SRC_TO_DST_ALIGNv2": 3,
+        "SET_FLAG": 2,
+        "WAIT_FLAG": 2,
+        "RV_VLOOPv2": 2,
+        "RV_SMOVI": 1,
+        "RV_SMOV": 1,
+        "RV_PLT": 32,
+        "RV_VLD": 64,
+        "RV_VAXPY": 32,
+        "RV_SNOP": 1,
+        "RV_SEND": 3,
+        "RV_VST": 32,
+        "VF": 1,
+        "BAR": 1,
+        "END": 1,
+        "DCCI": 2,
+        "END_LABEL": 1
+      },
+      "source_expected_data_counts": {
+        "RV_VLD": 64,
+        "RV_PLT": 32,
+        "RV_VAXPY": 32,
+        "RV_VST": 32
+      },
+      "source_data_counts_match": true,
+      "unexpected_vector_instructions": {},
+      "measured_vec_cycles": 103,
+      "vf_cycles": [
+        103
+      ],
+      "instruction_elapsed_histograms": {
+        "MOV_XD_SPR": {
+          "4": 6
+        },
+        "MOVK": {
+          "4": 9
+        },
+        "MOV_XD_IMM": {
+          "4": 14
+        },
+        "ADD": {
+          "4": 2
+        },
+        "SHR": {
+          "4": 1
+        },
+        "AND": {
+          "4": 1
+        },
+        "ADD_IMM": {
+          "4": 3
+        },
+        "SHL": {
+          "4": 3
+        },
+        "MADD": {
+          "5": 1
+        },
+        "DC_PRELOAD_XN_IMM": {
+          "407": 1
+        },
+        "LDP_XI_XJ_XN": {
+          "393": 1
+        },
+        "LD_XD_XN_IMM": {
+          "392": 1
+        },
+        "INSERT_XD_XN": {
+          "4": 4
+        },
+        "NOP": {
+          "0": 2
+        },
+        "PUSH_PB": {
+          "4": 1
+        },
+        "MOV_SRC_TO_DST_ALIGNv2": {
+          "1526": 1,
+          "2608": 1,
+          "1375": 1
+        },
+        "SET_FLAG": {
+          "2609": 1,
+          "2702": 1
+        },
+        "WAIT_FLAG": {
+          "2609": 1,
+          "2701": 1
+        },
+        "RV_VLOOPv2": {
+          "0": 2
+        },
+        "RV_SMOVI": {
+          "0": 1
+        },
+        "RV_SMOV": {
+          "1": 1
+        },
+        "RV_PLT": {
+          "6": 32
+        },
+        "RV_VLD": {
+          "9": 62,
+          "10": 2
+        },
+        "RV_VAXPY": {
+          "9": 32
+        },
+        "RV_SNOP": {
+          "1": 1
+        },
+        "RV_SEND": {
+          "-29": 1,
+          "9": 2
+        },
+        "RV_VST": {
+          "22": 8,
+          "9": 24
+        },
+        "VF": {
+          "103": 1
+        },
+        "END": {
+          "0": 1
+        },
+        "DCCI": {
+          "4": 1,
+          "6": 1
+        },
+        "END_LABEL": {
+          "5": 1
+        }
+      },
+      "forwarding_observations": {
+        "src_load_to_axpy": [
+          7,
+          7,
+          7,
+          7,
+          7,
+          7,
+          7,
+          7,
+          7,
+          7,
+          7,
+          7,
+          7,
+          7,
+          7,
+          7,
+          7,
+          7,
+          7,
+          7,
+          7,
+          7,
+          7,
+          7,
+          7,
+          7,
+          7,
+          7,
+          7,
+          7,
+          7,
+          7
+        ],
+        "accumulator_load_to_axpy": [
+          7,
+          7,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6,
+          6
+        ],
+        "axpy_to_store": [
+          7,
+          7,
+          7,
+          7,
+          7,
+          7,
+          7,
+          7,
+          20,
+          20,
+          20,
+          20,
+          20,
+          20,
+          20,
+          20,
+          20,
+          20,
+          20,
+          20,
+          20,
+          20,
+          20,
+          20,
+          20,
+          20,
+          20,
+          20,
+          20,
+          20,
+          20,
+          20
+        ],
+        "convert_to_axpy": []
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "input1.bin": "0bef9887cf77e772fcacb5be079e26ab0944bfbbf9da4b1bdd2869c0b9a6654c",
+        "output0.bin": "c2065e1833108052ab65bbee962823576bb07e083835e5adf3dcb655f01aa416",
+        "core0.veccore0.instr_popped_log.dump": "c5eda82dbe0e7bd3395f470caf2afe3636dac4e3fb03e812437285cb89deaa82",
+        "core0.veccore0.instr_log.dump": "2e38e2494fcf6c9819f0eb591d122edf207177b469134b4a4892f3cb95f3fda1"
+      },
+      "state": "native_verified"
+    },
+    {
+      "case": "axpy_fp16_fp32_n64_alpha0p125",
+      "opcode": "AXPY",
+      "dtype": "fp16",
+      "dst_dtype": "fp32",
+      "shape": [
+        1,
+        64
+      ],
+      "arity": 2,
+      "compute_arity": 1,
+      "alpha": 0.125,
+      "output_initial_input": 1,
+      "expected_vf_calls": 1,
+      "source": "PyPTO binary/basic.h::TAxpy -> PTO TAxpy.hpp AxpyInstrSame/AxpyInstrDiff",
+      "golden": {
+        "passed": true,
+        "mismatches": 0,
+        "guard_passed": true,
+        "elements_checked": 64,
+        "guard_bytes_checked": 32512
+      },
+      "instruction_counts": {
+        "MOV_XD_SPR": 6,
+        "MOVK": 9,
+        "MOV_XD_IMM": 13,
+        "ADD": 2,
+        "SHR": 1,
+        "AND": 1,
+        "ADD_IMM": 3,
+        "SHL": 3,
+        "MADD": 1,
+        "DC_PRELOAD_XN_IMM": 1,
+        "LDP_XI_XJ_XN": 1,
+        "LD_XD_XN_IMM": 1,
+        "INSERT_XD_XN": 4,
+        "NOP": 2,
+        "PUSH_PB": 1,
+        "MOV_SRC_TO_DST_ALIGNv2": 3,
+        "SET_FLAG": 2,
+        "WAIT_FLAG": 2,
+        "RV_VLOOPv2": 2,
+        "RV_SMOVI": 1,
+        "RV_SMOV": 1,
+        "RV_SNOP": 1,
+        "RV_SEND": 3,
+        "RV_PLT": 1,
+        "RV_VLD": 2,
+        "RV_VCVT_F2F": 1,
+        "RV_VAXPY": 1,
+        "RV_VST": 1,
+        "VF": 1,
+        "BAR": 1,
+        "END": 1,
+        "DCCI": 2,
+        "END_LABEL": 1
+      },
+      "source_expected_data_counts": {
+        "RV_VLD": 2,
+        "RV_PLT": 1,
+        "RV_VAXPY": 1,
+        "RV_VST": 1,
+        "RV_VCVT_F2F": 1
+      },
+      "source_data_counts_match": true,
+      "unexpected_vector_instructions": {},
+      "measured_vec_cycles": 62,
+      "vf_cycles": [
+        62
+      ],
+      "instruction_elapsed_histograms": {
+        "MOV_XD_SPR": {
+          "4": 6
+        },
+        "MOVK": {
+          "4": 9
+        },
+        "MOV_XD_IMM": {
+          "4": 13
+        },
+        "ADD": {
+          "4": 2
+        },
+        "SHR": {
+          "4": 1
+        },
+        "AND": {
+          "4": 1
+        },
+        "ADD_IMM": {
+          "4": 3
+        },
+        "SHL": {
+          "4": 3
+        },
+        "MADD": {
+          "5": 1
+        },
+        "DC_PRELOAD_XN_IMM": {
+          "407": 1
+        },
+        "LDP_XI_XJ_XN": {
+          "393": 1
+        },
+        "LD_XD_XN_IMM": {
+          "392": 1
+        },
+        "INSERT_XD_XN": {
+          "4": 4
+        },
+        "NOP": {
+          "0": 2
+        },
+        "PUSH_PB": {
+          "4": 1
+        },
+        "MOV_SRC_TO_DST_ALIGNv2": {
+          "1526": 1,
+          "2587": 1,
+          "1375": 1
+        },
+        "SET_FLAG": {
+          "2588": 1,
+          "2641": 1
+        },
+        "WAIT_FLAG": {
+          "2588": 1,
+          "2640": 1
+        },
+        "RV_VLOOPv2": {
+          "0": 2
+        },
+        "RV_SMOVI": {
+          "0": 1
+        },
+        "RV_SMOV": {
+          "1": 1
+        },
+        "RV_SNOP": {
+          "1": 1
+        },
+        "RV_SEND": {
+          "-19": 1,
+          "9": 2
+        },
+        "RV_PLT": {
+          "6": 1
+        },
+        "RV_VLD": {
+          "9": 1,
+          "10": 1
+        },
+        "RV_VCVT_F2F": {
+          "7": 1
+        },
+        "RV_VAXPY": {
+          "9": 1
+        },
+        "RV_VST": {
+          "9": 1
+        },
+        "VF": {
+          "62": 1
+        },
+        "END": {
+          "0": 1
+        },
+        "DCCI": {
+          "4": 1,
+          "6": 1
+        },
+        "END_LABEL": {
+          "5": 1
+        }
+      },
+      "forwarding_observations": {
+        "src_load_to_axpy": [
+          9
+        ],
+        "accumulator_load_to_axpy": [
+          9
+        ],
+        "axpy_to_store": [
+          7
+        ],
+        "convert_to_axpy": [
+          3
+        ]
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "input1.bin": "0bef9887cf77e772fcacb5be079e26ab0944bfbbf9da4b1bdd2869c0b9a6654c",
+        "output0.bin": "3634ea2b6743e9a1cc02e5a5897493157645e2683a5333ea8a92b6b44d7c4b43",
+        "core0.veccore0.instr_popped_log.dump": "863eb4461b7f37bfaf3d1a089c1fbd0922ccfe7363e7017587d536e263c22c5f",
+        "core0.veccore0.instr_log.dump": "135da6d67f3490967769599aa00722e3f2904ef615532d71e89f9c7047eafb37"
+      },
+      "state": "native_verified"
+    },
+    {
+      "case": "axpy_fp16_fp32_n64_alpha2p0",
+      "opcode": "AXPY",
+      "dtype": "fp16",
+      "dst_dtype": "fp32",
+      "shape": [
+        1,
+        64
+      ],
+      "arity": 2,
+      "compute_arity": 1,
+      "alpha": 2.0,
+      "output_initial_input": 1,
+      "expected_vf_calls": 1,
+      "source": "PyPTO binary/basic.h::TAxpy -> PTO TAxpy.hpp AxpyInstrSame/AxpyInstrDiff",
+      "golden": {
+        "passed": true,
+        "mismatches": 0,
+        "guard_passed": true,
+        "elements_checked": 64,
+        "guard_bytes_checked": 32512
+      },
+      "instruction_counts": {
+        "MOV_XD_SPR": 6,
+        "MOVK": 9,
+        "MOV_XD_IMM": 13,
+        "ADD": 2,
+        "SHR": 1,
+        "AND": 1,
+        "ADD_IMM": 3,
+        "SHL": 3,
+        "MADD": 1,
+        "DC_PRELOAD_XN_IMM": 1,
+        "LDP_XI_XJ_XN": 1,
+        "LD_XD_XN_IMM": 1,
+        "INSERT_XD_XN": 4,
+        "NOP": 2,
+        "PUSH_PB": 1,
+        "MOV_SRC_TO_DST_ALIGNv2": 3,
+        "SET_FLAG": 2,
+        "WAIT_FLAG": 2,
+        "RV_VLOOPv2": 2,
+        "RV_SMOVI": 1,
+        "RV_SMOV": 1,
+        "RV_SNOP": 1,
+        "RV_SEND": 3,
+        "RV_PLT": 1,
+        "RV_VLD": 2,
+        "RV_VCVT_F2F": 1,
+        "RV_VAXPY": 1,
+        "RV_VST": 1,
+        "VF": 1,
+        "BAR": 1,
+        "END": 1,
+        "DCCI": 2,
+        "END_LABEL": 1
+      },
+      "source_expected_data_counts": {
+        "RV_VLD": 2,
+        "RV_PLT": 1,
+        "RV_VAXPY": 1,
+        "RV_VST": 1,
+        "RV_VCVT_F2F": 1
+      },
+      "source_data_counts_match": true,
+      "unexpected_vector_instructions": {},
+      "measured_vec_cycles": 62,
+      "vf_cycles": [
+        62
+      ],
+      "instruction_elapsed_histograms": {
+        "MOV_XD_SPR": {
+          "4": 6
+        },
+        "MOVK": {
+          "4": 9
+        },
+        "MOV_XD_IMM": {
+          "4": 13
+        },
+        "ADD": {
+          "4": 2
+        },
+        "SHR": {
+          "4": 1
+        },
+        "AND": {
+          "4": 1
+        },
+        "ADD_IMM": {
+          "4": 3
+        },
+        "SHL": {
+          "4": 3
+        },
+        "MADD": {
+          "5": 1
+        },
+        "DC_PRELOAD_XN_IMM": {
+          "407": 1
+        },
+        "LDP_XI_XJ_XN": {
+          "393": 1
+        },
+        "LD_XD_XN_IMM": {
+          "392": 1
+        },
+        "INSERT_XD_XN": {
+          "4": 4
+        },
+        "NOP": {
+          "0": 2
+        },
+        "PUSH_PB": {
+          "4": 1
+        },
+        "MOV_SRC_TO_DST_ALIGNv2": {
+          "1526": 1,
+          "2587": 1,
+          "1375": 1
+        },
+        "SET_FLAG": {
+          "2588": 1,
+          "2641": 1
+        },
+        "WAIT_FLAG": {
+          "2588": 1,
+          "2640": 1
+        },
+        "RV_VLOOPv2": {
+          "0": 2
+        },
+        "RV_SMOVI": {
+          "0": 1
+        },
+        "RV_SMOV": {
+          "1": 1
+        },
+        "RV_SNOP": {
+          "1": 1
+        },
+        "RV_SEND": {
+          "-19": 1,
+          "9": 2
+        },
+        "RV_PLT": {
+          "6": 1
+        },
+        "RV_VLD": {
+          "9": 1,
+          "10": 1
+        },
+        "RV_VCVT_F2F": {
+          "7": 1
+        },
+        "RV_VAXPY": {
+          "9": 1
+        },
+        "RV_VST": {
+          "9": 1
+        },
+        "VF": {
+          "62": 1
+        },
+        "END": {
+          "0": 1
+        },
+        "DCCI": {
+          "4": 1,
+          "6": 1
+        },
+        "END_LABEL": {
+          "5": 1
+        }
+      },
+      "forwarding_observations": {
+        "src_load_to_axpy": [
+          9
+        ],
+        "accumulator_load_to_axpy": [
+          9
+        ],
+        "axpy_to_store": [
+          7
+        ],
+        "convert_to_axpy": [
+          3
+        ]
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "input1.bin": "0bef9887cf77e772fcacb5be079e26ab0944bfbbf9da4b1bdd2869c0b9a6654c",
+        "output0.bin": "8b39b3ad1634d304ae429e2e3c43ac8ffab1c341e575462a25ae991cb52856e9",
+        "core0.veccore0.instr_popped_log.dump": "5aac045dc6963c95a67b4777e29ef59649870c1cde8d3c9e6a50d1e45bfb6996",
+        "core0.veccore0.instr_log.dump": "d56f199d49b6de285af70c29d43bd2d9068d0260f90764c9e67d0320bd7b5b39"
+      },
+      "state": "native_verified"
+    },
+    {
+      "case": "axpy_fp16_fp32_n129_alpha0p125",
+      "opcode": "AXPY",
+      "dtype": "fp16",
+      "dst_dtype": "fp32",
+      "shape": [
+        1,
+        129
+      ],
+      "arity": 2,
+      "compute_arity": 1,
+      "alpha": 0.125,
+      "output_initial_input": 1,
+      "expected_vf_calls": 1,
+      "source": "PyPTO binary/basic.h::TAxpy -> PTO TAxpy.hpp AxpyInstrSame/AxpyInstrDiff",
+      "golden": {
+        "passed": true,
+        "mismatches": 0,
+        "guard_passed": true,
+        "elements_checked": 129,
+        "guard_bytes_checked": 32252
+      },
+      "instruction_counts": {
+        "MOV_XD_SPR": 6,
+        "MOVK": 10,
+        "MOV_XD_IMM": 16,
+        "ADD": 2,
+        "SHR": 1,
+        "AND": 1,
+        "ADD_IMM": 3,
+        "SHL": 3,
+        "MADD": 1,
+        "DC_PRELOAD_XN_IMM": 1,
+        "LDP_XI_XJ_XN": 1,
+        "LD_XD_XN_IMM": 1,
+        "INSERT_XD_XN": 5,
+        "NOP": 2,
+        "PUSH_PB": 2,
+        "MOV_SRC_TO_DST_ALIGNv2": 3,
+        "SET_FLAG": 2,
+        "WAIT_FLAG": 2,
+        "RV_VLOOPv2": 2,
+        "RV_SMOVI": 1,
+        "RV_SMOV": 1,
+        "RV_SNOP": 1,
+        "RV_SEND": 3,
+        "RV_PLT": 3,
+        "RV_VLD": 6,
+        "RV_VCVT_F2F": 3,
+        "RV_VAXPY": 3,
+        "RV_VST": 3,
+        "VF": 1,
+        "BAR": 1,
+        "END": 1,
+        "DCCI": 2,
+        "END_LABEL": 1
+      },
+      "source_expected_data_counts": {
+        "RV_VLD": 6,
+        "RV_PLT": 3,
+        "RV_VAXPY": 3,
+        "RV_VST": 3,
+        "RV_VCVT_F2F": 3
+      },
+      "source_data_counts_match": true,
+      "unexpected_vector_instructions": {},
+      "measured_vec_cycles": 66,
+      "vf_cycles": [
+        66
+      ],
+      "instruction_elapsed_histograms": {
+        "MOV_XD_SPR": {
+          "4": 6
+        },
+        "MOVK": {
+          "4": 10
+        },
+        "MOV_XD_IMM": {
+          "4": 16
+        },
+        "ADD": {
+          "4": 2
+        },
+        "SHR": {
+          "4": 1
+        },
+        "AND": {
+          "4": 1
+        },
+        "ADD_IMM": {
+          "4": 3
+        },
+        "SHL": {
+          "4": 3
+        },
+        "MADD": {
+          "5": 1
+        },
+        "DC_PRELOAD_XN_IMM": {
+          "407": 1
+        },
+        "LDP_XI_XJ_XN": {
+          "393": 1
+        },
+        "LD_XD_XN_IMM": {
+          "392": 1
+        },
+        "INSERT_XD_XN": {
+          "4": 5
+        },
+        "NOP": {
+          "0": 2
+        },
+        "PUSH_PB": {
+          "4": 2
+        },
+        "MOV_SRC_TO_DST_ALIGNv2": {
+          "1520": 1,
+          "2608": 1,
+          "1375": 1
+        },
+        "SET_FLAG": {
+          "2609": 1,
+          "2663": 1
+        },
+        "WAIT_FLAG": {
+          "2609": 1,
+          "2662": 1
+        },
+        "RV_VLOOPv2": {
+          "0": 2
+        },
+        "RV_SMOVI": {
+          "0": 1
+        },
+        "RV_SMOV": {
+          "1": 1
+        },
+        "RV_SNOP": {
+          "1": 1
+        },
+        "RV_SEND": {
+          "-19": 1,
+          "9": 2
+        },
+        "RV_PLT": {
+          "6": 3
+        },
+        "RV_VLD": {
+          "9": 3,
+          "10": 3
+        },
+        "RV_VCVT_F2F": {
+          "7": 3
+        },
+        "RV_VAXPY": {
+          "9": 3
+        },
+        "RV_VST": {
+          "9": 3
+        },
+        "VF": {
+          "66": 1
+        },
+        "END": {
+          "0": 1
+        },
+        "DCCI": {
+          "4": 1,
+          "6": 1
+        },
+        "END_LABEL": {
+          "5": 1
+        }
+      },
+      "forwarding_observations": {
+        "src_load_to_axpy": [
+          9,
+          9,
+          11
+        ],
+        "accumulator_load_to_axpy": [
+          9,
+          9,
+          10
+        ],
+        "axpy_to_store": [
+          7,
+          7,
+          7
+        ],
+        "convert_to_axpy": [
+          3,
+          3,
+          3
+        ]
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "input1.bin": "0bef9887cf77e772fcacb5be079e26ab0944bfbbf9da4b1bdd2869c0b9a6654c",
+        "output0.bin": "a5bb88eec42dc5ecbb514c0f46d3d111f246377316523537a421626f7b611630",
+        "core0.veccore0.instr_popped_log.dump": "9cef14db19afda23943f5d54aa87e944d7afed3d966564b0a89752df553ebfa4",
+        "core0.veccore0.instr_log.dump": "ab23fe63c23c151d937ab604fe0d979ea5e87f6ee487f6560e0f47707924704e"
+      },
+      "state": "native_verified"
+    },
+    {
+      "case": "axpy_fp16_fp32_n129_alpha2p0",
+      "opcode": "AXPY",
+      "dtype": "fp16",
+      "dst_dtype": "fp32",
+      "shape": [
+        1,
+        129
+      ],
+      "arity": 2,
+      "compute_arity": 1,
+      "alpha": 2.0,
+      "output_initial_input": 1,
+      "expected_vf_calls": 1,
+      "source": "PyPTO binary/basic.h::TAxpy -> PTO TAxpy.hpp AxpyInstrSame/AxpyInstrDiff",
+      "golden": {
+        "passed": true,
+        "mismatches": 0,
+        "guard_passed": true,
+        "elements_checked": 129,
+        "guard_bytes_checked": 32252
+      },
+      "instruction_counts": {
+        "MOV_XD_SPR": 6,
+        "MOVK": 10,
+        "MOV_XD_IMM": 16,
+        "ADD": 2,
+        "SHR": 1,
+        "AND": 1,
+        "ADD_IMM": 3,
+        "SHL": 3,
+        "MADD": 1,
+        "DC_PRELOAD_XN_IMM": 1,
+        "LDP_XI_XJ_XN": 1,
+        "LD_XD_XN_IMM": 1,
+        "INSERT_XD_XN": 5,
+        "NOP": 2,
+        "PUSH_PB": 2,
+        "MOV_SRC_TO_DST_ALIGNv2": 3,
+        "SET_FLAG": 2,
+        "WAIT_FLAG": 2,
+        "RV_VLOOPv2": 2,
+        "RV_SMOVI": 1,
+        "RV_SMOV": 1,
+        "RV_SNOP": 1,
+        "RV_SEND": 3,
+        "RV_PLT": 3,
+        "RV_VLD": 6,
+        "RV_VCVT_F2F": 3,
+        "RV_VAXPY": 3,
+        "RV_VST": 3,
+        "VF": 1,
+        "BAR": 1,
+        "END": 1,
+        "DCCI": 2,
+        "END_LABEL": 1
+      },
+      "source_expected_data_counts": {
+        "RV_VLD": 6,
+        "RV_PLT": 3,
+        "RV_VAXPY": 3,
+        "RV_VST": 3,
+        "RV_VCVT_F2F": 3
+      },
+      "source_data_counts_match": true,
+      "unexpected_vector_instructions": {},
+      "measured_vec_cycles": 66,
+      "vf_cycles": [
+        66
+      ],
+      "instruction_elapsed_histograms": {
+        "MOV_XD_SPR": {
+          "4": 6
+        },
+        "MOVK": {
+          "4": 10
+        },
+        "MOV_XD_IMM": {
+          "4": 16
+        },
+        "ADD": {
+          "4": 2
+        },
+        "SHR": {
+          "4": 1
+        },
+        "AND": {
+          "4": 1
+        },
+        "ADD_IMM": {
+          "4": 3
+        },
+        "SHL": {
+          "4": 3
+        },
+        "MADD": {
+          "5": 1
+        },
+        "DC_PRELOAD_XN_IMM": {
+          "407": 1
+        },
+        "LDP_XI_XJ_XN": {
+          "393": 1
+        },
+        "LD_XD_XN_IMM": {
+          "392": 1
+        },
+        "INSERT_XD_XN": {
+          "4": 5
+        },
+        "NOP": {
+          "0": 2
+        },
+        "PUSH_PB": {
+          "4": 2
+        },
+        "MOV_SRC_TO_DST_ALIGNv2": {
+          "1520": 1,
+          "2608": 1,
+          "1375": 1
+        },
+        "SET_FLAG": {
+          "2609": 1,
+          "2663": 1
+        },
+        "WAIT_FLAG": {
+          "2609": 1,
+          "2662": 1
+        },
+        "RV_VLOOPv2": {
+          "0": 2
+        },
+        "RV_SMOVI": {
+          "0": 1
+        },
+        "RV_SMOV": {
+          "1": 1
+        },
+        "RV_SNOP": {
+          "1": 1
+        },
+        "RV_SEND": {
+          "-19": 1,
+          "9": 2
+        },
+        "RV_PLT": {
+          "6": 3
+        },
+        "RV_VLD": {
+          "9": 3,
+          "10": 3
+        },
+        "RV_VCVT_F2F": {
+          "7": 3
+        },
+        "RV_VAXPY": {
+          "9": 3
+        },
+        "RV_VST": {
+          "9": 3
+        },
+        "VF": {
+          "66": 1
+        },
+        "END": {
+          "0": 1
+        },
+        "DCCI": {
+          "4": 1,
+          "6": 1
+        },
+        "END_LABEL": {
+          "5": 1
+        }
+      },
+      "forwarding_observations": {
+        "src_load_to_axpy": [
+          9,
+          9,
+          11
+        ],
+        "accumulator_load_to_axpy": [
+          9,
+          9,
+          10
+        ],
+        "axpy_to_store": [
+          7,
+          7,
+          7
+        ],
+        "convert_to_axpy": [
+          3,
+          3,
+          3
+        ]
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "input1.bin": "0bef9887cf77e772fcacb5be079e26ab0944bfbbf9da4b1bdd2869c0b9a6654c",
+        "output0.bin": "48f6133271dba7cc4565e4e695abcfd56b51c1c3d58debe54b9c346973a36b1b",
+        "core0.veccore0.instr_popped_log.dump": "8e89968d3ea214aa03e320533763cecb45c66d1cd161e1562699a4dbf769abdd",
+        "core0.veccore0.instr_log.dump": "48b1e210bb683d78e5018561bf7eb30c91d076e99fc8fc08da9f252de5a6dd12"
+      },
+      "state": "native_verified"
+    },
+    {
+      "case": "axpy_fp16_fp32_n512_alpha0p125",
+      "opcode": "AXPY",
+      "dtype": "fp16",
+      "dst_dtype": "fp32",
+      "shape": [
+        1,
+        512
+      ],
+      "arity": 2,
+      "compute_arity": 1,
+      "alpha": 0.125,
+      "output_initial_input": 1,
+      "expected_vf_calls": 1,
+      "source": "PyPTO binary/basic.h::TAxpy -> PTO TAxpy.hpp AxpyInstrSame/AxpyInstrDiff",
+      "golden": {
+        "passed": true,
+        "mismatches": 0,
+        "guard_passed": true,
+        "elements_checked": 512,
+        "guard_bytes_checked": 30720
+      },
+      "instruction_counts": {
+        "MOV_XD_SPR": 6,
+        "MOVK": 10,
+        "MOV_XD_IMM": 16,
+        "ADD": 2,
+        "SHR": 1,
+        "AND": 1,
+        "ADD_IMM": 3,
+        "SHL": 3,
+        "MADD": 1,
+        "DC_PRELOAD_XN_IMM": 1,
+        "LDP_XI_XJ_XN": 1,
+        "LD_XD_XN_IMM": 1,
+        "INSERT_XD_XN": 5,
+        "NOP": 2,
+        "PUSH_PB": 2,
+        "MOV_SRC_TO_DST_ALIGNv2": 3,
+        "SET_FLAG": 2,
+        "WAIT_FLAG": 2,
+        "RV_VLOOPv2": 2,
+        "RV_SMOVI": 1,
+        "RV_SMOV": 1,
+        "RV_PLT": 8,
+        "RV_VLD": 16,
+        "RV_SNOP": 1,
+        "RV_SEND": 3,
+        "RV_VCVT_F2F": 8,
+        "RV_VAXPY": 8,
+        "RV_VST": 8,
+        "VF": 1,
+        "BAR": 1,
+        "END": 1,
+        "DCCI": 2,
+        "END_LABEL": 1
+      },
+      "source_expected_data_counts": {
+        "RV_VLD": 16,
+        "RV_PLT": 8,
+        "RV_VAXPY": 8,
+        "RV_VST": 8,
+        "RV_VCVT_F2F": 8
+      },
+      "source_data_counts_match": true,
+      "unexpected_vector_instructions": {},
+      "measured_vec_cycles": 73,
+      "vf_cycles": [
+        73
+      ],
+      "instruction_elapsed_histograms": {
+        "MOV_XD_SPR": {
+          "4": 6
+        },
+        "MOVK": {
+          "4": 10
+        },
+        "MOV_XD_IMM": {
+          "4": 16
+        },
+        "ADD": {
+          "4": 2
+        },
+        "SHR": {
+          "4": 1
+        },
+        "AND": {
+          "4": 1
+        },
+        "ADD_IMM": {
+          "4": 3
+        },
+        "SHL": {
+          "4": 3
+        },
+        "MADD": {
+          "5": 1
+        },
+        "DC_PRELOAD_XN_IMM": {
+          "407": 1
+        },
+        "LDP_XI_XJ_XN": {
+          "393": 1
+        },
+        "LD_XD_XN_IMM": {
+          "392": 1
+        },
+        "INSERT_XD_XN": {
+          "4": 5
+        },
+        "NOP": {
+          "0": 2
+        },
+        "PUSH_PB": {
+          "4": 2
+        },
+        "MOV_SRC_TO_DST_ALIGNv2": {
+          "1520": 1,
+          "2608": 1,
+          "1375": 1
+        },
+        "SET_FLAG": {
+          "2609": 1,
+          "2670": 1
+        },
+        "WAIT_FLAG": {
+          "2609": 1,
+          "2669": 1
+        },
+        "RV_VLOOPv2": {
+          "0": 2
+        },
+        "RV_SMOVI": {
+          "0": 1
+        },
+        "RV_SMOV": {
+          "1": 1
+        },
+        "RV_PLT": {
+          "6": 8
+        },
+        "RV_VLD": {
+          "9": 9,
+          "10": 7
+        },
+        "RV_SNOP": {
+          "1": 1
+        },
+        "RV_SEND": {
+          "-20": 1,
+          "9": 2
+        },
+        "RV_VCVT_F2F": {
+          "7": 8
+        },
+        "RV_VAXPY": {
+          "9": 8
+        },
+        "RV_VST": {
+          "9": 8
+        },
+        "VF": {
+          "73": 1
+        },
+        "END": {
+          "0": 1
+        },
+        "DCCI": {
+          "4": 1,
+          "6": 1
+        },
+        "END_LABEL": {
+          "5": 1
+        }
+      },
+      "forwarding_observations": {
+        "src_load_to_axpy": [
+          9,
+          9,
+          11,
+          10,
+          10,
+          10,
+          11,
+          11
+        ],
+        "accumulator_load_to_axpy": [
+          9,
+          9,
+          10,
+          10,
+          10,
+          9,
+          11,
+          11
+        ],
+        "axpy_to_store": [
+          7,
+          7,
+          7,
+          7,
+          7,
+          7,
+          7,
+          7
+        ],
+        "convert_to_axpy": [
+          3,
+          3,
+          3,
+          3,
+          3,
+          3,
+          3,
+          3
+        ]
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "input1.bin": "0bef9887cf77e772fcacb5be079e26ab0944bfbbf9da4b1bdd2869c0b9a6654c",
+        "output0.bin": "e886f8ede3b331938d0d719191328089b21eb5cfaa319f7c9d12dad2146f8bb5",
+        "core0.veccore0.instr_popped_log.dump": "1ee0dd7908c1f18b86c643005958d3f8b1049bce9d1bf1fed6b303a735ce938c",
+        "core0.veccore0.instr_log.dump": "bf80b8940db62112661b94c389858e6008f6f388fc18e9adca69cf8cb1aadcae"
+      },
+      "state": "native_verified"
+    },
+    {
+      "case": "axpy_fp16_fp32_n512_alpha2p0",
+      "opcode": "AXPY",
+      "dtype": "fp16",
+      "dst_dtype": "fp32",
+      "shape": [
+        1,
+        512
+      ],
+      "arity": 2,
+      "compute_arity": 1,
+      "alpha": 2.0,
+      "output_initial_input": 1,
+      "expected_vf_calls": 1,
+      "source": "PyPTO binary/basic.h::TAxpy -> PTO TAxpy.hpp AxpyInstrSame/AxpyInstrDiff",
+      "golden": {
+        "passed": true,
+        "mismatches": 0,
+        "guard_passed": true,
+        "elements_checked": 512,
+        "guard_bytes_checked": 30720
+      },
+      "instruction_counts": {
+        "MOV_XD_SPR": 6,
+        "MOVK": 10,
+        "MOV_XD_IMM": 16,
+        "ADD": 2,
+        "SHR": 1,
+        "AND": 1,
+        "ADD_IMM": 3,
+        "SHL": 3,
+        "MADD": 1,
+        "DC_PRELOAD_XN_IMM": 1,
+        "LDP_XI_XJ_XN": 1,
+        "LD_XD_XN_IMM": 1,
+        "INSERT_XD_XN": 5,
+        "NOP": 2,
+        "PUSH_PB": 2,
+        "MOV_SRC_TO_DST_ALIGNv2": 3,
+        "SET_FLAG": 2,
+        "WAIT_FLAG": 2,
+        "RV_VLOOPv2": 2,
+        "RV_SMOVI": 1,
+        "RV_SMOV": 1,
+        "RV_PLT": 8,
+        "RV_VLD": 16,
+        "RV_SNOP": 1,
+        "RV_SEND": 3,
+        "RV_VCVT_F2F": 8,
+        "RV_VAXPY": 8,
+        "RV_VST": 8,
+        "VF": 1,
+        "BAR": 1,
+        "END": 1,
+        "DCCI": 2,
+        "END_LABEL": 1
+      },
+      "source_expected_data_counts": {
+        "RV_VLD": 16,
+        "RV_PLT": 8,
+        "RV_VAXPY": 8,
+        "RV_VST": 8,
+        "RV_VCVT_F2F": 8
+      },
+      "source_data_counts_match": true,
+      "unexpected_vector_instructions": {},
+      "measured_vec_cycles": 73,
+      "vf_cycles": [
+        73
+      ],
+      "instruction_elapsed_histograms": {
+        "MOV_XD_SPR": {
+          "4": 6
+        },
+        "MOVK": {
+          "4": 10
+        },
+        "MOV_XD_IMM": {
+          "4": 16
+        },
+        "ADD": {
+          "4": 2
+        },
+        "SHR": {
+          "4": 1
+        },
+        "AND": {
+          "4": 1
+        },
+        "ADD_IMM": {
+          "4": 3
+        },
+        "SHL": {
+          "4": 3
+        },
+        "MADD": {
+          "5": 1
+        },
+        "DC_PRELOAD_XN_IMM": {
+          "407": 1
+        },
+        "LDP_XI_XJ_XN": {
+          "393": 1
+        },
+        "LD_XD_XN_IMM": {
+          "392": 1
+        },
+        "INSERT_XD_XN": {
+          "4": 5
+        },
+        "NOP": {
+          "0": 2
+        },
+        "PUSH_PB": {
+          "4": 2
+        },
+        "MOV_SRC_TO_DST_ALIGNv2": {
+          "1520": 1,
+          "2608": 1,
+          "1375": 1
+        },
+        "SET_FLAG": {
+          "2609": 1,
+          "2670": 1
+        },
+        "WAIT_FLAG": {
+          "2609": 1,
+          "2669": 1
+        },
+        "RV_VLOOPv2": {
+          "0": 2
+        },
+        "RV_SMOVI": {
+          "0": 1
+        },
+        "RV_SMOV": {
+          "1": 1
+        },
+        "RV_PLT": {
+          "6": 8
+        },
+        "RV_VLD": {
+          "9": 9,
+          "10": 7
+        },
+        "RV_SNOP": {
+          "1": 1
+        },
+        "RV_SEND": {
+          "-20": 1,
+          "9": 2
+        },
+        "RV_VCVT_F2F": {
+          "7": 8
+        },
+        "RV_VAXPY": {
+          "9": 8
+        },
+        "RV_VST": {
+          "9": 8
+        },
+        "VF": {
+          "73": 1
+        },
+        "END": {
+          "0": 1
+        },
+        "DCCI": {
+          "4": 1,
+          "6": 1
+        },
+        "END_LABEL": {
+          "5": 1
+        }
+      },
+      "forwarding_observations": {
+        "src_load_to_axpy": [
+          9,
+          9,
+          11,
+          10,
+          10,
+          10,
+          11,
+          11
+        ],
+        "accumulator_load_to_axpy": [
+          9,
+          9,
+          10,
+          10,
+          10,
+          9,
+          11,
+          11
+        ],
+        "axpy_to_store": [
+          7,
+          7,
+          7,
+          7,
+          7,
+          7,
+          7,
+          7
+        ],
+        "convert_to_axpy": [
+          3,
+          3,
+          3,
+          3,
+          3,
+          3,
+          3,
+          3
+        ]
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "input1.bin": "0bef9887cf77e772fcacb5be079e26ab0944bfbbf9da4b1bdd2869c0b9a6654c",
+        "output0.bin": "0ae06f70e34f202f080793496953ac32e3d310f125bdaf74b7e07446a6a443cb",
+        "core0.veccore0.instr_popped_log.dump": "627ef72e8adf44cf3f70a959c5280d37d87b39ebdb520172b31c767ee2c06ce9",
+        "core0.veccore0.instr_log.dump": "1ad089c7e788cb7d407e153b27c8505ae1b89aa2188fc472a8cf92b09e427cd3"
+      },
+      "state": "native_verified"
+    },
+    {
+      "case": "axpy_fp16_fp32_n2048_alpha0p125",
+      "opcode": "AXPY",
+      "dtype": "fp16",
+      "dst_dtype": "fp32",
+      "shape": [
+        1,
+        2048
+      ],
+      "arity": 2,
+      "compute_arity": 1,
+      "alpha": 0.125,
+      "output_initial_input": 1,
+      "expected_vf_calls": 1,
+      "source": "PyPTO binary/basic.h::TAxpy -> PTO TAxpy.hpp AxpyInstrSame/AxpyInstrDiff",
+      "golden": {
+        "passed": true,
+        "mismatches": 0,
+        "guard_passed": true,
+        "elements_checked": 2048,
+        "guard_bytes_checked": 24576
+      },
+      "instruction_counts": {
+        "MOV_XD_SPR": 6,
+        "MOVK": 10,
+        "MOV_XD_IMM": 16,
+        "ADD": 2,
+        "SHR": 1,
+        "AND": 1,
+        "ADD_IMM": 3,
+        "SHL": 3,
+        "MADD": 1,
+        "DC_PRELOAD_XN_IMM": 1,
+        "LDP_XI_XJ_XN": 1,
+        "LD_XD_XN_IMM": 1,
+        "INSERT_XD_XN": 5,
+        "NOP": 2,
+        "PUSH_PB": 2,
+        "MOV_SRC_TO_DST_ALIGNv2": 3,
+        "SET_FLAG": 2,
+        "WAIT_FLAG": 2,
+        "RV_VLOOPv2": 2,
+        "RV_SMOVI": 1,
+        "RV_SMOV": 1,
+        "RV_PLT": 32,
+        "RV_VLD": 64,
+        "RV_VCVT_F2F": 32,
+        "RV_VAXPY": 32,
+        "RV_VST": 32,
+        "RV_SNOP": 1,
+        "RV_SEND": 3,
+        "VF": 1,
+        "BAR": 1,
+        "END": 1,
+        "DCCI": 2,
+        "END_LABEL": 1
+      },
+      "source_expected_data_counts": {
+        "RV_VLD": 64,
+        "RV_PLT": 32,
+        "RV_VAXPY": 32,
+        "RV_VST": 32,
+        "RV_VCVT_F2F": 32
+      },
+      "source_data_counts_match": true,
+      "unexpected_vector_instructions": {},
+      "measured_vec_cycles": 112,
+      "vf_cycles": [
+        112
+      ],
+      "instruction_elapsed_histograms": {
+        "MOV_XD_SPR": {
+          "4": 6
+        },
+        "MOVK": {
+          "4": 10
+        },
+        "MOV_XD_IMM": {
+          "4": 16
+        },
+        "ADD": {
+          "4": 2
+        },
+        "SHR": {
+          "4": 1
+        },
+        "AND": {
+          "4": 1
+        },
+        "ADD_IMM": {
+          "4": 3
+        },
+        "SHL": {
+          "4": 3
+        },
+        "MADD": {
+          "5": 1
+        },
+        "DC_PRELOAD_XN_IMM": {
+          "407": 1
+        },
+        "LDP_XI_XJ_XN": {
+          "393": 1
+        },
+        "LD_XD_XN_IMM": {
+          "392": 1
+        },
+        "INSERT_XD_XN": {
+          "4": 5
+        },
+        "NOP": {
+          "0": 2
+        },
+        "PUSH_PB": {
+          "4": 2
+        },
+        "MOV_SRC_TO_DST_ALIGNv2": {
+          "1520": 1,
+          "2608": 1,
+          "1375": 1
+        },
+        "SET_FLAG": {
+          "2609": 1,
+          "2709": 1
+        },
+        "WAIT_FLAG": {
+          "2609": 1,
+          "2708": 1
+        },
+        "RV_VLOOPv2": {
+          "0": 2
+        },
+        "RV_SMOVI": {
+          "0": 1
+        },
+        "RV_SMOV": {
+          "1": 1
+        },
+        "RV_PLT": {
+          "6": 32
+        },
+        "RV_VLD": {
+          "9": 40,
+          "10": 24
+        },
+        "RV_VCVT_F2F": {
+          "7": 32
+        },
+        "RV_VAXPY": {
+          "9": 32
+        },
+        "RV_VST": {
+          "12": 2,
+          "13": 3,
+          "14": 1,
+          "16": 3,
+          "17": 3,
+          "18": 1,
+          "15": 1,
+          "11": 1,
+          "10": 2,
+          "9": 15
+        },
+        "RV_SNOP": {
+          "1": 1
+        },
+        "RV_SEND": {
+          "-28": 1,
+          "9": 2
+        },
+        "VF": {
+          "112": 1
+        },
+        "END": {
+          "0": 1
+        },
+        "DCCI": {
+          "4": 1,
+          "6": 1
+        },
+        "END_LABEL": {
+          "5": 1
+        }
+      },
+      "forwarding_observations": {
+        "src_load_to_axpy": [
+          9,
+          9,
+          11,
+          10,
+          10,
+          10,
+          11,
+          11,
+          11,
+          11,
+          14,
+          10,
+          13,
+          14,
+          16,
+          12,
+          15,
+          16,
+          18,
+          14,
+          17,
+          18,
+          20,
+          16,
+          19,
+          20,
+          17,
+          18,
+          21,
+          22,
+          18,
+          19
+        ],
+        "accumulator_load_to_axpy": [
+          9,
+          9,
+          10,
+          10,
+          10,
+          9,
+          11,
+          11,
+          11,
+          10,
+          14,
+          10,
+          13,
+          13,
+          16,
+          12,
+          15,
+          15,
+          18,
+          14,
+          17,
+          17,
+          20,
+          16,
+          19,
+          19,
+          17,
+          18,
+          21,
+          20,
+          18,
+          17
+        ],
+        "axpy_to_store": [
+          7,
+          7,
+          7,
+          7,
+          7,
+          7,
+          7,
+          7,
+          7,
+          7,
+          7,
+          8,
+          9,
+          9,
+          7,
+          12,
+          9,
+          9,
+          7,
+          9,
+          7,
+          7,
+          7,
+          7,
+          7,
+          7,
+          7,
+          7,
+          7,
+          7,
+          7,
+          7
+        ],
+        "convert_to_axpy": [
+          3,
+          3,
+          3,
+          3,
+          3,
+          3,
+          3,
+          3,
+          3,
+          3,
+          3,
+          3,
+          3,
+          3,
+          3,
+          3,
+          3,
+          3,
+          3,
+          3,
+          3,
+          3,
+          3,
+          3,
+          3,
+          3,
+          3,
+          3,
+          3,
+          3,
+          3,
+          3
+        ]
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "input1.bin": "0bef9887cf77e772fcacb5be079e26ab0944bfbbf9da4b1bdd2869c0b9a6654c",
+        "output0.bin": "34a341ff5accf1b46e5662ddb572d0b7030fa9dd1a453e6a9674433cd579826f",
+        "core0.veccore0.instr_popped_log.dump": "0c525b34eea50d2484e1776bb6de90f62612265173a80c51f8914844b49b0bb6",
+        "core0.veccore0.instr_log.dump": "8691c2feecca13cbf61e503eb4738a3d59fcb232fb4ae3db0c4757e7e039ceb8"
+      },
+      "state": "native_verified"
+    },
+    {
+      "case": "axpy_fp16_fp32_n2048_alpha2p0",
+      "opcode": "AXPY",
+      "dtype": "fp16",
+      "dst_dtype": "fp32",
+      "shape": [
+        1,
+        2048
+      ],
+      "arity": 2,
+      "compute_arity": 1,
+      "alpha": 2.0,
+      "output_initial_input": 1,
+      "expected_vf_calls": 1,
+      "source": "PyPTO binary/basic.h::TAxpy -> PTO TAxpy.hpp AxpyInstrSame/AxpyInstrDiff",
+      "golden": {
+        "passed": true,
+        "mismatches": 0,
+        "guard_passed": true,
+        "elements_checked": 2048,
+        "guard_bytes_checked": 24576
+      },
+      "instruction_counts": {
+        "MOV_XD_SPR": 6,
+        "MOVK": 10,
+        "MOV_XD_IMM": 16,
+        "ADD": 2,
+        "SHR": 1,
+        "AND": 1,
+        "ADD_IMM": 3,
+        "SHL": 3,
+        "MADD": 1,
+        "DC_PRELOAD_XN_IMM": 1,
+        "LDP_XI_XJ_XN": 1,
+        "LD_XD_XN_IMM": 1,
+        "INSERT_XD_XN": 5,
+        "NOP": 2,
+        "PUSH_PB": 2,
+        "MOV_SRC_TO_DST_ALIGNv2": 3,
+        "SET_FLAG": 2,
+        "WAIT_FLAG": 2,
+        "RV_VLOOPv2": 2,
+        "RV_SMOVI": 1,
+        "RV_SMOV": 1,
+        "RV_PLT": 32,
+        "RV_VLD": 64,
+        "RV_VCVT_F2F": 32,
+        "RV_VAXPY": 32,
+        "RV_VST": 32,
+        "RV_SNOP": 1,
+        "RV_SEND": 3,
+        "VF": 1,
+        "BAR": 1,
+        "END": 1,
+        "DCCI": 2,
+        "END_LABEL": 1
+      },
+      "source_expected_data_counts": {
+        "RV_VLD": 64,
+        "RV_PLT": 32,
+        "RV_VAXPY": 32,
+        "RV_VST": 32,
+        "RV_VCVT_F2F": 32
+      },
+      "source_data_counts_match": true,
+      "unexpected_vector_instructions": {},
+      "measured_vec_cycles": 112,
+      "vf_cycles": [
+        112
+      ],
+      "instruction_elapsed_histograms": {
+        "MOV_XD_SPR": {
+          "4": 6
+        },
+        "MOVK": {
+          "4": 10
+        },
+        "MOV_XD_IMM": {
+          "4": 16
+        },
+        "ADD": {
+          "4": 2
+        },
+        "SHR": {
+          "4": 1
+        },
+        "AND": {
+          "4": 1
+        },
+        "ADD_IMM": {
+          "4": 3
+        },
+        "SHL": {
+          "4": 3
+        },
+        "MADD": {
+          "5": 1
+        },
+        "DC_PRELOAD_XN_IMM": {
+          "407": 1
+        },
+        "LDP_XI_XJ_XN": {
+          "393": 1
+        },
+        "LD_XD_XN_IMM": {
+          "392": 1
+        },
+        "INSERT_XD_XN": {
+          "4": 5
+        },
+        "NOP": {
+          "0": 2
+        },
+        "PUSH_PB": {
+          "4": 2
+        },
+        "MOV_SRC_TO_DST_ALIGNv2": {
+          "1520": 1,
+          "2608": 1,
+          "1375": 1
+        },
+        "SET_FLAG": {
+          "2609": 1,
+          "2709": 1
+        },
+        "WAIT_FLAG": {
+          "2609": 1,
+          "2708": 1
+        },
+        "RV_VLOOPv2": {
+          "0": 2
+        },
+        "RV_SMOVI": {
+          "0": 1
+        },
+        "RV_SMOV": {
+          "1": 1
+        },
+        "RV_PLT": {
+          "6": 32
+        },
+        "RV_VLD": {
+          "9": 40,
+          "10": 24
+        },
+        "RV_VCVT_F2F": {
+          "7": 32
+        },
+        "RV_VAXPY": {
+          "9": 32
+        },
+        "RV_VST": {
+          "12": 2,
+          "13": 3,
+          "14": 1,
+          "16": 3,
+          "17": 3,
+          "18": 1,
+          "15": 1,
+          "11": 1,
+          "10": 2,
+          "9": 15
+        },
+        "RV_SNOP": {
+          "1": 1
+        },
+        "RV_SEND": {
+          "-28": 1,
+          "9": 2
+        },
+        "VF": {
+          "112": 1
+        },
+        "END": {
+          "0": 1
+        },
+        "DCCI": {
+          "4": 1,
+          "6": 1
+        },
+        "END_LABEL": {
+          "5": 1
+        }
+      },
+      "forwarding_observations": {
+        "src_load_to_axpy": [
+          9,
+          9,
+          11,
+          10,
+          10,
+          10,
+          11,
+          11,
+          11,
+          11,
+          14,
+          10,
+          13,
+          14,
+          16,
+          12,
+          15,
+          16,
+          18,
+          14,
+          17,
+          18,
+          20,
+          16,
+          19,
+          20,
+          17,
+          18,
+          21,
+          22,
+          18,
+          19
+        ],
+        "accumulator_load_to_axpy": [
+          9,
+          9,
+          10,
+          10,
+          10,
+          9,
+          11,
+          11,
+          11,
+          10,
+          14,
+          10,
+          13,
+          13,
+          16,
+          12,
+          15,
+          15,
+          18,
+          14,
+          17,
+          17,
+          20,
+          16,
+          19,
+          19,
+          17,
+          18,
+          21,
+          20,
+          18,
+          17
+        ],
+        "axpy_to_store": [
+          7,
+          7,
+          7,
+          7,
+          7,
+          7,
+          7,
+          7,
+          7,
+          7,
+          7,
+          8,
+          9,
+          9,
+          7,
+          12,
+          9,
+          9,
+          7,
+          9,
+          7,
+          7,
+          7,
+          7,
+          7,
+          7,
+          7,
+          7,
+          7,
+          7,
+          7,
+          7
+        ],
+        "convert_to_axpy": [
+          3,
+          3,
+          3,
+          3,
+          3,
+          3,
+          3,
+          3,
+          3,
+          3,
+          3,
+          3,
+          3,
+          3,
+          3,
+          3,
+          3,
+          3,
+          3,
+          3,
+          3,
+          3,
+          3,
+          3,
+          3,
+          3,
+          3,
+          3,
+          3,
+          3,
+          3,
+          3
+        ]
+      },
+      "sha256": {
+        "input0.bin": "c121ba2c8e70722968558c1e309d85ed0ae0da2f3ec7cdcd93a9fe2f0dcf3621",
+        "input1.bin": "0bef9887cf77e772fcacb5be079e26ab0944bfbbf9da4b1bdd2869c0b9a6654c",
+        "output0.bin": "27c4f125c960e622d5cf7adaa7297c86edffe4e98a86b0d2e8366ad5326e006f",
+        "core0.veccore0.instr_popped_log.dump": "a2bbc256805c49a799a42fa7d03647fe5f60d9cebee4dc8f9f9246b7c8a8adb1",
+        "core0.veccore0.instr_log.dump": "c2445846b3bf456901afe7f3e20c4e4504fc6ff0ec9767f083a081dc977b8626"
+      },
+      "state": "native_verified"
+    }
+  ],
+  "forms": {
+    "fp16": {
+      "latency": 9,
+      "dtype": "fp16",
+      "EXU": "ALU",
+      "dispatch_exu": "EXU01"
+    },
+    "fp32": {
+      "latency": 9,
+      "dtype": "fp32",
+      "EXU": "ALU",
+      "dispatch_exu": "EXU01"
+    }
+  },
+  "forwarding_minima": {
+    "VLDS.fp16->VAXPY.fp16": 6,
+    "VAXPY.fp16->VSTS.fp16": 7,
+    "VLDS.fp32->VAXPY.fp32": 6,
+    "VAXPY.fp32->VSTS.fp32": 7,
+    "VCVT_F16_TO_F32.f16_to_f32->VAXPY.fp32": 3
+  },
+  "scope": "Native independent output/input1 guard/source-count proof; popped-to-done latency and minimum observed dependent issue gaps. Queue-delayed consumers retained. Isolated VAXPY issue capacity is not established; TileOp remains approximation. No total-cycle fitting."
+}

@@ -1,5 +1,6 @@
 import json
 import subprocess
+import sys
 import tempfile
 import unittest
 from pathlib import Path
@@ -1041,7 +1042,7 @@ class InstructionFallbackTest(unittest.TestCase):
             )
             subprocess.run(
                 [
-                    "python3",
+                    sys.executable,
                     str(ROOT / "main.py"),
                     "--trace",
                     str(trace_path),
@@ -1245,7 +1246,7 @@ class InstructionFallbackTest(unittest.TestCase):
             )
             subprocess.run(
                 [
-                    "python3",
+                    sys.executable,
                     str(ROOT / "main.py"),
                     "--trace",
                     str(trace_path),
@@ -1316,7 +1317,7 @@ class InstructionFallbackTest(unittest.TestCase):
             )
             subprocess.run(
                 [
-                    "python3",
+                    sys.executable,
                     str(ROOT / "main.py"),
                     "--trace",
                     str(trace_path),
