@@ -1,0 +1,1548 @@
+{
+  "date": "2026-10-22",
+  "baseline_commit": "4cc20155f36be92e24772e4909bd7b3148c6e389",
+  "comparison": {
+    "before": "One completion per EXU per cycle",
+    "after": "One vector-writing and one predicate-writing instruction per EXU per cycle",
+    "exu_inflight_cap": 7,
+    "unchanged_issue_bandwidth": 1,
+    "identical_parameters": true,
+    "parameter_sha256": {
+      "InitiationInterval.json": "174ba61536b3f4b9c1ba4f2a27558e1325d7290ef1a314d9fb44c2d9ce1cefea",
+      "cce_lowering.json": "4d4e4858815e5fdd070ffce3c40e3174354dfdd2d9e4c21bda4991478db17cc0",
+      "forwarding.json": "a699c34605d91e2c77fffef5de268542a96d818015d61bda2583ff67ca5c53dc",
+      "instruction_catalog.json": "978f6627740b911f5b4bab1fe437019539ea26260f06006bf64da582393d0be9",
+      "isa.json": "5588e6d9dff05a204e0cc6b0b59b49f5cfd795fec42ccb100a92bae5502a14eb",
+      "uarch.json": "5917eb35b82101f49acde8e712b6177087b3208c4f0f0593cd07e57daa3a3e2c",
+      "uarch_override_schema.json": "4a53c7cd7a628945003ec04df188f080517042a6385a65227a4ffd46c7314a95"
+    }
+  },
+  "reference_type": "Saved CANN CAModel VF execute cycles; no new hardware measurement",
+  "sources": {
+    "before": "/mnt/e/VfSimulator_refactor/results/membar_pairs_20261021/regression-after/metrics.json",
+    "after": "/tmp/vfsim-writeback-checks-20261022/regression/metrics.json",
+    "regression_manifest": "regression_suite/cases/cost_model_regression_cases.json",
+    "before_metrics_sha256": "591366cfbb00941afcb6ceebd0957ccf999e606a0412e892ce23f2a1e186ed72",
+    "after_metrics_sha256": "c24672ffb96c6c3f681efc4651b5c5b65d31daf3344cc274c6b7f21b0bbc2afa",
+    "before_wheel_sha256": "2e1bfdbe86e31ccba895fa42278508815719d7217cb6d7b3339975d8e25d6c64",
+    "after_wheel_sha256": "1810b96b9e13366ca4f23b938771db1a23909bf3ba3309e3c557ca50759a0dc2"
+  },
+  "total_cases": 37,
+  "reference_cases": 33,
+  "no_reference_cases": [
+    "vexp_longchain_i64_8x64",
+    "vexp_longchain_i128_128x4",
+    "gelu_poly_i96_u3",
+    "gelu_poly_i96_u6"
+  ],
+  "changed_cycles": [],
+  "improved_accuracy_cases": 0,
+  "degraded_accuracy_cases": 0,
+  "unchanged_accuracy_cases": 33,
+  "predicate_producers_by_regression_group": {
+    "softmax": {
+      "PSET_B8": 12,
+      "PSET_B16": 24,
+      "PSET_B32": 12
+    }
+  },
+  "groups": [
+    {
+      "name": "GeLU",
+      "before": {
+        "cases": 7,
+        "mape_percent": 7.370531488051695,
+        "wape_percent": 8.188383684264062,
+        "max_ape_percent": 13.273942093541201
+      },
+      "after": {
+        "cases": 7,
+        "mape_percent": 7.370531488051695,
+        "wape_percent": 8.188383684264062,
+        "max_ape_percent": 13.273942093541201
+      }
+    },
+    {
+      "name": "SiLU",
+      "before": {
+        "cases": 3,
+        "mape_percent": 4.869940642435683,
+        "wape_percent": 6.088560885608856,
+        "max_ape_percent": 7.24907063197026
+      },
+      "after": {
+        "cases": 3,
+        "mape_percent": 4.869940642435683,
+        "wape_percent": 6.088560885608856,
+        "max_ape_percent": 7.24907063197026
+      }
+    },
+    {
+      "name": "SwiGLU",
+      "before": {
+        "cases": 3,
+        "mape_percent": 2.9799655850540807,
+        "wape_percent": 2.765321375186846,
+        "max_ape_percent": 3.5416666666666665
+      },
+      "after": {
+        "cases": 3,
+        "mape_percent": 2.9799655850540807,
+        "wape_percent": 2.765321375186846,
+        "max_ape_percent": 3.5416666666666665
+      }
+    },
+    {
+      "name": "Softmax",
+      "before": {
+        "cases": 12,
+        "mape_percent": 3.3939804702865,
+        "wape_percent": 3.3507453178748885,
+        "max_ape_percent": 6.991869918699186
+      },
+      "after": {
+        "cases": 12,
+        "mape_percent": 3.3939804702865,
+        "wape_percent": 3.3507453178748885,
+        "max_ape_percent": 6.991869918699186
+      }
+    },
+    {
+      "name": "其他算子、依赖探针和长链",
+      "before": {
+        "cases": 8,
+        "mape_percent": 2.766956646616202,
+        "wape_percent": 3.330822576036986,
+        "max_ape_percent": 10.409104555006685
+      },
+      "after": {
+        "cases": 8,
+        "mape_percent": 2.766956646616202,
+        "wape_percent": 3.330822576036986,
+        "max_ape_percent": 10.409104555006685
+      }
+    },
+    {
+      "name": "全部",
+      "before": {
+        "cases": 33,
+        "mape_percent": 4.182025997430266,
+        "wape_percent": 3.566674662640459,
+        "max_ape_percent": 13.273942093541201
+      },
+      "after": {
+        "cases": 33,
+        "mape_percent": 4.182025997430266,
+        "wape_percent": 3.566674662640459,
+        "max_ape_percent": 13.273942093541201
+      }
+    }
+  ],
+  "cases": [
+    {
+      "id": "gelu_poly_i16_u1",
+      "category": "GeLU",
+      "regression_group": "standard",
+      "reference_cycles": 446,
+      "before_cycles": 408,
+      "after_cycles": 408,
+      "cycle_change": 0,
+      "before_ape_percent": 8.52017937219731,
+      "after_ape_percent": 8.52017937219731,
+      "input_sha256": "83e817dd0a1c4e00e3485c43e998fdfaaf90c16186806d2bb019ba9ca882b1dd",
+      "traces_unchanged": true,
+      "before_traces": {
+        "start_by_cycle.json": {
+          "events": 480,
+          "sha256": "60f68cface4ece0c5656d708d5a0626d7758fc5d86230306e4ed156c9e167ae0"
+        },
+        "done_by_cycle.json": {
+          "events": 480,
+          "sha256": "edebdcfe501aa95573fad23fbac04fd62b48d1f974a06cddf724ea023cadb14b"
+        }
+      },
+      "after_traces": {
+        "start_by_cycle.json": {
+          "events": 480,
+          "sha256": "60f68cface4ece0c5656d708d5a0626d7758fc5d86230306e4ed156c9e167ae0"
+        },
+        "done_by_cycle.json": {
+          "events": 480,
+          "sha256": "edebdcfe501aa95573fad23fbac04fd62b48d1f974a06cddf724ea023cadb14b"
+        }
+      },
+      "shared_vector_predicate_completion_cycles": 0,
+      "predicate_definitions": 0,
+      "python_refactor_cpp_only_parity": true
+    },
+    {
+      "id": "gelu_poly_i64_u1",
+      "category": "GeLU",
+      "regression_group": "standard",
+      "reference_cycles": 1502,
+      "before_cycles": 1331,
+      "after_cycles": 1331,
+      "cycle_change": 0,
+      "before_ape_percent": 11.384820239680426,
+      "after_ape_percent": 11.384820239680426,
+      "input_sha256": "0d9c5bc33574942a0b46a95c2235b065a73adad7b9b2dfc472e33e03a3057643",
+      "traces_unchanged": true,
+      "before_traces": {
+        "start_by_cycle.json": {
+          "events": 1920,
+          "sha256": "df8423718d2d0da51ea0b280f72c40e4cf9d6cda88bcfe08f6223bb9516fda36"
+        },
+        "done_by_cycle.json": {
+          "events": 1920,
+          "sha256": "d71668d935a8900853b8b30072cb79f48ad532a87aec1e0ce006f03dd4389dfb"
+        }
+      },
+      "after_traces": {
+        "start_by_cycle.json": {
+          "events": 1920,
+          "sha256": "df8423718d2d0da51ea0b280f72c40e4cf9d6cda88bcfe08f6223bb9516fda36"
+        },
+        "done_by_cycle.json": {
+          "events": 1920,
+          "sha256": "d71668d935a8900853b8b30072cb79f48ad532a87aec1e0ce006f03dd4389dfb"
+        }
+      },
+      "shared_vector_predicate_completion_cycles": 0,
+      "predicate_definitions": 0,
+      "python_refactor_cpp_only_parity": true
+    },
+    {
+      "id": "gelu_poly_i96_u1",
+      "category": "GeLU",
+      "regression_group": "standard",
+      "reference_cycles": 2245,
+      "before_cycles": 1947,
+      "after_cycles": 1947,
+      "cycle_change": 0,
+      "before_ape_percent": 13.273942093541203,
+      "after_ape_percent": 13.273942093541203,
+      "input_sha256": "13ca541451cc125d7e270b9dd614599f55357f78b5a5d3398c7cb038d59b3a57",
+      "traces_unchanged": true,
+      "before_traces": {
+        "start_by_cycle.json": {
+          "events": 2880,
+          "sha256": "0effcc391aecf92305c6ec3a8437c45bc51f8db0cccbcc0d400f06eeeeac117f"
+        },
+        "done_by_cycle.json": {
+          "events": 2880,
+          "sha256": "fd26a0d61228a9053285cba663de5f5f5ad02f68a180b6697586dca0b2073fe7"
+        }
+      },
+      "after_traces": {
+        "start_by_cycle.json": {
+          "events": 2880,
+          "sha256": "0effcc391aecf92305c6ec3a8437c45bc51f8db0cccbcc0d400f06eeeeac117f"
+        },
+        "done_by_cycle.json": {
+          "events": 2880,
+          "sha256": "fd26a0d61228a9053285cba663de5f5f5ad02f68a180b6697586dca0b2073fe7"
+        }
+      },
+      "shared_vector_predicate_completion_cycles": 0,
+      "predicate_definitions": 0,
+      "python_refactor_cpp_only_parity": true
+    },
+    {
+      "id": "gelu_i16_u1",
+      "category": "GeLU",
+      "regression_group": "standard",
+      "reference_cycles": 187,
+      "before_cycles": 191,
+      "after_cycles": 191,
+      "cycle_change": 0,
+      "before_ape_percent": 2.1390374331550803,
+      "after_ape_percent": 2.1390374331550803,
+      "input_sha256": "f66a81b62cd5d9d9f9764ec67490ead6e97d9650d5f3d0d86f099305821a9050",
+      "traces_unchanged": true,
+      "before_traces": {
+        "start_by_cycle.json": {
+          "events": 192,
+          "sha256": "91e54e3149c0f0f59ca894ff7d26924839c6a8addfe3404c9ea5a096fdbd8f7b"
+        },
+        "done_by_cycle.json": {
+          "events": 192,
+          "sha256": "9302574a639a2366b54fed5ecaa2c4325748924b176fd66339d46bfe7866a23e"
+        }
+      },
+      "after_traces": {
+        "start_by_cycle.json": {
+          "events": 192,
+          "sha256": "91e54e3149c0f0f59ca894ff7d26924839c6a8addfe3404c9ea5a096fdbd8f7b"
+        },
+        "done_by_cycle.json": {
+          "events": 192,
+          "sha256": "9302574a639a2366b54fed5ecaa2c4325748924b176fd66339d46bfe7866a23e"
+        }
+      },
+      "shared_vector_predicate_completion_cycles": 0,
+      "predicate_definitions": 0,
+      "python_refactor_cpp_only_parity": true
+    },
+    {
+      "id": "online_update_i64_u1",
+      "category": "其他算子、依赖探针和长链",
+      "regression_group": "standard",
+      "reference_cycles": 443,
+      "before_cycles": 448,
+      "after_cycles": 448,
+      "cycle_change": 0,
+      "before_ape_percent": 1.1286681715575622,
+      "after_ape_percent": 1.1286681715575622,
+      "input_sha256": "7a269aa938a5631bd6dbe6f641e80a0070289d8b41d2766d4368d1ac5b674ac1",
+      "traces_unchanged": true,
+      "before_traces": {
+        "start_by_cycle.json": {
+          "events": 1024,
+          "sha256": "0ced6e3426f3ae4dc029181ec5ea5fb58b164e1eea40c40826f231fa1a3da878"
+        },
+        "done_by_cycle.json": {
+          "events": 1024,
+          "sha256": "517bc8c79332ff4cd3be7af274ba63e2f2cc5799d904821731db02bc1d3875ed"
+        }
+      },
+      "after_traces": {
+        "start_by_cycle.json": {
+          "events": 1024,
+          "sha256": "0ced6e3426f3ae4dc029181ec5ea5fb58b164e1eea40c40826f231fa1a3da878"
+        },
+        "done_by_cycle.json": {
+          "events": 1024,
+          "sha256": "517bc8c79332ff4cd3be7af274ba63e2f2cc5799d904821731db02bc1d3875ed"
+        }
+      },
+      "shared_vector_predicate_completion_cycles": 0,
+      "predicate_definitions": 0,
+      "python_refactor_cpp_only_parity": true
+    },
+    {
+      "id": "probe_src_fanout",
+      "category": "其他算子、依赖探针和长链",
+      "regression_group": "standard",
+      "reference_cycles": 285,
+      "before_cycles": 282,
+      "after_cycles": 282,
+      "cycle_change": 0,
+      "before_ape_percent": 1.0526315789473684,
+      "after_ape_percent": 1.0526315789473684,
+      "input_sha256": "f712027aa4750ffdaabe76dafb21e617a356f5fea6f82812d7471d7308b8750c",
+      "traces_unchanged": true,
+      "before_traces": {
+        "start_by_cycle.json": {
+          "events": 576,
+          "sha256": "92084fd8b9c045690966071ce1631d6ce35e51c4cb64eb394a5c1e97a75212b7"
+        },
+        "done_by_cycle.json": {
+          "events": 576,
+          "sha256": "68e366aef43904bff83f4a1c9e0b9bf4ef64f013011507d4a8fc3efdb4a5205f"
+        }
+      },
+      "after_traces": {
+        "start_by_cycle.json": {
+          "events": 576,
+          "sha256": "92084fd8b9c045690966071ce1631d6ce35e51c4cb64eb394a5c1e97a75212b7"
+        },
+        "done_by_cycle.json": {
+          "events": 576,
+          "sha256": "68e366aef43904bff83f4a1c9e0b9bf4ef64f013011507d4a8fc3efdb4a5205f"
+        }
+      },
+      "shared_vector_predicate_completion_cycles": 0,
+      "predicate_definitions": 0,
+      "python_refactor_cpp_only_parity": true
+    },
+    {
+      "id": "probe_branch_live_range",
+      "category": "其他算子、依赖探针和长链",
+      "regression_group": "standard",
+      "reference_cycles": 221,
+      "before_cycles": 218,
+      "after_cycles": 218,
+      "cycle_change": 0,
+      "before_ape_percent": 1.3574660633484164,
+      "after_ape_percent": 1.3574660633484164,
+      "input_sha256": "57073dbf234ed2c0f962a0343976f4f57a08230bfd04d37b1295563296d0f414",
+      "traces_unchanged": true,
+      "before_traces": {
+        "start_by_cycle.json": {
+          "events": 512,
+          "sha256": "f1897d0c9cd487f9d3ef0421490c73b24205bf6ce85efcb2c68ecbb4154e1513"
+        },
+        "done_by_cycle.json": {
+          "events": 512,
+          "sha256": "864e8b1d73c15b7d903b25eb15d40e9577ebac22cd1c46c67a7de895a3764109"
+        }
+      },
+      "after_traces": {
+        "start_by_cycle.json": {
+          "events": 512,
+          "sha256": "f1897d0c9cd487f9d3ef0421490c73b24205bf6ce85efcb2c68ecbb4154e1513"
+        },
+        "done_by_cycle.json": {
+          "events": 512,
+          "sha256": "864e8b1d73c15b7d903b25eb15d40e9577ebac22cd1c46c67a7de895a3764109"
+        }
+      },
+      "shared_vector_predicate_completion_cycles": 0,
+      "predicate_definitions": 0,
+      "python_refactor_cpp_only_parity": true
+    },
+    {
+      "id": "probe_store_capture_reuse",
+      "category": "其他算子、依赖探针和长链",
+      "regression_group": "standard",
+      "reference_cycles": 319,
+      "before_cycles": 317,
+      "after_cycles": 317,
+      "cycle_change": 0,
+      "before_ape_percent": 0.6269592476489029,
+      "after_ape_percent": 0.6269592476489029,
+      "input_sha256": "0f3b0ebdeeedd6588166751d2133254ac40df44650e2e781c91bf34be1d6c0cb",
+      "traces_unchanged": true,
+      "before_traces": {
+        "start_by_cycle.json": {
+          "events": 768,
+          "sha256": "2acbc433683c0de22635f2b401ffa5e0f8a6647af80135ecea55191998ee5cd7"
+        },
+        "done_by_cycle.json": {
+          "events": 768,
+          "sha256": "d04fc38a383fa8c9cad69ba5920f6c5508f20828edb04fbcaafbd73a6301e01f"
+        }
+      },
+      "after_traces": {
+        "start_by_cycle.json": {
+          "events": 768,
+          "sha256": "2acbc433683c0de22635f2b401ffa5e0f8a6647af80135ecea55191998ee5cd7"
+        },
+        "done_by_cycle.json": {
+          "events": 768,
+          "sha256": "d04fc38a383fa8c9cad69ba5920f6c5508f20828edb04fbcaafbd73a6301e01f"
+        }
+      },
+      "shared_vector_predicate_completion_cycles": 0,
+      "predicate_definitions": 0,
+      "python_refactor_cpp_only_parity": true
+    },
+    {
+      "id": "vadds_longchain_i16_1x512",
+      "category": "其他算子、依赖探针和长链",
+      "regression_group": "standard",
+      "reference_cycles": 21823,
+      "before_cycles": 22153,
+      "after_cycles": 22153,
+      "cycle_change": 0,
+      "before_ape_percent": 1.5121660633276819,
+      "after_ape_percent": 1.5121660633276819,
+      "input_sha256": "c0999ebf3f474ece6cd34b123fbef09fa9a57110e897bbdc7756c483e2806f23",
+      "traces_unchanged": true,
+      "before_traces": {
+        "start_by_cycle.json": {
+          "events": 8224,
+          "sha256": "ff25ca8d5c7429318edfd6847d37ca8bc43880fc10fb82f29bf1d65ff45a10a7"
+        },
+        "done_by_cycle.json": {
+          "events": 8224,
+          "sha256": "b8e3149413713e854b26169461e0aaf9c9370b5689e5145f2cbb7ea2d3e39cca"
+        }
+      },
+      "after_traces": {
+        "start_by_cycle.json": {
+          "events": 8224,
+          "sha256": "ff25ca8d5c7429318edfd6847d37ca8bc43880fc10fb82f29bf1d65ff45a10a7"
+        },
+        "done_by_cycle.json": {
+          "events": 8224,
+          "sha256": "b8e3149413713e854b26169461e0aaf9c9370b5689e5145f2cbb7ea2d3e39cca"
+        }
+      },
+      "shared_vector_predicate_completion_cycles": 0,
+      "predicate_definitions": 0,
+      "python_refactor_cpp_only_parity": true
+    },
+    {
+      "id": "vadds_longchain_i64_8x64",
+      "category": "其他算子、依赖探针和长链",
+      "regression_group": "standard",
+      "reference_cycles": 37281,
+      "before_cycles": 39536,
+      "after_cycles": 39536,
+      "cycle_change": 0,
+      "before_ape_percent": 6.048657493092996,
+      "after_ape_percent": 6.048657493092996,
+      "input_sha256": "5005a8258c4e41a63f554c1cce5e48dc38ef613c2dbc6556d2dc56d5e510ebab",
+      "traces_unchanged": true,
+      "before_traces": {
+        "start_by_cycle.json": {
+          "events": 33792,
+          "sha256": "6a823149ad8b7537c115c695a63be58d1e014ef04d57acc7bc70daf99be35b36"
+        },
+        "done_by_cycle.json": {
+          "events": 33792,
+          "sha256": "ad0a3bed43dccbd327cfbddd75483fb4b0a49c6535a460991e44dbd2ed5a402a"
+        }
+      },
+      "after_traces": {
+        "start_by_cycle.json": {
+          "events": 33792,
+          "sha256": "6a823149ad8b7537c115c695a63be58d1e014ef04d57acc7bc70daf99be35b36"
+        },
+        "done_by_cycle.json": {
+          "events": 33792,
+          "sha256": "ad0a3bed43dccbd327cfbddd75483fb4b0a49c6535a460991e44dbd2ed5a402a"
+        }
+      },
+      "shared_vector_predicate_completion_cycles": 0,
+      "predicate_definitions": 0,
+      "python_refactor_cpp_only_parity": true
+    },
+    {
+      "id": "vadds_longchain_i128_128x4",
+      "category": "其他算子、依赖探针和长链",
+      "regression_group": "standard",
+      "reference_cycles": 36641,
+      "before_cycles": 32827,
+      "after_cycles": 32827,
+      "cycle_change": 0,
+      "before_ape_percent": 10.409104555006687,
+      "after_ape_percent": 10.409104555006687,
+      "input_sha256": "8f56201ff7809efa7a0eb1ff18f4af3569aaea27dad5921b16003b84092474e3",
+      "traces_unchanged": true,
+      "before_traces": {
+        "start_by_cycle.json": {
+          "events": 98304,
+          "sha256": "3ccb430317c54c1597d7096caf66d1af90815f1d59a76ea049f0b7bf10cc998c"
+        },
+        "done_by_cycle.json": {
+          "events": 98304,
+          "sha256": "fabfef6ff1c55c78105be9ca52e8cdc7e52f14646f79bfd5adb529956099689c"
+        }
+      },
+      "after_traces": {
+        "start_by_cycle.json": {
+          "events": 98304,
+          "sha256": "3ccb430317c54c1597d7096caf66d1af90815f1d59a76ea049f0b7bf10cc998c"
+        },
+        "done_by_cycle.json": {
+          "events": 98304,
+          "sha256": "fabfef6ff1c55c78105be9ca52e8cdc7e52f14646f79bfd5adb529956099689c"
+        }
+      },
+      "shared_vector_predicate_completion_cycles": 0,
+      "predicate_definitions": 0,
+      "python_refactor_cpp_only_parity": true
+    },
+    {
+      "id": "vexp_longchain_i16_1x512",
+      "category": "其他算子、依赖探针和长链",
+      "regression_group": "standard",
+      "reference_cycles": 95492,
+      "before_cycles": 95492,
+      "after_cycles": 95492,
+      "cycle_change": 0,
+      "before_ape_percent": 0.0,
+      "after_ape_percent": 0.0,
+      "input_sha256": "71055f137313b84fd2af579e1db10d3ffe1907c115e82eae53dc7c6bc4d56063",
+      "traces_unchanged": true,
+      "before_traces": {
+        "start_by_cycle.json": {
+          "events": 8224,
+          "sha256": "1644d32372e0da06034424aae462151d34dd7c182c7fb44f1bdd3bfe6068d15b"
+        },
+        "done_by_cycle.json": {
+          "events": 8224,
+          "sha256": "c426cc884b700504db5af7113fff234908c9bb893993689ef8974d9897ec85c3"
+        }
+      },
+      "after_traces": {
+        "start_by_cycle.json": {
+          "events": 8224,
+          "sha256": "1644d32372e0da06034424aae462151d34dd7c182c7fb44f1bdd3bfe6068d15b"
+        },
+        "done_by_cycle.json": {
+          "events": 8224,
+          "sha256": "c426cc884b700504db5af7113fff234908c9bb893993689ef8974d9897ec85c3"
+        }
+      },
+      "shared_vector_predicate_completion_cycles": 0,
+      "predicate_definitions": 0,
+      "python_refactor_cpp_only_parity": true
+    },
+    {
+      "id": "vexp_longchain_i64_8x64",
+      "category": "其他算子、依赖探针和长链",
+      "regression_group": "standard",
+      "reference_cycles": null,
+      "before_cycles": 161198,
+      "after_cycles": 161198,
+      "cycle_change": 0,
+      "before_ape_percent": null,
+      "after_ape_percent": null,
+      "input_sha256": "85c716ffd7ac84008760866584e40179b2c903f701a253ea2024253ba23df498",
+      "traces_unchanged": true,
+      "before_traces": {
+        "start_by_cycle.json": {
+          "events": 33792,
+          "sha256": "c348b098d1e6a771749d695f87962b1e00627737d19e375110b196c989005ee6"
+        },
+        "done_by_cycle.json": {
+          "events": 33792,
+          "sha256": "ea9735f146facf3bcf36f8ba1632bb60e502e5909714d61875e2908482f4a460"
+        }
+      },
+      "after_traces": {
+        "start_by_cycle.json": {
+          "events": 33792,
+          "sha256": "c348b098d1e6a771749d695f87962b1e00627737d19e375110b196c989005ee6"
+        },
+        "done_by_cycle.json": {
+          "events": 33792,
+          "sha256": "ea9735f146facf3bcf36f8ba1632bb60e502e5909714d61875e2908482f4a460"
+        }
+      },
+      "shared_vector_predicate_completion_cycles": 0,
+      "predicate_definitions": 0,
+      "python_refactor_cpp_only_parity": true
+    },
+    {
+      "id": "vexp_longchain_i128_128x4",
+      "category": "其他算子、依赖探针和长链",
+      "regression_group": "standard",
+      "reference_cycles": null,
+      "before_cycles": 131137,
+      "after_cycles": 131137,
+      "cycle_change": 0,
+      "before_ape_percent": null,
+      "after_ape_percent": null,
+      "input_sha256": "39cc3bb191b64c698bfd382efe6a857c738343163daaad3475bd8ba54ec9353e",
+      "traces_unchanged": true,
+      "before_traces": {
+        "start_by_cycle.json": {
+          "events": 98304,
+          "sha256": "b960f76c7e2a798829b2be084de802e1a93c285c658eae6df333358461acb9e8"
+        },
+        "done_by_cycle.json": {
+          "events": 98304,
+          "sha256": "22e5e0f4bccab934ff75670dcf4b4e51202581972764859b6d5430097b0798fa"
+        }
+      },
+      "after_traces": {
+        "start_by_cycle.json": {
+          "events": 98304,
+          "sha256": "b960f76c7e2a798829b2be084de802e1a93c285c658eae6df333358461acb9e8"
+        },
+        "done_by_cycle.json": {
+          "events": 98304,
+          "sha256": "22e5e0f4bccab934ff75670dcf4b4e51202581972764859b6d5430097b0798fa"
+        }
+      },
+      "shared_vector_predicate_completion_cycles": 0,
+      "predicate_definitions": 0,
+      "python_refactor_cpp_only_parity": true
+    },
+    {
+      "id": "gelu_poly_i96_u2",
+      "category": "GeLU",
+      "regression_group": "standard",
+      "reference_cycles": 2021,
+      "before_cycles": 1921,
+      "after_cycles": 1921,
+      "cycle_change": 0,
+      "before_ape_percent": 4.948045522018803,
+      "after_ape_percent": 4.948045522018803,
+      "input_sha256": "bd7784744032c313bedea29e20da61568d8bbe723b9978f0ce20a2647b9c9b5f",
+      "traces_unchanged": true,
+      "before_traces": {
+        "start_by_cycle.json": {
+          "events": 2880,
+          "sha256": "60de71f39593653f1b33d2cc74f2d85c02337f2a45cf1c461c74b72f3c3d16db"
+        },
+        "done_by_cycle.json": {
+          "events": 2880,
+          "sha256": "4302e8a88d15f147154ef64348ad25bd41e393c5ce19cc23f4c3fa22f54819d0"
+        }
+      },
+      "after_traces": {
+        "start_by_cycle.json": {
+          "events": 2880,
+          "sha256": "60de71f39593653f1b33d2cc74f2d85c02337f2a45cf1c461c74b72f3c3d16db"
+        },
+        "done_by_cycle.json": {
+          "events": 2880,
+          "sha256": "4302e8a88d15f147154ef64348ad25bd41e393c5ce19cc23f4c3fa22f54819d0"
+        }
+      },
+      "shared_vector_predicate_completion_cycles": 0,
+      "predicate_definitions": 0,
+      "python_refactor_cpp_only_parity": true
+    },
+    {
+      "id": "gelu_poly_i96_u3",
+      "category": "GeLU",
+      "regression_group": "standard",
+      "reference_cycles": null,
+      "before_cycles": 1880,
+      "after_cycles": 1880,
+      "cycle_change": 0,
+      "before_ape_percent": null,
+      "after_ape_percent": null,
+      "input_sha256": "ee1be0961f0cd6430bf394e371a0cf0831a1247a9d3214f3affac0c2844e1671",
+      "traces_unchanged": true,
+      "before_traces": {
+        "start_by_cycle.json": {
+          "events": 2880,
+          "sha256": "fd3ec27e58025cacc6c3079b0da7730c4f871467ecc8ef40dbddd3853eae9d8f"
+        },
+        "done_by_cycle.json": {
+          "events": 2880,
+          "sha256": "b37ca5f347d8dbea3b594830e4b4ba571ee6dc573de0da20549c05a3e5ed7162"
+        }
+      },
+      "after_traces": {
+        "start_by_cycle.json": {
+          "events": 2880,
+          "sha256": "fd3ec27e58025cacc6c3079b0da7730c4f871467ecc8ef40dbddd3853eae9d8f"
+        },
+        "done_by_cycle.json": {
+          "events": 2880,
+          "sha256": "b37ca5f347d8dbea3b594830e4b4ba571ee6dc573de0da20549c05a3e5ed7162"
+        }
+      },
+      "shared_vector_predicate_completion_cycles": 0,
+      "predicate_definitions": 0,
+      "python_refactor_cpp_only_parity": true
+    },
+    {
+      "id": "gelu_poly_i96_u4",
+      "category": "GeLU",
+      "regression_group": "standard",
+      "reference_cycles": 1712,
+      "before_cycles": 1886,
+      "after_cycles": 1886,
+      "cycle_change": 0,
+      "before_ape_percent": 10.163551401869158,
+      "after_ape_percent": 10.163551401869158,
+      "input_sha256": "f4603142de67685ff90ea9ae20850e7e26c1bcd90218c8aa252ef9a7060652b8",
+      "traces_unchanged": true,
+      "before_traces": {
+        "start_by_cycle.json": {
+          "events": 2880,
+          "sha256": "9e0c0c0907218d930afcbe901701904124254f11901248ac2985c6fe33f32769"
+        },
+        "done_by_cycle.json": {
+          "events": 2880,
+          "sha256": "688c41c0b65db370d93f0b3aa31ed9d3d1b5b0a60512456d3157e17a67cfb8f2"
+        }
+      },
+      "after_traces": {
+        "start_by_cycle.json": {
+          "events": 2880,
+          "sha256": "9e0c0c0907218d930afcbe901701904124254f11901248ac2985c6fe33f32769"
+        },
+        "done_by_cycle.json": {
+          "events": 2880,
+          "sha256": "688c41c0b65db370d93f0b3aa31ed9d3d1b5b0a60512456d3157e17a67cfb8f2"
+        }
+      },
+      "shared_vector_predicate_completion_cycles": 0,
+      "predicate_definitions": 0,
+      "python_refactor_cpp_only_parity": true
+    },
+    {
+      "id": "gelu_poly_i96_u6",
+      "category": "GeLU",
+      "regression_group": "standard",
+      "reference_cycles": null,
+      "before_cycles": 1732,
+      "after_cycles": 1732,
+      "cycle_change": 0,
+      "before_ape_percent": null,
+      "after_ape_percent": null,
+      "input_sha256": "2fbdcc5020fc1b0e5a2ff945bcb295cb9a825fc056c50ed354b6c16316cb5711",
+      "traces_unchanged": true,
+      "before_traces": {
+        "start_by_cycle.json": {
+          "events": 2880,
+          "sha256": "46bf2194b5f848bb9a0c47ac0cda8abca16a8a0df9ded0ebf61cf71d4159063f"
+        },
+        "done_by_cycle.json": {
+          "events": 2880,
+          "sha256": "3007a98237eb1415392422e354769bb31bfcb79beab4efb0c71a9133cc8ff20b"
+        }
+      },
+      "after_traces": {
+        "start_by_cycle.json": {
+          "events": 2880,
+          "sha256": "46bf2194b5f848bb9a0c47ac0cda8abca16a8a0df9ded0ebf61cf71d4159063f"
+        },
+        "done_by_cycle.json": {
+          "events": 2880,
+          "sha256": "3007a98237eb1415392422e354769bb31bfcb79beab4efb0c71a9133cc8ff20b"
+        }
+      },
+      "shared_vector_predicate_completion_cycles": 0,
+      "predicate_definitions": 0,
+      "python_refactor_cpp_only_parity": true
+    },
+    {
+      "id": "gelu_poly_i96_u8",
+      "category": "GeLU",
+      "regression_group": "standard",
+      "reference_cycles": 1718,
+      "before_cycles": 1738,
+      "after_cycles": 1738,
+      "cycle_change": 0,
+      "before_ape_percent": 1.1641443538998837,
+      "after_ape_percent": 1.1641443538998837,
+      "input_sha256": "f480e7523a926e46627c9893a913d2c96202e6e573d6bf44aeb4a50e523c7ca1",
+      "traces_unchanged": true,
+      "before_traces": {
+        "start_by_cycle.json": {
+          "events": 2880,
+          "sha256": "5b32923bb3642c8501e71d11a4767e167e4cfa4634b1ac49e05e1953d1bbf007"
+        },
+        "done_by_cycle.json": {
+          "events": 2880,
+          "sha256": "736f42bde032c4cc70ffd5fc6a394fc7c0fb2d521c00c675014ced952b299b8b"
+        }
+      },
+      "after_traces": {
+        "start_by_cycle.json": {
+          "events": 2880,
+          "sha256": "5b32923bb3642c8501e71d11a4767e167e4cfa4634b1ac49e05e1953d1bbf007"
+        },
+        "done_by_cycle.json": {
+          "events": 2880,
+          "sha256": "736f42bde032c4cc70ffd5fc6a394fc7c0fb2d521c00c675014ced952b299b8b"
+        }
+      },
+      "shared_vector_predicate_completion_cycles": 0,
+      "predicate_definitions": 0,
+      "python_refactor_cpp_only_parity": true
+    },
+    {
+      "id": "silu_i16_u1",
+      "category": "SiLU",
+      "regression_group": "standard",
+      "reference_cycles": 160,
+      "before_cycles": 159,
+      "after_cycles": 159,
+      "cycle_change": 0,
+      "before_ape_percent": 0.625,
+      "after_ape_percent": 0.625,
+      "input_sha256": "f7dce53a7d81762895d2c3d15cfbf1595695a44aad8b73d4b651f54e97bc145a",
+      "traces_unchanged": true,
+      "before_traces": {
+        "start_by_cycle.json": {
+          "events": 144,
+          "sha256": "4ad7d0a20a0e7d2a7fc2a5db30eec268b8d4dc92dcec116b0003bd8978b9c956"
+        },
+        "done_by_cycle.json": {
+          "events": 144,
+          "sha256": "f16259958e2d4870484340f34f90ef45dc8a6a3d9425f2775602754c6d19ff46"
+        }
+      },
+      "after_traces": {
+        "start_by_cycle.json": {
+          "events": 144,
+          "sha256": "4ad7d0a20a0e7d2a7fc2a5db30eec268b8d4dc92dcec116b0003bd8978b9c956"
+        },
+        "done_by_cycle.json": {
+          "events": 144,
+          "sha256": "f16259958e2d4870484340f34f90ef45dc8a6a3d9425f2775602754c6d19ff46"
+        }
+      },
+      "shared_vector_predicate_completion_cycles": 0,
+      "predicate_definitions": 0,
+      "python_refactor_cpp_only_parity": true
+    },
+    {
+      "id": "swiglu_i16_u1",
+      "category": "SwiGLU",
+      "regression_group": "standard",
+      "reference_cycles": 180,
+      "before_cycles": 174,
+      "after_cycles": 174,
+      "cycle_change": 0,
+      "before_ape_percent": 3.3333333333333335,
+      "after_ape_percent": 3.3333333333333335,
+      "input_sha256": "6ff287f95bef62227857fe4ff4b6f6b51947a0dae783097b22c65aff3f8a63ec",
+      "traces_unchanged": true,
+      "before_traces": {
+        "start_by_cycle.json": {
+          "events": 176,
+          "sha256": "93bd4bb5f86c3a440d3da7a4ee4f6bdbf24e9199f3b154a8d7983f7f54647380"
+        },
+        "done_by_cycle.json": {
+          "events": 176,
+          "sha256": "3a738a33b21af87321f92c51d39f64b3643829f8fb5ad674aa57f584576203a9"
+        }
+      },
+      "after_traces": {
+        "start_by_cycle.json": {
+          "events": 176,
+          "sha256": "93bd4bb5f86c3a440d3da7a4ee4f6bdbf24e9199f3b154a8d7983f7f54647380"
+        },
+        "done_by_cycle.json": {
+          "events": 176,
+          "sha256": "3a738a33b21af87321f92c51d39f64b3643829f8fb5ad674aa57f584576203a9"
+        }
+      },
+      "shared_vector_predicate_completion_cycles": 0,
+      "predicate_definitions": 0,
+      "python_refactor_cpp_only_parity": true
+    },
+    {
+      "id": "silu_i64_u1",
+      "category": "SiLU",
+      "regression_group": "standard",
+      "reference_cycles": 386,
+      "before_cycles": 412,
+      "after_cycles": 412,
+      "cycle_change": 0,
+      "before_ape_percent": 6.7357512953367875,
+      "after_ape_percent": 6.7357512953367875,
+      "input_sha256": "6ec38118a5e897263ab06799cb3257b11428ab112b1a21bdb0e80b94597f26e0",
+      "traces_unchanged": true,
+      "before_traces": {
+        "start_by_cycle.json": {
+          "events": 576,
+          "sha256": "ff06ca714876cc5615f6a35abcd1378ba6a5215ef43bd7016539db3d5148b5fb"
+        },
+        "done_by_cycle.json": {
+          "events": 576,
+          "sha256": "4f9c2168e4ba6e9ea61e5327efc3bcb852b29f02ea9a4fab9a8a7fc4e76137d8"
+        }
+      },
+      "after_traces": {
+        "start_by_cycle.json": {
+          "events": 576,
+          "sha256": "ff06ca714876cc5615f6a35abcd1378ba6a5215ef43bd7016539db3d5148b5fb"
+        },
+        "done_by_cycle.json": {
+          "events": 576,
+          "sha256": "4f9c2168e4ba6e9ea61e5327efc3bcb852b29f02ea9a4fab9a8a7fc4e76137d8"
+        }
+      },
+      "shared_vector_predicate_completion_cycles": 0,
+      "predicate_definitions": 0,
+      "python_refactor_cpp_only_parity": true
+    },
+    {
+      "id": "silu_i96_u1",
+      "category": "SiLU",
+      "regression_group": "standard",
+      "reference_cycles": 538,
+      "before_cycles": 577,
+      "after_cycles": 577,
+      "cycle_change": 0,
+      "before_ape_percent": 7.24907063197026,
+      "after_ape_percent": 7.24907063197026,
+      "input_sha256": "cd134805e3d723904607ea5c78da5688adb44b8798592d7224d02ca025096e76",
+      "traces_unchanged": true,
+      "before_traces": {
+        "start_by_cycle.json": {
+          "events": 864,
+          "sha256": "29434de39bda686083458ce81cf97d437ac60fac7a29431e03b97ea4106b724d"
+        },
+        "done_by_cycle.json": {
+          "events": 864,
+          "sha256": "7d62eb5aa25e2c8a70d228fa9d66cd1a2bb31ba648261b88b845fe9d5b6652c6"
+        }
+      },
+      "after_traces": {
+        "start_by_cycle.json": {
+          "events": 864,
+          "sha256": "29434de39bda686083458ce81cf97d437ac60fac7a29431e03b97ea4106b724d"
+        },
+        "done_by_cycle.json": {
+          "events": 864,
+          "sha256": "7d62eb5aa25e2c8a70d228fa9d66cd1a2bb31ba648261b88b845fe9d5b6652c6"
+        }
+      },
+      "shared_vector_predicate_completion_cycles": 0,
+      "predicate_definitions": 0,
+      "python_refactor_cpp_only_parity": true
+    },
+    {
+      "id": "swiglu_i64_u1",
+      "category": "SwiGLU",
+      "regression_group": "standard",
+      "reference_cycles": 480,
+      "before_cycles": 463,
+      "after_cycles": 463,
+      "cycle_change": 0,
+      "before_ape_percent": 3.5416666666666665,
+      "after_ape_percent": 3.5416666666666665,
+      "input_sha256": "097282281a3e423d6ec32507f646f8c41923f77a12223b75361185d2fae452f1",
+      "traces_unchanged": true,
+      "before_traces": {
+        "start_by_cycle.json": {
+          "events": 704,
+          "sha256": "ee0c1b6156c5a4e1b91abde4e32bc5b880b801e446c32d37a1c4a43bfc5de7f1"
+        },
+        "done_by_cycle.json": {
+          "events": 704,
+          "sha256": "c1df17455f80383ab3c74442f335cda40313d2b81a0bc065afbcd3e11431f841"
+        }
+      },
+      "after_traces": {
+        "start_by_cycle.json": {
+          "events": 704,
+          "sha256": "ee0c1b6156c5a4e1b91abde4e32bc5b880b801e446c32d37a1c4a43bfc5de7f1"
+        },
+        "done_by_cycle.json": {
+          "events": 704,
+          "sha256": "c1df17455f80383ab3c74442f335cda40313d2b81a0bc065afbcd3e11431f841"
+        }
+      },
+      "shared_vector_predicate_completion_cycles": 0,
+      "predicate_definitions": 0,
+      "python_refactor_cpp_only_parity": true
+    },
+    {
+      "id": "swiglu_i96_u1",
+      "category": "SwiGLU",
+      "regression_group": "standard",
+      "reference_cycles": 678,
+      "before_cycles": 664,
+      "after_cycles": 664,
+      "cycle_change": 0,
+      "before_ape_percent": 2.0648967551622417,
+      "after_ape_percent": 2.0648967551622417,
+      "input_sha256": "9421affe84b4aa8f28281fc6e45d9dba2317459be28bd6cd83930da986e65cbe",
+      "traces_unchanged": true,
+      "before_traces": {
+        "start_by_cycle.json": {
+          "events": 1056,
+          "sha256": "9a27f9e9b24d8e5a976e52b258b0b669f3a83f5c3268b474f8098ef1bd3fd8dc"
+        },
+        "done_by_cycle.json": {
+          "events": 1056,
+          "sha256": "63feb94c1c7854922670785936641a21ef9c6e1b389ce1e02405a56afed01bc4"
+        }
+      },
+      "after_traces": {
+        "start_by_cycle.json": {
+          "events": 1056,
+          "sha256": "9a27f9e9b24d8e5a976e52b258b0b669f3a83f5c3268b474f8098ef1bd3fd8dc"
+        },
+        "done_by_cycle.json": {
+          "events": 1056,
+          "sha256": "63feb94c1c7854922670785936641a21ef9c6e1b389ce1e02405a56afed01bc4"
+        }
+      },
+      "shared_vector_predicate_completion_cycles": 0,
+      "predicate_definitions": 0,
+      "python_refactor_cpp_only_parity": true
+    },
+    {
+      "id": "softmax_expdif_mulcvt_u1",
+      "category": "Softmax",
+      "regression_group": "softmax",
+      "reference_cycles": 713,
+      "before_cycles": 672,
+      "after_cycles": 672,
+      "cycle_change": 0,
+      "before_ape_percent": 5.750350631136045,
+      "after_ape_percent": 5.750350631136045,
+      "input_sha256": "3421bc55905ded9c102042bcb51afd12863e3233993359feb5f1a68e90fad59f",
+      "traces_unchanged": true,
+      "before_traces": {
+        "start_by_cycle.json": {
+          "events": 1159,
+          "sha256": "3492e76f1ad69c780f3334c1b431ef98cabef4b1e8c372e1c3dc60416dd8c518"
+        },
+        "done_by_cycle.json": {
+          "events": 1159,
+          "sha256": "bc9b1fcdc68d0c56bbbee742a65dbd62dfadb4e3339394795d8ead58c4040580"
+        }
+      },
+      "after_traces": {
+        "start_by_cycle.json": {
+          "events": 1159,
+          "sha256": "3492e76f1ad69c780f3334c1b431ef98cabef4b1e8c372e1c3dc60416dd8c518"
+        },
+        "done_by_cycle.json": {
+          "events": 1159,
+          "sha256": "bc9b1fcdc68d0c56bbbee742a65dbd62dfadb4e3339394795d8ead58c4040580"
+        }
+      },
+      "shared_vector_predicate_completion_cycles": 0,
+      "predicate_definitions": 4,
+      "python_refactor_cpp_only_parity": true
+    },
+    {
+      "id": "softmax_expdif_mulcvt_u2",
+      "category": "Softmax",
+      "regression_group": "softmax",
+      "reference_cycles": 609,
+      "before_cycles": 636,
+      "after_cycles": 636,
+      "cycle_change": 0,
+      "before_ape_percent": 4.433497536945813,
+      "after_ape_percent": 4.433497536945813,
+      "input_sha256": "9ec9892557b10e3179478cc5a19da9e01081f108e9e869743608993ee7cb01a3",
+      "traces_unchanged": true,
+      "before_traces": {
+        "start_by_cycle.json": {
+          "events": 1161,
+          "sha256": "2708893fe2cb150e12586b7089329649f57ccf74301005b7af1abeaddfde147e"
+        },
+        "done_by_cycle.json": {
+          "events": 1161,
+          "sha256": "0ac0327a723c17bb878d3b59a545003223621f52000494e9630373e44c181d29"
+        }
+      },
+      "after_traces": {
+        "start_by_cycle.json": {
+          "events": 1161,
+          "sha256": "2708893fe2cb150e12586b7089329649f57ccf74301005b7af1abeaddfde147e"
+        },
+        "done_by_cycle.json": {
+          "events": 1161,
+          "sha256": "0ac0327a723c17bb878d3b59a545003223621f52000494e9630373e44c181d29"
+        }
+      },
+      "shared_vector_predicate_completion_cycles": 0,
+      "predicate_definitions": 4,
+      "python_refactor_cpp_only_parity": true
+    },
+    {
+      "id": "softmax_expdif_mulcvt_u4",
+      "category": "Softmax",
+      "regression_group": "softmax",
+      "reference_cycles": 594,
+      "before_cycles": 635,
+      "after_cycles": 635,
+      "cycle_change": 0,
+      "before_ape_percent": 6.902356902356902,
+      "after_ape_percent": 6.902356902356902,
+      "input_sha256": "f2366f64d1e6319584f94a3750055a6ebdacfccfd38a4ceb96bcd8064abd7a9b",
+      "traces_unchanged": true,
+      "before_traces": {
+        "start_by_cycle.json": {
+          "events": 1165,
+          "sha256": "553f65fdb5136d4f3e74bc2749c9793d8123003f9181492f69ead9556ca693df"
+        },
+        "done_by_cycle.json": {
+          "events": 1165,
+          "sha256": "158f5345634fd1346d6d21b77250930898415a55e50f809fbc2b7807fec90af1"
+        }
+      },
+      "after_traces": {
+        "start_by_cycle.json": {
+          "events": 1165,
+          "sha256": "553f65fdb5136d4f3e74bc2749c9793d8123003f9181492f69ead9556ca693df"
+        },
+        "done_by_cycle.json": {
+          "events": 1165,
+          "sha256": "158f5345634fd1346d6d21b77250930898415a55e50f809fbc2b7807fec90af1"
+        }
+      },
+      "shared_vector_predicate_completion_cycles": 0,
+      "predicate_definitions": 4,
+      "python_refactor_cpp_only_parity": true
+    },
+    {
+      "id": "softmax_expdif_vcvt_u1",
+      "category": "Softmax",
+      "regression_group": "softmax",
+      "reference_cycles": 615,
+      "before_cycles": 658,
+      "after_cycles": 658,
+      "cycle_change": 0,
+      "before_ape_percent": 6.991869918699187,
+      "after_ape_percent": 6.991869918699187,
+      "input_sha256": "4e0af57a4b3eb3b18d834c62a1284d944bd21daa52e08317d0629ad6ff0ecac5",
+      "traces_unchanged": true,
+      "before_traces": {
+        "start_by_cycle.json": {
+          "events": 1159,
+          "sha256": "1398f4ea72cbd076b84bb925da470c012137284364e1eb5fe1f58b567674effb"
+        },
+        "done_by_cycle.json": {
+          "events": 1159,
+          "sha256": "7440e56f5dba8486e5484e346ea7ec25736af19247725a5a216e6da18503f1e6"
+        }
+      },
+      "after_traces": {
+        "start_by_cycle.json": {
+          "events": 1159,
+          "sha256": "1398f4ea72cbd076b84bb925da470c012137284364e1eb5fe1f58b567674effb"
+        },
+        "done_by_cycle.json": {
+          "events": 1159,
+          "sha256": "7440e56f5dba8486e5484e346ea7ec25736af19247725a5a216e6da18503f1e6"
+        }
+      },
+      "shared_vector_predicate_completion_cycles": 0,
+      "predicate_definitions": 4,
+      "python_refactor_cpp_only_parity": true
+    },
+    {
+      "id": "softmax_expdif_vcvt_u2",
+      "category": "Softmax",
+      "regression_group": "softmax",
+      "reference_cycles": 622,
+      "before_cycles": 622,
+      "after_cycles": 622,
+      "cycle_change": 0,
+      "before_ape_percent": 0.0,
+      "after_ape_percent": 0.0,
+      "input_sha256": "ff97511be06c5e78af08e968cc588c4ac364863d5f569030dd36f6aec39ed483",
+      "traces_unchanged": true,
+      "before_traces": {
+        "start_by_cycle.json": {
+          "events": 1161,
+          "sha256": "6cf2643786f0329774c39855c57264417282cc20a4f507f1475e014e874c281f"
+        },
+        "done_by_cycle.json": {
+          "events": 1161,
+          "sha256": "c66d08ee08a40152e4fe5cb94525ff17b9eefa34ee2c9a0fd1819a53609e27c1"
+        }
+      },
+      "after_traces": {
+        "start_by_cycle.json": {
+          "events": 1161,
+          "sha256": "6cf2643786f0329774c39855c57264417282cc20a4f507f1475e014e874c281f"
+        },
+        "done_by_cycle.json": {
+          "events": 1161,
+          "sha256": "c66d08ee08a40152e4fe5cb94525ff17b9eefa34ee2c9a0fd1819a53609e27c1"
+        }
+      },
+      "shared_vector_predicate_completion_cycles": 0,
+      "predicate_definitions": 4,
+      "python_refactor_cpp_only_parity": true
+    },
+    {
+      "id": "softmax_expdif_vcvt_u4",
+      "category": "Softmax",
+      "regression_group": "softmax",
+      "reference_cycles": 618,
+      "before_cycles": 630,
+      "after_cycles": 630,
+      "cycle_change": 0,
+      "before_ape_percent": 1.941747572815534,
+      "after_ape_percent": 1.941747572815534,
+      "input_sha256": "dfb5180dfa48c0ae054138bcbd9a7a5b2786ee6e5a9d9e46a208e6bf9c0629ed",
+      "traces_unchanged": true,
+      "before_traces": {
+        "start_by_cycle.json": {
+          "events": 1165,
+          "sha256": "e1f98a4ea003d35df1a12587c06ad08de1f96908bdb7f8f0550b3b70acc16196"
+        },
+        "done_by_cycle.json": {
+          "events": 1165,
+          "sha256": "1e7171942d28d236b69e05964b6bf17eb9132dd0321db1be9c96c77f9c7d3ac2"
+        }
+      },
+      "after_traces": {
+        "start_by_cycle.json": {
+          "events": 1165,
+          "sha256": "e1f98a4ea003d35df1a12587c06ad08de1f96908bdb7f8f0550b3b70acc16196"
+        },
+        "done_by_cycle.json": {
+          "events": 1165,
+          "sha256": "1e7171942d28d236b69e05964b6bf17eb9132dd0321db1be9c96c77f9c7d3ac2"
+        }
+      },
+      "shared_vector_predicate_completion_cycles": 0,
+      "predicate_definitions": 4,
+      "python_refactor_cpp_only_parity": true
+    },
+    {
+      "id": "softmax_sub_exp_mulcvt_u1",
+      "category": "Softmax",
+      "regression_group": "softmax",
+      "reference_cycles": 701,
+      "before_cycles": 714,
+      "after_cycles": 714,
+      "cycle_change": 0,
+      "before_ape_percent": 1.854493580599144,
+      "after_ape_percent": 1.854493580599144,
+      "input_sha256": "5c4ea8327007bb2e37290c0a22f4c5509d99be81b35ea9ebbb2bd871dd51c7f6",
+      "traces_unchanged": true,
+      "before_traces": {
+        "start_by_cycle.json": {
+          "events": 1287,
+          "sha256": "982bcffd9f84719ebfeec5fe5cad4ac22daadc992442bce10193d5f54e2a2ae6"
+        },
+        "done_by_cycle.json": {
+          "events": 1287,
+          "sha256": "7502e50415e16a6d11ddca7722ad65306bedb61d32fbdcdb6d1b9eaaba000c0e"
+        }
+      },
+      "after_traces": {
+        "start_by_cycle.json": {
+          "events": 1287,
+          "sha256": "982bcffd9f84719ebfeec5fe5cad4ac22daadc992442bce10193d5f54e2a2ae6"
+        },
+        "done_by_cycle.json": {
+          "events": 1287,
+          "sha256": "7502e50415e16a6d11ddca7722ad65306bedb61d32fbdcdb6d1b9eaaba000c0e"
+        }
+      },
+      "shared_vector_predicate_completion_cycles": 0,
+      "predicate_definitions": 4,
+      "python_refactor_cpp_only_parity": true
+    },
+    {
+      "id": "softmax_sub_exp_mulcvt_u2",
+      "category": "Softmax",
+      "regression_group": "softmax",
+      "reference_cycles": 668,
+      "before_cycles": 692,
+      "after_cycles": 692,
+      "cycle_change": 0,
+      "before_ape_percent": 3.592814371257485,
+      "after_ape_percent": 3.592814371257485,
+      "input_sha256": "3e5b3a20621eec1cdbc446893db41be5825bc46bd385452e9afb04451c89de71",
+      "traces_unchanged": true,
+      "before_traces": {
+        "start_by_cycle.json": {
+          "events": 1289,
+          "sha256": "5f035111c1aa33836cfc38bcc6c0ee7882699bc2e3f4d66c59485a18d1b480b7"
+        },
+        "done_by_cycle.json": {
+          "events": 1289,
+          "sha256": "0d19ffdf7fe822d47ad87e592916f2a93b03ef497aa2f9542c3c9d9d934b5416"
+        }
+      },
+      "after_traces": {
+        "start_by_cycle.json": {
+          "events": 1289,
+          "sha256": "5f035111c1aa33836cfc38bcc6c0ee7882699bc2e3f4d66c59485a18d1b480b7"
+        },
+        "done_by_cycle.json": {
+          "events": 1289,
+          "sha256": "0d19ffdf7fe822d47ad87e592916f2a93b03ef497aa2f9542c3c9d9d934b5416"
+        }
+      },
+      "shared_vector_predicate_completion_cycles": 0,
+      "predicate_definitions": 4,
+      "python_refactor_cpp_only_parity": true
+    },
+    {
+      "id": "softmax_sub_exp_mulcvt_u4",
+      "category": "Softmax",
+      "regression_group": "softmax",
+      "reference_cycles": 660,
+      "before_cycles": 697,
+      "after_cycles": 697,
+      "cycle_change": 0,
+      "before_ape_percent": 5.606060606060606,
+      "after_ape_percent": 5.606060606060606,
+      "input_sha256": "11126fa3ecce63d2f7631b94691dc377c33d46d030ae752253c84d708419e9ac",
+      "traces_unchanged": true,
+      "before_traces": {
+        "start_by_cycle.json": {
+          "events": 1293,
+          "sha256": "410d614f463644c47b8c05d77dcef718e5dd1a7b28e38e292b5fed0125789e39"
+        },
+        "done_by_cycle.json": {
+          "events": 1293,
+          "sha256": "24c232867f34b1e416a25310f00339f623ebdffa55f226b3ef95935e359b2af3"
+        }
+      },
+      "after_traces": {
+        "start_by_cycle.json": {
+          "events": 1293,
+          "sha256": "410d614f463644c47b8c05d77dcef718e5dd1a7b28e38e292b5fed0125789e39"
+        },
+        "done_by_cycle.json": {
+          "events": 1293,
+          "sha256": "24c232867f34b1e416a25310f00339f623ebdffa55f226b3ef95935e359b2af3"
+        }
+      },
+      "shared_vector_predicate_completion_cycles": 0,
+      "predicate_definitions": 4,
+      "python_refactor_cpp_only_parity": true
+    },
+    {
+      "id": "softmax_sub_exp_vcvt_u1",
+      "category": "Softmax",
+      "regression_group": "softmax",
+      "reference_cycles": 686,
+      "before_cycles": 699,
+      "after_cycles": 699,
+      "cycle_change": 0,
+      "before_ape_percent": 1.8950437317784257,
+      "after_ape_percent": 1.8950437317784257,
+      "input_sha256": "6dd4c3767ed579b1fa7520ba6ce728bf726c9142ea907c56232f4ffe8e86a47e",
+      "traces_unchanged": true,
+      "before_traces": {
+        "start_by_cycle.json": {
+          "events": 1287,
+          "sha256": "b0d3765deea961d9e1186416aed7c03f28c2744c56eb480c5377703dcc6d016b"
+        },
+        "done_by_cycle.json": {
+          "events": 1287,
+          "sha256": "9f8a14cf4b4cab21a72721835698288c290c87e8a4b71b6c7d5b120314788c6a"
+        }
+      },
+      "after_traces": {
+        "start_by_cycle.json": {
+          "events": 1287,
+          "sha256": "b0d3765deea961d9e1186416aed7c03f28c2744c56eb480c5377703dcc6d016b"
+        },
+        "done_by_cycle.json": {
+          "events": 1287,
+          "sha256": "9f8a14cf4b4cab21a72721835698288c290c87e8a4b71b6c7d5b120314788c6a"
+        }
+      },
+      "shared_vector_predicate_completion_cycles": 0,
+      "predicate_definitions": 4,
+      "python_refactor_cpp_only_parity": true
+    },
+    {
+      "id": "softmax_sub_exp_vcvt_u2",
+      "category": "Softmax",
+      "regression_group": "softmax",
+      "reference_cycles": 681,
+      "before_cycles": 681,
+      "after_cycles": 681,
+      "cycle_change": 0,
+      "before_ape_percent": 0.0,
+      "after_ape_percent": 0.0,
+      "input_sha256": "1d5335170b91705ff26d494eeaeee972ceb866142c9f98158c33b3b446a14f7c",
+      "traces_unchanged": true,
+      "before_traces": {
+        "start_by_cycle.json": {
+          "events": 1289,
+          "sha256": "a21fd96c9eaad28659f41c6ffa2882d4a78c528749e12ef97a9633080fc40d49"
+        },
+        "done_by_cycle.json": {
+          "events": 1289,
+          "sha256": "b4df910fabc04c5a86133b44c358bf3af3863fae3bcb88f10fb856fcd7f1006f"
+        }
+      },
+      "after_traces": {
+        "start_by_cycle.json": {
+          "events": 1289,
+          "sha256": "a21fd96c9eaad28659f41c6ffa2882d4a78c528749e12ef97a9633080fc40d49"
+        },
+        "done_by_cycle.json": {
+          "events": 1289,
+          "sha256": "b4df910fabc04c5a86133b44c358bf3af3863fae3bcb88f10fb856fcd7f1006f"
+        }
+      },
+      "shared_vector_predicate_completion_cycles": 0,
+      "predicate_definitions": 4,
+      "python_refactor_cpp_only_parity": true
+    },
+    {
+      "id": "softmax_sub_exp_vcvt_u4",
+      "category": "Softmax",
+      "regression_group": "softmax",
+      "reference_cycles": 682,
+      "before_cycles": 694,
+      "after_cycles": 694,
+      "cycle_change": 0,
+      "before_ape_percent": 1.7595307917888563,
+      "after_ape_percent": 1.7595307917888563,
+      "input_sha256": "1ca962ee815f6cfcca932f2a7019c2c33f5dad8f3b053ee1e02b64c901c64c19",
+      "traces_unchanged": true,
+      "before_traces": {
+        "start_by_cycle.json": {
+          "events": 1293,
+          "sha256": "a7680a5dba3230b5c9e66689c8c8d1ff660df726a8b8c51a1ff050c90692b7de"
+        },
+        "done_by_cycle.json": {
+          "events": 1293,
+          "sha256": "df8e6331a4ff7146e24233696fada0c152cd9047da49040bb3e48a850e7e4330"
+        }
+      },
+      "after_traces": {
+        "start_by_cycle.json": {
+          "events": 1293,
+          "sha256": "a7680a5dba3230b5c9e66689c8c8d1ff660df726a8b8c51a1ff050c90692b7de"
+        },
+        "done_by_cycle.json": {
+          "events": 1293,
+          "sha256": "df8e6331a4ff7146e24233696fada0c152cd9047da49040bb3e48a850e7e4330"
+        }
+      },
+      "shared_vector_predicate_completion_cycles": 0,
+      "predicate_definitions": 4,
+      "python_refactor_cpp_only_parity": true
+    }
+  ],
+  "overlap_probe": {
+    "id": "vector_predicate_overlap",
+    "before_cycles": 132,
+    "after_cycles": 131,
+    "cycle_change": -1,
+    "reference_cycles": null,
+    "included_in_accuracy_statistics": false,
+    "input_sha256": "efe9b6fc743b9b10672b2a0d8c3a410279dca2a4cb9e2a55bb013e2b8c608a46",
+    "shared_vector_predicate_completion_cycles": 5,
+    "example_overlaps": [
+      {
+        "port": 0,
+        "cycle": 53,
+        "instructions": [
+          [
+            14,
+            "VEXP",
+            [
+              "vector"
+            ]
+          ],
+          [
+            46,
+            "PSET_B32",
+            [
+              "predicate"
+            ]
+          ]
+        ]
+      },
+      {
+        "port": 1,
+        "cycle": 59,
+        "instructions": [
+          [
+            23,
+            "VEXP",
+            [
+              "vector"
+            ]
+          ],
+          [
+            54,
+            "VCMP_GT",
+            [
+              "predicate"
+            ]
+          ]
+        ]
+      },
+      {
+        "port": 0,
+        "cycle": 60,
+        "instructions": [
+          [
+            20,
+            "VEXP",
+            [
+              "vector"
+            ]
+          ],
+          [
+            58,
+            "PSET_B32",
+            [
+              "predicate"
+            ]
+          ]
+        ]
+      }
+    ],
+    "python_refactor_cpp_only_parity": true
+  }
+}

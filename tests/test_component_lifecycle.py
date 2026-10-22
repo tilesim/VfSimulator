@@ -31,7 +31,7 @@ class ComponentLifecycleTest(unittest.TestCase):
         self.assertEqual(engine.exq.pop_ready(0, 110), ('ALU', head))
         engine.exu.start(head, 0, 'ALU', 110, queued=True)
         self.assertIsNone(engine.exq.pop_ready(0, 110))
-        next_cycle = engine.exu.next_issue_cycle(tail.profile, 0)
+        next_cycle = engine.exu.next_issue_cycle(tail, 0)
         self.assertEqual(engine.exq.pop_ready(0, next_cycle), ('ALU', tail))
 
     def test_exq_waits_for_reception_and_exu_completion_capacity(self):
@@ -67,11 +67,11 @@ class ComponentLifecycleTest(unittest.TestCase):
         producer = self.uop(engine, 0, 'VEXP')
         consumer = self.uop(engine, 1)
         engine.exu.start(producer, 0, 'SFU', 100, queued=True)
-        self.assertTrue(engine.exu.can_issue(consumer.profile, 0, 100))
-        self.assertFalse(engine.exu.can_issue(consumer.profile, 0, 100, queued=True))
+        self.assertTrue(engine.exu.can_issue(consumer, 0, 100))
+        self.assertFalse(engine.exu.can_issue(consumer, 0, 100, queued=True))
         self.assertEqual(len(engine.exu.running), 1)
-        next_cycle = engine.exu.next_issue_cycle(consumer.profile, 0)
-        self.assertTrue(engine.exu.can_issue(consumer.profile, 0, next_cycle, queued=True))
+        next_cycle = engine.exu.next_issue_cycle(consumer, 0)
+        self.assertTrue(engine.exu.can_issue(consumer, 0, next_cycle, queued=True))
 
     def test_shq_release_is_delayed_and_published_once(self):
         engine = self.engine(shq_release_delay=2, idu_visible_shq_delay=1,

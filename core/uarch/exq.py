@@ -1,5 +1,6 @@
 from __future__ import annotations
-from core.params.types import InstructionProfile, UarchParameters
+from core.execution.instruction import Uop
+from core.params.types import UarchParameters
 from collections import deque
 
 class EXQ:
@@ -37,7 +38,8 @@ class EXQ:
     def can_accept(self, port: int) -> bool:
         return self.admission_occupancy(port) < self.depth
 
-    def predict_issue_cycle(self, port: int, profile: InstructionProfile, recv_cycle: int) -> int:
+    def predict_issue_cycle(self, port: int, uop: Uop, recv_cycle: int) -> int:
+        profile = uop.profile
         queue = self.exq_wait[port][profile.fu_type]
         predicted = int(recv_cycle)
         if queue:
@@ -53,10 +55,10 @@ class EXQ:
                                     self.db.get_ii_for_profiles(pending.profile, profile))
                     break
         else:
-            predicted = max(predicted, self.exu.next_issue_cycle(profile, port, fu_type=profile.fu_type))
+            predicted = max(predicted, self.exu.next_issue_cycle(uop, port, fu_type=profile.fu_type))
         if self.predict_issue_with_cross_fu:
-            predicted = max(predicted, self.exu.next_issue_cycle(profile, port))
-        return self.exu.next_completion_issue_cycle(profile, port, predicted)
+            predicted = max(predicted, self.exu.next_issue_cycle(uop, port))
+        return self.exu.next_completion_issue_cycle(uop, port, predicted)
 
     def pop_ready(self, port: int, cycle: int):
         best = None
@@ -73,7 +75,7 @@ class EXQ:
             ready = int(self.registers.ready_cycle(candidate))
             if ready > cycle:
                 continue
-            if not self.exu.can_issue(candidate.profile, port, cycle, queued=True):
+            if not self.exu.can_issue(candidate, port, cycle, queued=True):
                 continue
             key = (ready, received, candidate.inst_id)
             if best is None or key < best[0]:

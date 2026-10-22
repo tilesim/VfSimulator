@@ -48,7 +48,7 @@ forwarding 使用真实 producer→consumer 的最早发射间隔，核对具体
 常用跨 opcode 组合分别测量 FP32、FP16、BF16：forwarding 覆盖计算 RAW、
 LOAD→计算、计算→STORE 和 compare→select；II 按独立同端口流测量两个方向。
 例如 VADD→VMUL 的 II 为 1，VMUL→VADD 为 2。来源、逐对数值及隔离条件见
-[常用指令对测量](../skills/vfsim-instruction-benchmark/references/common-instruction-pairs.md)。
+[常用指令对测量](https://github.com/tilesim/VfSimulator/blob/4cc20155f36be92e24772e4909bd7b3148c6e389/skills/vfsim-instruction-benchmark/references/common-instruction-pairs.md)。
 完整算子与依赖探针的需求按输入内 COMPUTE 矩阵和动态 RAW 统计，详见
 [VFtest 算子指令对](instruction_coverage/a5/operator_pairs.md)。
 Membar 归档的 A5 算子覆盖 992 组 II 和 325 组静态 RAW 查询，
@@ -72,13 +72,17 @@ opcode/form 的预测发射间隔。预测用于端口选择，实际发射通�
 回归范围与误差见
 [II 发射规则验证](validation/issue_interval_regression_20261020.md)。
 
-每个 EXU 每周期最多完成一条计算指令。EXU 发射时预留 `issue_cycle + latency`
-对应的完成周期；若该周期已被同一 EXU 的在途指令占用，候选指令推迟发射，
-直到找到空闲完成周期。连续冲突可以推迟多个周期，指令本身的 latency 保持不变。
-例如 latency=16 的指令在 100 发射并预留 116；latency=7 的后续指令在 109
-发射会发生冲突，因此最早在 110 发射、117 完成。
+每个 EXU 每周期最多完成一条写向量寄存器的指令和一条写谓词寄存器的指令。
+重命名根据实际目的操作数记录目标寄存器 bank。EXU 发射时按 bank 预留
+`issue_cycle + latency` 对应的完成周期；若任一目标 bank 的该周期已被占用，
+候选指令推迟发射，直到所有目标 bank 都有空闲名额。连续冲突可以推迟多个周期，
+指令本身的 latency 保持不变。
+例如写向量寄存器的 VEXP 在 100 发射、116 完成；latency=7 的 VADD 最早在
+110 发射、117 完成。写谓词寄存器的 VCMP_GT 可以在 110 发射、116 完成。
 
-完成带宽在同一 EXU 的 ALU、SFU 和谓词计算之间共享，两个 EXU 分别维护预留状态；
+向量和谓词 bank 分别维护完成名额，ALU/SFU 分类及输入谓词不决定完成名额。
+一条指令的多个同类目的寄存器共用一个名额；同时写两类寄存器时同时占用两个名额；
+没有寄存器结果的指令不占用这两类名额。两个 EXU 分别维护预留状态，
 LSU 继续维护独立的访存完成规则。EXQ 预测读取已发射指令的预留状态，实际发射
 再次检查并预留。该规则支持多条指令重叠执行，并与 self-II、转换 II、每周期
 发射带宽及 inflight 上限共同约束调度。默认 inflight 上限为每 EXU 7 条，输入覆盖
@@ -89,7 +93,7 @@ LSU 继续维护独立的访存完成规则。EXQ 预测读取已发射指令的
 FP32 VCMAX 的 self-II=1、仅使用 EXU0；它与 VEXP 的双向转换可达到 1，
 VCMAX→VADD 的转换观测为 3。VADD/VMUL 和 VEXP/VDIV 的交错实验表明，
 self-II、端口单周期发射限制和共享资源冲突需要分别考虑。
-[FP32 执行资源实验](../skills/vfsim-instruction-benchmark/references/fp32-fu-contention.md)
+[FP32 执行资源实验](https://github.com/tilesim/VfSimulator/blob/4cc20155f36be92e24772e4909bd7b3148c6e389/skills/vfsim-instruction-benchmark/references/fp32-fu-contention.md)
 记录源程序与实际发射流、方向间隔、ISU 阻塞原因和资源分组建议。
 
 ## 访存与状态

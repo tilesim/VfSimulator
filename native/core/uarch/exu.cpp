@@ -13,6 +13,10 @@ EXU::EXU(const UarchConfig &cfg, const ParamDB &db)
     fu["ALU"] = {};
     fu["SFU"] = {};
   }
+  for (auto &banks : completionCycles_) {
+    banks["vector"] = {};
+    banks["predicate"] = {};
+  }
 }
 bool EXU::legalPort(const Uop &u, int port) const {
   return port >= 0 && port < cfg_.issuePorts &&
@@ -31,7 +35,11 @@ int64_t EXU::nextSelfIssueCycle(const Uop &u, int port) const {
 }
 int64_t EXU::nextCompletionIssueCycle(const Uop &u, int port, int64_t cycle) const {
   const auto &reserved = completionCycles_.at(port);
-  while (reserved.find(cycle + u.profile->latency) != reserved.end())
+  while (std::any_of(u.writebackBanks.begin(), u.writebackBanks.end(),
+                     [&](const auto &bank) {
+                       const auto &slots = reserved.at(bank);
+                       return slots.find(cycle + u.profile->latency) != slots.end();
+                     }))
     ++cycle;
   return cycle;
 }
@@ -74,14 +82,15 @@ std::optional<int> EXU::pickPort(const Uop &u, int64_t cycle,
 void EXU::start(const UopPtr &u, int port, int64_t cycle, bool queued) {
   const auto doneCycle = cycle + u->profile->latency;
   auto &reserved = completionCycles_.at(port);
-  if (reserved.find(doneCycle) != reserved.end())
+  if (nextCompletionIssueCycle(*u, port, cycle) != cycle)
     throw std::runtime_error("EXU completion cycle is already reserved");
   u->startCycle = cycle;
   u->doneCycle = doneCycle;
   u->exuPort = port;
   u->state = "running";
   running_.emplace(u->instId, u);
-  reserved.insert(doneCycle);
+  for (const auto &bank : u->writebackBanks)
+    reserved.at(bank).insert(doneCycle);
   ++inflight_[port];
   selfIssueReady_[port][{u->op, u->form}] =
       cycle + db_.initiationInterval(u->op, u->form, u->op, u->form);
@@ -95,7 +104,8 @@ std::vector<UopPtr> EXU::finish(int64_t cycle) {
   for (auto it = running_.begin(); it != running_.end();)
     if (cycle >= *it->second->doneCycle) {
       auto u = it->second;
-      completionCycles_[u->exuPort].erase(*u->doneCycle);
+      for (const auto &bank : u->writebackBanks)
+        completionCycles_[u->exuPort].at(bank).erase(*u->doneCycle);
       --inflight_[u->exuPort];
       u->exuPort = -1;
       u->state = "done";

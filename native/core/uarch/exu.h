@@ -31,7 +31,7 @@ private:
   std::vector<LastIssue> lastPort_;
   std::vector<std::map<std::string, LastIssue>> lastFu_;
   std::vector<std::map<std::pair<std::string, std::string>, int64_t>> selfIssueReady_;
-  std::vector<std::unordered_set<int64_t>> completionCycles_;
+  std::vector<std::map<std::string, std::unordered_set<int64_t>>> completionCycles_;
   std::vector<int64_t> inflight_;
   std::map<int64_t, UopPtr> running_;
   int rr_ = 0;

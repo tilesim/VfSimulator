@@ -93,6 +93,7 @@ UopPtr Registers::rename(const DynamicInst &inst, int64_t cycle) {
     if (i >= inst.dstValueKeep.size() || inst.dstValueKeep[i])
       rat_[id] = physical;
     u.pregDst.push_back(physical);
+    u.writebackBanks.insert(pred ? "predicate" : "vector");
     ++pregGeneration_[physical];
     pregConsumerCount_[physical] = 0;
     pregPending_.insert(physical);

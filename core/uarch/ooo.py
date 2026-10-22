@@ -107,7 +107,7 @@ class OoO:
             if self.enforce_same_cycle_src_hazard and (not self.theoretical_limit_mode) and issued_srcs_this_cycle & cur_srcs:
                 continue
             fu_type = u.profile.fu_type
-            chosen_port = self.exu.pick_port(u.profile, cycle, exu_used_this_cycle)
+            chosen_port = self.exu.pick_port(u, cycle, exu_used_this_cycle)
             if chosen_port is None:
                 continue
             self.exu.start(u, chosen_port, fu_type, cycle, queued=False)
@@ -159,16 +159,16 @@ class OoO:
             recv_cycle = cycle + self.exq_recv_delay
             if use_fu_rr_fifo:
                 chosen_port = self.select_fu_rr_port(fu_type, candidates)
-                predicted_issue = self.exq.predict_issue_cycle(chosen_port, u.profile, recv_cycle)
+                predicted_issue = self.exq.predict_issue_cycle(chosen_port, u, recv_cycle)
             elif self.shq_exq_static_rr:
                 ordered = sorted(candidates, key=lambda p: ((p - self.shq_exq_rr_ptr) % self.issue_ports, p))
                 chosen_port = ordered[0]
-                predicted_issue = self.exq.predict_issue_cycle(chosen_port, u.profile, recv_cycle)
+                predicted_issue = self.exq.predict_issue_cycle(chosen_port, u, recv_cycle)
                 self.shq_exq_rr_ptr = (chosen_port + 1) % self.issue_ports
             else:
                 best = None
                 for port in candidates:
-                    predicted_issue = self.exq.predict_issue_cycle(port, u.profile, recv_cycle)
+                    predicted_issue = self.exq.predict_issue_cycle(port, u, recv_cycle)
                     occ = self.exq.admission_occupancy(port)
                     key = (predicted_issue, occ, port)
                     if best is None or key < best[0]:
