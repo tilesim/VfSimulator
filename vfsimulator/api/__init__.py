@@ -1,7 +1,7 @@
 """Typed VfSimulator input API and frontend adapters."""
 
 from vfsimulator.api.input_api import InputAPI
-from vfsimulator.api.input_symbols import (
+from vfsimulator.api.common.symbols import (
     DType,
     MembarType,
     OpCode,
@@ -12,7 +12,8 @@ from vfsimulator.api.input_symbols import (
     normalize_opcode,
     normalize_storage,
 )
-from vfsimulator.api.frontend import CanonicalVfInfo, VfInfoBuilder
+from vfsimulator.api.common import (CanonicalVfInfo)
+from vfsimulator.api.programmatic.builder import VfInfoBuilder
 
 __all__ = [
     "InputAPI",

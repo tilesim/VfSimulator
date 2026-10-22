@@ -1,0 +1,15 @@
+void vf(__ubuf__ uint16_t *input, __ubuf__ uint16_t *output) {
+    __VEC_SCOPE__ {
+        vector_u16 data;
+        vector_bool p = pset_b16(PAT_ALL);
+        for (int row = 0; row < 2; ++row) {
+            for (int col = 0; col < 3; ++col) {
+                vector_address address = vag_b16(384, 128);
+                vld(data, input, address, NORM);
+                vst(data, output, address, NORM_B16, p);
+            }
+        }
+        mem_bar(VV_ALL);
+        mem_bar(VST_VST);
+    }
+}

@@ -1,0 +1,27 @@
+#define __aicore__ [aicore]
+
+__attribute__((always_inline)) inline [aicore] void pset_vadd_single_vf(
+    __ubuf__ float *a, __ubuf__ float *b, __ubuf__ float *out) {
+    __VEC_SCOPE__ {
+        vector_bool all = pset_b32(PAT_ALL);
+        vector_f32 va, vb, result;
+        vlds(va, a, 0, NORM);
+        vlds(vb, b, 0, NORM);
+        vadd(result, va, vb, all, MODE_ZEROING);
+        vsts(result, out, 0, NORM_B32, all);
+    }
+}
+
+extern "C" __global__ __aicore__ void pset_vadd_single(
+    __gm__ float *input, __gm__ float *output) {
+    __ubuf__ float *a = (__ubuf__ float *)get_imm(0);
+    __ubuf__ float *b = a + 64;
+    __ubuf__ float *out = (__ubuf__ float *)get_imm(0x4000);
+    copy_gm_to_ubuf_align_v2(a, input, 0, 1, 512, 0, 0, 0, 0, 0, 0);
+    set_flag(PIPE_MTE2, PIPE_V, (event_t)0);
+    wait_flag(PIPE_MTE2, PIPE_V, (event_t)0);
+    pset_vadd_single_vf(a, b, out);
+    set_flag(PIPE_V, PIPE_MTE3, (event_t)0);
+    wait_flag(PIPE_V, PIPE_MTE3, (event_t)0);
+    copy_ubuf_to_gm_align_v2(output, out, 0, 1, 256, 0, 0, 0);
+}

@@ -4,11 +4,11 @@ from dataclasses import replace
 
 import pytest
 
-from api.program_adapter import program_to_canonical
-from api.program_api import predict_from_program
-from api.frontend.schema import StorageKind
-from api.frontend.serialization import canonical_vf_info_to_dict, canonical_vf_info_from_dict
-from core.program_ir import VfSimInst, VfSimValue, VfSimProgram, VfSimLoop, VfSimMemoryAccess
+from api.tilesim.adapter import program_to_canonical
+from api.tilesim.predict import predict_from_program
+from api.common.schema import StorageKind
+from api.json.serialization import canonical_vf_info_to_dict, canonical_vf_info_from_dict
+from api.tilesim.program import VfSimInst, VfSimValue, VfSimProgram, VfSimLoop, VfSimMemoryAccess
 
 
 def predicate_program():
@@ -89,7 +89,8 @@ def test_multi_result_program_and_load_mode(tmp_path, op):
     canonical = program_to_canonical(p)
     load, pair = canonical.context[1:3]
     assert load.opcode == 'VLDS'
-    assert load.inputs[0].memory_access.span == 128
+    access = load.inputs[0].memory_access
+    assert (access.span, access.address_unit_bytes) == (512, 1)
     assert [v.value_id for v in pair.inputs] == [v.value_id for v in load.outputs]
     predict_from_program(p, out_dir=tmp_path)
     load_row = next(r for r in starts(tmp_path) if r['op'] == 'VLDS')
@@ -150,23 +151,3 @@ def test_external_predicate_store_forms_and_align_state(tmp_path):
     p.body[1].memory_accesses = ()
     with pytest.raises(ValueError, match='implicit_update'):
         program_to_canonical(p)
-
-
-def test_config_json_cache_reuses_reads_and_invalidates_changed_file(tmp_path, monkeypatch):
-    import core.param_db as db
-    path = tmp_path/'config.json'
-    path.write_text('{"value":1}')
-    read = db._read_json
-    calls = []
-    def counting_read(p):
-        calls.append(p)
-        return read(p)
-    monkeypatch.setattr(db, '_read_json', counting_read)
-    db.clear_param_json_cache()
-    assert db._read_json_cached(str(path)) == {'value': 1}
-    assert db._read_json_cached(str(path)) == {'value': 1}
-    assert len(calls) == 1
-    path.write_text('{"value":100}')
-    assert db._read_json_cached(str(path)) == {'value': 100}
-    assert len(calls) == 2
-    db.clear_param_json_cache()

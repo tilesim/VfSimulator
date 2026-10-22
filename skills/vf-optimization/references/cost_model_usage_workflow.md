@@ -6,7 +6,7 @@ This workflow is for running the current VfSimulator model and collecting compar
 
 ```bash
 python main.py ^
-  --trace VFtest/GeLU_poly.json ^
+  --trace VFtest/json/GeLU_poly.json ^
   --out_dir results/tmp_model/gelu_poly_json
 ```
 
@@ -30,7 +30,7 @@ Do not pass old options such as `--ooo-model consumer-done`; the public CLI no l
 
 ```bash
 python main.py ^
-  --cce cce_code/GeLU_poly.dsl ^
+  --cce VFtest/cce/GeLU_poly.cce ^
   --out_dir results/tmp_model/gelu_poly_cce
 ```
 
@@ -38,7 +38,7 @@ If the file has more than one `__VEC_SCOPE__` kernel:
 
 ```bash
 python main.py ^
-  --cce cce_code/example.dsl ^
+  --cce VFtest/cce/example.cce ^
   --cce-kernel my_vf_kernel ^
   --out_dir results/tmp_model/example_cce
 ```
@@ -51,14 +51,14 @@ Use these only when explicitly studying theoretical limits:
 
 ```bash
 python main.py ^
-  --trace VFtest/GeLU_poly.json ^
+  --trace VFtest/json/GeLU_poly.json ^
   --out_dir results/tmp_model/gelu_poly_theory_vloop ^
   --theoretical-limit-vloop-only
 ```
 
 ```bash
 python main.py ^
-  --trace VFtest/GeLU_poly.json ^
+  --trace VFtest/json/GeLU_poly.json ^
   --out_dir results/tmp_model/gelu_poly_theory_direct ^
   --theoretical-limit-vloop-only-legacy-forwarding-direct-issue
 ```
@@ -69,7 +69,7 @@ Do not use old generic `--theoretical-limit`; it is no longer the active interfa
 
 ```bash
 python main.py ^
-  --trace VFtest/GeLU_poly.json ^
+  --trace VFtest/json/GeLU_poly.json ^
   --out_dir results/tmp_model/gelu_poly_3ports ^
   --three-ports
 ```
@@ -88,7 +88,7 @@ One case:
 
 ```bash
 python skills/vf-optimization/scripts/run_cost_model_once.py ^
-  --trace VFtest/GeLU_poly.json ^
+  --trace VFtest/json/GeLU_poly.json ^
   --out-dir results/tmp_model_once/gelu_i64 ^
   --set-param I=64
 ```

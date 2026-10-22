@@ -1,0 +1,11 @@
+
+        void alias_case() {
+          __VEC_SCOPE__ {
+            vector_f32 a, b, out;
+            vector_bool pred = pset_b32(PAT_ALL);
+            vdup(a, 1.0f, pred, MODE_ZEROING);
+            b = a;
+            vdup(a, 2.0f, pred, MODE_ZEROING);
+            vadd(out, b, a, pred);
+          }
+        }

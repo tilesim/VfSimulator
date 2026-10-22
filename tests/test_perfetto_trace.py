@@ -3,7 +3,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from core.perfetto_trace import build_perfetto_trace, dump_perfetto_trace
+from core.trace.perfetto import build_perfetto_trace, dump_perfetto_trace
 
 
 class PerfettoTraceTest(unittest.TestCase):

@@ -42,7 +42,7 @@ UB_LIMIT_BYTES = 256 * 1024
 
 
 def _canonical_gelu_poly_body() -> List[Tuple[str, Tuple[str, ...], Tuple[str, ...]]]:
-    # Canonicalized from cce_code/GeLU_poly.dsl.
+    # Canonicalized from VFtest/cce/GeLU_poly.cce.
     # We intentionally validate a normalized semantic skeleton here because
     # GeLU_poly.json is a long-lived hand-maintained trace used as an optimizer
     # source of truth. If it drifts, optimization can silently target the wrong
@@ -113,7 +113,7 @@ def _validate_known_trace_semantics(trace_path: str) -> None:
             raise ValueError(
                 f"{path.name} failed GeLU semantic validation at body index {idx}: "
                 f"expected {canonical}, got {actual}. "
-                "Please refresh VFtest/GeLU_poly.json so it matches cce_code/GeLU_poly.dsl before optimizing."
+                "Please refresh VFtest/json/GeLU_poly.json so it matches VFtest/cce/GeLU_poly.cce before optimizing."
             )
 
 

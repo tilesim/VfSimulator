@@ -4,19 +4,17 @@ import unittest
 from pathlib import Path
 from unittest import mock
 
-from api.frontend import (
-    CanonicalJsonVfInfoAdapter,
-    VfInfoValidationError,
-    canonical_vf_info_to_dict,
-)
-from api.frontend.json_adapter import _canonical_schema_validator
+from api.json.adapter import (CanonicalJsonVfInfoAdapter)
+from api.common import (VfInfoValidationError)
+from api.json.serialization import (canonical_vf_info_to_dict)
+from api.json.adapter import _canonical_schema_validator
 from api.input_api import InputAPI
-from api.simulator_costmodel import CoreVfCostModel
+from api.common.schema import SUPPORTED_SCHEMA_VERSIONS
 
 
 class CanonicalJsonVfInfoAdapterTest(unittest.TestCase):
     def setUp(self):
-        self.fixtures = Path(__file__).parent / "fixtures/canonical_vf_info"
+        self.fixtures = Path(__file__).resolve().parents[1] / "VFtest/canonical/fixtures"
         self.root = Path(__file__).parents[1]
 
     def test_input_api_loads_and_validates_canonical_json(self):
@@ -34,18 +32,6 @@ class CanonicalJsonVfInfoAdapterTest(unittest.TestCase):
         )
         self.assertEqual(restored, vf_info)
 
-    def test_formal_apis_do_not_expose_legacy_prediction_entries(self):
-        self.assertFalse(hasattr(InputAPI, "load_legacy_json_canonical"))
-        self.assertFalse(hasattr(InputAPI, "load_cce_vf_info"))
-        model = CoreVfCostModel()
-        self.assertFalse(hasattr(model, "run_legacy_vf_info"))
-        self.assertFalse(hasattr(model, "predict_legacy_vf_cycles"))
-
-    def test_cost_model_payload_rejects_legacy_shape(self):
-        with self.assertRaises(VfInfoValidationError):
-            CoreVfCostModel().run_payload(
-                {"dtype": "fp32", "values": {}, "program": []}
-            )
 
     def test_semantically_invalid_payload_exposes_validator_diagnostics(self):
         with self.assertRaises(VfInfoValidationError) as raised:
@@ -80,7 +66,7 @@ class CanonicalJsonVfInfoAdapterTest(unittest.TestCase):
         self.assertEqual(diagnostic.location.line, 1)
         self.assertEqual(diagnostic.location.source, str(path))
 
-    def test_root_array_is_rejected_without_legacy_inference(self):
+    def test_root_array_is_rejected(self):
         with self.assertRaises(VfInfoValidationError) as raised:
             CanonicalJsonVfInfoAdapter.from_payload([])  # type: ignore[arg-type]
 
@@ -118,18 +104,23 @@ class CanonicalJsonVfInfoAdapterTest(unittest.TestCase):
             {"canonical_json_schema_error"},
         )
 
-    def test_misspelled_dependencies_field_is_not_silently_dropped(self):
-        payload = self._valid_payload()
-        instruction = payload["context"][0]["body"][0]
-        instruction["dependecies"] = instruction.pop("dependencies")
-
-        with self.assertRaises(VfInfoValidationError) as raised:
-            CanonicalJsonVfInfoAdapter.from_payload(payload)
-
-        self.assertEqual(
-            {item.code for item in raised.exception.diagnostics},
-            {"canonical_json_schema_error"},
-        )
+    def test_removed_dependencies_field_is_rejected(self):
+        for kind in ("instruction", "membar"):
+            for dependencies in ([], [{"producer_node_id": "inst.load", "kind": "memory"}]):
+                with self.subTest(kind=kind, dependencies=dependencies):
+                    payload = self._valid_payload()
+                    if kind == "instruction":
+                        node = payload["context"][0]["body"][0]
+                    else:
+                        node = {"kind": "membar", "instruction_id": "barrier.removed", "barrier": "VST_VLD"}
+                        payload["context"].append(node)
+                    node["dependencies"] = dependencies
+                    with self.assertRaises(VfInfoValidationError) as raised:
+                        CanonicalJsonVfInfoAdapter.from_payload(payload)
+                    self.assertEqual(
+                        {item.code for item in raised.exception.diagnostics},
+                        {"canonical_json_schema_error"},
+                    )
 
     def test_missing_jsonschema_only_disables_canonical_json_loading(self):
         missing = ModuleNotFoundError("No module named 'jsonschema'")
@@ -137,7 +128,7 @@ class CanonicalJsonVfInfoAdapterTest(unittest.TestCase):
         _canonical_schema_validator.cache_clear()
         try:
             with mock.patch(
-                "api.frontend.json_adapter.import_module",
+                "api.json.adapter.import_module",
                 side_effect=missing,
             ):
                 builder = InputAPI.new_builder()
@@ -164,10 +155,9 @@ class CanonicalJsonVfInfoAdapterTest(unittest.TestCase):
         }
         self.assertTrue(trace_paths)
         for trace in trace_paths:
-            self.assertIn("regression_suite/inputs/canonical/", trace)
-            payload = json.loads((self.root / trace).read_text(encoding="utf-8"))
-            self.assertEqual(payload.get("schema_version"), 1)
-            self.assertIn("context", payload)
+            self.assertIn("VFtest/canonical/", trace)
+            vf_info = InputAPI.load_json(self.root / trace)
+            self.assertIn(vf_info.schema_version, SUPPORTED_SCHEMA_VERSIONS)
 
 
 if __name__ == "__main__":

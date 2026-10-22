@@ -1,0 +1,205 @@
+"""Translate typed TileSim operands and loops to validated Canonical input."""
+from dataclasses import replace
+
+from vfsimulator.api.input_api import InputAPI
+
+from vfsimulator.api.cce.ir import (
+    AdapterInstruction, AdapterLoop, AdapterMembar, AdapterMemoryAccess,
+    AdapterProgram, AdapterValue,
+)
+from vfsimulator.api.common.instruction_catalog import DEFAULT_INSTRUCTION_CATALOG, OperandDirection, ArgumentKind, FormRule
+from vfsimulator.api.common.schema import CanonicalStorageObject, StorageKind, OperandRole
+from vfsimulator.api.cce.value_versioning import ValueVersioningPass
+from vfsimulator.api.common.symbols import normalize_opcode, compact_dtype, normalize_form, dtype_element_bytes
+from .program import VfSimInst, VfSimLoop, VfSimMembar, VfSimProgram
+
+
+class _ProgramValueVersioning(ValueVersioningPass):
+    """Reuse master definition/loop handling, retaining explicit UB aliases."""
+
+    def __init__(self, values):
+        super().__init__()
+        self.program_values = values
+
+    def _new_definition(self, logical_id, *, producer_node_id):
+        metadata = self.program_values[logical_id]
+        existing_objects = dict(self._storage_objects) if metadata.storage is StorageKind.UB else None
+        definition_id = super()._new_definition(logical_id, producer_node_id=producer_node_id)
+        if metadata.storage is StorageKind.UB:
+            old = self._values[definition_id]
+            # The master pass creates a per-name object; this API supplies the
+            # actual allocation identity, shared by all views of that allocation.
+            self._storage_objects = existing_objects
+            self._storage_objects[metadata.storage_object_id] = CanonicalStorageObject(
+                object_id=metadata.storage_object_id, storage=StorageKind.UB,
+            )
+            self._values[definition_id] = replace(old, storage_object_id=metadata.storage_object_id)
+        return definition_id
+
+
+def _element_offset(value):
+    offset = 0
+    for dimension, index in zip(value.storage_shape or value.shape, value.offsets):
+        if isinstance(offset, int) and isinstance(index, int):
+            offset = offset * dimension + index
+        else:
+            offset = f"({offset}) * {dimension} + ({index})"
+    return offset
+
+
+def program_to_canonical(program: VfSimProgram):
+    """Names are opaque; every referenced operand must have explicit metadata.
+
+    PredicateRegister enables strict predicate dependencies for the entire program.
+    Older programs without it retain v1 timing-only mask handling. Missing scalar
+    inputs are errors in both modes. config includes canonical instruction
+    attributes; typed memory_accesses supplies address-state metadata.
+    """
+    if not isinstance(program, VfSimProgram):
+        raise TypeError('program must be a VfSimProgram')
+    values = program.values
+    predicate_model = any(v.storage is StorageKind.PREDICATE_REGISTER for v in values.values())
+
+    def convert(node):
+        if isinstance(node, VfSimLoop):
+            return AdapterLoop(count=node.count, unroll=node.unroll,
+                               induction_variable=node.name, body=[convert(n) for n in node.body])
+        if isinstance(node, VfSimMembar):
+            return AdapterMembar(node.barrier)
+        if not isinstance(node, VfSimInst):
+            raise TypeError(f'Unsupported program node: {type(node).__name__}')
+        for name in node.src + node.dst:
+            if name not in values:
+                raise ValueError(f'{node.op}: operand {name!r} requires explicit metadata')
+        src = list(node.src)
+        opcode = normalize_opcode(node.op)
+        if opcode == 'VLDSX2':
+            raise ValueError('VLDSX2 must be lowered by the caller to VLDS with catalog_mode=DINTLV_B32')
+        if opcode == 'VDUP' and src and values[src[0]].storage is StorageKind.SCALAR:
+            opcode = 'VDUPS'
+        spec = DEFAULT_INSTRUCTION_CATALOG.lookup(opcode)
+        attributes = dict(node.config or {})
+        mode = attributes.get('catalog_mode')
+        if mode is not None:
+            if spec is None or mode not in spec.memory_modes:
+                raise ValueError(f'{node.op}: unsupported catalog_mode {mode!r}')
+            spec = spec.memory_modes[mode]
+        if spec is not None:
+            inputs = list(spec.input_operands)
+            outputs = list(spec.output_operands)
+            if not predicate_model:
+                # Preserve the old timing-only contract, without fabricating PSET.
+                if any(p.kind is ArgumentKind.PREDICATE for p in outputs):
+                    raise ValueError(f'{node.op}: predicate results require PredicateRegister metadata and explicit producers/masks')
+                predicates = [p for p in inputs if p.kind is ArgumentKind.PREDICATE]
+                if predicates and (len(predicates) != 1 or inputs[-1] is not predicates[0]
+                                   or len(inputs) == 1):
+                    raise ValueError(f'{node.op}: predicate data requires PredicateRegister metadata')
+                inputs = [p for p in inputs if p.kind is not ArgumentKind.PREDICATE]
+                if predicates and len(src) == len(inputs) + 1:
+                    mask = values[src[-1]]
+                    if mask.storage is not StorageKind.REGISTER or mask.dtype != 'bool':
+                        raise ValueError(f'{node.op}: trailing legacy predicate must be a bool register')
+                    src.pop()
+            if len(src) != len(inputs) or len(node.dst) != len(outputs):
+                raise ValueError(f'{node.op}: expected {len(inputs)} sources and {len(outputs)} destinations; got {len(src)} and {len(node.dst)}')
+            if len(node.dst) != len(set(node.dst)):
+                raise ValueError(f'{node.op}: multi-result destinations must be distinct')
+            if len(node.dst) > 1:
+                register_types = {values[n].dtype for n in src + node.dst
+                                  if values[n].storage is StorageKind.REGISTER}
+                if len(register_types) > 1:
+                    raise ValueError(f'{node.op}: multi-result register operands must have matching dtypes')
+        elif predicate_model and any(values[n].storage is StorageKind.PREDICATE_REGISTER for n in src + node.dst):
+            raise ValueError(f'{node.op}: predicate semantics require a Catalog signature')
+        form = normalize_form(node.form)
+        if form is None and spec is not None:
+            if spec.fixed_form:
+                form = spec.fixed_form
+            elif spec.form_rule is FormRule.CONVERSION:
+                form = f"{compact_dtype(values[src[0]].dtype)}_to_{compact_dtype(values[node.dst[0]].dtype)}"
+            else:
+                # Follow catalog data roles: memory element type first, then
+                # numeric register result/input types. A bool result is a mask,
+                # not the data precision (the catalog may call it a destination).
+                # Scalars likewise do not set the width of a register broadcast.
+                operands = list(zip(outputs, node.dst)) + list(zip(inputs, src))
+                candidates = [
+                    values[name]
+                    for role in (OperandRole.MEMORY, OperandRole.DESTINATION, OperandRole.SOURCE)
+                    for operand, name in operands
+                    if operand.role is role
+                    and values[name].storage in (StorageKind.UB, StorageKind.REGISTER)
+                    and values[name].dtype != 'bool'
+                ]
+                if not candidates:
+                    raise ValueError(f'{node.op}: cannot infer form without a typed data operand; supply form explicitly')
+                form = candidates[0].dtype
+                if form not in spec.forms:
+                    form = {"bf16": "b16", "int32": "b32", "uint32": "b32"}.get(form, form)
+        # ``vfsim_fallback`` is emitted by a source-faithful lowerer for an
+        # instruction whose ISA form is not present in the catalog/timing
+        # database.  Keep the original opcode and inferred form intact so
+        # ParamDB can issue its documented unsupported-form/op fallback.
+        # Validating here would reject e.g. ``VAND.s16`` before ParamDB has a
+        # chance to create that fallback event.
+        is_fallback = bool((node.config or {}).get("vfsim_fallback"))
+        if form is not None and not is_fallback:
+            opcode, form = DEFAULT_INSTRUCTION_CATALOG.resolve_and_validate_form(opcode, form)
+        if spec is not None and form not in spec.forms and not spec.virtual and not is_fallback:
+            raise ValueError(f'{node.op}: unsupported form {form!r} for selected Catalog signature')
+        supplied = {access.value_id: access for access in node.memory_accesses}
+        if len(supplied) != len(node.memory_accesses):
+            raise ValueError(f'{node.op}: duplicate memory access metadata')
+        accesses = []
+        for names, kind in ((src, 'read'), (node.dst, 'write')):
+            for name in names:
+                if values[name].storage is not StorageKind.UB:
+                    continue
+                access = supplied.pop(name, None)
+                explicit_span = access.span if access is not None else None
+                span = (spec.memory_span_by_form.get(form) or spec.memory_span) if spec else None
+                if access is None:
+                    access = AdapterMemoryAccess(name, kind, offset=_element_offset(values[name]), span=span)
+                elif access.access_kind != kind:
+                    raise ValueError(f'{node.op}: memory access direction disagrees with src/dst')
+                unit = spec.memory_address_unit_bytes if spec else None
+                if unit is not None and access.address_unit_bytes is None:
+                    if isinstance(access.offset, bool) or not isinstance(access.offset, (int, str)):
+                        raise ValueError(f'{node.op}: memory offset must be an integer or affine expression')
+                    if access.span is not None and (isinstance(access.span, bool) or not isinstance(access.span, int)):
+                        raise ValueError(f'{node.op}: memory span must be an integer')
+                    element_bytes = dtype_element_bytes(values[name].dtype)
+                    if element_bytes is None or element_bytes % unit:
+                        raise ValueError(f'{node.op}: supply an explicit address_unit_bytes for this memory view')
+                    scale = element_bytes // unit
+                    offset = access.offset
+                    if scale != 1:
+                        offset = offset * scale if isinstance(offset, int) else f'({offset}) * {scale}'
+                    # A supplied span uses element units; Catalog defaults
+                    # already use the instruction's declared address units.
+                    access = replace(access, offset=offset, address_unit_bytes=unit,
+                                     span=explicit_span * scale if explicit_span is not None else span)
+                if span is not None and access.span is None:
+                    access = replace(access, span=span)
+                accesses.append(access)
+        if supplied:
+            raise ValueError(f'{node.op}: memory access metadata must reference UB operands of this instruction')
+        return AdapterInstruction(name=opcode, src=src, dst=list(node.dst),
+                                  form=form, memory_accesses=tuple(accesses),
+                                  attributes=attributes)
+
+    adapter = AdapterProgram(
+        context=[convert(node) for node in program.body],
+        values={name: AdapterValue(name, v.storage.value, v.dtype, v.shape) for name, v in values.items()},
+        params=dict(program.params or {}), default_dtype=program.dtype,
+        uarch=dict(program.uarch or {}),
+        # Old program descriptions assumed a register entry for loop outputs.
+        # Retain that v1 behavior only for the timing-only compatibility path.
+        live_in_values=(() if predicate_model else tuple(
+            name for name, v in values.items() if v.storage is StorageKind.REGISTER and v.dtype != 'bool'
+        )),
+    )
+    canonical = _ProgramValueVersioning(values).run(adapter, source={'adapter': 'tilesim_program', **(program.config or {})})
+
+    return InputAPI.from_canonical(canonical)

@@ -95,7 +95,7 @@ extern "C" __global__ __aicore__ void foo_add(
     pipe_barrier(PIPE_ALL);
 }}
 """
-    dsl_path = case_dir / f"{name}.dsl"
+    dsl_path = case_dir / f"{name}.cce"
     dsl_path.write_text(dsl, encoding="utf-8")
     return dsl_path
 

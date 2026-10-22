@@ -16,15 +16,15 @@ ENABLE_VREG_LIVE_RANGE_NORMALIZATION = False
 EXTRA_MODEL_ARGS = []
 
 CASES = [
-    {"id": "GeLU_poly", "json": "unroll_test/json/GeLU_poly.json", "dsl": "unroll_test/dsl/GeLU_poly.dsl", "verify": "gelu_poly", "inputs": 2, "outputs": 1},
-    {"id": "GeLU", "json": "unroll_test/json/GeLU.json", "dsl": "unroll_test/dsl/GeLU.dsl", "verify": "gelu", "inputs": 2, "outputs": 1},
-    {"id": "online_update", "json": "unroll_test/json/online_update.json", "dsl": "unroll_test/dsl/online_update.dsl", "verify": "online_update", "inputs": 4, "outputs": 4},
-    {"id": "SiLU", "json": "unroll_test/json/SiLU.json", "dsl": "unroll_test/dsl/SiLU.dsl", "verify": "silu", "inputs": 2, "outputs": 1},
-    {"id": "SwiGLU", "json": "unroll_test/json/SwiGLU.json", "dsl": "unroll_test/dsl/SwiGLU.dsl", "verify": "swiglu", "inputs": 2, "outputs": 1},
-    {"id": "VADDS_chain64", "json": "unroll_test/json/VADDS_chain64.json", "dsl": "unroll_test/dsl/VADDS_chain64.dsl", "verify": "vadds64", "inputs": 2, "outputs": 1},
-    {"id": "VEXP_chain8", "json": "unroll_test/json/VEXP_chain8.json", "dsl": "unroll_test/dsl/VEXP_chain8.dsl", "verify": "vexp8", "inputs": 2, "outputs": 1},
-    {"id": "mixed_long_short", "json": "unroll_test/json/mixed_long_short.json", "dsl": "unroll_test/dsl/mixed_long_short.dsl", "verify": "mixed", "inputs": 2, "outputs": 1},
-    {"id": "binary_ops_dominant", "json": "unroll_test/json/binary_ops_dominant.json", "dsl": "unroll_test/dsl/binary_ops_dominant.dsl", "verify": "binary", "inputs": 2, "outputs": 1},
+    {"id": "GeLU_poly", "json": "unroll_test/json/GeLU_poly.json", "dsl": "unroll_test/dsl/GeLU_poly.cce", "verify": "gelu_poly", "inputs": 2, "outputs": 1},
+    {"id": "GeLU", "json": "unroll_test/json/GeLU.json", "dsl": "unroll_test/dsl/GeLU.cce", "verify": "gelu", "inputs": 2, "outputs": 1},
+    {"id": "online_update", "json": "unroll_test/json/online_update.json", "dsl": "unroll_test/dsl/online_update.cce", "verify": "online_update", "inputs": 4, "outputs": 4},
+    {"id": "SiLU", "json": "unroll_test/json/SiLU.json", "dsl": "unroll_test/dsl/SiLU.cce", "verify": "silu", "inputs": 2, "outputs": 1},
+    {"id": "SwiGLU", "json": "unroll_test/json/SwiGLU.json", "dsl": "unroll_test/dsl/SwiGLU.cce", "verify": "swiglu", "inputs": 2, "outputs": 1},
+    {"id": "VADDS_chain64", "json": "unroll_test/json/VADDS_chain64.json", "dsl": "unroll_test/dsl/VADDS_chain64.cce", "verify": "vadds64", "inputs": 2, "outputs": 1},
+    {"id": "VEXP_chain8", "json": "unroll_test/json/VEXP_chain8.json", "dsl": "unroll_test/dsl/VEXP_chain8.cce", "verify": "vexp8", "inputs": 2, "outputs": 1},
+    {"id": "mixed_long_short", "json": "unroll_test/json/mixed_long_short.json", "dsl": "unroll_test/dsl/mixed_long_short.cce", "verify": "mixed", "inputs": 2, "outputs": 1},
+    {"id": "binary_ops_dominant", "json": "unroll_test/json/binary_ops_dominant.json", "dsl": "unroll_test/dsl/binary_ops_dominant.cce", "verify": "binary", "inputs": 2, "outputs": 1},
 ]
 
 ABS_TOL = 1e-3
@@ -304,7 +304,7 @@ def run_one(case, I, U, out_root: Path, run_cce=True):
     max_rel = None
 
     if run_cce:
-        gen_dsl = case_dir / f'{tag}.dsl'
+        gen_dsl = case_dir / f'{tag}.cce'
         patch_dsl(ROOT / case['dsl'], gen_dsl, I, U)
         kname = kernel_name_from_dsl(gen_dsl)
         stem = tag

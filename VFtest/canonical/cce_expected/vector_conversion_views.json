@@ -1,0 +1,473 @@
+{
+  "schema_version": 2,
+  "context": [
+    {
+      "kind": "instruction",
+      "instruction_id": "instruction.0",
+      "opcode": "PSET_B8",
+      "instruction_class": "compute",
+      "form": "b8",
+      "inputs": [],
+      "outputs": [
+        {
+          "value_id": "p.def0",
+          "role": "destination",
+          "dtype": "bool",
+          "memory_access": null
+        }
+      ],
+      "attributes": {},
+      "source_location": {
+        "source": "vector_conversion_views",
+        "line": 6,
+        "column": null,
+        "path": "<cce>"
+      }
+    },
+    {
+      "kind": "instruction",
+      "instruction_id": "instruction.1",
+      "opcode": "VLDS",
+      "instruction_class": "load",
+      "form": "fp32",
+      "inputs": [
+        {
+          "value_id": "input.def1",
+          "role": "memory",
+          "dtype": "fp32",
+          "memory_access": {
+            "base_object_id": "ub.input",
+            "offset": {
+              "constant": 0,
+              "terms": []
+            },
+            "access_kind": "read",
+            "span": null,
+            "address_unit_bytes": null,
+            "alias_group": null,
+            "address_state_id": "vector_conversion_views:pointer:0:input",
+            "update_mode": "none",
+            "post_update_delta_bytes": null
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "value_id": "f.def2",
+          "role": "destination",
+          "dtype": "fp32",
+          "memory_access": null
+        }
+      ],
+      "attributes": {},
+      "source_location": {
+        "source": "vector_conversion_views",
+        "line": 7,
+        "column": null,
+        "path": "<cce>"
+      }
+    },
+    {
+      "kind": "instruction",
+      "instruction_id": "instruction.2",
+      "opcode": "VCVT_F32_TO_S32",
+      "instruction_class": "compute",
+      "form": "f32_to_s32",
+      "inputs": [
+        {
+          "value_id": "f.def2",
+          "role": "source",
+          "dtype": "fp32",
+          "memory_access": null
+        },
+        {
+          "value_id": "p.def0",
+          "role": "predicate",
+          "dtype": "bool",
+          "memory_access": null
+        }
+      ],
+      "outputs": [
+        {
+          "value_id": "i.def3",
+          "role": "destination",
+          "dtype": "int32",
+          "memory_access": null
+        }
+      ],
+      "attributes": {},
+      "source_location": {
+        "source": "vector_conversion_views",
+        "line": 8,
+        "column": null,
+        "path": "<cce>"
+      }
+    },
+    {
+      "kind": "instruction",
+      "instruction_id": "instruction.3",
+      "opcode": "VCVT_F32_TO_S32",
+      "instruction_class": "compute",
+      "form": "f32_to_s32",
+      "inputs": [
+        {
+          "value_id": "i.def3",
+          "role": "source",
+          "dtype": "int32",
+          "memory_access": null
+        },
+        {
+          "value_id": "p.def0",
+          "role": "predicate",
+          "dtype": "bool",
+          "memory_access": null
+        }
+      ],
+      "outputs": [
+        {
+          "value_id": "j.def4",
+          "role": "destination",
+          "dtype": "int32",
+          "memory_access": null
+        }
+      ],
+      "attributes": {},
+      "source_location": {
+        "source": "vector_conversion_views",
+        "line": 9,
+        "column": null,
+        "path": "<cce>"
+      }
+    },
+    {
+      "kind": "instruction",
+      "instruction_id": "instruction.4",
+      "opcode": "VCVT_F32_TO_S64",
+      "instruction_class": "compute",
+      "form": "f32_to_s64",
+      "inputs": [
+        {
+          "value_id": "f.def2",
+          "role": "source",
+          "dtype": "fp32",
+          "memory_access": null
+        },
+        {
+          "value_id": "p.def0",
+          "role": "predicate",
+          "dtype": "bool",
+          "memory_access": null
+        }
+      ],
+      "outputs": [
+        {
+          "value_id": "wide.def5",
+          "role": "destination",
+          "dtype": "int64",
+          "memory_access": null
+        }
+      ],
+      "attributes": {},
+      "source_location": {
+        "source": "vector_conversion_views",
+        "line": 10,
+        "column": null,
+        "path": "<cce>"
+      }
+    },
+    {
+      "kind": "instruction",
+      "instruction_id": "instruction.5",
+      "opcode": "VCVT_S32_TO_S64",
+      "instruction_class": "compute",
+      "form": "s32_to_s64",
+      "inputs": [
+        {
+          "value_id": "j.def4",
+          "role": "source",
+          "dtype": "int32",
+          "memory_access": null
+        },
+        {
+          "value_id": "p.def0",
+          "role": "predicate",
+          "dtype": "bool",
+          "memory_access": null
+        }
+      ],
+      "outputs": [
+        {
+          "value_id": "wide_integer.def6",
+          "role": "destination",
+          "dtype": "int64",
+          "memory_access": null
+        }
+      ],
+      "attributes": {},
+      "source_location": {
+        "source": "vector_conversion_views",
+        "line": 11,
+        "column": null,
+        "path": "<cce>"
+      }
+    },
+    {
+      "kind": "instruction",
+      "instruction_id": "instruction.6",
+      "opcode": "VCVT_S64_TO_F32",
+      "instruction_class": "compute",
+      "form": "s64_to_f32",
+      "inputs": [
+        {
+          "value_id": "wide_integer.def6",
+          "role": "source",
+          "dtype": "int64",
+          "memory_access": null
+        },
+        {
+          "value_id": "p.def0",
+          "role": "predicate",
+          "dtype": "bool",
+          "memory_access": null
+        }
+      ],
+      "outputs": [
+        {
+          "value_id": "out.def7",
+          "role": "destination",
+          "dtype": "fp32",
+          "memory_access": null
+        }
+      ],
+      "attributes": {},
+      "source_location": {
+        "source": "vector_conversion_views",
+        "line": 12,
+        "column": null,
+        "path": "<cce>"
+      }
+    },
+    {
+      "kind": "instruction",
+      "instruction_id": "instruction.7",
+      "opcode": "VCVT_S64_TO_S32",
+      "instruction_class": "compute",
+      "form": "s64_to_s32",
+      "inputs": [
+        {
+          "value_id": "wide.def5",
+          "role": "source",
+          "dtype": "int64",
+          "memory_access": null
+        },
+        {
+          "value_id": "p.def0",
+          "role": "predicate",
+          "dtype": "bool",
+          "memory_access": null
+        }
+      ],
+      "outputs": [
+        {
+          "value_id": "narrow.def8",
+          "role": "destination",
+          "dtype": "int32",
+          "memory_access": null
+        }
+      ],
+      "attributes": {},
+      "source_location": {
+        "source": "vector_conversion_views",
+        "line": 13,
+        "column": null,
+        "path": "<cce>"
+      }
+    },
+    {
+      "kind": "instruction",
+      "instruction_id": "instruction.8",
+      "opcode": "VPACK",
+      "instruction_class": "compute",
+      "form": "u32_to_u16",
+      "inputs": [
+        {
+          "value_id": "j.def4",
+          "role": "source",
+          "dtype": "int32",
+          "memory_access": null
+        }
+      ],
+      "outputs": [
+        {
+          "value_id": "j.def9",
+          "role": "destination",
+          "dtype": "int32",
+          "memory_access": null
+        }
+      ],
+      "attributes": {},
+      "source_location": {
+        "source": "vector_conversion_views",
+        "line": 14,
+        "column": null,
+        "path": "<cce>"
+      }
+    },
+    {
+      "kind": "instruction",
+      "instruction_id": "instruction.9",
+      "opcode": "VUNPACK",
+      "instruction_class": "compute",
+      "form": "u16_to_u32",
+      "inputs": [
+        {
+          "value_id": "j.def9",
+          "role": "source",
+          "dtype": "int32",
+          "memory_access": null
+        }
+      ],
+      "outputs": [
+        {
+          "value_id": "j.def10",
+          "role": "destination",
+          "dtype": "int32",
+          "memory_access": null
+        }
+      ],
+      "attributes": {},
+      "source_location": {
+        "source": "vector_conversion_views",
+        "line": 15,
+        "column": null,
+        "path": "<cce>"
+      }
+    }
+  ],
+  "values": {
+    "p.def0": {
+      "definition_id": "p.def0",
+      "logical_id": "p",
+      "storage": "PredicateRegister",
+      "dtype": "bool",
+      "shape": [],
+      "producer_node_id": "instruction.0",
+      "storage_object_id": null,
+      "source_location": null
+    },
+    "input.def1": {
+      "definition_id": "input.def1",
+      "logical_id": "input",
+      "storage": "UB",
+      "dtype": "fp32",
+      "shape": [],
+      "producer_node_id": null,
+      "storage_object_id": "ub.input",
+      "source_location": null
+    },
+    "f.def2": {
+      "definition_id": "f.def2",
+      "logical_id": "f",
+      "storage": "Register",
+      "dtype": "fp32",
+      "shape": [],
+      "producer_node_id": "instruction.1",
+      "storage_object_id": null,
+      "source_location": null
+    },
+    "i.def3": {
+      "definition_id": "i.def3",
+      "logical_id": "i",
+      "storage": "Register",
+      "dtype": "int32",
+      "shape": [],
+      "producer_node_id": "instruction.2",
+      "storage_object_id": null,
+      "source_location": null
+    },
+    "j.def4": {
+      "definition_id": "j.def4",
+      "logical_id": "j",
+      "storage": "Register",
+      "dtype": "int32",
+      "shape": [],
+      "producer_node_id": "instruction.3",
+      "storage_object_id": null,
+      "source_location": null
+    },
+    "wide.def5": {
+      "definition_id": "wide.def5",
+      "logical_id": "wide",
+      "storage": "Register",
+      "dtype": "int64",
+      "shape": [],
+      "producer_node_id": "instruction.4",
+      "storage_object_id": null,
+      "source_location": null
+    },
+    "wide_integer.def6": {
+      "definition_id": "wide_integer.def6",
+      "logical_id": "wide_integer",
+      "storage": "Register",
+      "dtype": "int64",
+      "shape": [],
+      "producer_node_id": "instruction.5",
+      "storage_object_id": null,
+      "source_location": null
+    },
+    "out.def7": {
+      "definition_id": "out.def7",
+      "logical_id": "out",
+      "storage": "Register",
+      "dtype": "fp32",
+      "shape": [],
+      "producer_node_id": "instruction.6",
+      "storage_object_id": null,
+      "source_location": null
+    },
+    "narrow.def8": {
+      "definition_id": "narrow.def8",
+      "logical_id": "narrow",
+      "storage": "Register",
+      "dtype": "int32",
+      "shape": [],
+      "producer_node_id": "instruction.7",
+      "storage_object_id": null,
+      "source_location": null
+    },
+    "j.def9": {
+      "definition_id": "j.def9",
+      "logical_id": "j",
+      "storage": "Register",
+      "dtype": "int32",
+      "shape": [],
+      "producer_node_id": "instruction.8",
+      "storage_object_id": null,
+      "source_location": null
+    },
+    "j.def10": {
+      "definition_id": "j.def10",
+      "logical_id": "j",
+      "storage": "Register",
+      "dtype": "int32",
+      "shape": [],
+      "producer_node_id": "instruction.9",
+      "storage_object_id": null,
+      "source_location": null
+    }
+  },
+  "storage_objects": {
+    "ub.input": {
+      "object_id": "ub.input",
+      "storage": "UB",
+      "shape": [],
+      "source_location": null
+    }
+  },
+  "params": {},
+  "uarch": {},
+  "source": {
+    "adapter": "cce",
+    "path": "<cce>"
+  }
+}

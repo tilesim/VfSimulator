@@ -1,0 +1,671 @@
+{
+  "target": {
+    "cann": "/home/lenovo/Ascend/ascend-toolkit/cann-9.0.0-beta.1",
+    "soc": "Ascend950PR_9599",
+    "target": "dav-c310-vec",
+    "npu_arch": 3101,
+    "preprocess_command": [
+      "/home/lenovo/Ascend/ascend-toolkit/cann-9.0.0-beta.1/bin/ccec",
+      "--cce-aicore-arch=dav-c310-vec",
+      "--cce-aicore-only",
+      "-x",
+      "cce",
+      "-E",
+      "/dev/null"
+    ],
+    "header_sha256": {
+      "__clang_cce_vector_intrinsics.h": "0baf7dd2e5ece8a987dc8999c9273d95fa938059ddad286ec592594912bbecef",
+      "npu_arch_3101/__clang_cce_vector_intrinsics.h": "d19d2a0bf6eba2f4e5fcebf36d3367d0e297ca7c104131ff4d68f438c836a021"
+    }
+  },
+  "current_summary": {
+    "cann_api_names": 160,
+    "cann_overloads": 1426,
+    "cann_api_forms": 1091,
+    "catalog_name_matches": 152,
+    "adapter_validated_overloads": 1422,
+    "target_rejected_apis": 7,
+    "catalog_form_status": {
+      "full_forms": 153,
+      "target_rejected": 7
+    },
+    "catalog_opcodes": 227,
+    "catalog_physical_forms": 1117,
+    "latency_exact_forms": 981,
+    "latency_missing_forms": 136,
+    "typed_physical_forms": 1011,
+    "typed_latency_missing_forms": 41,
+    "typed_compute_self_ii_missing_forms": 11,
+    "compute_forms": 713,
+    "self_ii_exact_forms": 626,
+    "forwarding_config_entries": 1699,
+    "ii_config_entries": 2506
+  },
+  "config_sha256": {
+    "instruction_catalog.json": "978f6627740b911f5b4bab1fe437019539ea26260f06006bf64da582393d0be9",
+    "isa.json": "5588e6d9dff05a204e0cc6b0b59b49f5cfd795fec42ccb100a92bae5502a14eb",
+    "forwarding.json": "a699c34605d91e2c77fffef5de268542a96d818015d61bda2583ff67ca5c53dc",
+    "InitiationInterval.json": "174ba61536b3f4b9c1ba4f2a27558e1325d7290ef1a314d9fb44c2d9ce1cefea"
+  },
+  "semantic_coverage": {
+    "api_names": 160,
+    "adapted_api_names": 153,
+    "signature_checks": 1426,
+    "adapter_passes": 1422,
+    "target_rejected_api_names": [
+      "pslide_b16",
+      "pslide_b32",
+      "pslide_b8",
+      "vnop",
+      "vsadd",
+      "vsadds",
+      "vssub"
+    ],
+    "target_rejected_macros": [
+      "vnopxn"
+    ],
+    "scope": "representative valid configuration per signature; numerical mode/dtype coverage is separate"
+  },
+  "software_lowering": {
+    "recipes": 224,
+    "steps": 2505,
+    "numerically_verified": 224,
+    "python_cpp_canonical_and_cycle_passes": 224,
+    "reference": "skills/vfsim-instruction-benchmark/references/evidence/a5-software-lowering.json",
+    "parity": "results/a5_instruction_completion_20261020/software-parity/summary.json"
+  },
+  "timing_gaps": {
+    "latency": [
+      "VCVT_BF16_TO_F8E4M3.bf16_to_f8e4m3",
+      "VCVT_BF16_TO_F8E5M2.bf16_to_f8e5m2",
+      "VCVT_F16_TO_F8E4M3.f16_to_f8e4m3",
+      "VCVT_F16_TO_F8E5M2.f16_to_f8e5m2",
+      "PSLIDE.b16",
+      "PSLIDE.b32",
+      "PSLIDE.b8",
+      "VSELRV2.bf16",
+      "VSELRV2.fp16",
+      "VSELRV2.int16",
+      "VSELRV2.uint16",
+      "VSTUR.bf16",
+      "VSTUR.f4e1m2x2",
+      "VSTUR.f4e2m1x2",
+      "VSTUR.f8e4m3",
+      "VSTUR.f8e5m2",
+      "VSTUR.f8e8m0",
+      "VSTUR.fp16",
+      "VSTUR.fp32",
+      "VSTUR.int16",
+      "VSTUR.int32",
+      "VSTUR.int64",
+      "VSTUR.int8",
+      "VSTUR.uint16",
+      "VSTUR.uint32",
+      "VSTUR.uint8",
+      "VSTAR.bf16",
+      "VSTAR.f4e1m2x2",
+      "VSTAR.f4e2m1x2",
+      "VSTAR.f8e4m3",
+      "VSTAR.f8e5m2",
+      "VSTAR.f8e8m0",
+      "VSTAR.fp16",
+      "VSTAR.fp32",
+      "VSTAR.int16",
+      "VSTAR.int32",
+      "VSTAR.int64",
+      "VSTAR.int8",
+      "VSTAR.uint16",
+      "VSTAR.uint32",
+      "VSTAR.uint8"
+    ],
+    "self_ii": [
+      "VCVT_BF16_TO_F8E4M3.bf16_to_f8e4m3",
+      "VCVT_BF16_TO_F8E5M2.bf16_to_f8e5m2",
+      "VCVT_F16_TO_F8E4M3.f16_to_f8e4m3",
+      "VCVT_F16_TO_F8E5M2.f16_to_f8e5m2",
+      "PSLIDE.b16",
+      "PSLIDE.b32",
+      "PSLIDE.b8",
+      "VSELRV2.bf16",
+      "VSELRV2.fp16",
+      "VSELRV2.int16",
+      "VSELRV2.uint16"
+    ],
+    "unconfirmed_carry_in_forwarding": [
+      "VADDCS.int32",
+      "VADDCS.uint32",
+      "VSUBCS.int32",
+      "VSUBCS.uint32"
+    ],
+    "dependency_only_membar": [
+      "VV_ALL",
+      "VST_VST"
+    ],
+    "cross_opcode_pairs": "not exhaustively measured; exact, inherited and fallback rules remain distinguishable"
+  },
+  "calibration_batches": [
+    {
+      "path": "skills/vfsim-instruction-benchmark/references/evidence/a5-address-distributions.json",
+      "cases": 34,
+      "passed": 34,
+      "latency_profiles": 0,
+      "self_ii_profiles": 0,
+      "self_forwarding_profiles": 0,
+      "changes": 34
+    },
+    {
+      "path": "skills/vfsim-instruction-benchmark/references/evidence/a5-address-memory.json",
+      "cases": 157,
+      "passed": 148,
+      "latency_profiles": 148,
+      "self_ii_profiles": 0,
+      "self_forwarding_profiles": 0,
+      "changes": 381
+    },
+    {
+      "path": "skills/vfsim-instruction-benchmark/references/evidence/a5-align-init.json",
+      "cases": 5,
+      "passed": 5,
+      "latency_profiles": 10,
+      "self_ii_profiles": 0,
+      "self_forwarding_profiles": 0,
+      "changes": 0
+    },
+    {
+      "path": "skills/vfsim-instruction-benchmark/references/evidence/a5-bf16-scalar-merge-ii.json",
+      "cases": 1,
+      "passed": 1,
+      "latency_profiles": 1,
+      "self_ii_profiles": 1,
+      "self_forwarding_profiles": 0,
+      "changes": 1
+    },
+    {
+      "path": "skills/vfsim-instruction-benchmark/references/evidence/a5-block-store.json",
+      "cases": 24,
+      "passed": 24,
+      "latency_profiles": 12,
+      "self_ii_profiles": 0,
+      "self_forwarding_profiles": 0,
+      "changes": 60
+    },
+    {
+      "path": "skills/vfsim-instruction-benchmark/references/evidence/a5-broadcast-final.json",
+      "cases": 6,
+      "passed": 6,
+      "latency_profiles": 6,
+      "self_ii_profiles": 5,
+      "self_forwarding_profiles": 1,
+      "changes": 25
+    },
+    {
+      "path": "skills/vfsim-instruction-benchmark/references/evidence/a5-broadcast-histogram-move.json",
+      "cases": 107,
+      "passed": 94,
+      "latency_profiles": 65,
+      "self_ii_profiles": 65,
+      "self_forwarding_profiles": 64,
+      "changes": 357
+    },
+    {
+      "path": "skills/vfsim-instruction-benchmark/references/evidence/a5-broadcast-move-completion.json",
+      "cases": 9,
+      "passed": 9,
+      "latency_profiles": 7,
+      "self_ii_profiles": 7,
+      "self_forwarding_profiles": 5,
+      "changes": 24
+    },
+    {
+      "path": "skills/vfsim-instruction-benchmark/references/evidence/a5-broadcast-scalar.json",
+      "cases": 42,
+      "passed": 42,
+      "latency_profiles": 28,
+      "self_ii_profiles": 28,
+      "self_forwarding_profiles": 11,
+      "changes": 134
+    },
+    {
+      "path": "skills/vfsim-instruction-benchmark/references/evidence/a5-conversion-extended.json",
+      "cases": 81,
+      "passed": 81,
+      "latency_profiles": 38,
+      "self_ii_profiles": 19,
+      "self_forwarding_profiles": 38,
+      "changes": 102
+    },
+    {
+      "path": "skills/vfsim-instruction-benchmark/references/evidence/a5-e8m0-address-align-load.json",
+      "cases": 2,
+      "passed": 2,
+      "latency_profiles": 2,
+      "self_ii_profiles": 0,
+      "self_forwarding_profiles": 0,
+      "changes": 3
+    },
+    {
+      "path": "skills/vfsim-instruction-benchmark/references/evidence/a5-e8m0-align-load.json",
+      "cases": 2,
+      "passed": 2,
+      "latency_profiles": 3,
+      "self_ii_profiles": 0,
+      "self_forwarding_profiles": 0,
+      "changes": 3
+    },
+    {
+      "path": "skills/vfsim-instruction-benchmark/references/evidence/a5-e8m0-load.json",
+      "cases": 1,
+      "passed": 1,
+      "latency_profiles": 1,
+      "self_ii_profiles": 0,
+      "self_forwarding_profiles": 0,
+      "changes": 3
+    },
+    {
+      "path": "skills/vfsim-instruction-benchmark/references/evidence/a5-e8m0-register-load.json",
+      "cases": 1,
+      "passed": 1,
+      "latency_profiles": 1,
+      "self_ii_profiles": 0,
+      "self_forwarding_profiles": 0,
+      "changes": 3
+    },
+    {
+      "path": "skills/vfsim-instruction-benchmark/references/evidence/a5-expdif-forwarding.json",
+      "cases": 6,
+      "passed": 6,
+      "latency_profiles": 2,
+      "self_ii_profiles": 1,
+      "self_forwarding_profiles": 0,
+      "changes": 0
+    },
+    {
+      "path": "skills/vfsim-instruction-benchmark/references/evidence/a5-expdif-self-forwarding.json",
+      "cases": 6,
+      "passed": 6,
+      "latency_profiles": 2,
+      "self_ii_profiles": 1,
+      "self_forwarding_profiles": 2,
+      "changes": 2
+    },
+    {
+      "path": "skills/vfsim-instruction-benchmark/references/evidence/a5-expdif.json",
+      "cases": 6,
+      "passed": 6,
+      "latency_profiles": 2,
+      "self_ii_profiles": 1,
+      "self_forwarding_profiles": 0,
+      "changes": 5
+    },
+    {
+      "path": "skills/vfsim-instruction-benchmark/references/evidence/a5-gatherb-unmasked.json",
+      "cases": 15,
+      "passed": 15,
+      "latency_profiles": 15,
+      "self_ii_profiles": 0,
+      "self_forwarding_profiles": 0,
+      "changes": 75
+    },
+    {
+      "path": "skills/vfsim-instruction-benchmark/references/evidence/a5-immediate.json",
+      "cases": 5,
+      "passed": 5,
+      "latency_profiles": 6,
+      "self_ii_profiles": 6,
+      "self_forwarding_profiles": 2,
+      "changes": 32
+    },
+    {
+      "path": "skills/vfsim-instruction-benchmark/references/evidence/a5-memory-distributions.json",
+      "cases": 40,
+      "passed": 34,
+      "latency_profiles": 0,
+      "self_ii_profiles": 0,
+      "self_forwarding_profiles": 0,
+      "changes": 34
+    },
+    {
+      "path": "skills/vfsim-instruction-benchmark/references/evidence/a5-memory-extended.json",
+      "cases": 174,
+      "passed": 171,
+      "latency_profiles": 161,
+      "self_ii_profiles": 0,
+      "self_forwarding_profiles": 0,
+      "changes": 544
+    },
+    {
+      "path": "skills/vfsim-instruction-benchmark/references/evidence/a5-memory-special-types.json",
+      "cases": 5,
+      "passed": 5,
+      "latency_profiles": 5,
+      "self_ii_profiles": 0,
+      "self_forwarding_profiles": 0,
+      "changes": 9
+    },
+    {
+      "path": "skills/vfsim-instruction-benchmark/references/evidence/a5-memory-wrappers.json",
+      "cases": 110,
+      "passed": 83,
+      "latency_profiles": 15,
+      "self_ii_profiles": 0,
+      "self_forwarding_profiles": 0,
+      "changes": 18
+    },
+    {
+      "path": "skills/vfsim-instruction-benchmark/references/evidence/a5-movvp.json",
+      "cases": 4,
+      "passed": 4,
+      "latency_profiles": 2,
+      "self_ii_profiles": 2,
+      "self_forwarding_profiles": 0,
+      "changes": 4
+    },
+    {
+      "path": "skills/vfsim-instruction-benchmark/references/evidence/a5-pair-indexed-memory.json",
+      "cases": 4,
+      "passed": 4,
+      "latency_profiles": 4,
+      "self_ii_profiles": 0,
+      "self_forwarding_profiles": 0,
+      "changes": 20
+    },
+    {
+      "path": "skills/vfsim-instruction-benchmark/references/evidence/a5-predicate-extended.json",
+      "cases": 40,
+      "passed": 40,
+      "latency_profiles": 13,
+      "self_ii_profiles": 13,
+      "self_forwarding_profiles": 13,
+      "changes": 53
+    },
+    {
+      "path": "skills/vfsim-instruction-benchmark/references/evidence/a5-predicate-immediate.json",
+      "cases": 5,
+      "passed": 5,
+      "latency_profiles": 0,
+      "self_ii_profiles": 0,
+      "self_forwarding_profiles": 0,
+      "changes": 0
+    },
+    {
+      "path": "skills/vfsim-instruction-benchmark/references/evidence/a5-predicate-memory.json",
+      "cases": 15,
+      "passed": 15,
+      "latency_profiles": 0,
+      "self_ii_profiles": 0,
+      "self_forwarding_profiles": 0,
+      "changes": 15
+    },
+    {
+      "path": "skills/vfsim-instruction-benchmark/references/evidence/a5-predicate-post.json",
+      "cases": 10,
+      "passed": 10,
+      "latency_profiles": 0,
+      "self_ii_profiles": 0,
+      "self_forwarding_profiles": 0,
+      "changes": 0
+    },
+    {
+      "path": "skills/vfsim-instruction-benchmark/references/evidence/a5-predicate-ranges.json",
+      "cases": 15,
+      "passed": 12,
+      "latency_profiles": 9,
+      "self_ii_profiles": 9,
+      "self_forwarding_profiles": 0,
+      "changes": 29
+    },
+    {
+      "path": "skills/vfsim-instruction-benchmark/references/evidence/a5-register-rearrangement.json",
+      "cases": 77,
+      "passed": 77,
+      "latency_profiles": 42,
+      "self_ii_profiles": 42,
+      "self_forwarding_profiles": 36,
+      "changes": 246
+    },
+    {
+      "path": "skills/vfsim-instruction-benchmark/references/evidence/a5-software-lowering.json",
+      "cases": 253,
+      "passed": 248,
+      "latency_profiles": 0,
+      "self_ii_profiles": 0,
+      "self_forwarding_profiles": 0,
+      "changes": 0
+    },
+    {
+      "path": "skills/vfsim-instruction-benchmark/references/evidence/a5-vector-compute.json",
+      "cases": 536,
+      "passed": 535,
+      "latency_profiles": 308,
+      "self_ii_profiles": 295,
+      "self_forwarding_profiles": 295,
+      "changes": 1564
+    },
+    {
+      "path": "skills/vfsim-instruction-benchmark/references/evidence/a5-vector-conversion.json",
+      "cases": 158,
+      "passed": 143,
+      "latency_profiles": 45,
+      "self_ii_profiles": 48,
+      "self_forwarding_profiles": 46,
+      "changes": 268
+    },
+    {
+      "path": "skills/vfsim-instruction-benchmark/references/evidence/a5-vector-structural.json",
+      "cases": 268,
+      "passed": 268,
+      "latency_profiles": 84,
+      "self_ii_profiles": 84,
+      "self_forwarding_profiles": 80,
+      "changes": 438
+    },
+    {
+      "path": "skills/vfsim-instruction-benchmark/references/evidence/a5-common-instruction-pairs.json",
+      "cases": 478,
+      "passed": 478,
+      "latency_profiles": 0,
+      "self_ii_profiles": 0,
+      "self_forwarding_profiles": 0,
+      "cross_forwarding_pairs": 99,
+      "cross_ii_pairs": 70,
+      "changes": 59
+    }
+  ],
+  "validation": {
+    "python_tests": 416,
+    "cpp_ctest_cases": 8,
+    "recipe_alignment_cases": 224,
+    "native_smoke_cases": 22,
+    "smoke_cycle_changes": 0,
+    "common_instruction_pair_cases": 478,
+    "common_instruction_pair_parity_dtypes": 3
+  },
+  "artifacts": "results/a5_instruction_completion_20261020/manifest.json",
+  "vector_compute_batch": {
+    "api_names": 42,
+    "opcode_dtype_forms": 295,
+    "latency_forms": 308,
+    "self_forwarding_forms": 295,
+    "self_ii_forms": 295,
+    "validated_runs": 535,
+    "diagnostic_mask_cases": 1,
+    "apis": [
+      "vabs",
+      "vabsdif",
+      "vadd",
+      "vadds",
+      "vand",
+      "vaxpy",
+      "vcmp_eq",
+      "vcmp_ge",
+      "vcmp_gt",
+      "vcmp_le",
+      "vcmp_lt",
+      "vcmp_ne",
+      "vcmps_eq",
+      "vcmps_ge",
+      "vcmps_gt",
+      "vcmps_le",
+      "vcmps_lt",
+      "vcmps_ne",
+      "vdiv",
+      "vexp",
+      "vln",
+      "vlrelu",
+      "vmadd",
+      "vmax",
+      "vmaxs",
+      "vmin",
+      "vmins",
+      "vmul",
+      "vmula",
+      "vmuls",
+      "vneg",
+      "vnot",
+      "vor",
+      "vprelu",
+      "vrelu",
+      "vshl",
+      "vshls",
+      "vshr",
+      "vshrs",
+      "vsqrt",
+      "vsub",
+      "vxor"
+    ],
+    "evidence": "skills/vfsim-instruction-benchmark/references/evidence/a5-vector-compute.json"
+  },
+  "conversion_batch": {
+    "apis": [
+      "vcvt",
+      "vpack",
+      "vunpack"
+    ],
+    "opcode_forms": 45,
+    "conversion_forms": 37,
+    "pack_forms": 4,
+    "unpack_forms": 4,
+    "latency_forms": 45,
+    "self_ii_forms": 45,
+    "self_forwarding_forms": 45,
+    "validated_cases": 143,
+    "diagnostic_cases": 15,
+    "camodel_batches": 13,
+    "measured_self_paths": "Vd->Vn",
+    "evidence": "skills/vfsim-instruction-benchmark/references/evidence/a5-vector-conversion.json",
+    "inherited_pack_b32_pairs": 32,
+    "explicit_view_scope": "Conversion and pack/unpack form selection; underlying value identity and declared dtype are retained."
+  },
+  "common_instruction_pairs": {
+    "dtypes": [
+      "fp32",
+      "fp16",
+      "bf16"
+    ],
+    "mask": "full",
+    "compute_mode": "MODE_ZEROING",
+    "memory_mode": "NORM",
+    "forwarding_pairs": 99,
+    "ii_pairs": 70,
+    "new_forwarding_pairs": 33,
+    "new_ii_pairs": 26,
+    "all_cross_opcode_pairs": false,
+    "validated_cases": 478,
+    "forwarding_pairs_by_dtype": {
+      "fp16": 40,
+      "fp32": 40,
+      "bf16": 19
+    },
+    "ii_pairs_by_dtype": {
+      "fp16": 30,
+      "fp32": 30,
+      "bf16": 10
+    },
+    "evidence": "skills/vfsim-instruction-benchmark/references/evidence/a5-common-instruction-pairs.json",
+    "artifacts": "results/a5_common_pairs_20261020/manifest.json",
+    "scheduler_limit": "queued issue checks port-adjacent II; per-FU history candidate remains isolated for EXQ prediction and accuracy analysis"
+  },
+  "fp32_fu_contention": {
+    "cases": 52,
+    "passed": 52,
+    "independent_target_instructions": 936,
+    "self_ii": {
+      "VCMAX": 1,
+      "VADD": 1,
+      "VEXP": 4,
+      "VMUL": 1,
+      "VDIV": 4
+    },
+    "evidence": "skills/vfsim-instruction-benchmark/references/evidence/a5-fp32-fu-contention.json",
+    "scope": "FP32 independent streams and mixed sequences; resource groups are modeling recommendations; configurations unchanged"
+  },
+  "operator_pairs": {
+    "files": 74,
+    "semantic_programs": 56,
+    "rejected_files": 0,
+    "excluded_files": 69,
+    "compute_forms": 25,
+    "ii_pairs": 325,
+    "ii_missing": 0,
+    "forwarding_pairs": 103,
+    "forwarding_missing_exact": 29,
+    "forwarding_missing": 0,
+    "new_measured_ii": 162,
+    "new_measured_forwarding": 10,
+    "reference": "docs/instruction_coverage/a5/operator_pairs.json",
+    "evidence": "skills/vfsim-instruction-benchmark/references/evidence/a5-operator-pairs.json"
+  },
+  "vld_vst_uint16": {
+    "date": "2026-10-21",
+    "measured_forwarding_cycles": 8,
+    "numeric_cases": 8,
+    "raw_pairs": 32,
+    "qualified_samples": 4,
+    "reference": "skills/vfsim-instruction-benchmark/references/evidence/a5-vld-vst-uint16.json",
+    "python_cpp_cycle": 63,
+    "missing_forwarding_pair_warnings": 0
+  },
+  "membar_pairs": {
+    "report": "docs/instruction_coverage/a5/membar_pairs.md",
+    "evidence": "skills/vfsim-instruction-benchmark/references/evidence/a5-membar-pairs.json",
+    "target": {
+      "cann": "9.0.0-beta.1",
+      "soc": "Ascend950PR_9599",
+      "arch": "dav-c310-vec",
+      "npu_arch": 3101
+    },
+    "scope": {
+      "cce_files": 549,
+      "archived_canonical_files": 319,
+      "a5_versions": 153,
+      "a5_operator_groups": 32,
+      "static_a5_programs": 305,
+      "current_a5_programs": 48,
+      "forms": 55,
+      "compute_forms": 40,
+      "a5_ii_pairs": 992,
+      "a5_static_raw_pairs": 325
+    },
+    "parameter_additions": {
+      "ii_measured": 640,
+      "ii_inherited": 31,
+      "forwarding_measured": 169,
+      "forwarding_inherited": 35,
+      "isa_inherited": 1
+    },
+    "numerical_samples": {
+      "batches": 128,
+      "cases": 2379,
+      "passed": 2367,
+      "qualified_ii": 642,
+      "qualified_forwarding": 169
+    },
+    "runtime_a5_without_warnings": 48,
+    "static_legacy_isa_compatibility_diagnostics": 2,
+    "native_completed": 52,
+    "native_input_rejected": 7,
+    "native_cycle_mismatches": 0,
+    "fixed_regression_cases": 37,
+    "regression_mape_percent": 4.182025997430266
+  }
+}

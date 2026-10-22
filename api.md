@@ -1,155 +1,89 @@
-# VF Simulator API
+# Python 接口
 
-This document describes the current public input interface for VF Simulator.
+`api/input_api.py::InputAPI` 接收输入并输出 `CanonicalVfInfo`。
+`core/simulator.py::CoreVfCostModel` 使用该对象进行预测。
 
-The simulator supports two input paths:
-
-1. JSON trace input through `main.py --trace`.
-2. CCE/DSL input through `main.py --cce`, parsed from `__VEC_SCOPE__`.
-
-Both paths are lowered to the same internal trace format and run through the current mainline model:
-
-```text
-queue_level4 + vreg live-range normalization + start+4 release
-```
-
-## Command Line
-
-Run a JSON trace:
-
-```bash
-python main.py --trace VFtest/GeLU_poly.json --out_dir results/demo_json
-```
-
-Run a CCE/DSL file:
-
-```bash
-python main.py --cce cce_code/GeLU_poly.dsl --out_dir results/demo_cce
-```
-
-Select a named VF kernel when a CCE file has multiple `__VEC_SCOPE__` blocks:
-
-```bash
-python main.py --cce path/to/file.dsl --cce-kernel kernel_name --out_dir results/demo_kernel
-```
-
-The old `--ooo-model` selector is no longer part of the public mainline CLI. The default model is selected inside `main.py`.
-
-## JSON Trace Format
-
-Minimal example:
-
-```json
-{
-  "dtype": "fp32",
-  "params": {
-    "I": 96,
-    "U": 1
-  },
-  "program": [
-    {
-      "type": "loop",
-      "iters": "I",
-      "unroll": "U",
-      "body": [
-        { "type": "inst", "op": "VLD", "dst": ["V0"], "src": ["memA"] },
-        { "type": "inst", "op": "VADDS", "dst": ["V1"], "src": ["V0"] },
-        { "type": "inst", "op": "VST", "dst": ["memB"], "src": ["V1"] }
-      ]
-    }
-  ]
-}
-```
-
-Fields:
-
-- `dtype`: instruction data type, commonly `fp32` or `fp16`.
-- `params`: symbolic parameters referenced by `iters` and `unroll`.
-- `program`: top-level VF program list.
-- `type=loop`: loop block with `iters`, `unroll`, and `body`.
-- `type=inst`: instruction with `op`, `dst`, and `src`.
-
-Nested loops are supported. The analyzer infers top-level loop bounds and dispatch structure from the program tree.
-
-## CCE/DSL Input
-
-The CCE adapter parses vector code inside `__VEC_SCOPE__` and converts supported instructions into `VFInfo`, then into the simulator trace format.
-
-Example:
-
-```bash
-python main.py --cce cce_code/GeLU_poly.dsl --out_dir results/gelu_poly_cce
-```
-
-Programmatic use:
+## 文件输入
 
 ```python
-from api.cce_adapter import parse_cce_vf_info
-from api.simulator_costmodel import predict_vf_cycles
+from api.input_api import InputAPI
+from core.simulator import CoreVfCostModel
 
-vf_info = parse_cce_vf_info("cce_code/GeLU_poly.dsl")
-cycles = predict_vf_cycles(vf_info)
+vf_info = InputAPI.load_json("VFtest/canonical/fixtures/v1_valid_loop.json")
+result = CoreVfCostModel(out_dir=None).run_vf_info(vf_info)
+print(result["cycles_executed"], result["vf_end_cycle"])
+```
+
+CCE 输入使用 `InputAPI.load_cce(path, kernel_name=None, loop_params=None)`。
+`kernel_name` 选择 VF 函数，`loop_params` 提供循环次数等整数参数。
+JSON 输入支持 Canonical schema v1/v2。所有正式输入出口执行一次通用语义校验。
+
+## 程序化构造
+
+`InputAPI.new_builder()` 返回 `VfInfoBuilder`。构造时提供值定义、producer 和
+operand，`build()` 返回校验成功的程序。
+
+```python
+from api.input_api import InputAPI
+from api.common.schema import CanonicalOperand, InstructionClass, OperandRole, StorageKind
+from core.simulator import CoreVfCostModel
+
+builder = InputAPI.new_builder(source={"name": "vector_add"})
+for name, producer in (("lhs", None), ("rhs", None), ("sum", "inst.add")):
+    builder.register_value(
+        name, logical_id=name, storage=StorageKind.REGISTER,
+        dtype="fp32", producer_node_id=producer,
+    )
+builder.add_instruction(
+    "inst.add", opcode="VADD", instruction_class=InstructionClass.COMPUTE, form="fp32",
+    inputs=(CanonicalOperand("lhs", OperandRole.SOURCE, "fp32"),
+            CanonicalOperand("rhs", OperandRole.SOURCE, "fp32")),
+    outputs=(CanonicalOperand("sum", OperandRole.DESTINATION, "fp32"),),
+)
+vf_info = builder.build()
+cycles = CoreVfCostModel(out_dir=None).predict_vf_cycles(vf_info)
 print(cycles)
 ```
 
-Useful API files:
+Builder 的 `params` 保存整数参数，`uarch` 保存单次微架构标量覆盖，`source` 保存来源
+元数据。UB 输入通过 `register_storage_object()` 声明存储对象，访存 operand 引用对象
+并提供 `MemoryAccess`。循环通过 `loop()` 或 `add_loop()` 构造。
 
-- `api/vf_costmodel.py`: `VFInfo`, `InstInfo`, `MemInfo` data classes.
-- `api/cce_adapter.py`: CCE/DSL parser.
-- `api/vf_lowering.py`: lowers `VFInfo` to simulator trace.
-- `api/input_api.py`: shared CLI input loader.
-- `api/simulator_costmodel.py`: programmatic simulator wrapper.
+直接实例化 Canonical dataclass 的调用方使用 `InputAPI.from_canonical(raw_vf_info)`
+接收对象。value、producer、operand 和循环携带关系由调用方显式提供。
+修改对象内部 Mapping 后应重新通过该入口校验。
 
-## Memory And Register Operands
+## 模型参数与结果
 
-The newer API can represent operand location through `MemInfo.location`, with expected values:
+| 参数 | 用途 |
+| --- | --- |
+| `base_dir` | 配置与相对输出路径的根目录，默认仓库根目录 |
+| `out_dir` | 文件输出目录，None 表示关闭输出 |
+| `fallback_dtype` | 参数查询缺少形式信息时使用的默认 dtype，默认 fp32 |
+| `theoretical_limit_vloop_only` | 启用 VLOOP 理论场景 |
+| `theoretical_limit_direct_issue` | 启用直接发射理论场景 |
 
-- `register`
-- `UB`
+`predict_vf_cycles()` 返回 `vf_end_cycle` 整数；`run_vf_info()` 返回包含执行 cycle、
+VF 结束 cycle、静态布局指令数和输出路径的字典。字段详见
+[验证与精度](docs/validation.md)。
+指令的 form 和数据 dtype 由 Canonical 描述；微架构覆盖由 `vf_info.uarch` 提供，
+支持字段见 [配置参数](docs/configuration.md)。
 
-The current lowering path still keeps compatibility with historical JSON traces that use names such as `V0`, `V1`, `memA`, and `mem_inter_*`.
+## 校验与诊断
 
-Recommended naming for JSON traces:
+```python
+from api.input_api import InputAPI
+from api.common.schema import CanonicalVfInfo
 
-- vector registers: `V0`, `V1`, `V2`, ...
-- input/output UB memory: `memA`, `memB`, `memOut`, ...
-- intermediate cross-block memory: `mem_inter_*`
-
-## Explicit Memory Barriers
-
-CCE parsing can represent explicit memory barrier semantics when they are visible in the source. For older JSON traces, cross-block dependency is usually modeled with:
-
-```text
-VST mem_inter_* in one block
-VLD mem_inter_* in a later block
+raw_vf_info = CanonicalVfInfo(context=(), values={})
+validation = InputAPI.validate_canonical_vf_info(raw_vf_info)
+print(validation.ok, validation.errors)
+vf_info = InputAPI.from_canonical(raw_vf_info)
 ```
 
-With `mem_bar_mode = strong`, this creates the intended ordering between blocks.
+检查接口返回 `ValidationResult`，包含结构化错误、警告及定位信息。
+正式接收接口在语义错误时抛出 `VfInfoValidationError`，错误输入类型会触发 TypeError。
+Core 检查当前执行能力和运行期约束，能力错误通过 `CanonicalCoreCompatibilityError`
+等异常报告。
 
-## Theoretical-Limit Options
-
-Current public theoretical-limit flags:
-
-```bash
---theoretical-limit-vloop-only
---theoretical-limit-vloop-only-legacy-forwarding-direct-issue
-```
-
-The older generic `--theoretical-limit` flag is not the active interface.
-
-## Output
-
-The canonical model timing is printed as:
-
-```text
-VF end cycle (with drain) = N
-```
-
-Common output files:
-
-- `start_by_cycle.json`
-- `done_by_cycle.json`
-- `idu_to_ooo.json`
-- `vloop_trace.json`
-- `sim_history.json`
-
+Canonical 字段和转换阶段见 [输入 API](docs/input_api.md)。

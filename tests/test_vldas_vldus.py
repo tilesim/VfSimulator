@@ -5,10 +5,10 @@ import subprocess
 import tempfile
 import unittest
 
-from api.cce_adapter import parse_cce_canonical_vf_info
-from api.frontend import canonical_vf_info_to_dict
-from api.simulator_costmodel import CoreVfCostModel
-from core.param_db import ParamDB
+from api.cce.adapter import parse_cce_canonical_vf_info
+from api.json.serialization import (canonical_vf_info_to_dict)
+from core.simulator import CoreVfCostModel
+from core.params.database import ParamDB
 
 ROOT = Path(__file__).resolve().parents[1]
 RUNNER = os.environ.get("VFSIM_NATIVE_RUNNER")

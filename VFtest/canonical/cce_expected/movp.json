@@ -1,0 +1,356 @@
+{
+  "schema_version": 2,
+  "context": [
+    {
+      "kind": "instruction",
+      "instruction_id": "instruction.0",
+      "opcode": "MOVP_B16",
+      "instruction_class": "compute",
+      "form": "b16",
+      "inputs": [],
+      "outputs": [
+        {
+          "value_id": "p16.def0",
+          "role": "destination",
+          "dtype": "bool",
+          "memory_access": null
+        }
+      ],
+      "attributes": {},
+      "source_location": {
+        "source": "vf",
+        "line": 3,
+        "column": null,
+        "path": "<cce>"
+      }
+    },
+    {
+      "kind": "instruction",
+      "instruction_id": "instruction.1",
+      "opcode": "MOVP_B32",
+      "instruction_class": "compute",
+      "form": "b32",
+      "inputs": [],
+      "outputs": [
+        {
+          "value_id": "p32.def1",
+          "role": "destination",
+          "dtype": "bool",
+          "memory_access": null
+        }
+      ],
+      "attributes": {},
+      "source_location": {
+        "source": "vf",
+        "line": 4,
+        "column": null,
+        "path": "<cce>"
+      }
+    },
+    {
+      "kind": "instruction",
+      "instruction_id": "instruction.2",
+      "opcode": "VDUPS",
+      "instruction_class": "compute",
+      "form": "fp16",
+      "inputs": [
+        {
+          "value_id": "1.0f.def2",
+          "role": "source",
+          "dtype": "fp32",
+          "memory_access": null
+        },
+        {
+          "value_id": "p16.def0",
+          "role": "predicate",
+          "dtype": "bool",
+          "memory_access": null
+        }
+      ],
+      "outputs": [
+        {
+          "value_id": "x16.def3",
+          "role": "destination",
+          "dtype": "fp16",
+          "memory_access": null
+        }
+      ],
+      "attributes": {},
+      "source_location": {
+        "source": "vf",
+        "line": 7,
+        "column": null,
+        "path": "<cce>"
+      }
+    },
+    {
+      "kind": "instruction",
+      "instruction_id": "instruction.3",
+      "opcode": "VDUPS",
+      "instruction_class": "compute",
+      "form": "fp32",
+      "inputs": [
+        {
+          "value_id": "2.0f.def4",
+          "role": "source",
+          "dtype": "fp32",
+          "memory_access": null
+        },
+        {
+          "value_id": "p32.def1",
+          "role": "predicate",
+          "dtype": "bool",
+          "memory_access": null
+        }
+      ],
+      "outputs": [
+        {
+          "value_id": "x32.def5",
+          "role": "destination",
+          "dtype": "fp32",
+          "memory_access": null
+        }
+      ],
+      "attributes": {},
+      "source_location": {
+        "source": "vf",
+        "line": 8,
+        "column": null,
+        "path": "<cce>"
+      }
+    },
+    {
+      "kind": "instruction",
+      "instruction_id": "instruction.4",
+      "opcode": "VSTS",
+      "instruction_class": "store",
+      "form": "fp16",
+      "inputs": [
+        {
+          "value_id": "x16.def3",
+          "role": "source",
+          "dtype": "fp16",
+          "memory_access": null
+        },
+        {
+          "value_id": "p16.def0",
+          "role": "predicate",
+          "dtype": "bool",
+          "memory_access": null
+        }
+      ],
+      "outputs": [
+        {
+          "value_id": "out16.def6",
+          "role": "memory",
+          "dtype": "fp16",
+          "memory_access": {
+            "base_object_id": "ub.out16",
+            "offset": {
+              "constant": 0,
+              "terms": []
+            },
+            "access_kind": "write",
+            "span": null,
+            "address_unit_bytes": null,
+            "alias_group": null,
+            "address_state_id": "vf:pointer:0:out16",
+            "update_mode": "none",
+            "post_update_delta_bytes": null
+          }
+        }
+      ],
+      "attributes": {},
+      "source_location": {
+        "source": "vf",
+        "line": 9,
+        "column": null,
+        "path": "<cce>"
+      }
+    },
+    {
+      "kind": "instruction",
+      "instruction_id": "instruction.5",
+      "opcode": "MOVP_B32",
+      "instruction_class": "compute",
+      "form": "b32",
+      "inputs": [],
+      "outputs": [
+        {
+          "value_id": "p32.def7",
+          "role": "destination",
+          "dtype": "bool",
+          "memory_access": null
+        }
+      ],
+      "attributes": {},
+      "source_location": {
+        "source": "vf",
+        "line": 10,
+        "column": null,
+        "path": "<cce>"
+      }
+    },
+    {
+      "kind": "instruction",
+      "instruction_id": "instruction.6",
+      "opcode": "VSTS",
+      "instruction_class": "store",
+      "form": "fp32",
+      "inputs": [
+        {
+          "value_id": "x32.def5",
+          "role": "source",
+          "dtype": "fp32",
+          "memory_access": null
+        },
+        {
+          "value_id": "p32.def7",
+          "role": "predicate",
+          "dtype": "bool",
+          "memory_access": null
+        }
+      ],
+      "outputs": [
+        {
+          "value_id": "out32.def8",
+          "role": "memory",
+          "dtype": "fp32",
+          "memory_access": {
+            "base_object_id": "ub.out32",
+            "offset": {
+              "constant": 0,
+              "terms": []
+            },
+            "access_kind": "write",
+            "span": null,
+            "address_unit_bytes": null,
+            "alias_group": null,
+            "address_state_id": "vf:pointer:1:out32",
+            "update_mode": "none",
+            "post_update_delta_bytes": null
+          }
+        }
+      ],
+      "attributes": {},
+      "source_location": {
+        "source": "vf",
+        "line": 11,
+        "column": null,
+        "path": "<cce>"
+      }
+    }
+  ],
+  "values": {
+    "p16.def0": {
+      "definition_id": "p16.def0",
+      "logical_id": "p16",
+      "storage": "PredicateRegister",
+      "dtype": "bool",
+      "shape": [],
+      "producer_node_id": "instruction.0",
+      "storage_object_id": null,
+      "source_location": null
+    },
+    "p32.def1": {
+      "definition_id": "p32.def1",
+      "logical_id": "p32",
+      "storage": "PredicateRegister",
+      "dtype": "bool",
+      "shape": [],
+      "producer_node_id": "instruction.1",
+      "storage_object_id": null,
+      "source_location": null
+    },
+    "1.0f.def2": {
+      "definition_id": "1.0f.def2",
+      "logical_id": "1.0f",
+      "storage": "Scalar",
+      "dtype": "fp32",
+      "shape": [],
+      "producer_node_id": null,
+      "storage_object_id": null,
+      "source_location": null
+    },
+    "x16.def3": {
+      "definition_id": "x16.def3",
+      "logical_id": "x16",
+      "storage": "Register",
+      "dtype": "fp16",
+      "shape": [],
+      "producer_node_id": "instruction.2",
+      "storage_object_id": null,
+      "source_location": null
+    },
+    "2.0f.def4": {
+      "definition_id": "2.0f.def4",
+      "logical_id": "2.0f",
+      "storage": "Scalar",
+      "dtype": "fp32",
+      "shape": [],
+      "producer_node_id": null,
+      "storage_object_id": null,
+      "source_location": null
+    },
+    "x32.def5": {
+      "definition_id": "x32.def5",
+      "logical_id": "x32",
+      "storage": "Register",
+      "dtype": "fp32",
+      "shape": [],
+      "producer_node_id": "instruction.3",
+      "storage_object_id": null,
+      "source_location": null
+    },
+    "out16.def6": {
+      "definition_id": "out16.def6",
+      "logical_id": "out16",
+      "storage": "UB",
+      "dtype": "fp16",
+      "shape": [],
+      "producer_node_id": "instruction.4",
+      "storage_object_id": "ub.out16",
+      "source_location": null
+    },
+    "p32.def7": {
+      "definition_id": "p32.def7",
+      "logical_id": "p32",
+      "storage": "PredicateRegister",
+      "dtype": "bool",
+      "shape": [],
+      "producer_node_id": "instruction.5",
+      "storage_object_id": null,
+      "source_location": null
+    },
+    "out32.def8": {
+      "definition_id": "out32.def8",
+      "logical_id": "out32",
+      "storage": "UB",
+      "dtype": "fp32",
+      "shape": [],
+      "producer_node_id": "instruction.6",
+      "storage_object_id": "ub.out32",
+      "source_location": null
+    }
+  },
+  "storage_objects": {
+    "ub.out16": {
+      "object_id": "ub.out16",
+      "storage": "UB",
+      "shape": [],
+      "source_location": null
+    },
+    "ub.out32": {
+      "object_id": "ub.out32",
+      "storage": "UB",
+      "shape": [],
+      "source_location": null
+    }
+  },
+  "params": {},
+  "uarch": {},
+  "source": {
+    "adapter": "cce",
+    "path": "<cce>"
+  }
+}

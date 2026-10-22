@@ -26,7 +26,7 @@
 ## 2.1 模型日志（本仓库 cost model）
 
 ```bash
-python main.py --trace VFtest/GeLU_poly.json --out_dir results/unroll_test/model_logs/I96_unroll4
+python main.py --trace VFtest/json/GeLU_poly.json --out_dir results/unroll_test/model_logs/I96_unroll4
 ```
 
 关键输出：
@@ -129,11 +129,11 @@ python main.py --trace VFtest/GeLU_poly.json --out_dir results/unroll_test/model
 python tools/run_cost_model_regression.py --tier smoke
 ```
 
-默认与 `precision_compare_3modes.md` 中的
-`queue_level4+ooo-transfer-delay` 列比较，对应基线文件：
+默认与 Canonical 入口及全局 membar 时序模型的实测结果比较，
+保留平衡 EXU0 预留策略，对应基线文件：
 
 ```text
-regression_suite/cases/baseline_queue_level4_ooo_transfer_delay.json
+regression_suite/cases/baseline_canonical_membar.json
 ```
 
 更新 baseline：

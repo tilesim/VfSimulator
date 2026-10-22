@@ -214,7 +214,7 @@ def run_one(I: int, J: int, out_root: Path):
     case_dir.mkdir(parents=True, exist_ok=True)
 
     trace_json = case_dir / "trace_input.json"
-    dsl = case_dir / f"{tag}.dsl"
+    dsl = case_dir / f"{tag}.cce"
     build_nested_json(trace_json, I, J)
     build_nested_dsl(dsl, I, J)
 

@@ -1,0 +1,13 @@
+void vf(__ubuf__ half *out16, __ubuf__ float *out32) {
+    __VEC_SCOPE__ {
+        vector_bool p16 = movp_b16();
+        vector_bool p32 = movp_b32();
+        vector_f16 x16;
+        vector_f32 x32;
+        vdup(x16, 1.0f, p16, MODE_ZEROING);
+        vdup(x32, 2.0f, p32, MODE_ZEROING);
+        vsts(x16, out16, 0, NORM_B16, p16);
+        p32 = movp_b32();
+        vsts(x32, out32, 0, NORM_B32, p32);
+    }
+}

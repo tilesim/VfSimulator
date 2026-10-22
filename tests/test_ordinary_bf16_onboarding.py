@@ -3,12 +3,12 @@ import tempfile
 import unittest
 
 from api.input_api import InputAPI
-from api.simulator_costmodel import CoreVfCostModel
-from core.param_db import ParamDB
+from core.simulator import CoreVfCostModel
+from core.params.database import ParamDB
 
 
 ROOT = Path(__file__).resolve().parents[1]
-BATCH2 = ROOT / "tests/fixtures/ordinary_instructions/batch2.cce"
+BATCH2 = ROOT / "VFtest/cce/ordinary_instructions/batch2.cce"
 
 
 class OrdinaryBf16OnboardingTest(unittest.TestCase):
@@ -49,8 +49,8 @@ class OrdinaryBf16OnboardingTest(unittest.TestCase):
         self.assertEqual(profile.fu_type, "ALU")
         self.assertEqual(profile.dispatch_exu, "EXU01")
         db.get_ii(
-            "VCVT_BF16_TO_F32", "VCVT_BF16_TO_F32", "fp32",
-            prev_form="bf16_to_f32", cur_form="bf16_to_f32",
+            "VCVT_BF16_TO_F32", "VADD", "fp32",
+            prev_form="bf16_to_f32", cur_form="fp32",
         )
         db.get_forwarding_cycles(
             "VCVT_BF16_TO_F32", "VSTS", "fp32",

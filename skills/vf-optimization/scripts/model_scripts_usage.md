@@ -8,7 +8,7 @@ Script:
 
 ```bash
 python skills/vf-optimization/scripts/run_cost_model_once.py ^
-  --trace VFtest/GeLU_poly.json ^
+  --trace VFtest/json/GeLU_poly.json ^
   --out-dir results/tmp_model_once/gelu_i64 ^
   --set-param I=64
 ```
@@ -17,7 +17,7 @@ CCE input is also supported:
 
 ```bash
 python skills/vf-optimization/scripts/run_cost_model_once.py ^
-  --cce cce_code/GeLU_poly.dsl ^
+  --cce VFtest/cce/GeLU_poly.cce ^
   --out-dir results/tmp_model_once/gelu_poly_cce
 ```
 
@@ -25,7 +25,7 @@ If multiple CCE VF kernels exist:
 
 ```bash
 python skills/vf-optimization/scripts/run_cost_model_once.py ^
-  --cce cce_code/example.dsl ^
+  --cce VFtest/cce/example.cce ^
   --cce-kernel selected_kernel ^
   --out-dir results/tmp_model_once/example
 ```
@@ -68,12 +68,12 @@ Manifest format:
   "cases": [
     {
       "id": "gelu_poly_i16",
-      "trace": "VFtest/GeLU_poly.json",
+      "trace": "VFtest/json/GeLU_poly.json",
       "params": { "I": 16 }
     },
     {
       "id": "gelu_poly_cce",
-      "cce": "cce_code/GeLU_poly.dsl",
+      "cce": "VFtest/cce/GeLU_poly.cce",
       "cce_kernel": "optional_kernel_name"
     }
   ]

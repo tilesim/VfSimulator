@@ -1,0 +1,24 @@
+#define __aicore__ [aicore]
+
+__attribute__((always_inline)) inline [aicore] void pset_vdup_single_vf(
+    __ubuf__ float *out) {
+    __VEC_SCOPE__ {
+        vector_bool mask = pset_b32(PAT_ALL);
+        vector_f32 result;
+        vdup(result, 1.0f, mask, MODE_ZEROING);
+        vsts(result, out, 0, NORM_B32, mask);
+    }
+}
+
+extern "C" __global__ __aicore__ void pset_vdup_single(
+    __gm__ float *input, __gm__ float *output) {
+    __ubuf__ float *in = (__ubuf__ float *)get_imm(0);
+    __ubuf__ float *out = (__ubuf__ float *)get_imm(0x4000);
+    copy_gm_to_ubuf_align_v2(in, input, 0, 1, 512, 0, 0, 0, 0, 0, 0);
+    set_flag(PIPE_MTE2, PIPE_V, (event_t)0);
+    wait_flag(PIPE_MTE2, PIPE_V, (event_t)0);
+    pset_vdup_single_vf(out);
+    set_flag(PIPE_V, PIPE_MTE3, (event_t)0);
+    wait_flag(PIPE_V, PIPE_MTE3, (event_t)0);
+    copy_ubuf_to_gm_align_v2(output, out, 0, 1, 256, 0, 0, 0);
+}

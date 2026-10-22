@@ -28,7 +28,7 @@ CCEC="$ACL/x86_64-linux/bin/ccec"
 LDLLD="$ACL/x86_64-linux/bin/ld.lld"
 
 stem="<case>_misched0"
-dsl="$REPO/cce_code/reg_release_probe/<case>.dsl"
+dsl="$REPO/VFtest/cce/reg_release_probe/<case>.cce"
 build="$REPO/ascend_runner/build/${stem}_native_simexec"
 cce="$build/${stem}.cce"
 aiv="$build/${stem}_mix_aiv.o"

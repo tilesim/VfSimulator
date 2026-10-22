@@ -1,234 +1,101 @@
-# VF Simulator
+# VfSimulator Python · TileSim 接口
 
-VF Simulator is a cycle-level performance model for Ascend-style vector function (VF) code. It predicts VF execution time from either a structured JSON trace or a CCE/DSL file containing `__VEC_SCOPE__` vector code.
+VfSimulator 对 VF 指令依赖、物理寄存器、队列、执行端口、LSU、循环和屏障进行逐周期
+仿真，返回包含 VF drain 的结束周期及执行事件。Python 核心、Canonical 输入和指令参数
+与 `wch/VfSimulator-refactor` 共享，TileSim 通过独立的 `vfsimulator` 命名空间调用模型。
 
-The project has two major parts:
+## 安装与调用
 
-1. **VF modeling**: parse VF structure, lower it into simulator instructions, and estimate cycle-level timing.
-2. **VF optimization**: explore split/unroll/rewrite strategies using the model as a fast cost oracle.
-
-The current mainline model is focused on VF modeling. Optimization utilities are kept in the repository, but the default simulator path is the queue-level VF model described below.
-
-## Current Default Model
-
-The default simulation path is:
-
-- `queue_level4`
-- `consumer release = producer/consumer start + 4`
-- `vreg live-range normalization = ON`
-- `shq_depth = 58`
-- `exq_depth = 26`
-- `issue_ports = 2`
-- `load_ports = 2`
-- `store_ports = 1`
-- per-EXU inflight cap from `configs/uarch.json`
-
-The model path is:
-
-```text
-JSON/CCE input
-  -> api input adapter
-  -> flatten
-  -> IFU
-  -> IDU
-  -> OOO rename + SHQ/LSQ
-  -> ISU / EXQ
-  -> EXU/VLD/VST timing
-  -> VF end cycle
-```
-
-The default command does not require an explicit model flag. `main.py` always selects the current queue-level mainline unless a theoretical-limit or experimental option is explicitly provided.
-
-## Quick Start
-
-Run a JSON trace:
+Python 版本要求为 3.10 及以上。在本仓库运行：
 
 ```bash
-python main.py --trace VFtest/GeLU_poly.json --out_dir results/demo_gelu_poly
+python3 -m pip install .
 ```
 
-Run a CCE/DSL file:
-
-```bash
-python main.py --cce cce_code/GeLU_poly.dsl --out_dir results/demo_gelu_poly_cce
-```
-
-If a CCE file has multiple `__VEC_SCOPE__` kernels, select one explicitly:
-
-```bash
-python main.py --cce path/to/file.dsl --cce-kernel kernel_name --out_dir results/demo_kernel
-```
-
-Common outputs:
-
-- `start_by_cycle.json`: instruction start events.
-- `done_by_cycle.json`: instruction done events.
-- `idu_to_ooo.json`: IDU to OOO admission trace.
-- `vloop_trace.json`: top-level loop dispatch trace.
-- `sim_history.json`: detailed simulation history.
-- terminal line `VF end cycle (with drain) = ...`: main timing result.
-
-## Theoretical-Limit Modes
-
-Two theoretical-limit candidates are currently exposed:
-
-```bash
-python main.py --trace VFtest/GeLU_poly.json \
-  --theoretical-limit-vloop-only \
-  --out_dir results/theory_vloop_only
-```
-
-```bash
-python main.py --trace VFtest/GeLU_poly.json \
-  --theoretical-limit-vloop-only-legacy-forwarding-direct-issue \
-  --out_dir results/theory_direct_issue
-```
-
-The first keeps the main queue-level path while relaxing top-level loop exposure constraints. The second is a more aggressive candidate that uses legacy forwarding and direct single-queue issue for comparison.
-
-## Experimental Three-Port Mode
-
-The repository also contains an experimental three-port VF model:
-
-```bash
-python main.py --trace VFtest/GeLU_poly.json --three-ports --out_dir results/demo_three_ports
-```
-
-In this mode, compute issue ports and VLD issue capacity are expanded to three, while VST remains single-issue.
-
-## API Interface
-
-The public API lives in `api/`.
-
-Main pieces:
-
-- `api/vf_costmodel.py`: data classes such as `VFInfo`, `InstInfo`, and `MemInfo`.
-- `api/cce_adapter.py`: parses `__VEC_SCOPE__` kernels from CCE/DSL files.
-- `api/vf_lowering.py`: lowers API-level VF information into simulator trace format.
-- `api/input_api.py`: unified loader for JSON and CCE input.
-- `api/simulator_costmodel.py`: programmatic cost model wrapper.
-
-Typical programmatic use:
+TileSim 使用下面的公开接口：
 
 ```python
-from api.cce_adapter import parse_cce_vf_info
-from api.simulator_costmodel import predict_vf_cycles
+from vfsimulator import (
+    StorageKind, VfSimValue, VfSimInst, VfSimProgram, predict_from_program,
+)
 
-vf_info = parse_cce_vf_info("cce_code/GeLU_poly.dsl")
-cycles = predict_vf_cycles(vf_info)
-print(cycles)
+program = VfSimProgram(
+    values={
+        "buffer": VfSimValue("buffer", StorageKind.UB, "fp32", (128,), "allocation"),
+        "x": VfSimValue("x", StorageKind.REGISTER, "fp32"),
+        "y": VfSimValue("y", StorageKind.REGISTER, "fp32"),
+        "mask": VfSimValue("mask", StorageKind.PREDICATE_REGISTER, "bool"),
+    },
+    body=[
+        VfSimInst("PSET_B32", [], ["mask"]),
+        VfSimInst("VLDS", ["buffer"], ["x"]),
+        VfSimInst("VADD", ["x", "x", "mask"], ["y"]),
+        VfSimInst("VSTS", ["y", "mask"], ["buffer"]),
+    ],
+)
+result = predict_from_program(program, dump_results=False)
+print(result["cycles"])
 ```
 
-Direct construction of `VFInfo` is also supported for tests and tools that do not start from CCE code.
+结果保留 `cycles`、`model`、`raw` 和 `trace_path`。`dump_results=False` 关闭仿真文件输出；
+`dump_trace_path` 可独立保存 Canonical JSON。输入字段、访存单位与配置缓存见
+[TileSim 对接说明](docs/tilesim_integration.md)。
 
-## Configuration Files
-
-Core configuration lives in `configs/`:
-
-- `uarch.json`: queue depths, issue widths, delay knobs, inflight caps, and other microarchitecture parameters.
-- `isa.json`: per-instruction latency, startup/drain cost, execution unit type, and dispatch restriction.
-- `forwarding.json`: producer-consumer forwarding timing.
-- `InitiationInterval.json`: instruction pair initiation interval table.
-
-Important ISA dispatch markers:
-
-- `EXU0_ONLY`: instruction can only execute on EXU0.
-- `EXU01`: instruction can execute on EXU0 or EXU1.
-- `EXU012`: used by experimental three-port mode.
-
-## Directory Layout
-
-Core directories intended for normal development and release branches:
+## 输入与执行
 
 ```text
-api/                 Public input/API adapter layer
-ascend_runner/       CCE/camodel build, run, and calibration helpers
-cce_code/            CCE/DSL examples and selected regression/optimization sources
-configs/             uarch, ISA, forwarding, and II configuration
-core/                Main simulator implementation
-docs/                Architecture notes and modeling documentation
-notes/               Curated working notes used by optimization/modeling flows
-optimizer/           VF optimization and split/unroll search tools
-regression_suite/    Regression package: cases, inputs, reports, docs
-skills/              Codex skill docs/scripts for VF optimization workflow
-tools/               Utility scripts for reports, plots, calibration, and experiments
-VFtest/              JSON trace examples and selected regression inputs
+TileSim → VfSimProgram → api/tilesim/ → CanonicalVfInfo
+CCE / Canonical JSON / CanonicalVfInfo → InputAPI
+                                         │
+                                  CoreVfCostModel
+                                         │
+                                       Engine
+                                         │
+                            IFU → IDU → SHQ → OoO → EXQ → EXU
+                                   └──────── LSU / UB
+                                         │
+                                 周期、事件和 Perfetto
 ```
 
-Top-level documentation:
+输入在 API 出口完成校验。各硬件组件持有自己的队列和状态，Engine 安排周期阶段。
+EXU 按 opcode/form 保留 self-II 历史，检查相邻指令 II，默认每端口最多 7 条在途指令，
+每周期最多发射和完成各一条计算指令。
 
-- `VF_modeling.md`: detailed VF modeling design.
-- `README.md`: current project entry point.
-- `api.md`: API design notes.
-
-Generated outputs and temporary material should normally stay out of release commits:
-
-- `results/`
-- `__pycache__/`
-- large `msprof`/camodel dump folders
-- ad-hoc figures and scratch files unless intentionally curated
-
-## Regression Suite
-
-The regression package is now organized as:
-
-```text
-regression_suite/
-  cases/
-    cost_model_regression_cases.json
-    baseline_queue_level4_ooo_transfer_delay.json
-    baseline_consumer_done.json
-    archive/
-  inputs/
-    json/
-    cce/
-  reports/
-    precision_compare_3modes.md
-  docs/
-    unroll_precision_debug_guide.md
-```
-
-Run smoke regression:
+源码工作区的命令行入口：
 
 ```bash
-python tools/run_cost_model_regression.py --tier smoke
+python3 main.py --cce VFtest/cce/GeLU_poly.cce --out_dir results/gelu
+python3 main.py --trace VFtest/canonical/fixtures/v1_valid_loop.json --out_dir results/fixture
 ```
 
-Run full regression:
+安装包也提供 `InputAPI`、`CoreVfCostModel` 和 `CanonicalVfInfo`，用于文件输入与直接构造。
+JSON 格式校验使用可选依赖：`python3 -m pip install '.[json]'`。
+
+## 目录
+
+| 目录 | 职责 |
+| --- | --- |
+| `api/cce/`、`api/json/`、`api/programmatic/` | CCE、JSON、Builder 输入 |
+| `api/common/` | Canonical、Catalog、校验与诊断 |
+| `api/tilesim/` | TileSim 对象定义、Canonical 转换与预测接口 |
+| `core/execution/` | 指令准备、展开、Engine、循环与屏障控制 |
+| `core/uarch/` | IFU、IDU、SHQ、OoO、EXQ、EXU、LSU 和寄存器组件 |
+| `core/params/`、`core/trace/` | 参数快照与查询、执行结果和事件 |
+| `configs/` | Catalog、软件展开、资源、latency、II 和 forwarding |
+| `vfsimulator/` | 从 `api/`、`core/`、`configs/` 生成的安装包，导入均位于同名命名空间下 |
+| `VFtest/` | 按 CCE、Canonical、JSON 分类的固定输入 |
+| `tests/` | Python 模型、对接和安装包测试 |
+| `regression_suite/` | 固定算子、周期参考与回归清单 |
+| `tools/` | 包同步、指令覆盖检查和周期回归 |
+
+修改源代码或参数后，通过同步工具更新安装包：
 
 ```bash
-python tools/run_cost_model_regression.py --tier full
+python3 tools/sync_python_package.py
+python3 tools/sync_python_package.py --check
+python3 -m pytest -q tests
+python3 -m pip wheel --no-deps -w dist .
 ```
 
-Update baseline intentionally:
-
-```bash
-python tools/run_cost_model_regression.py --tier full --update-baseline
-```
-
-The run output is written under `results/regression_suite/latest/` by default. Stable, curated reports belong under `regression_suite/reports/`.
-The default comparison baseline is the `queue_level4+ooo-transfer-delay` column
-from `regression_suite/reports/precision_compare_3modes.md`.
-
-## Ascend Runner
-
-`ascend_runner/` is the CCE/camodel companion toolchain. It is used to:
-
-- compile CCE/DSL cases through `ccec` and `ld.lld`;
-- run native simulator executables with `runtime_camodel`;
-- collect camodel logs such as instruction start/done and EXU traces;
-- calibrate `isa.json`, `forwarding.json`, and `InitiationInterval.json`.
-
-Current mainline scripts are in `ascend_runner/current/`. Historical debug and legacy scripts remain in `ascend_runner/debug/` and `ascend_runner/legacy/`.
-
-## Development Notes
-
-Recommended sanity checks after simulator changes:
-
-```bash
-python main.py --trace VFtest/GeLU_poly.json --out_dir results/sanity_gelu
-python main.py --cce cce_code/GeLU_poly.dsl --out_dir results/sanity_gelu_cce
-python tools/run_cost_model_regression.py --tier smoke
-```
-
-When preparing a clean release branch, prefer committing source, curated docs, selected regression inputs, and selected tools only. Avoid committing generated caches, temporary run logs, and large raw dumps.
+TileSim 安装 wheel 后，通过 `vfsimulator` 访问模型及随包提供的配置。
+[文档目录](docs/README.md)列出模型、参数和验证说明。

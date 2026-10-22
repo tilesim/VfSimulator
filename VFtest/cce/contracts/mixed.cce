@@ -1,0 +1,15 @@
+
+        void canonical_vf(__ubuf__ float *input, __ubuf__ float *output) {
+          __VEC_SCOPE__ {
+            vector_bool pred = pset_b32(PAT_ALL);
+            for (uint32_t i = 2; i < 6; i += 2) {
+              uint32_t off = 64 * i;
+              vector_f32 value;
+              vector_f32 sum;
+              vlds(value, input, off, NORM);
+              vadds(sum, value, 1.0f, pred);
+              vsts(sum, output, off, NORM_B32, pred);
+              mem_bar(VST_VLD);
+            }
+          }
+        }

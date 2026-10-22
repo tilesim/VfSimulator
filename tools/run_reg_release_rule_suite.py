@@ -22,7 +22,7 @@ class CaseSpec:
 CASE_MATRIX: Dict[str, CaseSpec] = {
     "reg_release_single_consumer": CaseSpec(
         name="reg_release_single_consumer",
-        dsl_rel="cce_code/reg_release_probe/reg_release_single_consumer.dsl",
+        dsl_rel="VFtest/cce/reg_release_probe/reg_release_single_consumer.cce",
         kernel="reg_release_single_consumer",
         producer_op="RV_VADDS",
         consumer_ops=("RV_VST",),
@@ -31,7 +31,7 @@ CASE_MATRIX: Dict[str, CaseSpec] = {
     ),
     "reg_release_two_consumers": CaseSpec(
         name="reg_release_two_consumers",
-        dsl_rel="cce_code/reg_release_probe/reg_release_two_consumers.dsl",
+        dsl_rel="VFtest/cce/reg_release_probe/reg_release_two_consumers.cce",
         kernel="reg_release_two_consumers",
         producer_op="RV_VLD",
         consumer_ops=("RV_VADD",),
@@ -40,7 +40,7 @@ CASE_MATRIX: Dict[str, CaseSpec] = {
     ),
     "reg_release_overwrite_chain": CaseSpec(
         name="reg_release_overwrite_chain",
-        dsl_rel="cce_code/reg_release_probe/reg_release_overwrite_chain.dsl",
+        dsl_rel="VFtest/cce/reg_release_probe/reg_release_overwrite_chain.cce",
         kernel="reg_release_overwrite_chain",
         producer_op="RV_VADDS",
         consumer_ops=("RV_VST",),
@@ -49,49 +49,49 @@ CASE_MATRIX: Dict[str, CaseSpec] = {
     ),
     "reg_release_e1_single_fast": CaseSpec(
         name="reg_release_e1_single_fast",
-        dsl_rel="cce_code/reg_release_probe/reg_release_e1_single_fast.dsl",
+        dsl_rel="VFtest/cce/reg_release_probe/reg_release_e1_single_fast.cce",
         kernel="reg_release_e1_single_fast",
         producer_op="RV_VADDS",
         consumer_ops=("RV_VEXP",),
     ),
     "reg_release_e2_dual_slowvdiv": CaseSpec(
         name="reg_release_e2_dual_slowvdiv",
-        dsl_rel="cce_code/reg_release_probe/reg_release_e2_dual_slowvdiv.dsl",
+        dsl_rel="VFtest/cce/reg_release_probe/reg_release_e2_dual_slowvdiv.cce",
         kernel="reg_release_e2_dual_slowvdiv",
         producer_op="RV_VADDS",
         consumer_ops=("RV_VMULS", "RV_VDIV"),
     ),
     "reg_release_e3_gap0": CaseSpec(
         name="reg_release_e3_gap0",
-        dsl_rel="cce_code/reg_release_probe/reg_release_e3_gap0.dsl",
+        dsl_rel="VFtest/cce/reg_release_probe/reg_release_e3_gap0.cce",
         kernel="reg_release_e3_gap0",
         producer_op="RV_VADDS",
         consumer_ops=("RV_VDIV",),
     ),
     "reg_release_e3_gap8": CaseSpec(
         name="reg_release_e3_gap8",
-        dsl_rel="cce_code/reg_release_probe/reg_release_e3_gap8.dsl",
+        dsl_rel="VFtest/cce/reg_release_probe/reg_release_e3_gap8.cce",
         kernel="reg_release_e3_gap8",
         producer_op="RV_VADDS",
         consumer_ops=("RV_VDIV",),
     ),
     "reg_release_e4_store_only": CaseSpec(
         name="reg_release_e4_store_only",
-        dsl_rel="cce_code/reg_release_probe/reg_release_e4_store_only.dsl",
+        dsl_rel="VFtest/cce/reg_release_probe/reg_release_e4_store_only.cce",
         kernel="reg_release_e4_store_only",
         producer_op="RV_VADDS",
         consumer_ops=("RV_VST",),
     ),
     "reg_release_e4_compute_then_store": CaseSpec(
         name="reg_release_e4_compute_then_store",
-        dsl_rel="cce_code/reg_release_probe/reg_release_e4_compute_then_store.dsl",
+        dsl_rel="VFtest/cce/reg_release_probe/reg_release_e4_compute_then_store.cce",
         kernel="reg_release_e4_compute_then_store",
         producer_op="RV_VADDS",
         consumer_ops=("RV_VMULS", "RV_VST"),
     ),
     "reg_release_cross_iter_overwrite": CaseSpec(
         name="reg_release_cross_iter_overwrite",
-        dsl_rel="cce_code/reg_release_probe/reg_release_cross_iter_overwrite.dsl",
+        dsl_rel="VFtest/cce/reg_release_probe/reg_release_cross_iter_overwrite.cce",
         kernel="reg_release_cross_iter_overwrite",
         producer_op="RV_VLD",
         consumer_ops=("RV_VADDS", "RV_VST"),
@@ -100,7 +100,7 @@ CASE_MATRIX: Dict[str, CaseSpec] = {
     ),
     "reg_release_loop_boundary_seal": CaseSpec(
         name="reg_release_loop_boundary_seal",
-        dsl_rel="cce_code/reg_release_probe/reg_release_loop_boundary_seal.dsl",
+        dsl_rel="VFtest/cce/reg_release_probe/reg_release_loop_boundary_seal.cce",
         kernel="reg_release_loop_boundary_seal",
         producer_op="RV_VLD",
         consumer_ops=("RV_VADDS", "RV_VST"),
@@ -109,7 +109,7 @@ CASE_MATRIX: Dict[str, CaseSpec] = {
     ),
     "reg_release_dual_consumer_reordered": CaseSpec(
         name="reg_release_dual_consumer_reordered",
-        dsl_rel="cce_code/reg_release_probe/reg_release_dual_consumer_reordered.dsl",
+        dsl_rel="VFtest/cce/reg_release_probe/reg_release_dual_consumer_reordered.cce",
         kernel="reg_release_dual_consumer_reordered",
         producer_op="RV_VLD",
         consumer_ops=("RV_VDIV", "RV_VADDS"),
@@ -256,7 +256,7 @@ def analyze_case_dump(case: CaseSpec, dump_dir: Path) -> dict:
 
 def run_case(repo_win: Path, case: CaseSpec, output_root: Path, misched: int) -> Tuple[str, Path]:
     stem = f"{case.name}_misched{misched}"
-    dsl_wsl = f"/mnt/d/VfSimulator/{case.dsl_rel}"
+    dsl_wsl = f"/mnt/d/VfSimulator/{case.cce_rel}"
     repo_wsl = "/mnt/d/VfSimulator"
     out_case = output_root / case.name / "cce_dump"
     out_case.mkdir(parents=True, exist_ok=True)

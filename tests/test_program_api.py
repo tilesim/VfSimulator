@@ -2,11 +2,11 @@ from dataclasses import replace
 
 import pytest
 
-from api.program_adapter import program_to_canonical
-from api.program_api import predict_from_program
-from api.simulator_costmodel import CoreVfCostModel
-from api.frontend.schema import StorageKind, CanonicalLoop, CanonicalMembar
-from core.program_ir import VfSimValue, VfSimProgram, VfSimLoop, VfSimInst, VfSimMembar
+from api.tilesim.adapter import program_to_canonical
+from api.tilesim.predict import predict_from_program
+from core.simulator import CoreVfCostModel
+from api.common.schema import StorageKind, CanonicalLoop, CanonicalMembar
+from api.tilesim.program import VfSimValue, VfSimProgram, VfSimLoop, VfSimInst, VfSimMembar
 
 
 def program(dtype='fp32', barrier='VST_VLD'):
@@ -30,7 +30,7 @@ def program(dtype='fp32', barrier='VST_VLD'):
 def test_predict_matches_master_canonical_core(tmp_path, dtype, barrier):
     p = program(dtype, barrier)
     canonical = program_to_canonical(p)
-    direct = CoreVfCostModel(out_dir=tmp_path/'direct', dtype=dtype).run_vf_info(canonical)
+    direct = CoreVfCostModel(out_dir=tmp_path/'direct', fallback_dtype=dtype).run_vf_info(canonical)
     result = predict_from_program(p, out_dir=tmp_path/'program', dump_trace_path=tmp_path/'canonical.json')
     assert result['cycles'] == direct['vf_end_cycle'] > 0
     assert 'schema_version' in (tmp_path/'canonical.json').read_text()

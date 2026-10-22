@@ -1,0 +1,13 @@
+void vf(__ubuf__ uint32_t *spill) {
+    __VEC_SCOPE__ {
+        vector_bool all = pset_b8(PAT_ALL);
+        vector_bool partial = pset_b32(PAT_VL32);
+        vector_bool q, r, s;
+        pnot(q, partial, all);
+        pxor(r, q, partial, all);
+        pmov(q, r);
+        pmov(r, q, all);
+        psel(s, q, r, partial);
+        psts(s, spill, 0, NORM);
+    }
+}

@@ -42,7 +42,7 @@ def write_json(path: Path, obj: Dict) -> None:
 
 
 def build_nested_trace(i_outer: int, j_inner: int, unroll: int) -> Dict:
-    base = json.loads((ROOT / "VFtest" / "GeLU_poly.json").read_text(encoding="utf-8-sig"))
+    base = json.loads((ROOT / "VFtest" / "json" / "GeLU_poly.json").read_text(encoding="utf-8-sig"))
     body = base["program"][0]["body"]
     return {
         "dtype": "fp32",
@@ -193,7 +193,7 @@ def run_one(u: int, i_outer: int = 16, j_inner: int = 16) -> Dict:
     trace_path = case_dir / "trace_input.json"
     write_json(trace_path, trace)
 
-    dsl_path = case_dir / f"{case_id}.dsl"
+    dsl_path = case_dir / f"{case_id}.cce"
     dsl_path.write_text(build_nested_dsl(i_outer, j_inner, u), encoding="utf-8")
 
     model_out_dir = case_dir / "model_run"

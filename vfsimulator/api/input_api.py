@@ -3,15 +3,15 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Dict, Mapping
 
-from vfsimulator.api.cce_adapter import parse_cce_canonical_vf_info
-from vfsimulator.api.frontend import (
-    CanonicalVfInfo,
-    CanonicalJsonVfInfoAdapter,
-    ScalarValue,
-    ValidationResult,
-    VfInfoBuilder,
+from vfsimulator.api.cce.adapter import parse_cce_canonical_vf_info
+from vfsimulator.api.programmatic.builder import VfInfoBuilder
+from vfsimulator.api.common.diagnostics import ValidationResult
+from vfsimulator.api.common.schema import CanonicalVfInfo, ScalarValue
+from vfsimulator.api.common.validator import (
+    require_valid_canonical_vf_info,
     validate_canonical_vf_info,
 )
+from vfsimulator.api.json.adapter import CanonicalJsonVfInfoAdapter
 
 
 class InputAPI:
@@ -38,6 +38,11 @@ class InputAPI:
             kernel_name=kernel_name,
             loop_params=loop_params,
         )
+
+    @staticmethod
+    def from_canonical(vf_info: CanonicalVfInfo) -> CanonicalVfInfo:
+        """Validate a directly constructed object and return it for Core execution."""
+        return require_valid_canonical_vf_info(vf_info)
 
     @staticmethod
     def validate_canonical_vf_info(vf_info: CanonicalVfInfo) -> ValidationResult:

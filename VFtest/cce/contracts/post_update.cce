@@ -1,0 +1,1 @@
+void vf(__ubuf__ float *p, __ubuf__ float *q) { __VEC_SCOPE__ {vector_f32 a, b, c;vector_bool mask = pset_b32(PAT_ALL);__ubuf__ float *p0 = p + 4; __ubuf__ float *p1 = p0;vlds(a,p0,64,NORM,POST_UPDATE);vlds(b,p1,0,NORM);vlds(c,((__ubuf__ half *&)p0),1,BRC_B16,POST_UPDATE);}}

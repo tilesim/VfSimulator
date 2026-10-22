@@ -1,19 +1,7 @@
 import unittest
 
-from api.frontend import (
-    AccessKind,
-    AffineExpression,
-    CanonicalMembar,
-    CanonicalOperand,
-    InductionVariable,
-    InstructionClass,
-    MemoryAccess,
-    OperandRole,
-    SourceLocation,
-    StorageKind,
-    VfInfoBuilder,
-    VfInfoValidationError,
-)
+from api.common import (AccessKind, AffineExpression, CanonicalMembar, CanonicalOperand, InductionVariable, InstructionClass, MemoryAccess, OperandRole, SourceLocation, StorageKind, VfInfoValidationError)
+from api.programmatic.builder import VfInfoBuilder
 from api.input_api import InputAPI
 
 
@@ -196,18 +184,6 @@ class VfInfoBuilderTest(unittest.TestCase):
             form="fp32",
         )
 
-        def failing_dependencies():
-            raise RuntimeError("dependency generator failed")
-            yield
-
-        with self.assertRaisesRegex(RuntimeError, "dependency generator failed"):
-            builder.add_membar(
-                "barrier.retry",
-                barrier="VST_VLD",
-                dependencies=failing_dependencies(),
-            )
-        builder.add_membar("barrier.retry", barrier="VST_VLD")
-
         def failing_carried_values():
             raise RuntimeError("carried value generator failed")
             yield
@@ -226,11 +202,9 @@ class VfInfoBuilderTest(unittest.TestCase):
         )
 
         vf_info = builder.build()
-        self.assertEqual(
-            [node.instruction_id for node in vf_info.context[:2]],
-            ["inst.retry", "barrier.retry"],
-        )
-        self.assertEqual(vf_info.context[2].loop_id, "loop.retry")
+        self.assertEqual(len(vf_info.context), 2)
+        self.assertEqual(vf_info.context[0].instruction_id, "inst.retry")
+        self.assertEqual(vf_info.context[1].loop_id, "loop.retry")
 
 
 if __name__ == "__main__":

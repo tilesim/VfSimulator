@@ -4,12 +4,12 @@ import subprocess
 import sys
 from pathlib import Path
 
-from api.frontend.serialization import canonical_vf_info_to_dict
-from api.program_adapter import program_to_canonical
+from api.json.serialization import canonical_vf_info_to_dict
+from api.tilesim.adapter import program_to_canonical
 from tests.test_program_api import program
 from tests.test_program_predicates import predicate_program
 import vfsimulator as packaged
-from vfsimulator.api.frontend.serialization import canonical_vf_info_to_dict as package_dict
+from vfsimulator.api.json.serialization import canonical_vf_info_to_dict as package_dict
 
 
 def test_package_sources_are_synchronized():
@@ -18,9 +18,9 @@ def test_package_sources_are_synchronized():
 
 @pytest.mark.parametrize('width', [16, 32])
 def test_movp_program_uses_packaged_predicate_semantics_and_parameters(tmp_path, width):
-    from api.frontend.schema import StorageKind
-    from api.program_api import predict_from_program
-    from core.program_ir import VfSimInst, VfSimValue, VfSimProgram
+    from api.common.schema import StorageKind
+    from api.tilesim.predict import predict_from_program
+    from api.tilesim.program import VfSimInst, VfSimValue, VfSimProgram
     dtype = 'fp16' if width == 16 else 'fp32'
     values = {
         'mask': VfSimValue('mask', StorageKind.PREDICATE_REGISTER, 'bool'),
@@ -50,7 +50,7 @@ def test_movp_program_uses_packaged_predicate_semantics_and_parameters(tmp_path,
               for line in (tmp_path/'package/start_by_cycle.json').read_text().splitlines()]
     by_op = {event['op']: event for event in events}
     assert by_op[f'MOVP_B{width}']['preg_dst'][0].startswith('pred')
-    assert by_op[f'MOVP_B{width}']['preg_dst'][0] in by_op['VDUP']['preg_src']
+    assert by_op[f'MOVP_B{width}']['preg_dst'][0] in by_op['VDUPS']['preg_src']
 
 
 @pytest.mark.parametrize('factory', [program, predicate_program])
@@ -65,5 +65,5 @@ def test_packaged_api_matches_root(tmp_path, factory):
     p = packaged.VfSimProgram(body=[convert(x) for x in root.body], params=root.params,
         values={k: packaged.VfSimValue(v.value_id, v.storage.value, v.dtype, v.shape, v.storage_object_id, v.offsets) for k,v in root.values.items()})
     assert package_dict(packaged.program_to_canonical(p)) == canonical_vf_info_to_dict(program_to_canonical(root))
-    from api.program_api import predict_from_program
+    from api.tilesim.predict import predict_from_program
     assert packaged.predict_from_program(p, out_dir=tmp_path/'package')['cycles'] == predict_from_program(root, out_dir=tmp_path/'root')['cycles']

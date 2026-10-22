@@ -92,7 +92,7 @@ CCE 代码优化不是通用代码清理，而是面向硬件瓶颈(目前以CAN
 
 默认可编辑：
 
-- `cce_code/`
+- `VFtest/cce/`
 - `VFtest/`
 - 与 kernel 直接相关的生成脚本（例如 `tools/generate_*dsl*.py`）
 

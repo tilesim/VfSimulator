@@ -1,0 +1,10 @@
+void vf(__ubuf__ uint8_t *input, __ubuf__ uint8_t *output) {
+    __VEC_SCOPE__ {
+        vector_u8 first, second;
+        vector_bool p = pset_b8(PAT_ALL);
+        vlds(first, input, 0, BRC_B8);
+        vsts(first, output, 0, ONEPT_B8, p);
+        vlds(first, second, input, 0, DINTLV_B8);
+        vsts(first, second, output, 0, INTLV_B8, p);
+    }
+}
