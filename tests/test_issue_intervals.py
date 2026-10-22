@@ -22,10 +22,11 @@ class IssueIntervalTests(unittest.TestCase):
 
     def uop(self, engine, identity, op, form="fp32"):
         return Uop(identity, op, form, [], [], [], [],
-                   profile=engine.db.resolve_inst(op, form))
+                   profile=engine.db.resolve_inst(op, form),
+                   writeback_banks=frozenset({"vector"}))
 
     def start(self, engine, uop, cycle, port=0, queued=True):
-        self.assertTrue(engine.exu.can_issue(uop.profile, port, cycle, queued=queued))
+        self.assertTrue(engine.exu.can_issue(uop, port, cycle, queued=queued))
         engine.exu.start(uop, port, uop.profile.fu_type, cycle, queued=queued)
 
     def test_interleaving_preserves_self_ii_in_direct_and_queue_modes(self):
@@ -38,11 +39,11 @@ class IssueIntervalTests(unittest.TestCase):
                     last = self.uop(engine, 2, "VEXP")
                     self.start(engine, first, 100, queued=queued)
                     self.start(engine, middle, 101, queued=queued)
-                    self.assertEqual(engine.exu.next_issue_cycle(last.profile, 0), 104)
+                    self.assertEqual(engine.exu.next_issue_cycle(last, 0), 104)
                     for cycle in (102, 103):
-                        self.assertFalse(engine.exu.can_issue(last.profile, 0, cycle,
+                        self.assertFalse(engine.exu.can_issue(last, 0, cycle,
                                                              queued=queued))
-                    self.assertTrue(engine.exu.can_issue(last.profile, 0, 104,
+                    self.assertTrue(engine.exu.can_issue(last, 0, 104,
                                                         queued=queued))
 
     def test_self_ii_uses_its_own_issue_origin(self):
@@ -52,33 +53,33 @@ class IssueIntervalTests(unittest.TestCase):
         last = self.uop(engine, 2, "VEXP")
         self.start(engine, first, 100)
         self.start(engine, middle, 103)
-        self.assertEqual(engine.exu.next_issue_cycle(last.profile, 0), 104)
-        self.assertTrue(engine.exu.can_issue(last.profile, 0, 104, queued=True))
+        self.assertEqual(engine.exu.next_issue_cycle(last, 0), 104)
+        self.assertTrue(engine.exu.can_issue(last, 0, 104, queued=True))
 
     def test_new_same_form_issue_advances_the_self_ii_deadline(self):
         engine = self.engine()
         for identity, op, cycle in [(0, "VEXP", 100), (1, "VADD", 101),
                                     (2, "VEXP", 104), (3, "VADD", 105)]:
             self.start(engine, self.uop(engine, identity, op), cycle)
-        profile = engine.db.resolve_inst("VEXP", "fp32")
-        self.assertFalse(engine.exu.can_issue(profile, 0, 106, queued=True))
-        self.assertEqual(engine.exu.next_issue_cycle(profile, 0), 108)
+        candidate = self.uop(engine, 9, "VEXP")
+        self.assertFalse(engine.exu.can_issue(candidate, 0, 106, queued=True))
+        self.assertEqual(engine.exu.next_issue_cycle(candidate, 0), 108)
 
     def test_history_is_independent_between_execution_ports(self):
         engine = self.engine()
         self.start(engine, self.uop(engine, 0, "VEXP"), 100)
         self.start(engine, self.uop(engine, 1, "VADD"), 101)
-        profile = engine.db.resolve_inst("VEXP", "fp32")
-        self.assertFalse(engine.exu.can_issue(profile, 0, 102, queued=True))
-        self.assertTrue(engine.exu.can_issue(profile, 1, 102, queued=True))
+        candidate = self.uop(engine, 9, "VEXP")
+        self.assertFalse(engine.exu.can_issue(candidate, 0, 102, queued=True))
+        self.assertTrue(engine.exu.can_issue(candidate, 1, 102, queued=True))
 
     def test_history_tracks_each_opcode_form(self):
         engine = self.engine()
         self.start(engine, self.uop(engine, 0, "VEXP", "fp32"), 100)
         self.start(engine, self.uop(engine, 1, "VEXP", "fp16"), 101)
         self.start(engine, self.uop(engine, 2, "VADD"), 102)
-        fp32 = engine.db.resolve_inst("VEXP", "fp32")
-        fp16 = engine.db.resolve_inst("VEXP", "fp16")
+        fp32 = self.uop(engine, 3, "VEXP", "fp32")
+        fp16 = self.uop(engine, 4, "VEXP", "fp16")
         self.assertEqual(engine.exu.next_issue_cycle(fp32, 0), 104)
         self.assertEqual(engine.exu.next_issue_cycle(fp16, 0), 109)
 
@@ -95,15 +96,15 @@ class IssueIntervalTests(unittest.TestCase):
         engine = self.engine()
         self.start(engine, self.uop(engine, 0, "VEXP"), 100)
         engine.exq.enqueue(self.uop(engine, 1, "VCMAX"), 0, "SFU", 101, 101)
-        profile = engine.db.resolve_inst("VEXP", "fp32")
-        self.assertEqual(engine.exq.predict_issue_cycle(0, profile, 102), 104)
+        candidate = self.uop(engine, 9, "VEXP")
+        self.assertEqual(engine.exq.predict_issue_cycle(0, candidate, 102), 104)
 
     def test_exq_prediction_preserves_pending_same_form_history(self):
         engine = self.engine()
         engine.exq.enqueue(self.uop(engine, 0, "VEXP"), 0, "SFU", 100, 100)
         engine.exq.enqueue(self.uop(engine, 1, "VCMAX"), 0, "SFU", 101, 101)
-        profile = engine.db.resolve_inst("VEXP", "fp32")
-        self.assertEqual(engine.exq.predict_issue_cycle(0, profile, 102), 104)
+        candidate = self.uop(engine, 9, "VEXP")
+        self.assertEqual(engine.exq.predict_issue_cycle(0, candidate, 102), 104)
 
     def test_exp_div_transition_intervals_remain_directional(self):
         for first_op, middle_op, gap in [("VEXP", "VDIV", 6), ("VDIV", "VEXP", 5)]:
@@ -111,11 +112,11 @@ class IssueIntervalTests(unittest.TestCase):
                 engine = self.engine()
                 self.start(engine, self.uop(engine, 0, first_op), 100)
                 middle = self.uop(engine, 1, middle_op)
-                self.assertFalse(engine.exu.can_issue(middle.profile, 0, 100 + gap - 1,
+                self.assertFalse(engine.exu.can_issue(middle, 0, 100 + gap - 1,
                                                      queued=True))
                 self.start(engine, middle, 100 + gap)
-                profile = engine.db.resolve_inst(first_op, "fp32")
-                self.assertEqual(engine.exu.next_issue_cycle(profile, 0), 111)
+                candidate = self.uop(engine, 9, first_op)
+                self.assertEqual(engine.exu.next_issue_cycle(candidate, 0), 111)
 
     def test_completion_does_not_erase_an_unexpired_interval(self):
         engine = self.engine()
@@ -131,9 +132,9 @@ class IssueIntervalTests(unittest.TestCase):
             self.start(engine, first, 100)
             self.assertEqual(engine.exu.finish(116), [first])
             self.start(engine, self.uop(engine, 1, "VADD"), 117)
-            profile = engine.db.resolve_inst("VEXP", "fp32")
-            self.assertFalse(engine.exu.can_issue(profile, 0, 118, queued=True))
-            self.assertEqual(engine.exu.next_issue_cycle(profile, 0), 120)
+            candidate = self.uop(engine, 9, "VEXP")
+            self.assertFalse(engine.exu.can_issue(candidate, 0, 118, queued=True))
+            self.assertEqual(engine.exu.next_issue_cycle(candidate, 0), 120)
 
 
 if __name__ == "__main__":

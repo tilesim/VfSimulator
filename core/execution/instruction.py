@@ -92,6 +92,8 @@ class Uop:
     exq_recv_cycle: int = 0
     exq_pred_issue: int = 0
     admission_seq: int = 0
+    # Destination banks used by this instruction, recorded during rename.
+    writeback_banks: frozenset[str] = frozenset()
 
     @property
     def op_class(self):

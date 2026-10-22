@@ -59,7 +59,7 @@ CCE / Canonical JSON / CanonicalVfInfo → InputAPI
 
 输入在 API 出口完成校验。各硬件组件持有自己的队列和状态，Engine 安排周期阶段。
 EXU 按 opcode/form 保留 self-II 历史，检查相邻指令 II，默认每端口最多 7 条在途指令，
-每周期最多发射和完成各一条计算指令。
+每周期最多发射一条计算指令；完成带宽分别允许一条写向量寄存器和一条写谓词寄存器的指令。
 
 源码工作区的命令行入口：
 

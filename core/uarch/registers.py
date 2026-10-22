@@ -446,6 +446,7 @@ class Registers:
             preg_src,
             preg_dst,
             profile=profile,
+            writeback_banks=frozenset(self.physical_banks[p].name for p in preg_dst),
             preg_src_gen=gens,
             top_block_id=inst.top_block_id,
             iter_stack=list(inst.iter_stack),
