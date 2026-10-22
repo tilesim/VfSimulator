@@ -2,6 +2,7 @@
 #include "api/common/schema.h"
 #include "core/params/types.h"
 #include <deque>
+#include <set>
 #include <tuple>
 #include <unordered_set>
 namespace vfsim {
@@ -61,6 +62,8 @@ struct Uop {
   std::vector<std::optional<std::string>> pregSrc;
   std::vector<std::optional<int64_t>> pregSrcGen;
   std::vector<std::string> pregDst;
+  // Destination banks used by this instruction, recorded during rename.
+  std::set<std::string> writebackBanks;
 
   // Owned by the run-local ParamDB; its lifetime covers all components and
   // traces.

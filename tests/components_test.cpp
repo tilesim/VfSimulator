@@ -17,6 +17,7 @@ UopPtr compute(int64_t id, const std::string &op, const ParamDB &db,
   u->op = op;
   u->form = form;
   u->profile = &db.inst(op, u->form, "COMPUTE");
+  u->writebackBanks = {"vector"};
   return u;
 }
 void testIssueIntervals(const ParamDB &db) {
@@ -177,11 +178,138 @@ void testCompletionBandwidth(const ParamDB &db) {
   }
   require(pipeline.inflight(0) == 6, "Completion bandwidth preserves pipelined overlap");
 }
+void testSeparateWritebackBanks(const ParamDB &db) {
+  auto cfg = db.uarch();
+  cfg.exqIssueInflightCapPerPort = 0;
+  auto predicate = [&](int64_t id, const std::string &op,
+                       const std::string &form = "fp32") {
+    auto u = compute(id, op, db, form);
+    u->writebackBanks = {"predicate"};
+    return u;
+  };
+  for (bool queued : {false, true}) {
+    for (bool cross : {false, true}) {
+      cfg.enableCrossFuIi = cross;
+      EXU exu(cfg, db);
+      auto vector = compute(0, "VEXP", db);
+      auto pred = predicate(1, "VCMP_GT");
+      exu.start(vector, 0, 100, queued);
+      require(exu.canIssue(*pred, 0, 110, queued),
+              "Vector and predicate completion slots are independent");
+      exu.start(pred, 0, 110, queued);
+      require(vector->doneCycle == pred->doneCycle && exu.finish(116).size() == 2,
+              "One EXU can finish vector and predicate results in the same cycle");
+      require(exu.inflight(0) == 0, "Both completions release inflight credit");
+      auto both = compute(2, "VADD", db);
+      both->writebackBanks = {"vector", "predicate"};
+      require(exu.nextCompletionIssueCycle(*both, 0, 109) == 109,
+              "Finishing both results releases both completion slots");
+    }
+  }
+  cfg.enableCrossFuIi = true;
+  EXU predOnly(cfg, db);
+  predOnly.start(predicate(0, "PAND", "b32"), 0, 100, true);
+  auto pred = predicate(1, "VCMP_GT");
+  require(!predOnly.canIssue(*pred, 0, 103, true) &&
+              predOnly.canIssue(*pred, 0, 104, true),
+          "Two predicate-producing instructions need separate completion cycles");
+  for (const auto &busyBank : {"vector", "predicate"}) {
+    EXU exu(cfg, db);
+    auto first = compute(0, "VEXP", db);
+    first->writebackBanks = {busyBank};
+    exu.start(first, 0, 100, true);
+    auto both = compute(1, "VADD", db);
+    both->writebackBanks = {"vector", "predicate"};
+    require(exu.nextIssueCycle(*both, 0, false, 109) == 110,
+            "An instruction writing both banks requires both completion slots");
+    bool rejected = false;
+    try {
+      exu.start(both, 0, 109, true);
+    } catch (const std::runtime_error &) {
+      rejected = true;
+    }
+    auto other = compute(2, "VADD", db);
+    other->writebackBanks = {
+        std::string(busyBank) == "vector" ? "predicate" : "vector"};
+    require(rejected && !both->startCycle && exu.canIssue(*other, 0, 109, true),
+            "A rejected reservation leaves both banks and the candidate unchanged");
+    exu.start(both, 0, 110, true);
+    for (const auto &bank : {"vector", "predicate"}) {
+      other->writebackBanks = {bank};
+      require(exu.nextCompletionIssueCycle(*other, 0, 110) == 111,
+              "A dual-bank instruction reserves each bank once");
+    }
+    require(exu.finish(117).size() == 2 && exu.inflight(0) == 0,
+            "Dual-bank completion releases reservations and inflight credit");
+  }
+  EXU noOutput(cfg, db);
+  noOutput.start(compute(0, "VEXP", db), 0, 100, true);
+  auto empty = compute(1, "VADD", db);
+  empty->writebackBanks.clear();
+  require(noOutput.canIssue(*empty, 0, 109, true),
+          "Instructions without register outputs consume no writeback slot");
+  noOutput.start(empty, 0, 109, true);
+  require(noOutput.finish(116).size() == 2,
+          "An instruction without outputs can finish beside a vector result");
+
+  std::unordered_map<std::string, ValueInfo> values;
+  Registers regs(cfg, db, values);
+  for (bool greedy : {false, true}) {
+    for (bool pending : {false, true}) {
+      cfg.enableExqGreedyBalance = greedy;
+      EXU exu(cfg, db);
+      exu.start(compute(0, "VEXP", db), 0, 100, true);
+      EXQ queue(cfg, db, regs, exu);
+      if (pending)
+        queue.enqueue(compute(2, "VADD", db), 0, 107, 107);
+      auto pred = predicate(1, "VCMP_GT");
+      require(queue.predictIssueCycle(0, *pred, 110) == 110 &&
+                  exu.pickPort(*pred, 110, {false, true}) == 0,
+              "EXQ prediction and direct port selection use the destination bank");
+      if (pending)
+        require(queue.popReady(0, 107) != nullptr, "The pending tail can issue");
+      queue.enqueue(pred, 0, 110, 110);
+      require(queue.popReady(0, 110) == pred,
+              "EXQ can issue a predicate result beside a reserved vector completion");
+    }
+  }
+}
+void testRenameWritebackBanks(const ParamDB &db) {
+  auto cfg = db.uarch();
+  std::unordered_map<std::string, ValueInfo> values{
+      {"predicate_like_vector", {"predicate_like_vector", ValueStorageKind::Register, "fp32", {}}},
+      {"another_vector", {"another_vector", ValueStorageKind::Register, "fp32", {}}},
+      {"V_like_predicate", {"V_like_predicate", ValueStorageKind::PredicateRegister, "b32", {}}},
+      {"scalar", {"scalar", ValueStorageKind::Scalar, "int32", {}}}};
+  for (bool theoretical : {false, true}) {
+    cfg.theoreticalLimitMode = theoretical;
+    Registers regs(cfg, db, values);
+    DynamicInst inst;
+    inst.op = "VADD";
+    inst.form = "fp32";
+    inst.dst = {"predicate_like_vector", "another_vector"};
+    require(regs.rename(inst, 100)->writebackBanks == std::set<std::string>{"vector"},
+            "Multiple vector destinations use one completion slot");
+    inst.dst = {"predicate_like_vector", "V_like_predicate"};
+    require(regs.rename(inst, 100)->writebackBanks ==
+                std::set<std::string>({"vector", "predicate"}),
+            "Rename records declared destination banks for opaque identifiers");
+    inst.dst = {"scalar"};
+    require(regs.rename(inst, 100)->writebackBanks.empty(),
+            "Scalar destinations use neither register writeback bank");
+    inst.src = {"V_like_predicate"};
+    inst.dst = {"another_vector"};
+    require(regs.rename(inst, 100)->writebackBanks == std::set<std::string>{"vector"},
+            "Predicate sources do not reserve predicate writeback slots");
+  }
+}
 } // namespace
 int main() {
   ParamDB db(VFSIM_SOURCE_ROOT);
   testIssueIntervals(db);
   testCompletionBandwidth(db);
+  testSeparateWritebackBanks(db);
+  testRenameWritebackBanks(db);
   auto cfg = db.uarch();
   cfg.exqIssueInflightCapPerPort = 1;
   cfg.exqDepth = 1;
