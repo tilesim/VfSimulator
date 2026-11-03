@@ -23,6 +23,8 @@ SimulationResult CoreVfCostModel::runVfInfo(const CanonicalVfInfo &vf,
   auto output = outDir_;
   if (!output.empty() && !output.is_absolute())
     output = baseDir_ / output;
-  return engine.run(output, maxCycles);
+  auto result = engine.run(output, maxCycles);
+  result.compilerOptimizationStats = program.compilerOptimizationStats;
+  return result;
 }
 } // namespace vfsim

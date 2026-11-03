@@ -1,4 +1,5 @@
 #pragma once
+#include "core/execution/optimization.h"
 #include <cstdint>
 #include <filesystem>
 #include <string>
@@ -12,6 +13,7 @@ struct SimulationResult {
   int64_t cyclesExecuted = 0, vfEndCycle = 0;
   std::string resultsDir, tracePath;
   int64_t linearInstCount = 0;
+  CompilerOptimizationStats compilerOptimizationStats;
 };
 void dumpLogs(const std::filesystem::path &, const TraceRecorder &, const IDU &,
               const LoopControl &, const MembarController &, const ParamDB &,

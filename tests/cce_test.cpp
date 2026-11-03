@@ -109,6 +109,10 @@ void catalogBinding(Inputs &in) {
   in.rejects(scope("mask=pset_b32(PAT_ALL);vdup(a,b,mask,POS_LOWEST);"),
              "variant");
   in.rejects(scope("vlds(a,p,0,123);"), "configuration");
+  in.rejects(scope("uint32_t n=1;uint32_t k=n++;"), "scalar side effects");
+  in.rejects(scope("uint32_t n=1;uint32_t k=(n+=1);"), "scalar side effects");
+  in.rejects(scope("uint32_t n=1;uint32_t k=(n<<=1);"), "scalar side effects");
+  in.rejects(scope("uint32_t n=1;mask=pset_b32(PAT_ALL);vdup(a,++n,mask,MODE_ZEROING);"), "scalar");
   in.rejects("void vf(__ubuf__ int16_t *p){__VEC_SCOPE__{"
              "vector_s16 a,out;vector_bool mask=pset_b16(PAT_ALL);"
              "vlds(a,p,0,NORM);vcadd(out,a,mask);}}",
@@ -287,6 +291,7 @@ void canonicalContractFixtures() {
   const auto root =
       std::filesystem::path(VFSIM_SOURCE_ROOT) / "VFtest/cce/contracts";
   for (const auto *name : {"mixed",
+                           "loop_invariants",
                            "alias",
                            "packed",
                            "post_update",

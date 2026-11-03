@@ -58,3 +58,5 @@ const auto cycles = result.vfEndCycle;
 | `configs/` | 指令语义、软件展开、资源容量、latency、forwarding 和 II 配置 |
 
 输入转换见[输入层说明](docs/input_api.md)，实现细节见 [C++ 模块说明](docs/code_structure_guide.md)、[执行模型](docs/execution_model.md)、[寄存器模型](docs/register_model.md)、[LSU 模型](docs/lsu_model.md)、[屏障时序](docs/membar_timing_model.md)和[参数配置](docs/configuration.md)。Canonical JSON 的结构定义位于 [canonical_vf_info.schema.json](api/json/canonical_vf_info.schema.json)，语义约束由输入校验器检查。
+
+循环外提由 `core/execution/optimization.*` 在 Canonical 层完成，规则见[循环外提](docs/loop_invariants.md)。

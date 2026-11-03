@@ -7,6 +7,7 @@
 #include "api/common/instruction_catalog.h"
 #include <algorithm>
 #include <cctype>
+#include <functional>
 #include <regex>
 #include <stdexcept>
 #include <tuple>
@@ -32,6 +33,17 @@ std::string withoutSemicolon(std::string s) {
 }
 bool integerDtype(const std::string &s) {
   return s != "float" && s != "double" && s != "half";
+}
+bool scalarHasSideEffects(const std::string &expression) {
+  if (expression.find("++") != std::string::npos || expression.find("--") != std::string::npos) return true;
+  for (size_t i = 0; i < expression.size(); ++i) {
+    if (expression[i] != '=') continue;
+    const char before = i ? expression[i-1] : '\0';
+    const char after = i+1 < expression.size() ? expression[i+1] : '\0';
+    if (after != '=' && before != '=' && before != '!' && before != '<' && before != '>') return true;
+    if (i >= 2 && (expression.substr(i-2,2) == "<<" || expression.substr(i-2,2) == ">>")) return true;
+  }
+  return false;
 }
 bool numericLiteral(std::string text) {
   text = std::regex_replace(
@@ -82,8 +94,8 @@ std::string combine(const std::string &a, const std::string &b) {
 
 struct Symbols {
   std::map<std::string, std::string> registers, align, scalarDtypes,
-      initializers, ubDtypes, pointerStates, addresses, addressStates;
-  std::set<std::string> scalars, offsetScalars, ubNames, induction;
+      initializers, ubDtypes, pointerStates, addresses, addressStates, scalarBindings;
+  std::set<std::string> scalars, offsetScalars, ubNames, induction, volatileScalars;
   std::map<std::string, std::pair<std::string, std::string>> ubAliases;
   std::map<std::string, std::vector<AdapterValue>> pairs;
 };
@@ -93,13 +105,15 @@ class ScopeParser {
   Symbols symbols_;
   const InstructionCatalog &catalog_ = defaultInstructionCatalog();
   int64_t alignSerial_ = 0, pointerSerial_ = 0, predicateSerial_ = 0,
-          vectorSerial_ = 0, softwareScalarSerial_ = 0;
+          vectorSerial_ = 0, softwareScalarSerial_ = 0, scalarDeclarationSerial_ = 0;
   bool collectingDeclarations_ = true;
   std::vector<std::tuple<std::string, int64_t, int64_t>> loopInductions_;
   std::map<int, std::string> addressBindings_;
   std::set<std::string> updated_, allUpdated_, loopPointers_;
   std::map<std::string, std::string> loopPointerSources_;
   std::vector<AdapterNode> instructionPrefix_;
+  std::vector<AdapterNode> scalarPrefix_;
+  std::set<std::string> volatileScalarValues_;
   CanonicalSourceLocation location(int64_t line) const {
     CanonicalSourceLocation l;
     l.source = scope_.kernelName;
@@ -154,7 +168,37 @@ class ScopeParser {
       }
     }
   }
-  void scalarDecl(const std::string &stmt) {
+  std::string scalarBinding(const std::string &name) const {
+    auto found = symbols_.scalarBindings.find(name);
+    return found == symbols_.scalarBindings.end() ? name : found->second;
+  }
+  std::string cleanScalarExpression(const std::string &expression) const {
+    return std::regex_replace(expression, std::regex(R"(\(\s*(?:u?int(?:8|16|32|64)_t|size_t|int|unsigned|signed|short|long|float|double|half)\s*\))"), "");
+  }
+  AdapterNode scalarAssignment(const std::string &name, const std::string &expression, std::optional<int64_t> line) {
+    if (scalarHasSideEffects(expression))
+      throw std::runtime_error("Unsupported scalar side effects: " + expression);
+    AdapterNode n;
+    n.kind = AdapterNode::Kind::ScalarAssignment;
+    n.scalarExpression = expression;
+    n.dst = {{scalarBinding(name), CanonicalStorageKind::Scalar, scalarDtype(symbols_.scalarDtypes.at(name)), {}}};
+    if (line) n.sourceLocation = location(*line);
+    auto clean = cleanScalarExpression(expression);
+    n.scalarPure = std::regex_match(clean, std::regex(R"([\w\s.+*/%<>&|^~!?:()\-]+)"));
+    std::set<std::string> names;
+    const std::regex scalarSymbol(R"(\b[A-Za-z_]\w*\b)");
+    for (std::sregex_iterator it(clean.begin(), clean.end(), scalarSymbol), end; it != end; ++it) names.insert(it->str());
+    for (const auto &source : names) {
+      if (symbols_.induction.count(source)) n.scalarInductions.push_back(source);
+      else if (symbols_.scalars.count(source)) {
+        n.src.push_back({scalarBinding(source), CanonicalStorageKind::Scalar, scalarDtype(symbols_.scalarDtypes.at(source)), {}});
+        if (symbols_.volatileScalars.count(source)) n.scalarPure = false;
+      } else n.scalarPure = false;
+    }
+    return n;
+  }
+  std::vector<AdapterNode> scalarDecl(const std::string &stmt, std::optional<int64_t> line = std::nullopt) {
+    std::vector<AdapterNode> assignments;
     std::smatch m;
     if (!std::regex_match(stmt, m, scalarDeclaration))
       throw std::runtime_error("Unsupported local scalar declaration: " + stmt);
@@ -169,10 +213,19 @@ class ScopeParser {
       symbols_.scalars.insert(name);
       symbols_.offsetScalars.erase(name);
       symbols_.scalarDtypes[name] = dtype;
+      symbols_.scalarBindings[name] = symbols_.induction.empty() ? name : "__scalar_local_" + std::to_string(scalarDeclarationSerial_++) + ":" + name;
+      symbols_.volatileScalars.erase(name);
+      if (std::regex_search(stmt, std::regex(R"(\bvolatile\b)"))) {
+        symbols_.volatileScalars.insert(name);
+        volatileScalarValues_.insert(scalarBinding(name));
+      }
       symbols_.initializers.erase(name);
-      if (d[2].matched)
+      if (d[2].matched) {
         symbols_.initializers[name] = trim(d[2]);
+        assignments.push_back(scalarAssignment(name, trim(d[2]), line));
+      }
     }
+    return assignments;
   }
   IntegerParams integerConstants() const {
     auto result = params_;
@@ -725,7 +778,7 @@ class ScopeParser {
       else if (begins(type, "vector_"))
         arguments[pos] = {typedRegister(name)};
       else if (symbols_.scalars.count(name))
-        arguments[pos] = {{name,
+        arguments[pos] = {{scalarBinding(name),
                            CanonicalStorageKind::Scalar,
                            scalarDtype(symbols_.scalarDtypes.at(name)),
                            {}}};
@@ -923,11 +976,24 @@ class ScopeParser {
       }
       if (symbols_.ubNames.count(name))
         error("cannot use a UB object as scalar");
-      if (symbols_.scalars.count(name))
-        return AdapterValue{name,
+      if (symbols_.scalars.count(name) && trim(arg) == name)
+        return AdapterValue{scalarBinding(name),
                             CanonicalStorageKind::Scalar,
                             scalarDtype(symbols_.scalarDtypes[name]),
                             {}};
+      auto clean = cleanScalarExpression(arg);
+      const std::regex scalarSymbol(R"(\b[A-Za-z_]\w*\b)");
+      bool known = std::regex_match(clean, std::regex(R"([\w\s.+*/%<>&|^~!?:()\-]+)")) && !scalarHasSideEffects(clean), any = false;
+      for (std::sregex_iterator it(clean.begin(), clean.end(), scalarSymbol), end; it != end; ++it) {
+        any = true;
+        known = known && (symbols_.scalars.count(it->str()) || symbols_.induction.count(it->str()));
+      }
+      if (any && known) {
+        auto dtype = castScalarDtype(arg);
+        auto temporary = temporaryScalar(dtype.empty() ? "uint32" : dtype);
+        instructionPrefix_.push_back(scalarAssignment(temporary.valueId, arg, std::nullopt));
+        return temporary;
+      }
       error("must be a declared scalar or literal");
     }
     if (kind == CatalogArgumentKind::Predicate) {
@@ -1050,7 +1116,7 @@ class ScopeParser {
     if (auto ref = ubReference(arg))
       return AdapterValue{ref->first, CanonicalStorageKind::UB, "", {}};
     if (symbols_.scalars.count(name))
-      return AdapterValue{name,
+      return AdapterValue{scalarBinding(name),
                           CanonicalStorageKind::Scalar,
                           scalarDtype(symbols_.scalarDtypes[name]),
                           {}};
@@ -1290,8 +1356,7 @@ class ScopeParser {
       return {};
     }
     if (std::regex_match(stmt, scalarDeclaration)) {
-      scalarDecl(stmt);
-      return {};
+      return scalarDecl(stmt, line);
     }
     if (std::regex_match(stmt, pointerDeclaration)) {
       pointerDecl(stmt);
@@ -1300,6 +1365,12 @@ class ScopeParser {
     if (std::regex_match(stmt,
                          std::regex(R"(\(\s*void\s*\)\s*[A-Za-z_]\w*\s*;)")))
       return {};
+    if (std::regex_match(stmt, m, std::regex(R"(([A-Za-z_]\w*)\s*(=|\+=|-=|\*=|/=|%=|&=|\|=|\^=)\s*([\s\S]+);)")) && symbols_.scalars.count(m[1])) {
+      auto name = m[1].str(), operation = m[2].str(), expression = m[3].str();
+      if (operation != "=") expression = name + operation.substr(0, operation.size()-1) + "(" + expression + ")";
+      symbols_.initializers.erase(name);
+      return {scalarAssignment(name, expression, line)};
+    }
     if (std::regex_match(stmt, m,
                          std::regex(R"(([A-Za-z_]\w*)\s*=\s*([\s\S]*);)")) &&
         symbols_.addresses.count(m[1])) {
@@ -1859,8 +1930,10 @@ public:
         auto stmt = trim(scope.declarationSource.substr(start, i - start + 1));
         if (std::regex_match(stmt, vectorDeclaration))
           vectorDecl(stmt);
-        if (std::regex_match(stmt, scalarDeclaration))
-          scalarDecl(stmt);
+        if (std::regex_match(stmt, scalarDeclaration)) {
+          auto assignments = scalarDecl(stmt);
+          scalarPrefix_.insert(scalarPrefix_.end(), assignments.begin(), assignments.end());
+        }
         start = i + 1;
       }
     start = 0;
@@ -1883,6 +1956,16 @@ public:
     AdapterProgram p;
     p.params = params_;
     p.context = block(scope_.source, {}, scope_.startLine);
+    std::function<void(std::vector<AdapterNode> &)> markVolatile = [&](auto &nodes) {
+      for (auto &node : nodes) {
+        if (node.kind == AdapterNode::Kind::Loop) markVolatile(node.body);
+        else if (node.kind == AdapterNode::Kind::Instruction)
+          for (const auto &source : node.src)
+            if (volatileScalarValues_.count(source.valueId)) node.attributes["volatile"] = true;
+      }
+    };
+    markVolatile(p.context);
+    p.context.insert(p.context.begin(), scalarPrefix_.begin(), scalarPrefix_.end());
     for (const auto &[state, source] : loopPointerSources_) {
       auto ancestor = source;
       std::set<std::string> seen;

@@ -43,7 +43,7 @@ AdapterProgram normalizeProgram(AdapterProgram program) {
         record(v);
       for (auto &v : n.dst)
         record(v);
-      if (n.kind == AdapterNode::Kind::Alias)
+      if (n.kind == AdapterNode::Kind::Alias || n.kind == AdapterNode::Kind::ScalarAssignment)
         continue;
       n.name = defaultInstructionCatalog().canonicalOpcode(n.name);
       if (!n.form.empty())

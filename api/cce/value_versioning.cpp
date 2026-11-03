@@ -37,6 +37,7 @@ class Versioner {
   const AdapterProgram &program_;
   CanonicalVfInfo vf_;
   std::set<std::string> nodeIds_;
+  std::map<std::string, std::string> inductionScopes_;
   int64_t instruction_ = 0, loop_ = 0, membar_ = 0, definition_ = 0;
   std::string nodeId(const std::string &kind,
                      const std::string &preferred = {}) {
@@ -94,7 +95,7 @@ class Versioner {
         result.insert(inner.begin(), inner.end());
       } else
         for (const auto &v : n.dst)
-          if (renameable(program_.values.at(v.valueId).storage))
+          if (program_.values.at(v.valueId).storage != CanonicalStorageKind::UB)
             result.insert(v.valueId);
     }
     return result;
@@ -116,7 +117,7 @@ class Versioner {
       }
       for (const auto &v : n.src)
         if (!defined.count(v.valueId) &&
-            renameable(program_.values.at(v.valueId).storage))
+            program_.values.at(v.valueId).storage != CanonicalStorageKind::UB)
           reads.insert(v.valueId);
       for (const auto &v : n.dst)
         defined.insert(v.valueId);
@@ -233,7 +234,12 @@ class Versioner {
                         : std::nullopt;
     auto innerInduction = induction;
     innerInduction.insert(out.induction.variableId);
+    auto previous = inductionScopes_.find(out.induction.variableId);
+    std::optional<std::string> savedScope = previous == inductionScopes_.end() ? std::nullopt : std::optional<std::string>{previous->second};
+    inductionScopes_[out.induction.variableId] = out.loopId;
     out.body = nodes(n.body, innerEnv, innerInduction);
+    if (savedScope) inductionScopes_[out.induction.variableId] = *savedScope;
+    else inductionScopes_.erase(out.induction.variableId);
     std::map<std::string, std::string> exitByBack;
     for (const auto &id : ids) {
       auto back = innerEnv.at(id);
@@ -266,6 +272,21 @@ class Versioner {
             CanonicalNode::makeInstruction(instruction(n, env, induction)));
       else if (n.kind == AdapterNode::Kind::Loop)
         out.push_back(CanonicalNode::makeLoop(loop(n, env, induction)));
+      else if (n.kind == AdapterNode::Kind::ScalarAssignment) {
+        std::vector<std::string> dependencies;
+        for (const auto &source : n.src) dependencies.push_back(entry(source.valueId, env));
+        auto id = definition(n.dst.at(0).valueId, std::nullopt);
+        auto &value = vf_.values.at(id);
+        value.scalarExpression = n.scalarExpression;
+        value.scalarDependencies = std::move(dependencies);
+        std::set<std::string> loops;
+        if (n.scalarPure) {
+          for (const auto &name : n.scalarInductions) loops.insert(inductionScopes_.at(name));
+        } else for (const auto &[name, scope] : inductionScopes_) loops.insert(scope);
+        value.scalarLoopDependencies.assign(loops.begin(), loops.end());
+        value.sourceLocation = n.sourceLocation;
+        env[n.dst.at(0).valueId] = id;
+      }
       else if (n.kind == AdapterNode::Kind::Membar) {
         CanonicalMembar m;
         m.instructionId = nodeId("membar");

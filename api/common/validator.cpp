@@ -243,6 +243,20 @@ validateCanonicalVfInfo(const CanonicalVfInfo &vfInfo) {
     if (value.dtype.empty())
       error("missing_value_dtype", "Value must declare dtype", path,
             value.sourceLocation);
+    if (value.scalarExpression || !value.scalarDependencies.empty() || !value.scalarLoopDependencies.empty()) {
+      if (value.storage != CanonicalStorageKind::Scalar)
+        error("invalid_scalar_dependency", "Scalar dependency metadata requires Scalar storage", path, value.sourceLocation);
+      for (const auto &id : value.scalarDependencies) {
+        auto target = vfInfo.values.find(id);
+        if (target == vfInfo.values.end() || target->second.storage != CanonicalStorageKind::Scalar)
+          error("invalid_scalar_dependency", "Scalar dependency must reference a declared Scalar value", path, value.sourceLocation);
+      }
+      for (const auto &id : value.scalarLoopDependencies) {
+        auto target = nodeInfo.find(id);
+        if (target == nodeInfo.end() || target->second.kind != "loop")
+          error("invalid_scalar_dependency", "Scalar loop dependency must reference a declared loop", path, value.sourceLocation);
+      }
+    }
     if (value.storage == CanonicalStorageKind::PredicateRegister) {
       if (vfInfo.schemaVersion != 2)
         error("predicate_requires_schema_v2",

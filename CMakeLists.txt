@@ -26,6 +26,7 @@ add_library(vfsim_native_core STATIC
   core/execution/loop_control.cpp
   core/execution/membar.cpp
   core/execution/prepare.cpp
+  core/execution/optimization.cpp
   core/params/database.cpp
   core/params/fallback.cpp
   core/params/loader.cpp

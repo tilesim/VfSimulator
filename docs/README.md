@@ -5,6 +5,7 @@
 | [代码结构](code_structure_guide.md) | C++ 模块、组件和周期推进 |
 | [输入 API](input_api.md) | CCE、Canonical JSON 和 Builder |
 | [执行模型](execution_model.md) | 组件流转、循环、II 与完成带宽 |
+| [循环无关指令外提](loop_invariants.md) | 纯计算、标量反馈、嵌套循环边界及动态值生存期 |
 | [参数配置](configuration.md) | 参数文件、加载快照和查询回退 |
 | [指令时序](instruction_timing.md) | latency、II、forwarding 与实验边界 |
 | [A5 指令覆盖](a5_instruction_coverage.md) | CANN 接口与 dtype 范围 |

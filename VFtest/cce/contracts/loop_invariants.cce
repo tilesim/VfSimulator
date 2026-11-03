@@ -1,0 +1,17 @@
+void loop_invariants(__ubuf__ float *input, __ubuf__ float *output, uint32_t count) {
+    __VEC_SCOPE__ {
+        vector_bool all = pset_b32(PAT_ALL), fixed_mask, feedback_mask;
+        vector_f32 data, constant, result;
+        uint32_t remaining = count;
+        for (uint16_t i = 0; i < 4; ++i) {
+            uint32_t fixed_count = count;
+            fixed_mask = plt_b32(fixed_count, POST_UPDATE);
+            feedback_mask = plt_b32(remaining, POST_UPDATE);
+            vdup(constant, 2.0f, fixed_mask, MODE_ZEROING);
+            vlds(data, input, i * 64, NORM);
+            vsel(result, data, constant, feedback_mask);
+            vsts(result, output, i * 64, NORM_B32, all);
+        }
+        vsts(constant, output, 256, NORM_B32, all);
+    }
+}

@@ -1,6 +1,7 @@
 // Copyright (c) 2026 Huawei Technologies Co., Ltd.
 // SPDX-License-Identifier: CANN-1.0
 #include "api/input_api.h"
+#include "api/json/value.h"
 #include "core/simulator.h"
 #include <iostream>
 #include <stdexcept>
@@ -82,6 +83,15 @@ int main(int argc, char **argv) {
     std::cout << "cyclesExecuted=" << result.cyclesExecuted << '\n'
               << "vfEndCycle=" << result.vfEndCycle << '\n'
               << "linearInstCount=" << result.linearInstCount << '\n';
+    vfsim::json::Value::Array moves;
+    for (const auto &move : result.compilerOptimizationStats.moves)
+      moves.emplace_back(vfsim::json::Value::Object{{"instruction_id", move.instructionId},
+        {"opcode", move.opcode}, {"from_loop", move.fromLoop},
+        {"to_loop", move.toLoop ? vfsim::json::Value(*move.toLoop) : vfsim::json::Value(nullptr)}});
+    std::cout << "compilerOptimizationStats=" << vfsim::json::stringify(vfsim::json::Value::Object{
+      {"enabled", result.compilerOptimizationStats.enabled},
+      {"hoisted_instruction_count", result.compilerOptimizationStats.hoistedInstructionCount},
+      {"moves", std::move(moves)}}) << '\n';
     if (!result.tracePath.empty())
       std::cout << "tracePath=" << result.tracePath << '\n';
     if (!result.resultsDir.empty())
