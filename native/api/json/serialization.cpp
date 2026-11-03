@@ -328,7 +328,7 @@ CanonicalVfInfo decodeCanonicalVfInfoJson(const json::Value &rootValue) {
     rejectUnknownFields(object,
                         {"definition_id", "logical_id", "storage", "dtype",
                          "shape", "producer_node_id", "storage_object_id",
-                         "source_location"},
+                         "source_location", "scalar_expression", "scalar_dependencies", "scalar_loop_dependencies"},
                         "canonical value");
     CanonicalValue decoded;
     decoded.definitionId = required(object, "definition_id").asString();
@@ -339,6 +339,13 @@ CanonicalVfInfo decodeCanonicalVfInfoJson(const json::Value &rootValue) {
     decoded.producerNodeId = optionalString(object, "producer_node_id");
     decoded.storageObjectId = optionalString(object, "storage_object_id");
     decoded.sourceLocation = sourceLocation(find(object, "source_location"));
+    decoded.scalarExpression = optionalString(object, "scalar_expression");
+    if (auto dependencies = find(object, "scalar_dependencies"))
+      for (const auto &id : dependencies->asArray())
+        decoded.scalarDependencies.push_back(id.asString());
+    if (auto dependencies = find(object, "scalar_loop_dependencies"))
+      for (const auto &id : dependencies->asArray())
+        decoded.scalarLoopDependencies.push_back(id.asString());
     result.values.emplace(definitionId, std::move(decoded));
   }
   if (const json::Value *storageObjects = find(root, "storage_objects")) {
@@ -537,9 +544,8 @@ Array encodeNodes(const std::vector<CanonicalNode> &nodes) {
 } // namespace
 json::Value encodeCanonicalVfInfoJson(const CanonicalVfInfo &vf) {
   JsonObject values, objects, params;
-  for (const auto &[id, value] : vf.values)
-    values[id] =
-        JsonObject{{"definition_id", value.definitionId},
+  for (const auto &[id, value] : vf.values) {
+    JsonObject object{{"definition_id", value.definitionId},
                    {"logical_id", value.logicalId},
                    {"storage", storageName(value.storage)},
                    {"dtype", value.dtype},
@@ -547,6 +553,16 @@ json::Value encodeCanonicalVfInfoJson(const CanonicalVfInfo &vf) {
                    {"producer_node_id", encodeOptional(value.producerNodeId)},
                    {"storage_object_id", encodeOptional(value.storageObjectId)},
                    {"source_location", encodeLocation(value.sourceLocation)}};
+    if (value.scalarExpression || !value.scalarDependencies.empty() || !value.scalarLoopDependencies.empty()) {
+      object["scalar_expression"] = encodeOptional(value.scalarExpression);
+      json::Value::Array dependencies, loops;
+      for (const auto &dependency : value.scalarDependencies) dependencies.emplace_back(dependency);
+      for (const auto &dependency : value.scalarLoopDependencies) loops.emplace_back(dependency);
+      object["scalar_dependencies"] = std::move(dependencies);
+      object["scalar_loop_dependencies"] = std::move(loops);
+    }
+    values[id] = std::move(object);
+  }
   for (const auto &[id, object] : vf.storageObjects)
     objects[id] =
         JsonObject{{"object_id", object.objectId},

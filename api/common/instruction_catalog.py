@@ -97,6 +97,7 @@ class InstructionSpec:
     )
     virtual: bool = False
     timing_optional: bool = False
+    pure: bool = False
     call_variants: tuple[CallVariant, ...] = ()
     align_state_operation: str | None = None
     align_state_argument_index: int | None = None
@@ -661,6 +662,7 @@ def instruction_catalog_from_dict(payload: Mapping[str, Any]) -> InstructionCata
         specializations = raw.get("specializations", {})
         virtual = raw.get("virtual", False)
         timing_optional = raw.get("timing_optional", False)
+        pure = raw.get('pure', False)
         raw_call_variants = raw.get("call_variants", [])
         if not isinstance(aliases, list) or not all(
             isinstance(value, str) and value for value in aliases
@@ -677,6 +679,8 @@ def instruction_catalog_from_dict(payload: Mapping[str, Any]) -> InstructionCata
             raise ValueError(f"{opcode}.specializations must map strings to strings")
         if not isinstance(virtual, bool) or not isinstance(timing_optional, bool):
             raise ValueError(f"{opcode}.virtual/timing_optional must be boolean")
+        if not isinstance(pure, bool):
+            raise ValueError(f'{opcode}.pure must be boolean')
         if not isinstance(raw_call_variants, list):
             raise ValueError(f"{opcode}.call_variants must be an array")
         call_variants = []
@@ -753,6 +757,7 @@ def instruction_catalog_from_dict(payload: Mapping[str, Any]) -> InstructionCata
             ),
             virtual=virtual,
             timing_optional=timing_optional,
+            pure=pure,
             call_variants=tuple(call_variants),
             align_state_operation=align_state_operation,
             align_state_argument_index=align_state_argument_index,

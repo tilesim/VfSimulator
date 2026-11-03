@@ -1,13 +1,14 @@
 from __future__ import annotations
 
 import re
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from typing import Iterable, Mapping
 
 from api.common.symbols import normalize_dtype
 
 from .ir import (
     AdapterAlias,
+    AdapterScalarAssignment,
     AdapterInstruction,
     AdapterLoop,
     AdapterMemoryAccess,
@@ -79,6 +80,7 @@ class ValueVersioningPass:
         self._logical_values = dict(program.values)
         self._params = dict(program.params)
         self._node_ids = set()
+        self._induction_scopes = {}
 
         environment: dict[str, str | None] = {}
         for logical_id in program.live_in_values:
@@ -160,23 +162,23 @@ class ValueVersioningPass:
             environment[logical_id] = definition_id
         return definition_id
 
-    def _written_registers(self, nodes: Iterable[AdapterNode]) -> set[str]:
+    def _written_values(self, nodes: Iterable[AdapterNode]) -> set[str]:
         written: set[str] = set()
         for node in nodes:
             if isinstance(node, AdapterInstruction):
                 written.update(
                     str(value_id)
                     for value_id in node.dst
-                    if is_renameable_storage(
-                        self._logical_values[str(value_id)].storage
-                    )
+                    if self._logical_values[str(value_id)].storage != 'UB'
                 )
+            elif isinstance(node, AdapterScalarAssignment):
+                written.add(str(node.destination))
             elif isinstance(node, AdapterAlias):
                 destination_id = str(node.destination)
                 if is_renameable_storage(self._logical_values[destination_id].storage):
                     written.add(destination_id)
             elif isinstance(node, AdapterLoop):
-                written.update(self._written_registers(node.body))
+                written.update(self._written_values(node.body))
         return written
 
     def _version_nodes(
@@ -221,6 +223,16 @@ class ValueVersioningPass:
                         "VFAlias source and destination must have matching dtype and shape"
                     )
                 current[destination_id] = self._ensure_entry(source_id, current)
+            elif isinstance(node, AdapterScalarAssignment):
+                dependencies = tuple(self._ensure_entry(str(source), current) for source in node.sources)
+                definition_id = self._new_definition(str(node.destination), producer_node_id=None)
+                loop_dependencies = (self._induction_scopes[name] for name in node.induction_variables) if node.pure else self._induction_scopes.values()
+                self._values[definition_id] = replace(
+                    self._values[definition_id], scalar_expression=node.expression,
+                    scalar_dependencies=dependencies,
+                    scalar_loop_dependencies=tuple(sorted(set(loop_dependencies))),
+                    source_location=node.source_location)
+                current[str(node.destination)] = definition_id
             elif isinstance(node, AdapterMembar):
                 output.append(
                     CanonicalMembar(
@@ -384,7 +396,7 @@ class ValueVersioningPass:
     ) -> tuple[CanonicalLoop, dict[str, str | None]]:
         loop_id = self._next_node_id("loop", node.loop_id)
         variable_id = node.induction_variable or f"iter_{_safe_id(loop_id)}"
-        written = sorted(self._written_registers(node.body))
+        written = sorted(self._written_values(node.body))
         first_reads = self._read_before_write(node.body)
         entry_environment = dict(environment)
         entries = {
@@ -395,11 +407,16 @@ class ValueVersioningPass:
             )
             for logical_id in written
         }
-        body, body_environment = self._version_nodes(
-            node.body,
-            entry_environment,
-            parent_induction_variables | {variable_id},
-        )
+        saved_scope = self._induction_scopes.get(variable_id)
+        self._induction_scopes[variable_id] = loop_id
+        try:
+            body, body_environment = self._version_nodes(
+                node.body, entry_environment, parent_induction_variables | {variable_id})
+        finally:
+            if saved_scope is None:
+                self._induction_scopes.pop(variable_id)
+            else:
+                self._induction_scopes[variable_id] = saved_scope
 
         carried: list[LoopCarriedValue] = []
         current = dict(environment)
@@ -462,10 +479,12 @@ class ValueVersioningPass:
                 reads.update(self._read_before_write(node.body) - defined)
                 count = self._resolved_count(node.count)
                 if count is not None and count > 0:
-                    defined.update(self._written_registers(node.body))
+                    defined.update(self._written_values(node.body))
                 continue
             if isinstance(node, AdapterInstruction):
                 sources, destinations = node.src, node.dst
+            elif isinstance(node, AdapterScalarAssignment):
+                sources, destinations = node.sources, [node.destination]
             elif isinstance(node, AdapterAlias):
                 sources, destinations = [node.source], [node.destination]
             else:
@@ -474,7 +493,7 @@ class ValueVersioningPass:
                 str(value)
                 for value in sources
                 if str(value) not in defined
-                and is_renameable_storage(self._logical_values[str(value)].storage)
+                and self._logical_values[str(value)].storage != 'UB'
             )
             defined.update(str(value) for value in destinations)
         return reads

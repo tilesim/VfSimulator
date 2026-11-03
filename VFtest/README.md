@@ -18,6 +18,7 @@ JSON 与 `cce/contracts/` 中同名 CCE 配对，用于检查完整的 Canonical
 `cce/contracts/vector_conversions.cce` 与 `vector_conversion_views.cce` 覆盖转换签名、
 64-bit 类型、打包与显式视图，配对 Canonical 文件固定其依赖合同。
 `cce/membar_timing/` 和 `cce/ordinary_instructions/` 分别保存屏障及指令覆盖案例。
+`cce/contracts/loop_invariants.cce` 区分固定 mask 与 PLT 标量反馈，检查循环外提及出口消费者。
 
 在仓库根目录运行：
 

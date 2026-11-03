@@ -5,6 +5,7 @@
 
 ## 程序准备
 
+`hoist_loop_invariants()` 在 Canonical 层按纯度、标量和循环反馈依赖进行[循环外提](loop_invariants.md)，保留静态身份与出口绑定。
 `prepare_program()` 依次调用 Core lowering、静态布局和动态展开。
 `CoreLoweringPass` 把 Canonical dataclass 转成 Core 内部字典，保留指令、值声明、
 存储对象、访存及循环信息。`ValueStorageLookup` 根据显式声明查询存储类别。

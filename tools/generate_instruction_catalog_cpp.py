@@ -31,7 +31,7 @@ def render_catalog_cpp(payload: Mapping[str, Any]) -> str:
     ]
     for opcode, spec in instructions.items():
         lines.append(
-            "  {%s, %s, %s, %s, %s, %s, %s, %d, %d, %s, %d},"
+            "  {%s, %s, %s, %s, %s, %s, %s, %d, %d, %s, %d, %s},"
             % (
                 _quote(opcode),
                 _quote(spec["class"]),
@@ -44,6 +44,7 @@ def render_catalog_cpp(payload: Mapping[str, Any]) -> str:
                 spec.get("ub_transfer_bytes", 0),
                 _quote(spec.get("forwarding_opcode", "")),
                 spec.get("memory_address_unit_bytes", 0),
+                "true" if spec.get("pure", False) else "false",
             )
         )
     lines.append("};")

@@ -89,6 +89,8 @@ struct CanonicalValue {
   std::optional<std::string> producerNodeId;
   std::optional<std::string> storageObjectId;
   std::optional<CanonicalSourceLocation> sourceLocation;
+  std::optional<std::string> scalarExpression;
+  std::vector<std::string> scalarDependencies, scalarLoopDependencies;
 };
 
 struct CanonicalOperand {

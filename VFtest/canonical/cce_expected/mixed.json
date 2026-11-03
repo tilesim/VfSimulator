@@ -36,16 +36,22 @@
       "unroll": 1,
       "carried_values": [
         {
+          "logical_id": "__scalar_local_0:off",
+          "entry_value_id": null,
+          "back_edge_value_id": "scalar_local_0_off.def1",
+          "exit_value_id": "scalar_local_0_off.def7"
+        },
+        {
           "logical_id": "sum",
           "entry_value_id": null,
-          "back_edge_value_id": "sum.def4",
-          "exit_value_id": "sum.def6"
+          "back_edge_value_id": "sum.def5",
+          "exit_value_id": "sum.def8"
         },
         {
           "logical_id": "value",
           "entry_value_id": null,
-          "back_edge_value_id": "value.def2",
-          "exit_value_id": "value.def7"
+          "back_edge_value_id": "value.def3",
+          "exit_value_id": "value.def9"
         }
       ],
       "body": [
@@ -57,7 +63,7 @@
           "form": "fp32",
           "inputs": [
             {
-              "value_id": "input.def1",
+              "value_id": "input.def2",
               "role": "memory",
               "dtype": "fp32",
               "memory_access": {
@@ -83,7 +89,7 @@
           ],
           "outputs": [
             {
-              "value_id": "value.def2",
+              "value_id": "value.def3",
               "role": "destination",
               "dtype": "fp32",
               "memory_access": null
@@ -105,13 +111,13 @@
           "form": "fp32",
           "inputs": [
             {
-              "value_id": "value.def2",
+              "value_id": "value.def3",
               "role": "source",
               "dtype": "fp32",
               "memory_access": null
             },
             {
-              "value_id": "1.0f.def3",
+              "value_id": "1.0f.def4",
               "role": "scalar",
               "dtype": "fp32",
               "memory_access": null
@@ -125,7 +131,7 @@
           ],
           "outputs": [
             {
-              "value_id": "sum.def4",
+              "value_id": "sum.def5",
               "role": "destination",
               "dtype": "fp32",
               "memory_access": null
@@ -147,7 +153,7 @@
           "form": "fp32",
           "inputs": [
             {
-              "value_id": "sum.def4",
+              "value_id": "sum.def5",
               "role": "source",
               "dtype": "fp32",
               "memory_access": null
@@ -161,7 +167,7 @@
           ],
           "outputs": [
             {
-              "value_id": "output.def5",
+              "value_id": "output.def6",
               "role": "memory",
               "dtype": "fp32",
               "memory_access": {
@@ -224,8 +230,28 @@
       "storage_object_id": null,
       "source_location": null
     },
-    "input.def1": {
-      "definition_id": "input.def1",
+    "scalar_local_0_off.def1": {
+      "definition_id": "scalar_local_0_off.def1",
+      "logical_id": "__scalar_local_0:off",
+      "storage": "Scalar",
+      "dtype": "uint32",
+      "shape": [],
+      "producer_node_id": null,
+      "storage_object_id": null,
+      "source_location": {
+        "source": "canonical_vf",
+        "line": 6,
+        "column": null,
+        "path": "<cce>"
+      },
+      "scalar_expression": "64 * i",
+      "scalar_dependencies": [],
+      "scalar_loop_dependencies": [
+        "loop.0"
+      ]
+    },
+    "input.def2": {
+      "definition_id": "input.def2",
       "logical_id": "input",
       "storage": "UB",
       "dtype": "fp32",
@@ -234,8 +260,8 @@
       "storage_object_id": "ub.input",
       "source_location": null
     },
-    "value.def2": {
-      "definition_id": "value.def2",
+    "value.def3": {
+      "definition_id": "value.def3",
       "logical_id": "value",
       "storage": "Register",
       "dtype": "fp32",
@@ -244,8 +270,8 @@
       "storage_object_id": null,
       "source_location": null
     },
-    "1.0f.def3": {
-      "definition_id": "1.0f.def3",
+    "1.0f.def4": {
+      "definition_id": "1.0f.def4",
       "logical_id": "1.0f",
       "storage": "Scalar",
       "dtype": "fp32",
@@ -254,8 +280,8 @@
       "storage_object_id": null,
       "source_location": null
     },
-    "sum.def4": {
-      "definition_id": "sum.def4",
+    "sum.def5": {
+      "definition_id": "sum.def5",
       "logical_id": "sum",
       "storage": "Register",
       "dtype": "fp32",
@@ -264,8 +290,8 @@
       "storage_object_id": null,
       "source_location": null
     },
-    "output.def5": {
-      "definition_id": "output.def5",
+    "output.def6": {
+      "definition_id": "output.def6",
       "logical_id": "output",
       "storage": "UB",
       "dtype": "fp32",
@@ -274,8 +300,18 @@
       "storage_object_id": "ub.output",
       "source_location": null
     },
-    "sum.def6": {
-      "definition_id": "sum.def6",
+    "scalar_local_0_off.def7": {
+      "definition_id": "scalar_local_0_off.def7",
+      "logical_id": "__scalar_local_0:off",
+      "storage": "Scalar",
+      "dtype": "uint32",
+      "shape": [],
+      "producer_node_id": "loop.0",
+      "storage_object_id": null,
+      "source_location": null
+    },
+    "sum.def8": {
+      "definition_id": "sum.def8",
       "logical_id": "sum",
       "storage": "Register",
       "dtype": "fp32",
@@ -284,8 +320,8 @@
       "storage_object_id": null,
       "source_location": null
     },
-    "value.def7": {
-      "definition_id": "value.def7",
+    "value.def9": {
+      "definition_id": "value.def9",
       "logical_id": "value",
       "storage": "Register",
       "dtype": "fp32",

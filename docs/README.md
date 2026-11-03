@@ -11,6 +11,7 @@ CanonicalVfInfo 对象统一接收，微架构组件按周期推进指令、依�
 | [输入 API](input_api.md) | 三种输入、CCE 转换流程、Canonical 数据和校验 |
 | [配置参数](configuration.md) | 配置文件、参数加载、时序查询和理论模式 |
 | [执行模型](execution_model.md) | 指令准备、周期推进、循环与队列调度 |
+| [循环无关指令外提](loop_invariants.md) | 纯计算、标量反馈、嵌套循环边界及 A5 编译器验证 |
 | [寄存器模型](register_model.md) | 重命名、普通依赖、物理资源回收和对齐状态 |
 | [访存模型](lsu_model.md) | LSU 仲裁、地址更新、多结果和打包访存 |
 | [Membar 时序](membar_timing_model.md) | 屏障控制、方向、释放和退休 |

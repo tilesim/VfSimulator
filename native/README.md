@@ -58,6 +58,7 @@ native/
 | `core/simulator.h/.cpp` | 公共仿真接口、配置组合和结果返回 |
 | `core/execution/instruction.h` | 动态指令、重命名后的 Uop 和内部 value 信息 |
 | `core/execution/prepare.*` | 执行能力检查、内部 value 表准备 |
+| `core/execution/optimization.*` | 在 Canonical 层按纯度、标量和反馈依赖进行循环外提，结果保存在 compilerOptimizationStats |
 | `core/execution/expansion.*` | 循环展开、动态定义身份、末次使用和循环边界标注 |
 | `core/execution/engine.*` | 全局 cycle、传输延迟、分派预算、组件协作和排空 |
 | `core/execution/loop_control.*` | VLOOP 启动、循环反馈与分派开放时间 |

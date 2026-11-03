@@ -147,6 +147,8 @@ class ExuCompletionTests(unittest.TestCase):
             'mask=pset_b32(PAT_ALL);vlds(x,a,0,NORM);'
             'for(int i=0;i<32;++i){vexp(y,x,mask);vcmp_gt(p,x,x,mask);'
             'mask=pset_b32(PAT_ALL);}vsel(y,y,x,p);vsts(y,out,0,NORM_B32,mask);')
+        # Preserve the repeated instructions used to exercise writeback collisions.
+        vf = replace(vf, source={**vf.source, 'compiler_optimized': True})
         engine = engine_for(vf)
         engine.run(None)
         done = {row['inst_id']: row['cy'] for row in engine.trace.cyc_done_log}

@@ -54,6 +54,7 @@ struct NativeInstructionSpec {
   std::string formRule;
   std::string fixedForm;
   bool virtualOpcode = false;
+  bool pure = false;
   std::string alignStateOperation;
   int alignStateArgumentIndex = -1;
   std::unordered_set<std::string> forms;

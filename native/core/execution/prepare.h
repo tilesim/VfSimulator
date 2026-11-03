@@ -5,6 +5,7 @@
 #define VFSIM_NATIVE_EXECUTION_PREPARE_H
 
 #include "native/core/execution/instruction.h"
+#include "native/core/execution/optimization.h"
 #include "native/core/params/database.h"
 #include <stdexcept>
 
@@ -60,6 +61,7 @@ struct PreparedProgram {
   std::unordered_set<int64_t> emptyTopBlocks;
   int64_t totalTopBlocks = 1;
   int64_t linearInstCount = 0;
+  CompilerOptimizationStats compilerOptimizationStats;
 };
 
 PreparedProgram prepareProgram(const CanonicalVfInfo &, const ParamDB &,

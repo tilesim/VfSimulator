@@ -34,14 +34,17 @@ int64_t checkExecutionSupport(const std::vector<CanonicalNode> &nodes) {
   return count;
 }
 } // namespace
-PreparedProgram prepareProgram(const CanonicalVfInfo &vf, const ParamDB &db,
+PreparedProgram prepareProgram(const CanonicalVfInfo &input, const ParamDB &db,
                                const UarchConfig &cfg) {
+  const auto optimized = hoistLoopInvariants(input);
+  const auto &vf = optimized.vfInfo;
   const int64_t linearCount = checkExecutionSupport(vf.context);
   std::unordered_map<std::string, ValueInfo> values;
   for (const auto &[id, value] : vf.values)
     values.emplace(id, ValueInfo{id, value.storage, value.dtype, value.shape});
   auto program = expandCanonicalProgram(vf, db, cfg, std::move(values));
   program.linearInstCount = linearCount;
+  program.compilerOptimizationStats = optimized.stats;
   return program;
 }
 } // namespace vfsim

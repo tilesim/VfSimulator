@@ -46,6 +46,9 @@ CCE parser 支持已定义的向量作用域语法，支持范围由 parser 和 
 
 JSON adapter 检查文件格式并直接反序列化 Canonical。Builder 和直接对象使用显式定义，
 调用方负责提供定义版本和循环携带关系。
+CCE 的标量声明与赋值记录定义依赖，Scalar 输出参与循环反馈。
+`CanonicalValue.scalar_expression/scalar_dependencies/scalar_loop_dependencies`
+供共享的[循环外提 pass](loop_invariants.md)判断标量是否随循环变化。
 
 ## 共享数据类型
 

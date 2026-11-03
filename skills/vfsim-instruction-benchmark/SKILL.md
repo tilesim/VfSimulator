@@ -57,6 +57,7 @@ LOAD/STORE 分别测量自身的 `latency`。LOAD→compute、compute→STORE �
 - [analyze_membar_pairs.py](scripts/analyze_membar_pairs.py)：归并按 form 测量的 II 和逐语义源路径 forwarding，检查实际物理 RAW、ISU 源就绪和 LSU/GSU 接收时刻。
 - [fu_contention.py](scripts/fu_contention.py)：FP32 归约、ALU、数学 SFU 的独立流、重复三连与单条穿插对照，精确检查归约值和索引。
 - [analyze_fu_contention.py](scripts/analyze_fu_contention.py)：关联 ISU 源就绪、资源阻塞及实际端口流，区分 self-II、跨指令间隔和共享资源等待。
+- [loop_invariants.py](scripts/loop_invariants.py)：通过 A5 C Model 的数值、保护区、VF 动态指令数量验证固定 mask、标量反馈、广播链及嵌套循环的编译器外提；规则与证据见[循环外提](../../docs/loop_invariants.md)。
 
 复用已有结论时，按目标读取 [谓词数值验证](references/predicate-validation.md)、[谓词压力实验](references/predicate-pressure.md)、[VAXPY FP32 测量](references/vaxpy-timing.md)、
 [谓词 spill](references/predicate-spill.md) 或 [MOVP 与 VMOV 转发](references/movp-timing.md)。

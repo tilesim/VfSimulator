@@ -29,6 +29,7 @@ python3 tools/run_cost_model_regression.py --tier full --out-dir results/regress
 | `cycles_executed` | 排空时的仿真 cycle |
 | `vf_end_cycle` | 最后指令完成或屏障退休的最大 cycle 加 VF drain |
 | `linear_inst_count` | 程序静态布局中的指令计数 |
+| `compiler_optimization_stats` | 循环外提的启用状态、指令数和逐条移动记录 |
 | `results_dir` | 输出目录，关闭文件输出时为 None |
 | `trace_path` | Perfetto 文件路径，关闭文件输出时为 None |
 

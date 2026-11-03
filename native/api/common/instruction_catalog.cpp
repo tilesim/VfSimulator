@@ -22,6 +22,7 @@ struct GeneratedInstruction {
   int64_t ubTransferBytes;
   const char *forwardingOpcode;
   int memoryAddressUnitBytes;
+  bool pure;
 };
 struct GeneratedOperand {
   const char *opcode;
@@ -163,6 +164,7 @@ InstructionCatalog::InstructionCatalog() {
     spec.ubTransferBytes = entry.ubTransferBytes;
     spec.forwardingOpcode = entry.forwardingOpcode;
     spec.memoryAddressUnitBytes = entry.memoryAddressUnitBytes;
+    spec.pure = entry.pure;
     if (!specs_.emplace(spec.opcode, std::move(spec)).second)
       throw std::runtime_error("Duplicate generated opcode: " +
                                std::string(entry.opcode));

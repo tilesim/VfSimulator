@@ -10,7 +10,7 @@ python3 -m unittest tests.test_ooo_dispatch
 | 测试组 | 代表文件 |
 | --- | --- |
 | 输入与 Canonical 校验 | `test_input_api`、`test_cce_parser`、`test_frontend_schema`、`test_frontend_json_adapter`、`test_frontend_builder` |
-| 值版本化与执行准备 | `test_value_versioning`、`test_core_lowering`、`test_core_architecture` |
+| 值版本化与执行准备 | `test_value_versioning`、`test_core_lowering`、`test_core_architecture`、`test_loop_invariants` |
 | 组件及计算调度 | `test_component_lifecycle`、`test_issue_intervals`、`test_exu_completion`、`test_ooo_dispatch`、`test_physical_register_bank`、`test_predicate_registers` |
 | 访存和控制 | `test_post_update_address_state`、`test_ub_shared_issue_slots`、`test_membar_timing` |
 | 指令和模式 | `test_vmov`、`test_movp`、`test_predicate_logic_extensions`、`test_predicate_spill`、`test_interleave`、`test_pstu`、`test_vldas_vldus`、`test_vlds_deinterleave`、`test_packed_memory_modes` |

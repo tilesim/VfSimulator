@@ -23,7 +23,7 @@ struct AdapterMemoryAccess {
   std::optional<int64_t> addressUnitBytes;
 };
 struct AdapterNode {
-  enum class Kind { Instruction, Loop, Alias, Membar };
+  enum class Kind { Instruction, Loop, Alias, Membar, ScalarAssignment };
   Kind kind = Kind::Instruction;
   std::string name, form;
   CanonicalInstructionClass instructionClass =
@@ -35,6 +35,9 @@ struct AdapterNode {
   std::vector<AdapterNode> body;
   int64_t count = 1, unroll = 1, inductionStart = 0, inductionStep = 1;
   std::string loopId, inductionVariable;
+  std::string scalarExpression;
+  std::vector<std::string> scalarInductions;
+  bool scalarPure = true;
 };
 struct AdapterProgram {
   std::vector<AdapterNode> context;

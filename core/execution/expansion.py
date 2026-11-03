@@ -573,7 +573,9 @@ class DynamicExpander:
                 if top.is_innermost and top.unroll > 1:
                     if top.iter_now < top.iters_total:
                         self._build_pending_unrolled(top)
-                        return self._pending.pop(0) if self._pending else None
+                        if self._pending:
+                            return self._pending.pop(0)
+                        continue
                     else:
                         self._complete_loop_value_aliases(top)
                         self.frames.pop()
