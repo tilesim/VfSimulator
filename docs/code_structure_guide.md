@@ -62,6 +62,7 @@ configs/           指令语义与微架构时序参数
 | --- | --- | --- |
 | [simulator.py](../core/simulator.py) | `run_vf_info/predict_vf_cycles` | 检查输入类型、合并参数、组装模型并返回结果 |
 | [instruction.py](../core/execution/instruction.py) | `DynamicInstruction`、`Uop` | 保存动态指令身份与运行期指令状态 |
+| [optimization.py](../core/execution/optimization.py) | `hoist_loop_invariants` | 在 Canonical 层按纯度、标量与反馈依赖进行循环外提 |
 | [prepare.py](../core/execution/prepare.py) | `CoreLoweringPass.lower`、`prepare_program`、`ValueStorageLookup` | 检查执行能力、转换表示、分析静态布局和查询声明的存储类型 |
 | [expansion.py](../core/execution/expansion.py) | `DynamicExpander.prepare_structured_stream` | 展开循环和 unroll、绑定动态值身份及最后使用 |
 | [engine.py](../core/execution/engine.py) | `Engine.run/backend_step/admit/reservation` | 协调周期阶段、传输、资源预留、重命名入队和排空 |

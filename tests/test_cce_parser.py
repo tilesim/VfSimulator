@@ -3,7 +3,7 @@ import re
 import tempfile
 from pathlib import Path
 
-from api.cce.ir import AdapterMembar
+from api.cce.ir import AdapterInstruction, AdapterLoop, AdapterMembar, AdapterScalarAssignment
 from api.cce.parser import _parse_cce_adapter_program
 from api.common.symbols import (
     normalize_dtype,
@@ -73,7 +73,7 @@ class CCEParserTest(unittest.TestCase):
                 path, kernel_name="softmax_vf"
             )
 
-        insts = vf_info.context[1:]
+        insts = [node for node in vf_info.context if isinstance(node, AdapterInstruction)][1:]
         self.assertEqual(insts[0].name, "VPACK")
         self.assertEqual(insts[0].src, ["vreg_x_exp_even_f16"])
         self.assertEqual(insts[0].dst, ["vreg_x_exp_even_f16"])
@@ -84,10 +84,13 @@ class CCEParserTest(unittest.TestCase):
         self.assertEqual(insts[1].form, "fp16")
         self.assertEqual(vf_info.values["vreg_x_exp_even_f16"].dtype, "fp16")
         self.assertEqual(vf_info.values["nz_buffer_Ptr"].storage, "UB")
-        no_update = vf_info.context[2].memory_accesses[0]
-        one_block_update = post_update_info.context[2].memory_accesses[0]
-        two_block_update = two_block_info.context[2].memory_accesses[0]
-        different_stride_update = different_stride_info.context[2].memory_accesses[0]
+        def store_access(program):
+            return next(node.memory_accesses[0] for node in program.context
+                        if isinstance(node, AdapterInstruction) and node.name == 'VSSTB')
+        no_update = store_access(vf_info)
+        one_block_update = store_access(post_update_info)
+        two_block_update = store_access(two_block_info)
+        different_stride_update = store_access(different_stride_info)
         self.assertEqual(no_update.update_mode, "none")
         self.assertIsNone(no_update.post_update_delta_bytes)
         self.assertEqual(one_block_update.update_mode, "post_update")
@@ -118,7 +121,7 @@ class CCEParserTest(unittest.TestCase):
                 kernel_name="loop_bound_vf",
             )
 
-        loop = vf_info.context[0]
+        loop = next(node for node in vf_info.context if isinstance(node, AdapterLoop))
         self.assertEqual(loop.count, 15)
         self.assertEqual(loop.induction_start, 4)
         self.assertEqual(loop.induction_step, 4)
@@ -502,7 +505,11 @@ class CCEParserTest(unittest.TestCase):
             path = Path(tmpdir) / "local_affine.cce"
             path.write_text(source, encoding="utf-8")
             vf_info = _parse_cce_adapter_program(path, kernel_name="valid")
-        self.assertEqual(vf_info.context[0].body[0].name, "VLDS")
+        loop = next(node for node in vf_info.context if isinstance(node, AdapterLoop))
+        _, assignment, load = loop.body
+        self.assertIsInstance(assignment, AdapterScalarAssignment)
+        self.assertEqual(assignment.induction_variables, ('i',))
+        self.assertEqual(load.name, "VLDS")
 
     def test_cce_local_scalar_offsets_obey_scope_and_affine_rules(self):
         sources = {
@@ -570,7 +577,8 @@ class CCEParserTest(unittest.TestCase):
             path = Path(tmpdir) / "local_float.cce"
             path.write_text(source, encoding="utf-8")
             vf_info = _parse_cce_adapter_program(path, kernel_name="valid")
-        self.assertEqual(vf_info.context[1].src, ["src", "scale", "mask"])
+        self.assertIsInstance(vf_info.context[1], AdapterScalarAssignment)
+        self.assertEqual(vf_info.context[2].src, ["src", "scale", "mask"])
 
     def test_cce_local_scalar_initializer_is_validated_only_for_offsets(self):
         source = """
@@ -587,7 +595,9 @@ class CCEParserTest(unittest.TestCase):
             path = Path(tmpdir) / "delayed_scalar.cce"
             path.write_text(source, encoding="utf-8")
             vf_info = _parse_cce_adapter_program(path, kernel_name="valid")
-        self.assertEqual(vf_info.context[1].src, ["src", "tid", "mask"])
+        self.assertIsInstance(vf_info.context[0], AdapterScalarAssignment)
+        self.assertFalse(vf_info.context[0].pure)
+        self.assertEqual(vf_info.context[2].src, ["src", "tid", "mask"])
 
         offset_source = """
             void bad(__ubuf__ float *input) {
@@ -606,7 +616,6 @@ class CCEParserTest(unittest.TestCase):
 
     def test_cce_rejects_unmodeled_scope_statements_with_source_text(self):
         sources = {
-            "assignment": "off = 64 * i;",
             "non_vector_call": "update_offset(off);",
         }
         for name, statement in sources.items():

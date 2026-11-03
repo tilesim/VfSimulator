@@ -47,6 +47,7 @@ class NativeContractParityTests(unittest.TestCase):
         self.assertEqual(int(fields["cyclesExecuted"]), result["cycles_executed"])
         self.assertEqual(int(fields["vfEndCycle"]), result["vf_end_cycle"])
         self.assertEqual(int(fields["linearInstCount"]), result["linear_inst_count"])
+        self.assertEqual(json.loads(fields['compilerOptimizationStats']), result['compiler_optimization_stats'])
         py_files = {p.name for p in (root / "python").glob("*.json")}
         cpp_files = {p.name for p in (root / "cpp").glob("*.json")}
         self.assertEqual(py_files, cpp_files)
@@ -81,6 +82,27 @@ class NativeContractParityTests(unittest.TestCase):
             self.compare(vf, root, arguments=["--cce", str(path), "--cce-kernel", "vf"])
             rejected = subprocess.run([RUNNER, "--cce", str(path)], capture_output=True, text=True)
             self.assertNotEqual(rejected.returncode, 0)
+
+    def test_loop_invariant_scalar_dataflow_and_exit_consumers(self):
+        bodies = (
+        'for(int i=0;i<4;++i){uint32_t k=n;p=plt_b32(k,POST_UPDATE);pnot(q,p,all);vdup(y,2.5f,q,MODE_ZEROING);vsts(y,out,i*64,NORM_B32,all);}',
+        'uint32_t k=n;for(int i=0;i<4;++i){p=plt_b32(k,POST_UPDATE);vlds(x,a,i*64,NORM);vsel(y,x,x,p);vsts(y,out,i*64,NORM_B32,all);}',
+        'for(int j=0;j<2;++j){uint32_t outer=n+j*7;for(int i=0;i<4;++i){uint32_t k=outer;p=plt_b32(k,POST_UPDATE);vdup(y,2.5f,p,MODE_ZEROING);vsts(y,out,j*256+i*64,NORM_B32,all);}}',
+        'for(int i=0;i<4;++i){p=pltm_b32((uint16_t)i,n);vdup(y,(uint32_t)i+3u,p,MODE_ZEROING);vsts(y,out,i*64,NORM_B32,all);}',
+        'vlds(x,a,0,NORM);\n#pragma unroll(2)\nfor(int i=0;i<4;++i){vadds(y,x,1.0f,all);}vadd(z,y,y,all);vsts(z,out,0,NORM_B32,all);',
+        'volatile uint32_t k=37;for(int i=0;i<4;++i){p=pltm_b32(0,k);vdup(y,2.5f,p,MODE_ZEROING);vsts(y,out,i*64,NORM_B32,all);}',
+        'for(int j=0;j<2;++j){for(int i=0;i<4;++i){p=pset_b32(PAT_VL32);vdup(y,2.5f,p,MODE_ZEROING);vsts(y,out,j*256+i*64,NORM_B32,all);}}vsts(y,out,512,NORM_B32,all);',
+        'uint32_t k=n;for(int i=0;i<4;++i){p=pltm_b32(0,k);vdup(y,2.5f,p,MODE_ZEROING);vsts(y,out,i*64,NORM_B32,all);k+=7;}',
+        )
+        for index, body in enumerate(bodies):
+            with self.subTest(case=index), tempfile.TemporaryDirectory() as folder:
+                root = Path(folder)
+                path = root / 'licm.cce'
+                path.write_text('void vf(__ubuf__ float *a,__ubuf__ float *out,uint32_t n){__VEC_SCOPE__{'
+                                'vector_f32 x,y,z;vector_bool all,p,q;all=pset_b32(PAT_ALL);'+body+'}}')
+                vf = InputAPI.load_cce(path)
+                self.compare(vf, root, arguments=['--cce',str(path)])
+                self.compare(vf, root)
 
     def test_cce_fixture_outputs(self):
         for fixture in sorted((ROOT / "VFtest/cce/contracts").glob("*.cce")):

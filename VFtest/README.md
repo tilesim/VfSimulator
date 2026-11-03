@@ -30,3 +30,5 @@ python3 main.py --trace VFtest/canonical/fixtures/v1_valid_loop.json --out_dir r
 指令参数测量工具和原始证据位于
 [共享模型的标定 skill](https://github.com/tilesim/VfSimulator/tree/wch/VfSimulator-refactor/skills/vfsim-instruction-benchmark)。
 运行时生成的日志与中间文件保存在独立的 results 目录。
+
+`loop_invariants` 用例检查固定 mask、标量反馈、嵌套外提和循环出口；共享 pass 位于 `core/execution/optimization.py`。

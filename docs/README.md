@@ -6,6 +6,7 @@
 | [输入 API](input_api.md) | CCE、JSON、Builder 与 Canonical |
 | [代码结构](code_structure_guide.md) | execution、uarch、params、trace 模块 |
 | [执行模型](execution_model.md) | 组件、循环、II 和完成带宽 |
+| [循环无关指令外提](loop_invariants.md) | 纯计算、标量反馈、嵌套循环边界及动态值生存期 |
 | [参数配置](configuration.md) | 7 份配置与文件读取 |
 | [指令时序](instruction_timing.md) | latency、II、forwarding 与适用范围 |
 | [A5 覆盖清单](a5_instruction_coverage.md) | 指令签名和 dtype |

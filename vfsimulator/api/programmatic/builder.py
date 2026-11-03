@@ -127,6 +127,9 @@ class VfInfoBuilder:
         producer_node_id: str | None = None,
         storage_object_id: str | None = None,
         source_location: SourceLocation | None = None,
+        scalar_expression: str | None = None,
+        scalar_dependencies: Iterable[str] = (),
+        scalar_loop_dependencies: Iterable[str] = (),
     ) -> CanonicalValue:
         if definition_id in self._values:
             raise ValueError(f"Duplicate value definition ID: {definition_id}")
@@ -139,6 +142,9 @@ class VfInfoBuilder:
             producer_node_id=producer_node_id,
             storage_object_id=storage_object_id,
             source_location=source_location,
+            scalar_expression=scalar_expression,
+            scalar_dependencies=tuple(scalar_dependencies),
+            scalar_loop_dependencies=tuple(scalar_loop_dependencies),
         )
         self._values[definition_id] = value
         return value

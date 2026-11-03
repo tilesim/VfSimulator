@@ -302,7 +302,8 @@ class ValueVersioningPassTest(unittest.TestCase):
                         for uop in list(core.active_uops.values())
                         if uop.op == "VADD"
                     ]
-                    self.assertEqual(len(adds), count + 1)
+                    expected = 2 if alias_source == 'a' and count > 0 else count + 1
+                    self.assertEqual(len(adds), expected)
                     if alias_source == "a":
                         self.assertTrue(
                             all(

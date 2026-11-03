@@ -64,6 +64,16 @@ class AdapterAlias:
     allow_bitcast: bool = False
 
 
+@dataclass(frozen=True)
+class AdapterScalarAssignment:
+    destination: AdapterValueRef
+    expression: str
+    sources: tuple[AdapterValueRef, ...] = ()
+    induction_variables: tuple[str, ...] = ()
+    pure: bool = True
+    source_location: SourceLocation | None = None
+
+
 @dataclass
 class AdapterMembar:
     type: str = "VST_VLD"
@@ -83,7 +93,7 @@ class AdapterLoop:
 
 
 AdapterNode: TypeAlias = (
-    "AdapterLoop | AdapterInstruction | AdapterAlias | AdapterMembar"
+    "AdapterLoop | AdapterInstruction | AdapterAlias | AdapterMembar | AdapterScalarAssignment"
 )
 
 
@@ -99,6 +109,7 @@ class AdapterProgram:
 
 __all__ = [
     "AdapterAlias",
+    "AdapterScalarAssignment",
     "AdapterInstruction",
     "AdapterLoop",
     "AdapterMemoryAccess",

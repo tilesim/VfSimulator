@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import ast
 import re
+from dataclasses import replace
 from pathlib import Path
 from typing import Dict, List, Mapping, Optional, Sequence
 
@@ -40,6 +41,7 @@ from vfsimulator.api.common.schema import SourceLocation
 from vfsimulator.api.cce.normalization import normalize_adapter_program
 from vfsimulator.api.cce.ir import (
     AdapterAlias,
+    AdapterScalarAssignment,
     AdapterInstruction,
     AdapterLoop,
     AdapterMemoryAccess,
@@ -153,6 +155,11 @@ class _VFScopeParser:
             if name in self.scalar_names
         }
         self.local_scalar_initializers: Dict[str, str] = {}
+        self.scalar_bindings = {name: name for name in self.scalar_names}
+        self._scalar_declaration_serial = 0
+        self.volatile_scalar_names = set()
+        self._volatile_scalar_values = set()
+        self._scalar_prefix: list[AdapterScalarAssignment] = []
         self._record_function_scope_scalar_declarations(scope.declaration_source)
         self._record_function_scope_ub_pointer_declarations(scope.declaration_source)
         self.pair_registers = {}
@@ -175,7 +182,17 @@ class _VFScopeParser:
                 raise ValueError(
                     "Cannot snapshot an updated pointer in a loop-local alias"
                 )
-        return nodes
+        def mark_volatile(children):
+            for child in children:
+                if isinstance(child, AdapterLoop):
+                    mark_volatile(child.body)
+                elif isinstance(child, AdapterInstruction) and any(
+                    (value.value_id if isinstance(value, AdapterValue) else value)
+                    in self._volatile_scalar_values for value in child.src
+                ):
+                    child.attributes['volatile'] = True
+        mark_volatile(nodes)
+        return [*self._scalar_prefix, *nodes]
 
     def _parse_block(
         self,
@@ -194,6 +211,8 @@ class _VFScopeParser:
         saved_offset_scalar_names = set(self.offset_scalar_names)
         saved_scalar_dtypes = dict(self.local_scalar_dtypes)
         saved_scalar_initializers = dict(self.local_scalar_initializers)
+        saved_scalar_bindings = dict(self.scalar_bindings)
+        saved_volatile_scalars = set(self.volatile_scalar_names)
         saved_ub_names = set(self.ub_names)
         saved_ub_aliases = dict(self.ub_aliases)
         saved_ub_dtypes = dict(self.ub_dtypes)
@@ -214,6 +233,8 @@ class _VFScopeParser:
             self.offset_scalar_names = saved_offset_scalar_names
             self.local_scalar_dtypes = saved_scalar_dtypes
             self.local_scalar_initializers = saved_scalar_initializers
+            self.scalar_bindings = saved_scalar_bindings
+            self.volatile_scalar_names = saved_volatile_scalars
             self.ub_names = saved_ub_names
             self.ub_aliases = saved_ub_aliases
             self.ub_dtypes = saved_ub_dtypes
@@ -365,13 +386,22 @@ class _VFScopeParser:
                 return result
             return None
         if _LOCAL_SCALAR_DECL_RE.fullmatch(stmt):
-            self._record_local_scalar_decl_statement(stmt)
-            return None
+            return self._record_local_scalar_decl_statement(stmt, line=line)
         if _LOCAL_UB_POINTER_DECL_RE.fullmatch(stmt):
             self._record_local_ub_pointer_decl_statement(stmt)
             return None
         if _VOID_USE_RE.fullmatch(stmt):
             return None
+        scalar_assignment = re.fullmatch(
+            r'([A-Za-z_]\w*)\s*(=|\+=|-=|\*=|/=|%=|&=|\|=|\^=)\s*(.+);',
+            stmt, re.DOTALL,
+        )
+        if scalar_assignment and scalar_assignment[1] in self.scalar_names:
+            name, operation, expression = scalar_assignment.groups()
+            if operation != '=':
+                expression = f'{name}{operation[:-1]}({expression})'
+            self.local_scalar_initializers.pop(name, None)
+            return self._scalar_assignment(name, expression, line)
         register_alias = _REGISTER_ALIAS_ASSIGN_RE.fullmatch(stmt)
         if register_alias:
             dst = register_alias.group("dst")
@@ -734,11 +764,15 @@ class _VFScopeParser:
                 instruction_class="compute",
                 source_location=instruction.source_location,
             )
-            for producer in self._instruction_prefix:
-                producer.source_location = instruction.source_location
+            self._instruction_prefix = [
+                replace(producer, source_location=instruction.source_location)
+                for producer in self._instruction_prefix
+            ]
             return [*self._instruction_prefix, instruction, merge]
-        for producer in self._instruction_prefix:
-            producer.source_location = instruction.source_location
+        self._instruction_prefix = [
+            replace(producer, source_location=instruction.source_location)
+            for producer in self._instruction_prefix
+        ]
         return (
             [*self._instruction_prefix, instruction]
             if self._instruction_prefix
@@ -828,7 +862,7 @@ class _VFScopeParser:
                 arguments[position] = self._typed_register(name)
             elif name in self.scalar_names:
                 arguments[position] = AdapterValue(
-                    name,
+                    self.scalar_bindings.get(name, name),
                     "Scalar",
                     _cce_scalar_dtype_to_form(self.local_scalar_dtypes[name]),
                 )
@@ -1468,12 +1502,19 @@ class _VFScopeParser:
                 raise ValueError(
                     f"{callee} argument {index} cannot use a UB object as scalar: {arg}"
                 )
-            if name in self.scalar_names:
+            if name in self.scalar_names and arg.strip() == name:
                 return AdapterValue(
-                    name,
+                    self.scalar_bindings.get(name, name),
                     "Scalar",
                     _cce_scalar_dtype_to_form(self.local_scalar_dtypes.get(name, "")),
                 )
+            symbols, arithmetic = _scalar_expression_symbols(arg)
+            if symbols and arithmetic and symbols <= self.scalar_names | induction_variables:
+                temporary = self._temporary_scalar(_cast_numeric_scalar_dtype(arg) or 'uint32')
+                self._instruction_prefix.append(
+                    self._scalar_assignment(temporary.value_id, arg, None)
+                )
+                return temporary
             raise ValueError(
                 f"{callee} argument {index} must be a declared scalar or literal: {arg}"
             )
@@ -1975,7 +2016,7 @@ class _VFScopeParser:
             return AdapterValue(ub_reference[0], "UB")
         if name in self.scalar_names:
             return AdapterValue(
-                name,
+                self.scalar_bindings.get(name, name),
                 "Scalar",
                 _cce_scalar_dtype_to_form(self.local_scalar_dtypes.get(name, "")),
             )
@@ -2021,7 +2062,7 @@ class _VFScopeParser:
                 continue
             candidate = f"{stmt};"
             if _LOCAL_SCALAR_DECL_RE.fullmatch(candidate):
-                self._record_local_scalar_decl_statement(candidate)
+                self._scalar_prefix.extend(self._record_local_scalar_decl_statement(candidate))
 
     def _record_function_scope_ub_pointer_declarations(self, source: str) -> None:
         for segment in source.split(";"):
@@ -2035,11 +2076,13 @@ class _VFScopeParser:
     def _record_local_scalar_decl_statement(
         self,
         stmt: str,
-    ) -> None:
+        *, line: int | None = None,
+    ) -> list[AdapterScalarAssignment]:
         match = _LOCAL_SCALAR_DECL_RE.fullmatch(stmt)
         if not match:
             raise ValueError(f"Unsupported local scalar declaration: {stmt}")
         dtype = match.group("dtype")
+        assignments = []
         for raw_declaration in _split_args(match.group("declarations")):
             declaration = re.fullmatch(
                 r"([A-Za-z_]\w*)\s*(?:=\s*(.+))?",
@@ -2052,10 +2095,40 @@ class _VFScopeParser:
             self.scalar_names.add(name)
             self.offset_scalar_names.discard(name)
             self.local_scalar_dtypes[name] = dtype
+            if self._block_induction_variables:
+                self.scalar_bindings[name] = f'__scalar_local_{self._scalar_declaration_serial}:{name}'
+                self._scalar_declaration_serial += 1
+            else:
+                self.scalar_bindings[name] = name
+            self.volatile_scalar_names.discard(name)
+            if re.search(r'\bvolatile\b', stmt):
+                self.volatile_scalar_names.add(name)
+                self._volatile_scalar_values.add(self.scalar_bindings[name])
             self.local_scalar_initializers.pop(name, None)
             if initializer is None:
                 continue
             self.local_scalar_initializers[name] = initializer.strip()
+            assignments.append(self._scalar_assignment(name, initializer.strip(), line))
+        return assignments
+
+    def _scalar_assignment(self, name, expression, line):
+        # Preserve scalar SSA dependencies without adding timed scalar uops.
+        if _scalar_has_side_effects(expression):
+            raise ValueError(f'Unsupported scalar side effects: {expression}')
+        symbols, arithmetic = _scalar_expression_symbols(expression)
+        inductions = symbols & self._block_induction_variables
+        scalars = symbols & self.scalar_names - inductions
+        pure = (arithmetic and not (symbols - scalars - inductions)
+                and not (scalars & self.volatile_scalar_names))
+        return AdapterScalarAssignment(
+            AdapterValue(self.scalar_bindings.get(name, name), 'Scalar',
+                         _cce_scalar_dtype_to_form(self.local_scalar_dtypes[name])),
+            expression,
+            tuple(AdapterValue(self.scalar_bindings.get(source, source), 'Scalar',
+                               _cce_scalar_dtype_to_form(self.local_scalar_dtypes[source]))
+                  for source in sorted(scalars)),
+            tuple(sorted(inductions)), pure,
+            self._source_location(line) if line is not None else None)
 
     def _record_local_ub_pointer_decl_statement(self, stmt: str) -> None:
         match = _LOCAL_UB_POINTER_DECL_RE.fullmatch(stmt)
@@ -2230,6 +2303,30 @@ def _resolve_loop_step(step_expr: str, var: str, loop_params: Dict[str, int]) ->
     if assign_plus:
         return _resolve_count_expr(assign_plus.group(1), loop_params)
     raise ValueError(f"Unsupported for-loop step: {step_expr}")
+
+
+def _scalar_has_side_effects(expression: str) -> bool:
+    if '++' in expression or '--' in expression:
+        return True
+    for index, char in enumerate(expression):
+        if char != '=':
+            continue
+        before, after = expression[max(0,index-1):index], expression[index+1:index+2]
+        if after != '=' and before not in ('=', '!', '<', '>'):
+            return True
+        if expression[max(0,index-2):index] in ('<<', '>>'):
+            return True
+    return False
+
+
+def _scalar_expression_symbols(expression: str) -> tuple[set[str], bool]:
+    clean = re.sub(
+        r'\(\s*(?:u?int(?:8|16|32|64)_t|size_t|int|unsigned|signed|short|long|float|double|half)\s*\)',
+        '', expression,
+    )
+    return (set(re.findall(r'\b[A-Za-z_]\w*\b', clean)),
+            re.fullmatch(r'[\w\s.+*/%<>&|^~!?:()\-]+', clean) is not None
+            and not _scalar_has_side_effects(clean))
 
 
 def _is_numeric_scalar_literal(value: str) -> bool:

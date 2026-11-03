@@ -40,4 +40,5 @@ class CoreVfCostModel:
             output = Path(self.base_dir) / output
         result = engine.run(output).to_dict()
         result['linear_inst_count'] = program.linear_inst_count
+        result['compiler_optimization_stats'] = program.compiler_optimization_stats
         return result

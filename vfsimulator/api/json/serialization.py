@@ -133,6 +133,10 @@ def canonical_vf_info_to_dict(vf_info: CanonicalVfInfo) -> dict[str, Any]:
                 "producer_node_id": value.producer_node_id,
                 "storage_object_id": value.storage_object_id,
                 "source_location": _source_location_to_dict(value.source_location),
+                **({"scalar_expression": value.scalar_expression,
+                    "scalar_dependencies": list(value.scalar_dependencies),
+                    "scalar_loop_dependencies": list(value.scalar_loop_dependencies)}
+                   if value.scalar_expression is not None or value.scalar_dependencies or value.scalar_loop_dependencies else {}),
             }
             for definition_id, value in vf_info.values.items()
         },
@@ -254,6 +258,9 @@ def canonical_vf_info_from_dict(payload: Mapping[str, Any]) -> CanonicalVfInfo:
             producer_node_id=value.get("producer_node_id"),
             storage_object_id=value.get("storage_object_id"),
             source_location=_source_location(value.get("source_location")),
+            scalar_expression=value.get('scalar_expression'),
+            scalar_dependencies=tuple(value.get('scalar_dependencies', ())),
+            scalar_loop_dependencies=tuple(value.get('scalar_loop_dependencies', ())),
         )
         for definition_id, value in payload["values"].items()
     }

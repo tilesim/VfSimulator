@@ -221,6 +221,17 @@ def validate_canonical_vf_info(vf_info: CanonicalVfInfo) -> ValidationResult:
         for index, dim in enumerate(value.shape):
             validate_int64(dim, f"{path}.shape[{index}]", minimum=0)
         validate_location(value.source_location, f"{path}.source_location")
+        if (value.scalar_expression is not None or value.scalar_dependencies or value.scalar_loop_dependencies):
+            if value.storage != StorageKind.SCALAR or (value.scalar_expression is not None and not isinstance(value.scalar_expression, str)):
+                error("invalid_scalar_dependency", "Scalar dependency metadata requires Scalar storage and a string expression", path=path)
+            for dependency in value.scalar_dependencies:
+                target = vf_info.values.get(dependency)
+                if target is None or target.storage != StorageKind.SCALAR:
+                    error("invalid_scalar_dependency", "Scalar dependency must reference a declared Scalar value", path=path, dependency=dependency)
+            for dependency in value.scalar_loop_dependencies:
+                target = node_info.get(dependency)
+                if target is None or target.kind != "loop":
+                    error("invalid_scalar_dependency", "Scalar loop dependency must reference a declared loop", path=path, dependency=dependency)
         if value.storage == StorageKind.UB:
             if (
                 not value.storage_object_id

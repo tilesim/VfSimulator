@@ -16,6 +16,35 @@ def test_package_sources_are_synchronized():
     subprocess.run([sys.executable, str(Path(__file__).resolve().parents[1]/'tools/sync_python_package.py'), '--check'], check=True)
 
 
+@pytest.mark.parametrize('feedback', [False, True])
+def test_loop_invariant_motion_preserves_program_feedback_in_package(tmp_path, feedback):
+    from api.tilesim import program as root_api
+    from api.tilesim.predict import predict_from_program
+
+    def make(api):
+        values = {
+            'mask': api.VfSimValue('mask', 'PredicateRegister', 'bool'),
+            'count': api.VfSimValue('count', 'Scalar', 'uint32'),
+            'one': api.VfSimValue('one', 'Scalar', 'fp32'),
+            'x': api.VfSimValue('x', 'Register', 'fp32'),
+            'out': api.VfSimValue('out', 'UB', 'fp32', (256,), 'buffer'),
+        }
+        mask = (api.VfSimInst('PLT', ['count'], ['mask', 'count'], 'b32')
+                if feedback else api.VfSimInst('PSET_B32', [], ['mask'], 'b32'))
+        body = [mask, api.VfSimInst('VDUP', ['one','mask'], ['x']),
+                api.VfSimInst('VSTS', ['x','mask'], ['out'])]
+        return api.VfSimProgram(values=values, body=[api.VfSimLoop(4, body, name='repeat')])
+
+    root = predict_from_program(make(root_api), out_dir=tmp_path/'root')
+    result = packaged.predict_from_program(make(packaged), out_dir=tmp_path/'package')
+    assert result['cycles'] == root['cycles']
+    assert result['raw']['compiler_optimization_stats'] == root['raw']['compiler_optimization_stats']
+    assert result['raw']['compiler_optimization_stats']['hoisted_instruction_count'] == (0 if feedback else 2)
+    events = [json.loads(line) for line in (tmp_path/'package/start_by_cycle.json').read_text().splitlines()]
+    assert sum(event['op'] == 'VDUPS' for event in events) == (4 if feedback else 1)
+    assert sum(event['op'] == ('PLT' if feedback else 'PSET_B32') for event in events) == (4 if feedback else 1)
+
+
 @pytest.mark.parametrize('width', [16, 32])
 def test_movp_program_uses_packaged_predicate_semantics_and_parameters(tmp_path, width):
     from api.common.schema import StorageKind

@@ -1,0 +1,461 @@
+{
+  "source_commit": "f6cdfa1",
+  "case_count": 36,
+  "all_passed": true,
+  "records": [
+    {
+      "name": "pset_fixed_0",
+      "python_cycle": 57,
+      "counts": {
+        "PSET_B32": 2,
+        "VBR": 1,
+        "VLDS": 5,
+        "VSEL": 4,
+        "VSTS": 5
+      },
+      "passed": true
+    },
+    {
+      "name": "plt_reset_literal_0",
+      "python_cycle": 57,
+      "counts": {
+        "PSET_B32": 1,
+        "VBR": 2,
+        "PLT": 1,
+        "VLDS": 5,
+        "VSEL": 4,
+        "VSTS": 9
+      },
+      "passed": true
+    },
+    {
+      "name": "plt_reset_external_0",
+      "python_cycle": 57,
+      "counts": {
+        "PSET_B32": 1,
+        "VBR": 2,
+        "PLT": 1,
+        "VLDS": 5,
+        "VSEL": 4,
+        "VSTS": 9
+      },
+      "passed": true
+    },
+    {
+      "name": "plt_feedback_0",
+      "python_cycle": 59,
+      "counts": {
+        "PSET_B32": 1,
+        "VBR": 5,
+        "PLT": 4,
+        "VLDS": 5,
+        "VSEL": 4,
+        "VSTS": 9
+      },
+      "passed": true
+    },
+    {
+      "name": "plt_induction_0",
+      "python_cycle": 59,
+      "counts": {
+        "PSET_B32": 1,
+        "VBR": 5,
+        "PLT": 4,
+        "VLDS": 5,
+        "VSEL": 4,
+        "VSTS": 9
+      },
+      "passed": true
+    },
+    {
+      "name": "plt_reset_derived_0",
+      "python_cycle": 57,
+      "counts": {
+        "PSET_B32": 1,
+        "VBR": 2,
+        "PLT": 1,
+        "VLDS": 5,
+        "VSEL": 4,
+        "VSTS": 9
+      },
+      "passed": true
+    },
+    {
+      "name": "pltm_fixed_0",
+      "python_cycle": 57,
+      "counts": {
+        "PSET_B32": 1,
+        "VBR": 1,
+        "PLTM": 1,
+        "VLDS": 5,
+        "VSEL": 4,
+        "VSTS": 5
+      },
+      "passed": true
+    },
+    {
+      "name": "pltm_induction_0",
+      "python_cycle": 57,
+      "counts": {
+        "PSET_B32": 1,
+        "VBR": 1,
+        "PLTM": 4,
+        "VLDS": 5,
+        "VSEL": 4,
+        "VSTS": 5
+      },
+      "passed": true
+    },
+    {
+      "name": "vdup_fixed_0",
+      "python_cycle": 55,
+      "counts": {
+        "PSET_B32": 1,
+        "VBR": 1,
+        "VDUPS": 1,
+        "VSTS": 5,
+        "VLDS": 1
+      },
+      "passed": true
+    },
+    {
+      "name": "vdup_mask_variant_0",
+      "python_cycle": 56,
+      "counts": {
+        "PSET_B32": 1,
+        "VBR": 1,
+        "PLT": 4,
+        "VDUPS": 4,
+        "VSTS": 5,
+        "VLDS": 1
+      },
+      "passed": true
+    },
+    {
+      "name": "vdup_vector_variant_0",
+      "python_cycle": 59,
+      "counts": {
+        "PSET_B32": 1,
+        "VBR": 1,
+        "VLDS": 5,
+        "VDUP": 4,
+        "VSTS": 5
+      },
+      "passed": true
+    },
+    {
+      "name": "invariant_chain_0",
+      "python_cycle": 59,
+      "counts": {
+        "PSET_B32": 1,
+        "VBR": 1,
+        "PLT": 1,
+        "PNOT": 1,
+        "VDUPS": 1,
+        "VSTS": 5,
+        "VLDS": 1
+      },
+      "passed": true
+    },
+    {
+      "name": "nested_outer_variant_0",
+      "python_cycle": 66,
+      "counts": {
+        "PSET_B32": 1,
+        "VBR": 3,
+        "PLT": 2,
+        "VLDS": 9,
+        "VSEL": 8,
+        "VSTS": 17
+      },
+      "passed": true
+    },
+    {
+      "name": "zero_trip_0",
+      "python_cycle": 52,
+      "counts": {
+        "PSET_B32": 1,
+        "VBR": 1,
+        "VLDS": 1,
+        "VSTS": 1
+      },
+      "passed": true
+    },
+    {
+      "name": "external_preheader_0",
+      "python_cycle": 57,
+      "counts": {
+        "PSET_B32": 1,
+        "VBR": 2,
+        "PLT": 1,
+        "VLDS": 5,
+        "VSEL": 4,
+        "VSTS": 9
+      },
+      "passed": true
+    },
+    {
+      "name": "pset_fixed_1",
+      "python_cycle": 57,
+      "counts": {
+        "PSET_B32": 2,
+        "VBR": 1,
+        "VLDS": 5,
+        "VSEL": 4,
+        "VSTS": 5
+      },
+      "passed": true
+    },
+    {
+      "name": "plt_reset_literal_1",
+      "python_cycle": 57,
+      "counts": {
+        "PSET_B32": 1,
+        "VBR": 2,
+        "PLT": 1,
+        "VLDS": 5,
+        "VSEL": 4,
+        "VSTS": 9
+      },
+      "passed": true
+    },
+    {
+      "name": "plt_reset_external_1",
+      "python_cycle": 57,
+      "counts": {
+        "PSET_B32": 1,
+        "VBR": 2,
+        "PLT": 1,
+        "VLDS": 5,
+        "VSEL": 4,
+        "VSTS": 9
+      },
+      "passed": true
+    },
+    {
+      "name": "plt_feedback_1",
+      "python_cycle": 59,
+      "counts": {
+        "PSET_B32": 1,
+        "VBR": 5,
+        "PLT": 4,
+        "VLDS": 5,
+        "VSEL": 4,
+        "VSTS": 9
+      },
+      "passed": true
+    },
+    {
+      "name": "plt_induction_1",
+      "python_cycle": 59,
+      "counts": {
+        "PSET_B32": 1,
+        "VBR": 5,
+        "PLT": 4,
+        "VLDS": 5,
+        "VSEL": 4,
+        "VSTS": 9
+      },
+      "passed": true
+    },
+    {
+      "name": "plt_reset_derived_1",
+      "python_cycle": 57,
+      "counts": {
+        "PSET_B32": 1,
+        "VBR": 2,
+        "PLT": 1,
+        "VLDS": 5,
+        "VSEL": 4,
+        "VSTS": 9
+      },
+      "passed": true
+    },
+    {
+      "name": "pltm_fixed_1",
+      "python_cycle": 57,
+      "counts": {
+        "PSET_B32": 1,
+        "VBR": 1,
+        "PLTM": 1,
+        "VLDS": 5,
+        "VSEL": 4,
+        "VSTS": 5
+      },
+      "passed": true
+    },
+    {
+      "name": "pltm_induction_1",
+      "python_cycle": 57,
+      "counts": {
+        "PSET_B32": 1,
+        "VBR": 1,
+        "PLTM": 4,
+        "VLDS": 5,
+        "VSEL": 4,
+        "VSTS": 5
+      },
+      "passed": true
+    },
+    {
+      "name": "vdup_fixed_1",
+      "python_cycle": 55,
+      "counts": {
+        "PSET_B32": 1,
+        "VBR": 1,
+        "VDUPS": 1,
+        "VSTS": 5,
+        "VLDS": 1
+      },
+      "passed": true
+    },
+    {
+      "name": "vdup_mask_variant_1",
+      "python_cycle": 56,
+      "counts": {
+        "PSET_B32": 1,
+        "VBR": 1,
+        "PLT": 4,
+        "VDUPS": 4,
+        "VSTS": 5,
+        "VLDS": 1
+      },
+      "passed": true
+    },
+    {
+      "name": "vdup_vector_variant_1",
+      "python_cycle": 59,
+      "counts": {
+        "PSET_B32": 1,
+        "VBR": 1,
+        "VLDS": 5,
+        "VDUP": 4,
+        "VSTS": 5
+      },
+      "passed": true
+    },
+    {
+      "name": "invariant_chain_1",
+      "python_cycle": 59,
+      "counts": {
+        "PSET_B32": 1,
+        "VBR": 1,
+        "PLT": 1,
+        "PNOT": 1,
+        "VDUPS": 1,
+        "VSTS": 5,
+        "VLDS": 1
+      },
+      "passed": true
+    },
+    {
+      "name": "nested_outer_variant_1",
+      "python_cycle": 66,
+      "counts": {
+        "PSET_B32": 1,
+        "VBR": 3,
+        "PLT": 2,
+        "VLDS": 9,
+        "VSEL": 8,
+        "VSTS": 17
+      },
+      "passed": true
+    },
+    {
+      "name": "zero_trip_1",
+      "python_cycle": 52,
+      "counts": {
+        "PSET_B32": 1,
+        "VBR": 1,
+        "VLDS": 1,
+        "VSTS": 1
+      },
+      "passed": true
+    },
+    {
+      "name": "external_preheader_1",
+      "python_cycle": 57,
+      "counts": {
+        "PSET_B32": 1,
+        "VBR": 2,
+        "PLT": 1,
+        "VLDS": 5,
+        "VSEL": 4,
+        "VSTS": 9
+      },
+      "passed": true
+    },
+    {
+      "name": "alu_fixed_0",
+      "python_cycle": 58,
+      "counts": {
+        "PSET_B32": 1,
+        "VBR": 1,
+        "VLDS": 2,
+        "VADDS": 1,
+        "VSTS": 5
+      },
+      "passed": true
+    },
+    {
+      "name": "alu_feedback_0",
+      "python_cycle": 63,
+      "counts": {
+        "PSET_B32": 1,
+        "VBR": 1,
+        "VLDS": 2,
+        "VADDS": 4,
+        "VSTS": 5
+      },
+      "passed": true
+    },
+    {
+      "name": "alu_fixed_1",
+      "python_cycle": 58,
+      "counts": {
+        "PSET_B32": 1,
+        "VBR": 1,
+        "VLDS": 2,
+        "VADDS": 1,
+        "VSTS": 5
+      },
+      "passed": true
+    },
+    {
+      "name": "alu_feedback_1",
+      "python_cycle": 63,
+      "counts": {
+        "PSET_B32": 1,
+        "VBR": 1,
+        "VLDS": 2,
+        "VADDS": 4,
+        "VSTS": 5
+      },
+      "passed": true
+    },
+    {
+      "name": "vdup_scalar_variant_0",
+      "python_cycle": 55,
+      "counts": {
+        "PSET_B32": 1,
+        "VBR": 1,
+        "VDUPS": 4,
+        "VSTS": 5,
+        "VLDS": 1
+      },
+      "passed": true
+    },
+    {
+      "name": "vdup_scalar_variant_1",
+      "python_cycle": 55,
+      "counts": {
+        "PSET_B32": 1,
+        "VBR": 1,
+        "VDUPS": 4,
+        "VSTS": 5,
+        "VLDS": 1
+      },
+      "passed": true
+    }
+  ]
+}

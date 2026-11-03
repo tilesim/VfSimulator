@@ -18,3 +18,5 @@ python3 tools/sync_python_package.py --check
 
 独立安装 wheel 后还需从仓库外验证包资源与真实 TileSim 调用。
 带有外部 Native runner 的 Python 对照测试通过 `VFSIM_NATIVE_RUNNER` 选择匹配的可执行文件。
+
+`loop_invariants` 用例检查固定 mask、标量反馈、嵌套外提和循环出口；共享 pass 位于 `core/execution/optimization.py`。

@@ -9,6 +9,7 @@ from vfsimulator.api.common.symbols import (
 )
 from .ir import (
     AdapterAlias,
+    AdapterScalarAssignment,
     AdapterInstruction,
     AdapterLoop,
     AdapterMembar,
@@ -119,6 +120,11 @@ def normalize_adapter_program(program: AdapterProgram) -> AdapterProgram:
                         node.allow_bitcast,
                     )
                 )
+            elif isinstance(node, AdapterScalarAssignment):
+                normalized.append(AdapterScalarAssignment(
+                    register(node.destination), node.expression,
+                    tuple(register(source) for source in node.sources),
+                    node.induction_variables, node.pure, node.source_location))
             elif isinstance(node, AdapterMembar):
                 normalized.append(
                     AdapterMembar(

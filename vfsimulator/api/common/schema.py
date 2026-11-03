@@ -96,6 +96,9 @@ class CanonicalValue:
     producer_node_id: str | None = None
     storage_object_id: str | None = None
     source_location: SourceLocation | None = None
+    scalar_expression: str | None = None
+    scalar_dependencies: tuple[str, ...] = ()
+    scalar_loop_dependencies: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True)

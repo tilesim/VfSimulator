@@ -8083,7 +8083,8 @@
         "uint32",
         "uint8"
       ],
-      "timing_optional": true
+      "timing_optional": true,
+      "pure": true
     },
     "VSUBCS": {
       "class": "compute",
@@ -8165,7 +8166,8 @@
         "uint32",
         "uint8"
       ],
-      "timing_optional": true
+      "timing_optional": true,
+      "pure": true
     },
     "VNEG": {
       "class": "compute",
@@ -8177,7 +8179,8 @@
         "int32",
         "int8"
       ],
-      "timing_optional": true
+      "timing_optional": true,
+      "pure": true
     },
     "VMULL": {
       "class": "compute",
@@ -8255,7 +8258,8 @@
         "b8"
       ],
       "form_rule": "fixed",
-      "fixed_form": "b8"
+      "fixed_form": "b8",
+      "pure": true
     },
     "PXOR": {
       "class": "compute",
@@ -8264,7 +8268,8 @@
         "b8"
       ],
       "form_rule": "fixed",
-      "fixed_form": "b8"
+      "fixed_form": "b8",
+      "pure": true
     },
     "PMOV": {
       "class": "compute",
@@ -8286,7 +8291,8 @@
         "b8"
       ],
       "form_rule": "fixed",
-      "fixed_form": "b8"
+      "fixed_form": "b8",
+      "pure": true
     },
     "MOVP_B16": {
       "class": "compute",
@@ -8379,7 +8385,8 @@
         "plt_b16",
         "plt_b32",
         "plt_2xvl_b64"
-      ]
+      ],
+      "pure": true
     },
     "PSTU": {
       "class": "store",
@@ -8485,7 +8492,8 @@
         "uint32",
         "uint8",
         "int64"
-      ]
+      ],
+      "pure": true
     },
     "VINTLV": {
       "class": "compute",
@@ -8542,7 +8550,8 @@
         "b8"
       ],
       "form_rule": "fixed",
-      "fixed_form": "b8"
+      "fixed_form": "b8",
+      "pure": true
     },
     "POR": {
       "class": "compute",
@@ -8551,7 +8560,8 @@
         "b8"
       ],
       "form_rule": "fixed",
-      "fixed_form": "b8"
+      "fixed_form": "b8",
+      "pure": true
     },
     "PSET_B8": {
       "class": "compute",
@@ -8564,7 +8574,8 @@
       "timing_optional": true,
       "aliases": [
         "pge_b8"
-      ]
+      ],
+      "pure": true
     },
     "PSET_B16": {
       "class": "compute",
@@ -8577,7 +8588,8 @@
       "timing_optional": true,
       "aliases": [
         "pge_b16"
-      ]
+      ],
+      "pure": true
     },
     "PSET_B32": {
       "class": "compute",
@@ -8591,7 +8603,8 @@
       "aliases": [
         "pset_2xvl_b64",
         "pge_b32"
-      ]
+      ],
+      "pure": true
     },
     "VCMP_GT": {
       "class": "compute",
@@ -8814,7 +8827,8 @@
         "uint16",
         "uint32",
         "uint8"
-      ]
+      ],
+      "pure": true
     },
     "VEXP": {
       "class": "compute",
@@ -8841,7 +8855,8 @@
         "uint16",
         "uint32",
         "uint8"
-      ]
+      ],
+      "pure": true
     },
     "VMULS": {
       "class": "compute",
@@ -8858,7 +8873,8 @@
       ],
       "specializations": {
         "bf16": "VMUL"
-      }
+      },
+      "pure": true
     },
     "VDIV": {
       "class": "compute",
@@ -8881,7 +8897,8 @@
         "int16",
         "int32",
         "int8"
-      ]
+      ],
+      "pure": true
     },
     "VSUB": {
       "class": "compute",
@@ -8898,7 +8915,8 @@
         "uint16",
         "uint32",
         "uint8"
-      ]
+      ],
+      "pure": true
     },
     "VMUL": {
       "class": "compute",
@@ -8913,7 +8931,8 @@
         "int32",
         "uint16",
         "uint32"
-      ]
+      ],
+      "pure": true
     },
     "VMAXS": {
       "class": "compute",
@@ -8930,7 +8949,8 @@
         "uint16",
         "uint32",
         "uint8"
-      ]
+      ],
+      "pure": true
     },
     "VMINS": {
       "class": "compute",
@@ -8947,7 +8967,8 @@
         "uint16",
         "uint32",
         "uint8"
-      ]
+      ],
+      "pure": true
     },
     "VMAX": {
       "class": "compute",
@@ -8964,7 +8985,8 @@
         "uint16",
         "uint32",
         "uint8"
-      ]
+      ],
+      "pure": true
     },
     "VMIN": {
       "class": "compute",
@@ -8981,7 +9003,8 @@
         "uint16",
         "uint32",
         "uint8"
-      ]
+      ],
+      "pure": true
     },
     "VCMAX": {
       "class": "compute",
@@ -9890,7 +9913,8 @@
           "argument_count": 3,
           "argument_values": {}
         }
-      ]
+      ],
+      "pure": true
     },
     "VAND": {
       "class": "compute",
@@ -9910,7 +9934,8 @@
         "uint16",
         "uint32",
         "uint8"
-      ]
+      ],
+      "pure": true
     },
     "VCGMAX": {
       "class": "compute",
@@ -10073,7 +10098,8 @@
         "uint16",
         "uint32",
         "uint8"
-      ]
+      ],
+      "pure": true
     },
     "VSHLS": {
       "class": "compute",
@@ -10125,7 +10151,8 @@
         "uint16",
         "uint32",
         "uint8"
-      ]
+      ],
+      "pure": true
     },
     "VPACK": {
       "class": "compute",
@@ -10295,7 +10322,8 @@
         "uint32",
         "uint8"
       ],
-      "timing_optional": true
+      "timing_optional": true,
+      "pure": true
     },
     "VCI": {
       "class": "compute",
@@ -11174,7 +11202,8 @@
         "uint32",
         "uint8"
       ],
-      "timing_optional": true
+      "timing_optional": true,
+      "pure": true
     },
     "PINTLV": {
       "class": "compute",
@@ -11233,7 +11262,8 @@
         "pltm_b32",
         "pltm_2xvl_b64"
       ],
-      "timing_optional": true
+      "timing_optional": true,
+      "pure": true
     },
     "PPACK": {
       "class": "compute",
@@ -11696,7 +11726,8 @@
         "uint32",
         "uint8"
       ],
-      "timing_optional": true
+      "timing_optional": true,
+      "pure": true
     },
     "VDUP_HIGHEST": {
       "class": "compute",
@@ -11715,7 +11746,8 @@
         "uint32",
         "uint8"
       ],
-      "timing_optional": true
+      "timing_optional": true,
+      "pure": true
     },
     "VDUP_HIGHEST_MERGE": {
       "class": "compute",
@@ -11734,7 +11766,8 @@
         "uint32",
         "uint8"
       ],
-      "timing_optional": true
+      "timing_optional": true,
+      "pure": true
     },
     "VLDS_PAIR": {
       "class": "load",
@@ -11787,7 +11820,8 @@
         "uint32",
         "uint8"
       ],
-      "timing_optional": true
+      "timing_optional": true,
+      "pure": true
     },
     "VDUPS_MERGE": {
       "class": "compute",
@@ -11806,7 +11840,8 @@
         "uint32",
         "uint8"
       ],
-      "timing_optional": true
+      "timing_optional": true,
+      "pure": true
     },
     "VLD": {
       "class": "load",

@@ -1,8 +1,9 @@
 from __future__ import annotations
-from dataclasses import dataclass, fields
+from dataclasses import dataclass, field, fields
 from typing import Any, Dict, List
 from core.execution.instruction import DynamicInstruction
 from core.execution.expansion import DynamicExpander
+from core.execution.optimization import hoist_loop_invariants
 from core.params.types import UarchParameters
 from typing import Any, Iterable
 from api.common.instruction_catalog import DEFAULT_INSTRUCTION_CATALOG
@@ -412,8 +413,10 @@ class PreparedProgram:
     empty_top_blocks: set[int]
     fallback_dtype: str
     linear_inst_count: int
+    compiler_optimization_stats: dict = field(default_factory=dict)
 
 def prepare_program(vf_info, db, uarch: UarchParameters):
+    vf_info, optimization_stats = hoist_loop_invariants(vf_info)
     payload = CoreLoweringPass().lower(vf_info)
     params = payload['params']
     linear = _StaticLayout(params).flatten(payload['program'])
@@ -434,5 +437,6 @@ def prepare_program(vf_info, db, uarch: UarchParameters):
         bounds,
         expander.empty_top_block_ids(),
         payload['fallback_dtype'],
-        len(linear)
+        len(linear),
+        optimization_stats
     )

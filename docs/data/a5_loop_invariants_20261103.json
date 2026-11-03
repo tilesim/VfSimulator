@@ -1,0 +1,1999 @@
+{
+  "target": "A5",
+  "cann": "9.0.0-beta.1",
+  "core_arch": "dav-c310-vec",
+  "simulator": "Ascend950PR_9599",
+  "case_count": 18,
+  "validated_records": 36,
+  "replicas": 2,
+  "raw_archive": "results/a5_loop_invariants_20261103",
+  "note": "Scalar variant uses the uint32 store probe; earlier vector reinterpretation probes remain in main archive.",
+  "rows": [
+    {
+      "name": "pset_fixed",
+      "replica": 0,
+      "source_iterations": 4,
+      "passed": true,
+      "guards_passed": true,
+      "motion_verified": true,
+      "dynamic_opcode_counts": {
+        "RV_VLOOPv2": 1,
+        "RV_VLD": 4,
+        "RV_VBR": 1,
+        "RV_PSET": 2,
+        "RV_SEND": 5,
+        "RV_VLDS": 1,
+        "RV_VSEL": 4,
+        "RV_VST": 4,
+        "RV_VSTS": 1
+      },
+      "expected_opcode_counts": {
+        "RV_PSET": 2
+      },
+      "artifact_group": "main",
+      "artifact_batch": "batch_000",
+      "kernel": "probe_0_pset_fixed",
+      "source_sha256": "ba1aa5bf730f2efff3106d58ed88fafcfcc13377295a1c3e55d3d72a4ee18761",
+      "model_opcode_counts": {
+        "PSET_B32": 2,
+        "VBR": 1,
+        "VLDS": 5,
+        "VSEL": 4,
+        "VSTS": 5
+      },
+      "before_model_opcode_counts": {
+        "PSET_B32": 5,
+        "VBR": 1,
+        "VLDS": 5,
+        "VSEL": 4,
+        "VSTS": 5
+      },
+      "python_native_cce_and_json_parity": true,
+      "model_vf_end_cycle": 57,
+      "optimization": {
+        "enabled": true,
+        "hoisted_instruction_count": 1,
+        "moves": [
+          {
+            "instruction_id": "instruction.2",
+            "opcode": "PSET_B32",
+            "from_loop": "loop.0",
+            "to_loop": null
+          }
+        ]
+      }
+    },
+    {
+      "name": "plt_reset_literal",
+      "replica": 0,
+      "source_iterations": 4,
+      "passed": true,
+      "guards_passed": true,
+      "motion_verified": true,
+      "dynamic_opcode_counts": {
+        "RV_VLOOPv2": 1,
+        "RV_SMOVI": 1,
+        "RV_VLD": 4,
+        "RV_PSET": 1,
+        "RV_VBR": 2,
+        "RV_PLT": 1,
+        "RV_SEND": 5,
+        "RV_VLDS": 1,
+        "RV_VST": 8,
+        "RV_VSEL": 4,
+        "RV_VSTS": 1
+      },
+      "expected_opcode_counts": {
+        "RV_PLT": 1
+      },
+      "artifact_group": "main",
+      "artifact_batch": "batch_000",
+      "kernel": "probe_1_plt_reset_literal",
+      "source_sha256": "ba1aa5bf730f2efff3106d58ed88fafcfcc13377295a1c3e55d3d72a4ee18761",
+      "model_opcode_counts": {
+        "PSET_B32": 1,
+        "VBR": 2,
+        "PLT": 1,
+        "VLDS": 5,
+        "VSEL": 4,
+        "VSTS": 9
+      },
+      "before_model_opcode_counts": {
+        "PSET_B32": 1,
+        "VBR": 5,
+        "PLT": 4,
+        "VLDS": 5,
+        "VSEL": 4,
+        "VSTS": 9
+      },
+      "python_native_cce_and_json_parity": true,
+      "model_vf_end_cycle": 57,
+      "optimization": {
+        "enabled": true,
+        "hoisted_instruction_count": 2,
+        "moves": [
+          {
+            "instruction_id": "instruction.2",
+            "opcode": "PLT",
+            "from_loop": "loop.0",
+            "to_loop": null
+          },
+          {
+            "instruction_id": "instruction.6",
+            "opcode": "VBR",
+            "from_loop": "loop.0",
+            "to_loop": null
+          }
+        ]
+      }
+    },
+    {
+      "name": "plt_reset_external",
+      "replica": 0,
+      "source_iterations": 4,
+      "passed": true,
+      "guards_passed": true,
+      "motion_verified": true,
+      "dynamic_opcode_counts": {
+        "RV_VLOOPv2": 1,
+        "RV_SMOV": 1,
+        "RV_VLD": 4,
+        "RV_PSET": 1,
+        "RV_VBR": 2,
+        "RV_PLT": 1,
+        "RV_SEND": 5,
+        "RV_VLDS": 1,
+        "RV_VST": 8,
+        "RV_VSEL": 4,
+        "RV_VSTS": 1
+      },
+      "expected_opcode_counts": {
+        "RV_PLT": 1
+      },
+      "artifact_group": "main",
+      "artifact_batch": "batch_000",
+      "kernel": "probe_2_plt_reset_external",
+      "source_sha256": "ba1aa5bf730f2efff3106d58ed88fafcfcc13377295a1c3e55d3d72a4ee18761",
+      "model_opcode_counts": {
+        "PSET_B32": 1,
+        "VBR": 2,
+        "PLT": 1,
+        "VLDS": 5,
+        "VSEL": 4,
+        "VSTS": 9
+      },
+      "before_model_opcode_counts": {
+        "PSET_B32": 1,
+        "VBR": 5,
+        "PLT": 4,
+        "VLDS": 5,
+        "VSEL": 4,
+        "VSTS": 9
+      },
+      "python_native_cce_and_json_parity": true,
+      "model_vf_end_cycle": 57,
+      "optimization": {
+        "enabled": true,
+        "hoisted_instruction_count": 2,
+        "moves": [
+          {
+            "instruction_id": "instruction.2",
+            "opcode": "PLT",
+            "from_loop": "loop.0",
+            "to_loop": null
+          },
+          {
+            "instruction_id": "instruction.6",
+            "opcode": "VBR",
+            "from_loop": "loop.0",
+            "to_loop": null
+          }
+        ]
+      }
+    },
+    {
+      "name": "plt_feedback",
+      "replica": 0,
+      "source_iterations": 4,
+      "passed": true,
+      "guards_passed": true,
+      "motion_verified": true,
+      "dynamic_opcode_counts": {
+        "RV_VLOOPv2": 1,
+        "RV_SMOV": 1,
+        "RV_VLD": 4,
+        "RV_PSET": 1,
+        "RV_VBR": 5,
+        "RV_PLT": 4,
+        "RV_SEND": 5,
+        "RV_VLDS": 1,
+        "RV_VST": 8,
+        "RV_VSEL": 4,
+        "RV_VSTS": 1
+      },
+      "expected_opcode_counts": {
+        "RV_PLT": 4
+      },
+      "artifact_group": "main",
+      "artifact_batch": "batch_000",
+      "kernel": "probe_3_plt_feedback",
+      "source_sha256": "ba1aa5bf730f2efff3106d58ed88fafcfcc13377295a1c3e55d3d72a4ee18761",
+      "model_opcode_counts": {
+        "PSET_B32": 1,
+        "VBR": 5,
+        "PLT": 4,
+        "VLDS": 5,
+        "VSEL": 4,
+        "VSTS": 9
+      },
+      "before_model_opcode_counts": {
+        "PSET_B32": 1,
+        "VBR": 5,
+        "PLT": 4,
+        "VLDS": 5,
+        "VSEL": 4,
+        "VSTS": 9
+      },
+      "python_native_cce_and_json_parity": true,
+      "model_vf_end_cycle": 59,
+      "optimization": {
+        "enabled": true,
+        "hoisted_instruction_count": 0,
+        "moves": []
+      }
+    },
+    {
+      "name": "plt_induction",
+      "replica": 0,
+      "source_iterations": 4,
+      "passed": true,
+      "guards_passed": true,
+      "motion_verified": true,
+      "dynamic_opcode_counts": {
+        "RV_VLOOPv2": 1,
+        "RV_SMOVI": 1,
+        "RV_SADDI": 4,
+        "RV_VLD": 4,
+        "RV_PSET": 1,
+        "RV_VBR": 5,
+        "RV_SMOV": 4,
+        "RV_PLT": 4,
+        "RV_VST": 8,
+        "RV_VSEL": 4,
+        "RV_SEND": 5,
+        "RV_VLDS": 1,
+        "RV_VSTS": 1
+      },
+      "expected_opcode_counts": {
+        "RV_PLT": 4
+      },
+      "artifact_group": "main",
+      "artifact_batch": "batch_000",
+      "kernel": "probe_4_plt_induction",
+      "source_sha256": "ba1aa5bf730f2efff3106d58ed88fafcfcc13377295a1c3e55d3d72a4ee18761",
+      "model_opcode_counts": {
+        "PSET_B32": 1,
+        "VBR": 5,
+        "PLT": 4,
+        "VLDS": 5,
+        "VSEL": 4,
+        "VSTS": 9
+      },
+      "before_model_opcode_counts": {
+        "PSET_B32": 1,
+        "VBR": 5,
+        "PLT": 4,
+        "VLDS": 5,
+        "VSEL": 4,
+        "VSTS": 9
+      },
+      "python_native_cce_and_json_parity": true,
+      "model_vf_end_cycle": 59,
+      "optimization": {
+        "enabled": true,
+        "hoisted_instruction_count": 0,
+        "moves": []
+      }
+    },
+    {
+      "name": "plt_reset_derived",
+      "replica": 0,
+      "source_iterations": 4,
+      "passed": true,
+      "guards_passed": true,
+      "motion_verified": true,
+      "dynamic_opcode_counts": {
+        "RV_VLOOPv2": 1,
+        "RV_SMOV": 1,
+        "RV_VLD": 4,
+        "RV_PSET": 1,
+        "RV_VBR": 2,
+        "RV_PLT": 1,
+        "RV_SEND": 5,
+        "RV_VLDS": 1,
+        "RV_VST": 8,
+        "RV_VSEL": 4,
+        "RV_VSTS": 1
+      },
+      "expected_opcode_counts": {
+        "RV_PLT": 1
+      },
+      "artifact_group": "main",
+      "artifact_batch": "batch_000",
+      "kernel": "probe_5_plt_reset_derived",
+      "source_sha256": "ba1aa5bf730f2efff3106d58ed88fafcfcc13377295a1c3e55d3d72a4ee18761",
+      "model_opcode_counts": {
+        "PSET_B32": 1,
+        "VBR": 2,
+        "PLT": 1,
+        "VLDS": 5,
+        "VSEL": 4,
+        "VSTS": 9
+      },
+      "before_model_opcode_counts": {
+        "PSET_B32": 1,
+        "VBR": 5,
+        "PLT": 4,
+        "VLDS": 5,
+        "VSEL": 4,
+        "VSTS": 9
+      },
+      "python_native_cce_and_json_parity": true,
+      "model_vf_end_cycle": 57,
+      "optimization": {
+        "enabled": true,
+        "hoisted_instruction_count": 2,
+        "moves": [
+          {
+            "instruction_id": "instruction.2",
+            "opcode": "PLT",
+            "from_loop": "loop.0",
+            "to_loop": null
+          },
+          {
+            "instruction_id": "instruction.6",
+            "opcode": "VBR",
+            "from_loop": "loop.0",
+            "to_loop": null
+          }
+        ]
+      }
+    },
+    {
+      "name": "pltm_fixed",
+      "replica": 0,
+      "source_iterations": 4,
+      "passed": true,
+      "guards_passed": true,
+      "motion_verified": true,
+      "dynamic_opcode_counts": {
+        "RV_VLOOPv2": 1,
+        "RV_VLD": 4,
+        "RV_VBR": 1,
+        "RV_PSET": 1,
+        "RV_PLTM": 1,
+        "RV_VSEL": 4,
+        "RV_SEND": 5,
+        "RV_VLDS": 1,
+        "RV_VST": 4,
+        "RV_VSTS": 1
+      },
+      "expected_opcode_counts": {
+        "RV_PLTM": 1
+      },
+      "artifact_group": "main",
+      "artifact_batch": "batch_001",
+      "kernel": "probe_0_pltm_fixed",
+      "source_sha256": "c9ebab4caf01f18d9e94a61f196f3852ac57f5babae5ec8d1f3d87f78a59dba4",
+      "model_opcode_counts": {
+        "PSET_B32": 1,
+        "VBR": 1,
+        "PLTM": 1,
+        "VLDS": 5,
+        "VSEL": 4,
+        "VSTS": 5
+      },
+      "before_model_opcode_counts": {
+        "PSET_B32": 1,
+        "VBR": 1,
+        "PLTM": 4,
+        "VLDS": 5,
+        "VSEL": 4,
+        "VSTS": 5
+      },
+      "python_native_cce_and_json_parity": true,
+      "model_vf_end_cycle": 57,
+      "optimization": {
+        "enabled": true,
+        "hoisted_instruction_count": 1,
+        "moves": [
+          {
+            "instruction_id": "instruction.2",
+            "opcode": "PLTM",
+            "from_loop": "loop.0",
+            "to_loop": null
+          }
+        ]
+      }
+    },
+    {
+      "name": "pltm_induction",
+      "replica": 0,
+      "source_iterations": 4,
+      "passed": true,
+      "guards_passed": true,
+      "motion_verified": true,
+      "dynamic_opcode_counts": {
+        "RV_VLOOPv2": 1,
+        "RV_VLD": 4,
+        "RV_PSET": 1,
+        "RV_VBR": 1,
+        "RV_PLTM": 4,
+        "RV_SEND": 5,
+        "RV_VLDS": 1,
+        "RV_VSEL": 4,
+        "RV_VST": 4,
+        "RV_VSTS": 1
+      },
+      "expected_opcode_counts": {
+        "RV_PLTM": 4
+      },
+      "artifact_group": "main",
+      "artifact_batch": "batch_001",
+      "kernel": "probe_1_pltm_induction",
+      "source_sha256": "c9ebab4caf01f18d9e94a61f196f3852ac57f5babae5ec8d1f3d87f78a59dba4",
+      "model_opcode_counts": {
+        "PSET_B32": 1,
+        "VBR": 1,
+        "PLTM": 4,
+        "VLDS": 5,
+        "VSEL": 4,
+        "VSTS": 5
+      },
+      "before_model_opcode_counts": {
+        "PSET_B32": 1,
+        "VBR": 1,
+        "PLTM": 4,
+        "VLDS": 5,
+        "VSEL": 4,
+        "VSTS": 5
+      },
+      "python_native_cce_and_json_parity": true,
+      "model_vf_end_cycle": 57,
+      "optimization": {
+        "enabled": true,
+        "hoisted_instruction_count": 0,
+        "moves": []
+      }
+    },
+    {
+      "name": "vdup_fixed",
+      "replica": 0,
+      "source_iterations": 4,
+      "passed": true,
+      "guards_passed": true,
+      "motion_verified": true,
+      "dynamic_opcode_counts": {
+        "RV_VLOOPv2": 1,
+        "RV_PSET": 1,
+        "RV_SEND": 5,
+        "RV_VDUPS": 1,
+        "RV_VLDS": 1,
+        "RV_VST": 4,
+        "RV_VSTS": 1
+      },
+      "expected_opcode_counts": {
+        "RV_VDUPS": 1
+      },
+      "artifact_group": "main",
+      "artifact_batch": "batch_001",
+      "kernel": "probe_2_vdup_fixed",
+      "source_sha256": "c9ebab4caf01f18d9e94a61f196f3852ac57f5babae5ec8d1f3d87f78a59dba4",
+      "model_opcode_counts": {
+        "PSET_B32": 1,
+        "VBR": 1,
+        "VDUPS": 1,
+        "VSTS": 5,
+        "VLDS": 1
+      },
+      "before_model_opcode_counts": {
+        "PSET_B32": 1,
+        "VBR": 1,
+        "VDUPS": 4,
+        "VSTS": 5,
+        "VLDS": 1
+      },
+      "python_native_cce_and_json_parity": true,
+      "model_vf_end_cycle": 55,
+      "optimization": {
+        "enabled": true,
+        "hoisted_instruction_count": 1,
+        "moves": [
+          {
+            "instruction_id": "instruction.2",
+            "opcode": "VDUPS",
+            "from_loop": "loop.0",
+            "to_loop": null
+          }
+        ]
+      }
+    },
+    {
+      "name": "vdup_mask_variant",
+      "replica": 0,
+      "source_iterations": 4,
+      "passed": true,
+      "guards_passed": true,
+      "motion_verified": true,
+      "dynamic_opcode_counts": {
+        "RV_VLOOPv2": 1,
+        "RV_SMOVI": 1,
+        "RV_SADDI": 4,
+        "RV_PSET": 1,
+        "RV_SMOV": 4,
+        "RV_PLT": 4,
+        "RV_VDUPS": 4,
+        "RV_VST": 4,
+        "RV_SEND": 5,
+        "RV_VLDS": 1,
+        "RV_VSTS": 1
+      },
+      "expected_opcode_counts": {
+        "RV_PLT": 4,
+        "RV_VDUPS": 4
+      },
+      "artifact_group": "main",
+      "artifact_batch": "batch_001",
+      "kernel": "probe_4_vdup_mask_variant",
+      "source_sha256": "c9ebab4caf01f18d9e94a61f196f3852ac57f5babae5ec8d1f3d87f78a59dba4",
+      "model_opcode_counts": {
+        "PSET_B32": 1,
+        "VBR": 1,
+        "PLT": 4,
+        "VDUPS": 4,
+        "VSTS": 5,
+        "VLDS": 1
+      },
+      "before_model_opcode_counts": {
+        "PSET_B32": 1,
+        "VBR": 1,
+        "PLT": 4,
+        "VDUPS": 4,
+        "VSTS": 5,
+        "VLDS": 1
+      },
+      "python_native_cce_and_json_parity": true,
+      "model_vf_end_cycle": 56,
+      "optimization": {
+        "enabled": true,
+        "hoisted_instruction_count": 0,
+        "moves": []
+      }
+    },
+    {
+      "name": "vdup_vector_variant",
+      "replica": 0,
+      "source_iterations": 4,
+      "passed": true,
+      "guards_passed": true,
+      "motion_verified": true,
+      "dynamic_opcode_counts": {
+        "RV_VLOOPv2": 1,
+        "RV_VLD": 4,
+        "RV_PSET": 1,
+        "RV_SEND": 5,
+        "RV_VLDS": 1,
+        "RV_VDUP": 4,
+        "RV_VSTS": 1,
+        "RV_VST": 4
+      },
+      "expected_opcode_counts": {
+        "RV_VDUP": 4
+      },
+      "artifact_group": "main",
+      "artifact_batch": "batch_001",
+      "kernel": "probe_5_vdup_vector_variant",
+      "source_sha256": "c9ebab4caf01f18d9e94a61f196f3852ac57f5babae5ec8d1f3d87f78a59dba4",
+      "model_opcode_counts": {
+        "PSET_B32": 1,
+        "VBR": 1,
+        "VLDS": 5,
+        "VDUP": 4,
+        "VSTS": 5
+      },
+      "before_model_opcode_counts": {
+        "PSET_B32": 1,
+        "VBR": 1,
+        "VLDS": 5,
+        "VDUP": 4,
+        "VSTS": 5
+      },
+      "python_native_cce_and_json_parity": true,
+      "model_vf_end_cycle": 59,
+      "optimization": {
+        "enabled": true,
+        "hoisted_instruction_count": 0,
+        "moves": []
+      }
+    },
+    {
+      "name": "invariant_chain",
+      "replica": 0,
+      "source_iterations": 4,
+      "passed": true,
+      "guards_passed": true,
+      "motion_verified": true,
+      "dynamic_opcode_counts": {
+        "RV_VLOOPv2": 1,
+        "RV_SMOV": 1,
+        "RV_PSET": 1,
+        "RV_PLT": 1,
+        "RV_PNOT": 1,
+        "RV_VDUPS": 1,
+        "RV_SEND": 5,
+        "RV_VLDS": 1,
+        "RV_VST": 4,
+        "RV_VSTS": 1
+      },
+      "expected_opcode_counts": {
+        "RV_PLT": 1,
+        "RV_PNOT": 1,
+        "RV_VDUPS": 1
+      },
+      "artifact_group": "main",
+      "artifact_batch": "batch_002",
+      "kernel": "probe_0_invariant_chain",
+      "source_sha256": "3c451f4c8f986bc8165199fd36053e0367ae39a60d359ef899f66333431946cb",
+      "model_opcode_counts": {
+        "PSET_B32": 1,
+        "VBR": 1,
+        "PLT": 1,
+        "PNOT": 1,
+        "VDUPS": 1,
+        "VSTS": 5,
+        "VLDS": 1
+      },
+      "before_model_opcode_counts": {
+        "PSET_B32": 1,
+        "VBR": 1,
+        "PLT": 4,
+        "PNOT": 4,
+        "VDUPS": 4,
+        "VSTS": 5,
+        "VLDS": 1
+      },
+      "python_native_cce_and_json_parity": true,
+      "model_vf_end_cycle": 59,
+      "optimization": {
+        "enabled": true,
+        "hoisted_instruction_count": 3,
+        "moves": [
+          {
+            "instruction_id": "instruction.2",
+            "opcode": "PLT",
+            "from_loop": "loop.0",
+            "to_loop": null
+          },
+          {
+            "instruction_id": "instruction.3",
+            "opcode": "PNOT",
+            "from_loop": "loop.0",
+            "to_loop": null
+          },
+          {
+            "instruction_id": "instruction.4",
+            "opcode": "VDUPS",
+            "from_loop": "loop.0",
+            "to_loop": null
+          }
+        ]
+      }
+    },
+    {
+      "name": "nested_outer_variant",
+      "replica": 0,
+      "source_iterations": 8,
+      "passed": true,
+      "guards_passed": true,
+      "motion_verified": true,
+      "dynamic_opcode_counts": {
+        "RV_VLOOPv2": 3,
+        "RV_SMOV": 1,
+        "RV_SMULI": 2,
+        "RV_VBR": 3,
+        "RV_PSET": 1,
+        "RV_SADD": 2,
+        "RV_VLD": 8,
+        "RV_PLT": 2,
+        "RV_SADDI": 2,
+        "RV_VST": 16,
+        "RV_SZEROEXT": 2,
+        "RV_VSEL": 8,
+        "RV_SEND": 5,
+        "RV_VLDS": 1,
+        "RV_VSTS": 1
+      },
+      "expected_opcode_counts": {
+        "RV_PLT": 2
+      },
+      "artifact_group": "main",
+      "artifact_batch": "batch_002",
+      "kernel": "probe_1_nested_outer_variant",
+      "source_sha256": "3c451f4c8f986bc8165199fd36053e0367ae39a60d359ef899f66333431946cb",
+      "model_opcode_counts": {
+        "PSET_B32": 1,
+        "VBR": 3,
+        "PLT": 2,
+        "VLDS": 9,
+        "VSEL": 8,
+        "VSTS": 17
+      },
+      "before_model_opcode_counts": {
+        "PSET_B32": 1,
+        "VBR": 9,
+        "PLT": 8,
+        "VLDS": 9,
+        "VSEL": 8,
+        "VSTS": 17
+      },
+      "python_native_cce_and_json_parity": true,
+      "model_vf_end_cycle": 66,
+      "optimization": {
+        "enabled": true,
+        "hoisted_instruction_count": 2,
+        "moves": [
+          {
+            "instruction_id": "instruction.2",
+            "opcode": "PLT",
+            "from_loop": "loop.1",
+            "to_loop": "loop.0"
+          },
+          {
+            "instruction_id": "instruction.6",
+            "opcode": "VBR",
+            "from_loop": "loop.1",
+            "to_loop": "loop.0"
+          }
+        ]
+      }
+    },
+    {
+      "name": "zero_trip",
+      "replica": 0,
+      "source_iterations": 0,
+      "passed": true,
+      "guards_passed": true,
+      "motion_verified": true,
+      "dynamic_opcode_counts": {
+        "RV_SEND": 5,
+        "RV_VLDS": 1,
+        "RV_PSET": 1,
+        "RV_VSTS": 1
+      },
+      "expected_opcode_counts": {
+        "RV_PLT": 0
+      },
+      "artifact_group": "main",
+      "artifact_batch": "batch_002",
+      "kernel": "probe_2_zero_trip",
+      "source_sha256": "3c451f4c8f986bc8165199fd36053e0367ae39a60d359ef899f66333431946cb",
+      "model_opcode_counts": {
+        "PSET_B32": 1,
+        "VBR": 1,
+        "VLDS": 1,
+        "VSTS": 1
+      },
+      "before_model_opcode_counts": {
+        "PSET_B32": 1,
+        "VBR": 1,
+        "VLDS": 1,
+        "VSTS": 1
+      },
+      "python_native_cce_and_json_parity": true,
+      "model_vf_end_cycle": 52,
+      "optimization": {
+        "enabled": true,
+        "hoisted_instruction_count": 0,
+        "moves": []
+      }
+    },
+    {
+      "name": "external_preheader",
+      "replica": 0,
+      "source_iterations": 4,
+      "passed": true,
+      "guards_passed": true,
+      "motion_verified": true,
+      "dynamic_opcode_counts": {
+        "RV_VLOOPv2": 1,
+        "RV_SMOV": 1,
+        "RV_PSET": 1,
+        "RV_VBR": 2,
+        "RV_VLD": 4,
+        "RV_PLT": 1,
+        "RV_VST": 8,
+        "RV_SEND": 5,
+        "RV_VLDS": 1,
+        "RV_VSEL": 4,
+        "RV_VSTS": 1
+      },
+      "expected_opcode_counts": {
+        "RV_PLT": 1
+      },
+      "artifact_group": "main",
+      "artifact_batch": "batch_002",
+      "kernel": "probe_3_external_preheader",
+      "source_sha256": "3c451f4c8f986bc8165199fd36053e0367ae39a60d359ef899f66333431946cb",
+      "model_opcode_counts": {
+        "PSET_B32": 1,
+        "VBR": 2,
+        "PLT": 1,
+        "VLDS": 5,
+        "VSEL": 4,
+        "VSTS": 9
+      },
+      "before_model_opcode_counts": {
+        "PSET_B32": 1,
+        "VBR": 5,
+        "PLT": 1,
+        "VLDS": 5,
+        "VSEL": 4,
+        "VSTS": 9
+      },
+      "python_native_cce_and_json_parity": true,
+      "model_vf_end_cycle": 57,
+      "optimization": {
+        "enabled": true,
+        "hoisted_instruction_count": 1,
+        "moves": [
+          {
+            "instruction_id": "instruction.6",
+            "opcode": "VBR",
+            "from_loop": "loop.0",
+            "to_loop": null
+          }
+        ]
+      }
+    },
+    {
+      "name": "pset_fixed",
+      "replica": 1,
+      "source_iterations": 4,
+      "passed": true,
+      "guards_passed": true,
+      "motion_verified": true,
+      "dynamic_opcode_counts": {
+        "RV_VLOOPv2": 1,
+        "RV_VLD": 4,
+        "RV_PSET": 2,
+        "RV_VBR": 1,
+        "RV_SEND": 5,
+        "RV_VLDS": 1,
+        "RV_VSEL": 4,
+        "RV_VST": 4,
+        "RV_VSTS": 1
+      },
+      "expected_opcode_counts": {
+        "RV_PSET": 2
+      },
+      "artifact_group": "main",
+      "artifact_batch": "batch_002",
+      "kernel": "probe_4_pset_fixed",
+      "source_sha256": "3c451f4c8f986bc8165199fd36053e0367ae39a60d359ef899f66333431946cb",
+      "model_opcode_counts": {
+        "PSET_B32": 2,
+        "VBR": 1,
+        "VLDS": 5,
+        "VSEL": 4,
+        "VSTS": 5
+      },
+      "before_model_opcode_counts": {
+        "PSET_B32": 5,
+        "VBR": 1,
+        "VLDS": 5,
+        "VSEL": 4,
+        "VSTS": 5
+      },
+      "python_native_cce_and_json_parity": true,
+      "model_vf_end_cycle": 57,
+      "optimization": {
+        "enabled": true,
+        "hoisted_instruction_count": 1,
+        "moves": [
+          {
+            "instruction_id": "instruction.2",
+            "opcode": "PSET_B32",
+            "from_loop": "loop.0",
+            "to_loop": null
+          }
+        ]
+      }
+    },
+    {
+      "name": "plt_reset_literal",
+      "replica": 1,
+      "source_iterations": 4,
+      "passed": true,
+      "guards_passed": true,
+      "motion_verified": true,
+      "dynamic_opcode_counts": {
+        "RV_VLOOPv2": 1,
+        "RV_SMOVI": 1,
+        "RV_VLD": 4,
+        "RV_VBR": 2,
+        "RV_PSET": 1,
+        "RV_PLT": 1,
+        "RV_SEND": 5,
+        "RV_VLDS": 1,
+        "RV_VST": 8,
+        "RV_VSEL": 4,
+        "RV_VSTS": 1
+      },
+      "expected_opcode_counts": {
+        "RV_PLT": 1
+      },
+      "artifact_group": "main",
+      "artifact_batch": "batch_002",
+      "kernel": "probe_5_plt_reset_literal",
+      "source_sha256": "3c451f4c8f986bc8165199fd36053e0367ae39a60d359ef899f66333431946cb",
+      "model_opcode_counts": {
+        "PSET_B32": 1,
+        "VBR": 2,
+        "PLT": 1,
+        "VLDS": 5,
+        "VSEL": 4,
+        "VSTS": 9
+      },
+      "before_model_opcode_counts": {
+        "PSET_B32": 1,
+        "VBR": 5,
+        "PLT": 4,
+        "VLDS": 5,
+        "VSEL": 4,
+        "VSTS": 9
+      },
+      "python_native_cce_and_json_parity": true,
+      "model_vf_end_cycle": 57,
+      "optimization": {
+        "enabled": true,
+        "hoisted_instruction_count": 2,
+        "moves": [
+          {
+            "instruction_id": "instruction.2",
+            "opcode": "PLT",
+            "from_loop": "loop.0",
+            "to_loop": null
+          },
+          {
+            "instruction_id": "instruction.6",
+            "opcode": "VBR",
+            "from_loop": "loop.0",
+            "to_loop": null
+          }
+        ]
+      }
+    },
+    {
+      "name": "plt_reset_external",
+      "replica": 1,
+      "source_iterations": 4,
+      "passed": true,
+      "guards_passed": true,
+      "motion_verified": true,
+      "dynamic_opcode_counts": {
+        "RV_VLOOPv2": 1,
+        "RV_SMOV": 1,
+        "RV_VBR": 2,
+        "RV_PSET": 1,
+        "RV_VLD": 4,
+        "RV_PLT": 1,
+        "RV_VST": 8,
+        "RV_SEND": 5,
+        "RV_VLDS": 1,
+        "RV_VSEL": 4,
+        "RV_VSTS": 1
+      },
+      "expected_opcode_counts": {
+        "RV_PLT": 1
+      },
+      "artifact_group": "main",
+      "artifact_batch": "batch_003",
+      "kernel": "probe_0_plt_reset_external",
+      "source_sha256": "7d35afa94440919abef8684ffedfc102a1bd210779abf1acfb21402aecc55c1c",
+      "model_opcode_counts": {
+        "PSET_B32": 1,
+        "VBR": 2,
+        "PLT": 1,
+        "VLDS": 5,
+        "VSEL": 4,
+        "VSTS": 9
+      },
+      "before_model_opcode_counts": {
+        "PSET_B32": 1,
+        "VBR": 5,
+        "PLT": 4,
+        "VLDS": 5,
+        "VSEL": 4,
+        "VSTS": 9
+      },
+      "python_native_cce_and_json_parity": true,
+      "model_vf_end_cycle": 57,
+      "optimization": {
+        "enabled": true,
+        "hoisted_instruction_count": 2,
+        "moves": [
+          {
+            "instruction_id": "instruction.2",
+            "opcode": "PLT",
+            "from_loop": "loop.0",
+            "to_loop": null
+          },
+          {
+            "instruction_id": "instruction.6",
+            "opcode": "VBR",
+            "from_loop": "loop.0",
+            "to_loop": null
+          }
+        ]
+      }
+    },
+    {
+      "name": "plt_feedback",
+      "replica": 1,
+      "source_iterations": 4,
+      "passed": true,
+      "guards_passed": true,
+      "motion_verified": true,
+      "dynamic_opcode_counts": {
+        "RV_VLOOPv2": 1,
+        "RV_SMOV": 1,
+        "RV_VLD": 4,
+        "RV_VBR": 5,
+        "RV_PSET": 1,
+        "RV_PLT": 4,
+        "RV_SEND": 5,
+        "RV_VLDS": 1,
+        "RV_VST": 8,
+        "RV_VSEL": 4,
+        "RV_VSTS": 1
+      },
+      "expected_opcode_counts": {
+        "RV_PLT": 4
+      },
+      "artifact_group": "main",
+      "artifact_batch": "batch_003",
+      "kernel": "probe_1_plt_feedback",
+      "source_sha256": "7d35afa94440919abef8684ffedfc102a1bd210779abf1acfb21402aecc55c1c",
+      "model_opcode_counts": {
+        "PSET_B32": 1,
+        "VBR": 5,
+        "PLT": 4,
+        "VLDS": 5,
+        "VSEL": 4,
+        "VSTS": 9
+      },
+      "before_model_opcode_counts": {
+        "PSET_B32": 1,
+        "VBR": 5,
+        "PLT": 4,
+        "VLDS": 5,
+        "VSEL": 4,
+        "VSTS": 9
+      },
+      "python_native_cce_and_json_parity": true,
+      "model_vf_end_cycle": 59,
+      "optimization": {
+        "enabled": true,
+        "hoisted_instruction_count": 0,
+        "moves": []
+      }
+    },
+    {
+      "name": "plt_induction",
+      "replica": 1,
+      "source_iterations": 4,
+      "passed": true,
+      "guards_passed": true,
+      "motion_verified": true,
+      "dynamic_opcode_counts": {
+        "RV_VLOOPv2": 1,
+        "RV_SMOVI": 1,
+        "RV_SADDI": 4,
+        "RV_VLD": 4,
+        "RV_VBR": 5,
+        "RV_PSET": 1,
+        "RV_SMOV": 4,
+        "RV_PLT": 4,
+        "RV_VST": 8,
+        "RV_VSEL": 4,
+        "RV_SEND": 5,
+        "RV_VLDS": 1,
+        "RV_VSTS": 1
+      },
+      "expected_opcode_counts": {
+        "RV_PLT": 4
+      },
+      "artifact_group": "main",
+      "artifact_batch": "batch_003",
+      "kernel": "probe_2_plt_induction",
+      "source_sha256": "7d35afa94440919abef8684ffedfc102a1bd210779abf1acfb21402aecc55c1c",
+      "model_opcode_counts": {
+        "PSET_B32": 1,
+        "VBR": 5,
+        "PLT": 4,
+        "VLDS": 5,
+        "VSEL": 4,
+        "VSTS": 9
+      },
+      "before_model_opcode_counts": {
+        "PSET_B32": 1,
+        "VBR": 5,
+        "PLT": 4,
+        "VLDS": 5,
+        "VSEL": 4,
+        "VSTS": 9
+      },
+      "python_native_cce_and_json_parity": true,
+      "model_vf_end_cycle": 59,
+      "optimization": {
+        "enabled": true,
+        "hoisted_instruction_count": 0,
+        "moves": []
+      }
+    },
+    {
+      "name": "plt_reset_derived",
+      "replica": 1,
+      "source_iterations": 4,
+      "passed": true,
+      "guards_passed": true,
+      "motion_verified": true,
+      "dynamic_opcode_counts": {
+        "RV_VLOOPv2": 1,
+        "RV_SMOV": 1,
+        "RV_VBR": 2,
+        "RV_PSET": 1,
+        "RV_VLD": 4,
+        "RV_PLT": 1,
+        "RV_VST": 8,
+        "RV_SEND": 5,
+        "RV_VLDS": 1,
+        "RV_VSEL": 4,
+        "RV_VSTS": 1
+      },
+      "expected_opcode_counts": {
+        "RV_PLT": 1
+      },
+      "artifact_group": "main",
+      "artifact_batch": "batch_003",
+      "kernel": "probe_3_plt_reset_derived",
+      "source_sha256": "7d35afa94440919abef8684ffedfc102a1bd210779abf1acfb21402aecc55c1c",
+      "model_opcode_counts": {
+        "PSET_B32": 1,
+        "VBR": 2,
+        "PLT": 1,
+        "VLDS": 5,
+        "VSEL": 4,
+        "VSTS": 9
+      },
+      "before_model_opcode_counts": {
+        "PSET_B32": 1,
+        "VBR": 5,
+        "PLT": 4,
+        "VLDS": 5,
+        "VSEL": 4,
+        "VSTS": 9
+      },
+      "python_native_cce_and_json_parity": true,
+      "model_vf_end_cycle": 57,
+      "optimization": {
+        "enabled": true,
+        "hoisted_instruction_count": 2,
+        "moves": [
+          {
+            "instruction_id": "instruction.2",
+            "opcode": "PLT",
+            "from_loop": "loop.0",
+            "to_loop": null
+          },
+          {
+            "instruction_id": "instruction.6",
+            "opcode": "VBR",
+            "from_loop": "loop.0",
+            "to_loop": null
+          }
+        ]
+      }
+    },
+    {
+      "name": "pltm_fixed",
+      "replica": 1,
+      "source_iterations": 4,
+      "passed": true,
+      "guards_passed": true,
+      "motion_verified": true,
+      "dynamic_opcode_counts": {
+        "RV_VLOOPv2": 1,
+        "RV_VLD": 4,
+        "RV_VBR": 1,
+        "RV_PSET": 1,
+        "RV_PLTM": 1,
+        "RV_SEND": 5,
+        "RV_VLDS": 1,
+        "RV_VSEL": 4,
+        "RV_VST": 4,
+        "RV_VSTS": 1
+      },
+      "expected_opcode_counts": {
+        "RV_PLTM": 1
+      },
+      "artifact_group": "main",
+      "artifact_batch": "batch_003",
+      "kernel": "probe_4_pltm_fixed",
+      "source_sha256": "7d35afa94440919abef8684ffedfc102a1bd210779abf1acfb21402aecc55c1c",
+      "model_opcode_counts": {
+        "PSET_B32": 1,
+        "VBR": 1,
+        "PLTM": 1,
+        "VLDS": 5,
+        "VSEL": 4,
+        "VSTS": 5
+      },
+      "before_model_opcode_counts": {
+        "PSET_B32": 1,
+        "VBR": 1,
+        "PLTM": 4,
+        "VLDS": 5,
+        "VSEL": 4,
+        "VSTS": 5
+      },
+      "python_native_cce_and_json_parity": true,
+      "model_vf_end_cycle": 57,
+      "optimization": {
+        "enabled": true,
+        "hoisted_instruction_count": 1,
+        "moves": [
+          {
+            "instruction_id": "instruction.2",
+            "opcode": "PLTM",
+            "from_loop": "loop.0",
+            "to_loop": null
+          }
+        ]
+      }
+    },
+    {
+      "name": "pltm_induction",
+      "replica": 1,
+      "source_iterations": 4,
+      "passed": true,
+      "guards_passed": true,
+      "motion_verified": true,
+      "dynamic_opcode_counts": {
+        "RV_VLOOPv2": 1,
+        "RV_VLD": 4,
+        "RV_PSET": 1,
+        "RV_VBR": 1,
+        "RV_PLTM": 4,
+        "RV_SEND": 5,
+        "RV_VLDS": 1,
+        "RV_VSEL": 4,
+        "RV_VST": 4,
+        "RV_VSTS": 1
+      },
+      "expected_opcode_counts": {
+        "RV_PLTM": 4
+      },
+      "artifact_group": "main",
+      "artifact_batch": "batch_003",
+      "kernel": "probe_5_pltm_induction",
+      "source_sha256": "7d35afa94440919abef8684ffedfc102a1bd210779abf1acfb21402aecc55c1c",
+      "model_opcode_counts": {
+        "PSET_B32": 1,
+        "VBR": 1,
+        "PLTM": 4,
+        "VLDS": 5,
+        "VSEL": 4,
+        "VSTS": 5
+      },
+      "before_model_opcode_counts": {
+        "PSET_B32": 1,
+        "VBR": 1,
+        "PLTM": 4,
+        "VLDS": 5,
+        "VSEL": 4,
+        "VSTS": 5
+      },
+      "python_native_cce_and_json_parity": true,
+      "model_vf_end_cycle": 57,
+      "optimization": {
+        "enabled": true,
+        "hoisted_instruction_count": 0,
+        "moves": []
+      }
+    },
+    {
+      "name": "vdup_fixed",
+      "replica": 1,
+      "source_iterations": 4,
+      "passed": true,
+      "guards_passed": true,
+      "motion_verified": true,
+      "dynamic_opcode_counts": {
+        "RV_VLOOPv2": 1,
+        "RV_PSET": 1,
+        "RV_VDUPS": 1,
+        "RV_SEND": 5,
+        "RV_VLDS": 1,
+        "RV_VST": 4,
+        "RV_VSTS": 1
+      },
+      "expected_opcode_counts": {
+        "RV_VDUPS": 1
+      },
+      "artifact_group": "main",
+      "artifact_batch": "batch_004",
+      "kernel": "probe_0_vdup_fixed",
+      "source_sha256": "dfbfbafed96d04ec4d8199c7b231d790f843bccea5404c349de213c5615d547d",
+      "model_opcode_counts": {
+        "PSET_B32": 1,
+        "VBR": 1,
+        "VDUPS": 1,
+        "VSTS": 5,
+        "VLDS": 1
+      },
+      "before_model_opcode_counts": {
+        "PSET_B32": 1,
+        "VBR": 1,
+        "VDUPS": 4,
+        "VSTS": 5,
+        "VLDS": 1
+      },
+      "python_native_cce_and_json_parity": true,
+      "model_vf_end_cycle": 55,
+      "optimization": {
+        "enabled": true,
+        "hoisted_instruction_count": 1,
+        "moves": [
+          {
+            "instruction_id": "instruction.2",
+            "opcode": "VDUPS",
+            "from_loop": "loop.0",
+            "to_loop": null
+          }
+        ]
+      }
+    },
+    {
+      "name": "vdup_mask_variant",
+      "replica": 1,
+      "source_iterations": 4,
+      "passed": true,
+      "guards_passed": true,
+      "motion_verified": true,
+      "dynamic_opcode_counts": {
+        "RV_VLOOPv2": 1,
+        "RV_SMOVI": 1,
+        "RV_SADDI": 4,
+        "RV_PSET": 1,
+        "RV_SMOV": 4,
+        "RV_PLT": 4,
+        "RV_VDUPS": 4,
+        "RV_VST": 4,
+        "RV_SEND": 5,
+        "RV_VLDS": 1,
+        "RV_VSTS": 1
+      },
+      "expected_opcode_counts": {
+        "RV_PLT": 4,
+        "RV_VDUPS": 4
+      },
+      "artifact_group": "main",
+      "artifact_batch": "batch_004",
+      "kernel": "probe_2_vdup_mask_variant",
+      "source_sha256": "dfbfbafed96d04ec4d8199c7b231d790f843bccea5404c349de213c5615d547d",
+      "model_opcode_counts": {
+        "PSET_B32": 1,
+        "VBR": 1,
+        "PLT": 4,
+        "VDUPS": 4,
+        "VSTS": 5,
+        "VLDS": 1
+      },
+      "before_model_opcode_counts": {
+        "PSET_B32": 1,
+        "VBR": 1,
+        "PLT": 4,
+        "VDUPS": 4,
+        "VSTS": 5,
+        "VLDS": 1
+      },
+      "python_native_cce_and_json_parity": true,
+      "model_vf_end_cycle": 56,
+      "optimization": {
+        "enabled": true,
+        "hoisted_instruction_count": 0,
+        "moves": []
+      }
+    },
+    {
+      "name": "vdup_vector_variant",
+      "replica": 1,
+      "source_iterations": 4,
+      "passed": true,
+      "guards_passed": true,
+      "motion_verified": true,
+      "dynamic_opcode_counts": {
+        "RV_VLOOPv2": 1,
+        "RV_VLD": 4,
+        "RV_PSET": 1,
+        "RV_SEND": 5,
+        "RV_VLDS": 1,
+        "RV_VDUP": 4,
+        "RV_VSTS": 1,
+        "RV_VST": 4
+      },
+      "expected_opcode_counts": {
+        "RV_VDUP": 4
+      },
+      "artifact_group": "main",
+      "artifact_batch": "batch_004",
+      "kernel": "probe_3_vdup_vector_variant",
+      "source_sha256": "dfbfbafed96d04ec4d8199c7b231d790f843bccea5404c349de213c5615d547d",
+      "model_opcode_counts": {
+        "PSET_B32": 1,
+        "VBR": 1,
+        "VLDS": 5,
+        "VDUP": 4,
+        "VSTS": 5
+      },
+      "before_model_opcode_counts": {
+        "PSET_B32": 1,
+        "VBR": 1,
+        "VLDS": 5,
+        "VDUP": 4,
+        "VSTS": 5
+      },
+      "python_native_cce_and_json_parity": true,
+      "model_vf_end_cycle": 59,
+      "optimization": {
+        "enabled": true,
+        "hoisted_instruction_count": 0,
+        "moves": []
+      }
+    },
+    {
+      "name": "invariant_chain",
+      "replica": 1,
+      "source_iterations": 4,
+      "passed": true,
+      "guards_passed": true,
+      "motion_verified": true,
+      "dynamic_opcode_counts": {
+        "RV_VLOOPv2": 1,
+        "RV_SMOV": 1,
+        "RV_PSET": 1,
+        "RV_PLT": 1,
+        "RV_PNOT": 1,
+        "RV_VDUPS": 1,
+        "RV_SEND": 5,
+        "RV_VLDS": 1,
+        "RV_VST": 4,
+        "RV_VSTS": 1
+      },
+      "expected_opcode_counts": {
+        "RV_PLT": 1,
+        "RV_PNOT": 1,
+        "RV_VDUPS": 1
+      },
+      "artifact_group": "main",
+      "artifact_batch": "batch_004",
+      "kernel": "probe_4_invariant_chain",
+      "source_sha256": "dfbfbafed96d04ec4d8199c7b231d790f843bccea5404c349de213c5615d547d",
+      "model_opcode_counts": {
+        "PSET_B32": 1,
+        "VBR": 1,
+        "PLT": 1,
+        "PNOT": 1,
+        "VDUPS": 1,
+        "VSTS": 5,
+        "VLDS": 1
+      },
+      "before_model_opcode_counts": {
+        "PSET_B32": 1,
+        "VBR": 1,
+        "PLT": 4,
+        "PNOT": 4,
+        "VDUPS": 4,
+        "VSTS": 5,
+        "VLDS": 1
+      },
+      "python_native_cce_and_json_parity": true,
+      "model_vf_end_cycle": 59,
+      "optimization": {
+        "enabled": true,
+        "hoisted_instruction_count": 3,
+        "moves": [
+          {
+            "instruction_id": "instruction.2",
+            "opcode": "PLT",
+            "from_loop": "loop.0",
+            "to_loop": null
+          },
+          {
+            "instruction_id": "instruction.3",
+            "opcode": "PNOT",
+            "from_loop": "loop.0",
+            "to_loop": null
+          },
+          {
+            "instruction_id": "instruction.4",
+            "opcode": "VDUPS",
+            "from_loop": "loop.0",
+            "to_loop": null
+          }
+        ]
+      }
+    },
+    {
+      "name": "nested_outer_variant",
+      "replica": 1,
+      "source_iterations": 8,
+      "passed": true,
+      "guards_passed": true,
+      "motion_verified": true,
+      "dynamic_opcode_counts": {
+        "RV_VLOOPv2": 3,
+        "RV_SMOV": 1,
+        "RV_SMULI": 2,
+        "RV_PSET": 1,
+        "RV_VBR": 3,
+        "RV_SADD": 2,
+        "RV_VLD": 8,
+        "RV_PLT": 2,
+        "RV_SADDI": 2,
+        "RV_VST": 16,
+        "RV_SZEROEXT": 2,
+        "RV_VSEL": 8,
+        "RV_SEND": 5,
+        "RV_VLDS": 1,
+        "RV_VSTS": 1
+      },
+      "expected_opcode_counts": {
+        "RV_PLT": 2
+      },
+      "artifact_group": "main",
+      "artifact_batch": "batch_004",
+      "kernel": "probe_5_nested_outer_variant",
+      "source_sha256": "dfbfbafed96d04ec4d8199c7b231d790f843bccea5404c349de213c5615d547d",
+      "model_opcode_counts": {
+        "PSET_B32": 1,
+        "VBR": 3,
+        "PLT": 2,
+        "VLDS": 9,
+        "VSEL": 8,
+        "VSTS": 17
+      },
+      "before_model_opcode_counts": {
+        "PSET_B32": 1,
+        "VBR": 9,
+        "PLT": 8,
+        "VLDS": 9,
+        "VSEL": 8,
+        "VSTS": 17
+      },
+      "python_native_cce_and_json_parity": true,
+      "model_vf_end_cycle": 66,
+      "optimization": {
+        "enabled": true,
+        "hoisted_instruction_count": 2,
+        "moves": [
+          {
+            "instruction_id": "instruction.2",
+            "opcode": "PLT",
+            "from_loop": "loop.1",
+            "to_loop": "loop.0"
+          },
+          {
+            "instruction_id": "instruction.6",
+            "opcode": "VBR",
+            "from_loop": "loop.1",
+            "to_loop": "loop.0"
+          }
+        ]
+      }
+    },
+    {
+      "name": "zero_trip",
+      "replica": 1,
+      "source_iterations": 0,
+      "passed": true,
+      "guards_passed": true,
+      "motion_verified": true,
+      "dynamic_opcode_counts": {
+        "RV_SEND": 5,
+        "RV_VLDS": 1,
+        "RV_PSET": 1,
+        "RV_VSTS": 1
+      },
+      "expected_opcode_counts": {
+        "RV_PLT": 0
+      },
+      "artifact_group": "main",
+      "artifact_batch": "batch_005",
+      "kernel": "probe_0_zero_trip",
+      "source_sha256": "f74cce68f69811a14761632e27c446f4427cb46abf447d03f17cb6bdc2ba453d",
+      "model_opcode_counts": {
+        "PSET_B32": 1,
+        "VBR": 1,
+        "VLDS": 1,
+        "VSTS": 1
+      },
+      "before_model_opcode_counts": {
+        "PSET_B32": 1,
+        "VBR": 1,
+        "VLDS": 1,
+        "VSTS": 1
+      },
+      "python_native_cce_and_json_parity": true,
+      "model_vf_end_cycle": 52,
+      "optimization": {
+        "enabled": true,
+        "hoisted_instruction_count": 0,
+        "moves": []
+      }
+    },
+    {
+      "name": "external_preheader",
+      "replica": 1,
+      "source_iterations": 4,
+      "passed": true,
+      "guards_passed": true,
+      "motion_verified": true,
+      "dynamic_opcode_counts": {
+        "RV_VLOOPv2": 1,
+        "RV_SMOV": 1,
+        "RV_PSET": 1,
+        "RV_VBR": 2,
+        "RV_VLD": 4,
+        "RV_PLT": 1,
+        "RV_VST": 8,
+        "RV_SEND": 5,
+        "RV_VLDS": 1,
+        "RV_VSEL": 4,
+        "RV_VSTS": 1
+      },
+      "expected_opcode_counts": {
+        "RV_PLT": 1
+      },
+      "artifact_group": "main",
+      "artifact_batch": "batch_005",
+      "kernel": "probe_1_external_preheader",
+      "source_sha256": "f74cce68f69811a14761632e27c446f4427cb46abf447d03f17cb6bdc2ba453d",
+      "model_opcode_counts": {
+        "PSET_B32": 1,
+        "VBR": 2,
+        "PLT": 1,
+        "VLDS": 5,
+        "VSEL": 4,
+        "VSTS": 9
+      },
+      "before_model_opcode_counts": {
+        "PSET_B32": 1,
+        "VBR": 5,
+        "PLT": 1,
+        "VLDS": 5,
+        "VSEL": 4,
+        "VSTS": 9
+      },
+      "python_native_cce_and_json_parity": true,
+      "model_vf_end_cycle": 57,
+      "optimization": {
+        "enabled": true,
+        "hoisted_instruction_count": 1,
+        "moves": [
+          {
+            "instruction_id": "instruction.6",
+            "opcode": "VBR",
+            "from_loop": "loop.0",
+            "to_loop": null
+          }
+        ]
+      }
+    },
+    {
+      "name": "alu_fixed",
+      "replica": 0,
+      "source_iterations": 4,
+      "passed": true,
+      "guards_passed": true,
+      "motion_verified": true,
+      "dynamic_opcode_counts": {
+        "RV_VLOOPv2": 1,
+        "RV_VLDI": 1,
+        "RV_PSET": 1,
+        "RV_VADDS": 1,
+        "RV_VLDS": 1,
+        "RV_SEND": 5,
+        "RV_VST": 4,
+        "RV_VSTS": 1
+      },
+      "expected_opcode_counts": {
+        "RV_VADDS": 1
+      },
+      "artifact_group": "alu",
+      "artifact_batch": "batch_000",
+      "kernel": "probe_0_alu_fixed",
+      "source_sha256": "38ba260fcf73edd08133a481dba240c5433fd21be2c5e8e065b8c7fd0fd703a5",
+      "model_opcode_counts": {
+        "PSET_B32": 1,
+        "VBR": 1,
+        "VLDS": 2,
+        "VADDS": 1,
+        "VSTS": 5
+      },
+      "before_model_opcode_counts": {
+        "PSET_B32": 1,
+        "VBR": 1,
+        "VLDS": 2,
+        "VADDS": 4,
+        "VSTS": 5
+      },
+      "python_native_cce_and_json_parity": true,
+      "model_vf_end_cycle": 58,
+      "optimization": {
+        "enabled": true,
+        "hoisted_instruction_count": 1,
+        "moves": [
+          {
+            "instruction_id": "instruction.3",
+            "opcode": "VADDS",
+            "from_loop": "loop.0",
+            "to_loop": null
+          }
+        ]
+      }
+    },
+    {
+      "name": "alu_feedback",
+      "replica": 0,
+      "source_iterations": 4,
+      "passed": true,
+      "guards_passed": true,
+      "motion_verified": true,
+      "dynamic_opcode_counts": {
+        "RV_VLOOPv2": 1,
+        "RV_VLDS": 2,
+        "RV_PSET": 1,
+        "RV_VADDS": 4,
+        "RV_SEND": 5,
+        "RV_VST": 4,
+        "RV_VSTS": 1
+      },
+      "expected_opcode_counts": {
+        "RV_VADDS": 4
+      },
+      "artifact_group": "alu",
+      "artifact_batch": "batch_000",
+      "kernel": "probe_1_alu_feedback",
+      "source_sha256": "38ba260fcf73edd08133a481dba240c5433fd21be2c5e8e065b8c7fd0fd703a5",
+      "model_opcode_counts": {
+        "PSET_B32": 1,
+        "VBR": 1,
+        "VLDS": 2,
+        "VADDS": 4,
+        "VSTS": 5
+      },
+      "before_model_opcode_counts": {
+        "PSET_B32": 1,
+        "VBR": 1,
+        "VLDS": 2,
+        "VADDS": 4,
+        "VSTS": 5
+      },
+      "python_native_cce_and_json_parity": true,
+      "model_vf_end_cycle": 63,
+      "optimization": {
+        "enabled": true,
+        "hoisted_instruction_count": 0,
+        "moves": []
+      }
+    },
+    {
+      "name": "alu_fixed",
+      "replica": 1,
+      "source_iterations": 4,
+      "passed": true,
+      "guards_passed": true,
+      "motion_verified": true,
+      "dynamic_opcode_counts": {
+        "RV_VLOOPv2": 1,
+        "RV_VLDS": 2,
+        "RV_PSET": 1,
+        "RV_VADDS": 1,
+        "RV_SEND": 5,
+        "RV_VST": 4,
+        "RV_VSTS": 1
+      },
+      "expected_opcode_counts": {
+        "RV_VADDS": 1
+      },
+      "artifact_group": "alu",
+      "artifact_batch": "batch_000",
+      "kernel": "probe_2_alu_fixed",
+      "source_sha256": "38ba260fcf73edd08133a481dba240c5433fd21be2c5e8e065b8c7fd0fd703a5",
+      "model_opcode_counts": {
+        "PSET_B32": 1,
+        "VBR": 1,
+        "VLDS": 2,
+        "VADDS": 1,
+        "VSTS": 5
+      },
+      "before_model_opcode_counts": {
+        "PSET_B32": 1,
+        "VBR": 1,
+        "VLDS": 2,
+        "VADDS": 4,
+        "VSTS": 5
+      },
+      "python_native_cce_and_json_parity": true,
+      "model_vf_end_cycle": 58,
+      "optimization": {
+        "enabled": true,
+        "hoisted_instruction_count": 1,
+        "moves": [
+          {
+            "instruction_id": "instruction.3",
+            "opcode": "VADDS",
+            "from_loop": "loop.0",
+            "to_loop": null
+          }
+        ]
+      }
+    },
+    {
+      "name": "alu_feedback",
+      "replica": 1,
+      "source_iterations": 4,
+      "passed": true,
+      "guards_passed": true,
+      "motion_verified": true,
+      "dynamic_opcode_counts": {
+        "RV_VLOOPv2": 1,
+        "RV_VLDS": 2,
+        "RV_PSET": 1,
+        "RV_SEND": 5,
+        "RV_VADDS": 4,
+        "RV_VST": 4,
+        "RV_VSTS": 1
+      },
+      "expected_opcode_counts": {
+        "RV_VADDS": 4
+      },
+      "artifact_group": "alu",
+      "artifact_batch": "batch_000",
+      "kernel": "probe_3_alu_feedback",
+      "source_sha256": "38ba260fcf73edd08133a481dba240c5433fd21be2c5e8e065b8c7fd0fd703a5",
+      "model_opcode_counts": {
+        "PSET_B32": 1,
+        "VBR": 1,
+        "VLDS": 2,
+        "VADDS": 4,
+        "VSTS": 5
+      },
+      "before_model_opcode_counts": {
+        "PSET_B32": 1,
+        "VBR": 1,
+        "VLDS": 2,
+        "VADDS": 4,
+        "VSTS": 5
+      },
+      "python_native_cce_and_json_parity": true,
+      "model_vf_end_cycle": 63,
+      "optimization": {
+        "enabled": true,
+        "hoisted_instruction_count": 0,
+        "moves": []
+      }
+    },
+    {
+      "name": "vdup_scalar_variant",
+      "replica": 0,
+      "source_iterations": 4,
+      "passed": true,
+      "guards_passed": true,
+      "motion_verified": true,
+      "dynamic_opcode_counts": {
+        "RV_VLOOPv2": 1,
+        "RV_SMOVI": 1,
+        "RV_SADDI": 4,
+        "RV_PSET": 1,
+        "RV_VDUPS": 4,
+        "RV_SEND": 5,
+        "RV_VST": 4,
+        "RV_VLDS": 1,
+        "RV_VSTS": 1
+      },
+      "expected_opcode_counts": {
+        "RV_VDUPS": 4
+      },
+      "artifact_group": "scalar",
+      "artifact_batch": "batch_000",
+      "kernel": "probe_0_vdup_scalar_variant",
+      "source_sha256": "66cd36b369486fcf5fe084c32f9664edf9d057989b71730b5b8968192e7a1fc2",
+      "model_opcode_counts": {
+        "PSET_B32": 1,
+        "VBR": 1,
+        "VDUPS": 4,
+        "VSTS": 5,
+        "VLDS": 1
+      },
+      "before_model_opcode_counts": {
+        "PSET_B32": 1,
+        "VBR": 1,
+        "VDUPS": 4,
+        "VSTS": 5,
+        "VLDS": 1
+      },
+      "python_native_cce_and_json_parity": true,
+      "model_vf_end_cycle": 55,
+      "optimization": {
+        "enabled": true,
+        "hoisted_instruction_count": 0,
+        "moves": []
+      }
+    },
+    {
+      "name": "vdup_scalar_variant",
+      "replica": 1,
+      "source_iterations": 4,
+      "passed": true,
+      "guards_passed": true,
+      "motion_verified": true,
+      "dynamic_opcode_counts": {
+        "RV_VLOOPv2": 1,
+        "RV_SMOVI": 1,
+        "RV_SADDI": 4,
+        "RV_PSET": 1,
+        "RV_VDUPS": 4,
+        "RV_SEND": 5,
+        "RV_VST": 4,
+        "RV_VLDS": 1,
+        "RV_VSTS": 1
+      },
+      "expected_opcode_counts": {
+        "RV_VDUPS": 4
+      },
+      "artifact_group": "scalar",
+      "artifact_batch": "batch_000",
+      "kernel": "probe_1_vdup_scalar_variant",
+      "source_sha256": "66cd36b369486fcf5fe084c32f9664edf9d057989b71730b5b8968192e7a1fc2",
+      "model_opcode_counts": {
+        "PSET_B32": 1,
+        "VBR": 1,
+        "VDUPS": 4,
+        "VSTS": 5,
+        "VLDS": 1
+      },
+      "before_model_opcode_counts": {
+        "PSET_B32": 1,
+        "VBR": 1,
+        "VDUPS": 4,
+        "VSTS": 5,
+        "VLDS": 1
+      },
+      "python_native_cce_and_json_parity": true,
+      "model_vf_end_cycle": 55,
+      "optimization": {
+        "enabled": true,
+        "hoisted_instruction_count": 0,
+        "moves": []
+      }
+    }
+  ],
+  "verification": {
+    "python_unittest_with_native_runner": 536,
+    "cpp_ctest": 9,
+    "passed": true
+  }
+}
