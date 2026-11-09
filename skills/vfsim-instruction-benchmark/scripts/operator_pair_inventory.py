@@ -20,7 +20,7 @@ from api.json.serialization import canonical_vf_info_to_dict
 from core.execution.prepare import prepare_program
 from core.params.database import ParamDB
 from core.params.fallback import pair_key_candidates
-from core.params.resources import issue_interval
+from core.params.resources import compute_store_forwarding, issue_interval
 from core.params.uarch import resolve_uarch
 
 
@@ -63,6 +63,9 @@ def forwarding_resolution(table, previous, current):
 def timing_resolution(db, kind, previous, current):
     op, form = previous.split('.', 1)
     consumer_op, consumer_form = current.split('.', 1)
+    a, b = db.resolve_inst(op, form), db.resolve_inst(consumer_op, consumer_form)
+    if kind == 'forwarding' and compute_store_forwarding(a, b) is not None:
+        return 'compute_store_rule', previous, current
     candidates = list(pair_key_candidates(op, form, consumer_op, consumer_form))
     for producer, consumer, _ in candidates:
         if consumer in db.timing_overrides[kind].get(producer, {}):
@@ -75,7 +78,6 @@ def timing_resolution(db, kind, previous, current):
         for producer, consumer, compatible in candidates:
             if consumer in db._ii_table.get(producer, {}):
                 return ('compatible' if compatible else 'exact'), producer, consumer
-    a, b = db.resolve_inst(op, form), db.resolve_inst(consumer_op, consumer_form)
     if a.execution_resource and b.execution_resource:
         if kind == 'forwarding' or issue_interval(a, b) is not None:
             return 'resource_rule', previous, current

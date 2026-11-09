@@ -8,7 +8,7 @@ from typing import Any, Dict, Optional
 from .types import InstructionProfile, LoadedParameters
 from .loader import load_parameters, merge_parameters
 from .uarch import allowed_exu_ports
-from .resources import forwarding_interval, instruction_banks, issue_interval
+from .resources import compute_store_forwarding, forwarding_interval, instruction_banks, issue_interval
 from .fallback import (
     compatible_form,
     form_candidates,
@@ -455,6 +455,10 @@ class ParamDB:
         cached = self._forwarding_profile_cache.get(key)
         if cached is not None:
             return cached
+        value = compute_store_forwarding(producer, consumer)
+        if value is not None:
+            self._forwarding_profile_cache[key] = value
+            return value
         form_key = (
             producer.op,
             producer.requested_form,

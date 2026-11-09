@@ -24,6 +24,13 @@ std::vector<std::string> instructionBanks(const std::string &op) {
   return banks;
 }
 
+std::optional<int64_t> computeStoreForwarding(const InstructionProfile &producer,
+                                            const InstructionProfile &consumer) {
+  if (producer.opClass == "COMPUTE" && consumer.opClass == "STORE")
+    return std::max<int64_t>(0, producer.latency - 2);
+  return std::nullopt;
+}
+
 std::optional<int64_t> forwardingInterval(const ParamBundle &rules,
                                         const InstructionProfile &producer,
                                         const InstructionProfile &consumer) {

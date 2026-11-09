@@ -36,7 +36,6 @@ class OrdinaryFp32OnboardingTest(unittest.TestCase):
 
     def test_exact_forwarding_and_self_ii(self):
         db = ParamDB(base_dir=str(ROOT))
-        forwarding = json.loads((ROOT/'configs/forwarding.json').read_text())['forwarding']
         ii = json.loads((ROOT/'configs/InitiationInterval.json').read_text())['InitiationInterval']
         for op, (_, own, store) in OPS.items():
             self.assertEqual(db.get_forwarding_cycles('VLDS', op, 'fp32'), 6)
@@ -44,7 +43,6 @@ class OrdinaryFp32OnboardingTest(unittest.TestCase):
             self.assertEqual(db.get_forwarding_cycles(op, 'VSTS', 'fp32'), store)
             self.assertEqual(db.get_ii(op, op, 'fp32'), 4)
             self.assertEqual(db.resolve_inst(op, 'fp32').execution_resource, 'LNEXP')
-            self.assertEqual(forwarding[op+'.fp32']['VSTS.fp32'], store)
             self.assertEqual(ii[op+'.fp32'][op+'.fp32'], 4)
         self.assertEqual(db.get_warnings(), [])
 

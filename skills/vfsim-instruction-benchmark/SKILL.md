@@ -27,11 +27,11 @@ description: 通过 CCE/CAModel benchmark 测量和校准重构版 VFSim 的指�
 | FU 分类 | 模型中的 ALU/SFU 功能分类，结合已有分类与执行证据 | 同一 form 的 `EXU` |
 | 可用计算端口 | 目标指令能够使用的 EXU 端口集合 | 同一 form 的 `dispatch_exu` |
 | 子执行单元 | 结合 self-II、交叉独立流和穿插实验确认的共享接收资源 | 同一 form 的 `execution_resource` |
-| forwarding | 真实 producer→consumer 的最早可用发射间隔 | 分组公式、`timing_overrides.json.forwarding`；访存及未分组指令对写 `forwarding.json.forwarding` |
+| forwarding | 真实 producer→consumer 的最早可用发射间隔 | COMPUTE→STORE 使用 `max(0, producer_latency-2)`；其他组合使用分组公式、例外表或显式表 |
 | self-II | 同端口独立流的本指令接收间隔 | `InitiationInterval.json` 的 `InitiationInterval["OP.form"]["OP.form"]` |
 | 交叉 II | 同端口、源已就绪的前后计算指令接收间隔 | 分组公式、`timing_overrides.json.ii`；未分组指令对写显式 II 表 |
 
-LOAD/STORE 分别测量自身的 `latency`。LOAD→compute、compute→STORE 的依赖间隔写入对应 forwarding 指令对。`op_class`、`dtype`、签名及 form 来自语义定义，结合编译产物核对。
+LOAD/STORE 分别测量自身的 `latency`。LOAD→compute 的依赖间隔写入对应 forwarding 指令对。COMPUTE→STORE 依赖间隔与固定公式比较，保留测量证据和差异报告。`op_class`、`dtype`、签名及 form 来自语义定义，结合编译产物核对。
 
 **字段边界：** `pipeline_startup_cost`、`pipeline_drain_cost`、`data_load_cost`、`data_store_cost`、`throughput` 不作为此 skill 的标定输出；配置中残留的这些键也不构成继续写入的依据。VF 整体开销使用 `isa.json.defaults.vf_startup_cost/vf_drain_cost`，仅在任务包含整体启动/排空校准且具备对应边界事件时修改。资源容量、循环控制和屏障参数需要专门结构实验。
 
@@ -93,7 +93,7 @@ VCMAX 与 VADD/VEXP 的 FP32 竞争、实际发射重排及 II 建模建议见 [
 
 ## 写入与验证
 
-使用 form 精确键，先核对 schema 和实际查询结果。已分组的指令对与资源公式比较：符合公式时保留测量证据，偏离公式时写入例外表；self-II 始终写入显式 II 表。`analyze_vector_compute.apply_parameters()` 执行上述选择，并通过精确 `--replace` 路径处理已有值冲突。分组规则与运行期约束见 [子 EXU 模型](../../docs/execution_resources.md)。将 `*` forwarding 限定为具有相应覆盖证据的默认规则。分别标注 **实测**、**近似**、**未覆盖**，保留兼容 form 和缺失参数回退产生的 warning。
+使用 form 精确键，先核对 schema 和实际查询结果。COMPUTE→STORE 使用固定公式并报告观测差异。其他已分组的指令对与资源公式比较：符合公式时保留测量证据，偏离公式时写入例外表；self-II 始终写入显式 II 表。`analyze_vector_compute.apply_parameters()` 执行上述选择，并通过精确 `--replace` 路径处理已有值冲突。分组规则与运行期约束见 [子 EXU 模型](../../docs/execution_resources.md)。将 `*` forwarding 限定为具有相应覆盖证据的默认规则。分别标注 **实测**、**近似**、**未覆盖**，保留兼容 form 和缺失参数回退产生的 warning。
 
 参数更新后创建新的模型实例加载配置快照，运行相关指令测试和既有 smoke 回归。项目同时维护 Python/C++ 时，对同一 Canonical 输入核对 issue/done 与周期；两个分支的修改范围按用户任务确定。参数修改引起的基线差异逐项解释后，再按任务要求更新基线。
 

@@ -40,7 +40,7 @@ class OrdinaryBf16OnboardingTest(unittest.TestCase):
             with self.assertRaises(ValueError):
                 InputAPI.load_cce(path, "probe")
 
-    def test_measured_latency_does_not_silence_unmeasured_pairs(self):
+    def test_resource_and_store_rules_cover_unmeasured_pairs(self):
         db = ParamDB(base_dir=str(ROOT))
         profile = db.resolve_inst(
             "VCVT_BF16_TO_F32", "bf16_to_f32", "fp32"
@@ -58,7 +58,7 @@ class OrdinaryBf16OnboardingTest(unittest.TestCase):
         )
         self.assertEqual(
             {warning["kind"] for warning in db.get_warnings()},
-            {"missing_forwarding_pair"},
+            set(),
         )
 
 

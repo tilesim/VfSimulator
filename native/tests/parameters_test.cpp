@@ -108,6 +108,33 @@ void testResourceParameters(const std::filesystem::path &root) {
               db.forwardingCycles("VADD", "fp32", "VEXP", "fp32") == 4 &&
               db.forwardingCycles("VMULL", "int32", "VMULL", "int32") == 5,
           "Resource forwarding and sparse exceptions share lookup semantics");
+  const auto stores = json::parseFile(source / "docs/data/compute_store_forwarding_20261109.json");
+  for (const auto &value : stores.asObject().at("pairs").asArray()) {
+    const auto &row = value.asObject();
+    const auto p = row.at("producer").asString(), c = row.at("consumer").asString();
+    require(db.forwardingCycles(p.substr(0, p.find('.')), p.substr(p.find('.')+1),
+                                c.substr(0, c.find('.')), c.substr(c.find('.')+1)) == row.at("value").asInt(),
+            "Compute-to-store migration preserves all configured intervals");
+  }
+  require(db.forwardingCycles("VCADD", "fp32", "VSSTB", "fp32") == 20 &&
+              db.forwardingCycles("PLT", "b32", "PSTS", "b8") == 4 &&
+              db.forwardingCycles("VCI", "int32", "VSCATTER", "int32") == 5,
+          "Compute-to-store timing covers ungrouped, predicate and scatter inputs");
+  auto bundle = std::make_shared<ParamBundle>(db.bundle());
+  bundle->isa["VADD"]["fp32"].latency = 14;
+  bundle->forwardingByForm["VADD.fp32"]["VSTS.fp32"] = 99;
+  bundle->forwardingByForm["VADD.fp32"]["*"] = 98;
+  bundle->forwardingOverrides["VADD.fp32"]["VSTS.fp32"] = 97;
+  ParamDB changed(bundle);
+  for (int i = 0; i < 3; ++i)
+    require(changed.forwardingCycles("VADD", "fp32", "VSTS", "fp32") == 12,
+            "Current producer latency determines compute-to-store timing before explicit values");
+  auto shortBundle = std::make_shared<ParamBundle>(db.bundle());
+  shortBundle->isa["VADD"]["fp32"].latency = 1;
+  ParamDB shortLatency(shortBundle);
+  require(shortLatency.forwardingCycles("VADD", "fp32", "VSTS", "fp32") == 0 &&
+              shortLatency.forwardingCycles("VLDS", "fp32", "VSTS", "fp32") == 8,
+          "Short compute latency is clamped while LOAD-to-STORE keeps its own timing");
   std::filesystem::create_directories(root / "configs");
   for (const auto *name : {"isa.json", "uarch.json", "forwarding.json", "InitiationInterval.json", "execution_resources.json"})
     std::filesystem::copy_file(source / "configs" / name, root / "configs" / name);

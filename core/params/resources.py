@@ -1,4 +1,4 @@
-"""Configuration and timing rules for resources inside each physical EXU."""
+"""Execution-resource and producer/consumer timing rules."""
 from __future__ import annotations
 
 from api.common.instruction_catalog import ArgumentKind, DEFAULT_INSTRUCTION_CATALOG
@@ -19,6 +19,12 @@ def forwarding_interval(rules, producer_group, consumer_group, latency):
     policy = rules['forwarding']
     offset = policy['pair_offsets'].get(producer_group, {}).get(consumer_group, policy['default_offset'])
     return max(policy['minimum'], latency-offset)
+
+
+def compute_store_forwarding(producer, consumer):
+    if producer.op_class == 'COMPUTE' and consumer.op_class == 'STORE':
+        return max(0, producer.latency - 2)
+    return None
 
 
 def issue_interval(previous, current):

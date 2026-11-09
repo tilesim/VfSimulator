@@ -110,7 +110,9 @@ Profile 对缓存，缓存值为相对周期数。
 form 优先精确匹配，查询可使用 `b16→fp16`、`b32→fp32` 备选。
 缺失指令参数使用 latency=9；计算指令的默认 FU/端口为 ALU/EXU01，并记录 warning。
 
-forwarding 按例外表、显式指令对、producer 的 `*`、资源规则的顺序查询。
+COMPUTE→STORE 的 forwarding 统一使用 `max(0, producer_latency-2)`，按指令类别匹配，
+覆盖向量、谓词、scatter 等源依赖。该类查询直接应用公式。
+其他 forwarding 按例外表、显式指令对、producer 的 `*`、资源规则的顺序查询。
 两端均分组时使用 `max(2, producer_latency-offset)`，涉及 LNEXP 时 offset=3，
 其他分组对 offset=4。例外表保留偏离规则的参数。
 缺失 LOAD→STORE 对使用 6 cycles，其他缺失对使用 `max(0, producer_latency-3)`。

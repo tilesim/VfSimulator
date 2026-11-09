@@ -13,7 +13,6 @@
     },
     "PAND.b8": {
       "PAND.b8": 3,
-      "PSTS.b8": 5,
       "VABS.fp32": 4,
       "VADD.fp32": 3,
       "VADDS.fp32": 3,
@@ -23,17 +22,14 @@
       "VMUL.fp32": 3,
       "VMULS.fp32": 3,
       "VSEL.fp32": 3,
-      "VSTS.fp32": 5,
       "VSUB.fp32": 3
     },
     "MOVP_B16.b16": {
       "VSEL.fp16": 2,
-      "PSTS.b8": 4,
       "VDUPS.fp16": 2
     },
     "MOVP_B32.b32": {
       "VSEL.fp32": 2,
-      "PSTS.b8": 4,
       "VDUPS.fp32": 2
     },
     "PLDS.b8": {
@@ -65,14 +61,8 @@
       "VSUB.fp32": 6
     },
     "VMOV.fp32": {
-      "VSTS.fp32": 4,
-      "VSTS.b32": 4,
       "VCADD.fp32": 2,
       "VMAX.fp32": 2
-    },
-    "VMOV.b32": {
-      "VSTS.fp32": 4,
-      "VSTS.b32": 4
     },
     "VDUP.b32": {
       "VCMP_GE.fp32": 8,
@@ -80,7 +70,6 @@
       "VCMP_LT.fp32": 8,
       "VMOV.fp32": 8,
       "VSEL.fp32": 8,
-      "VSTS.fp32": 9,
       "VDIV.fp32": 8,
       "VSUB.fp32": 8,
       "VADDS.fp32": 8,
@@ -88,26 +77,11 @@
       "VMAX.fp32": 8,
       "VMIN.fp32": 8
     },
-    "VAXPY.fp32": {
-      "VSTS.fp32": 7
-    },
     "VINTLV.fp32": {
-      "VSTS.fp32": 9,
-      "VSTS.b32": 9,
       "VINTLV.fp32": 9
     },
-    "VINTLV.b32": {
-      "VSTS.fp32": 9,
-      "VSTS.b32": 9
-    },
     "VDINTLV.fp32": {
-      "VSTS.fp32": 9,
-      "VSTS.b32": 9,
       "VDINTLV.fp32": 9
-    },
-    "VDINTLV.b32": {
-      "VSTS.fp32": 9,
-      "VSTS.b32": 9
     },
     "PSTU.b16": {
       "VSTAS.uint16": 1,
@@ -139,36 +113,24 @@
       "*": 1
     },
     "PSET_B8.b8": {
-      "PSTS.b8": 4,
       "*": 2
     },
     "PSET_B16.b16": {
-      "PSTS.b8": 4,
       "*": 2
     },
     "PSET_B32.b32": {
-      "PSTS.b8": 4,
       "*": 2
     },
     "VLDS.uint32": {
       "VOR.b32": 6
     },
-    "VOR.b32": {
-      "VSTS.uint32": 4
-    },
     "VCI.int32": {
-      "VSTS.int32": 5,
       "VGATHER2.b32": 5,
-      "VSTS.fp32": 5,
       "VGATHER2.fp32": 5,
       "VGATHER2.int32": 5,
       "VGATHER2.uint32": 5
     },
-    "VSQRT.fp32": {
-      "VSTS.fp32": 15
-    },
     "VLN.fp32": {
-      "VSTS.fp32": 16,
       "VMAXS.fp32": 15,
       "VSEL.fp32": 15
     },
@@ -180,7 +142,6 @@
       "VCMAX.fp32": 3,
       "VCMIN.fp32": 3,
       "VDUP.fp32": 4,
-      "VSTS.fp32": 5,
       "VAND.fp32": 3,
       "VCGMAX.fp32": 3,
       "VCMP_EQ.fp32": 3,
@@ -199,7 +160,6 @@
       "VCMAX.fp32": 4,
       "VCMIN.fp32": 4,
       "VDUP.fp32": 5,
-      "VSTS.fp32": 6,
       "VCMPS_LT.fp32": 4,
       "VCMP_LE.fp32": 4,
       "VSEL.fp32": 4
@@ -212,7 +172,6 @@
       "VCMAX.fp32": 3,
       "VCMIN.fp32": 3,
       "VDUP.fp32": 4,
-      "VSTS.fp32": 5,
       "VAND.fp32": 3,
       "VCGMAX.fp32": 3,
       "VCMP_EQ.fp32": 3,
@@ -220,8 +179,7 @@
       "VSHLS.fp32": 3,
       "VSHRS.fp32": 3,
       "VRELU.fp32": 4,
-      "VCADD.fp32": 3,
-      "VSTUS.fp32": 5
+      "VCADD.fp32": 3
     },
     "VEXP.fp32": {
       "VMAXS.fp32": 13,
@@ -231,7 +189,6 @@
       "VCMAX.fp32": 13,
       "VCMIN.fp32": 13,
       "VDUP.fp32": 13,
-      "VSTS.fp32": 14,
       "VCADD.fp32": 13,
       "VMULSCVT.f32_to_f16": 13,
       "VCMPS_LT.fp32": 13,
@@ -245,9 +202,7 @@
       "VCMAX.fp32": 14,
       "VCMIN.fp32": 14,
       "VDUP.fp32": 14,
-      "VSTS.fp32": 15,
-      "VSEL.fp32": 14,
-      "VSTUS.fp32": 15
+      "VSEL.fp32": 14
     },
     "VABS.fp32": {
       "VMAXS.fp32": 2,
@@ -257,7 +212,6 @@
       "VCMAX.fp32": 2,
       "VCMIN.fp32": 2,
       "VDUP.fp32": 2,
-      "VSTS.fp32": 3,
       "VCMP_LE.fp32": 2
     },
     "VSUB.fp32": {
@@ -268,7 +222,6 @@
       "VCMAX.fp32": 3,
       "VCMIN.fp32": 3,
       "VDUP.fp32": 4,
-      "VSTS.fp32": 5,
       "VAND.fp32": 3,
       "VCGMAX.fp32": 3,
       "VCMP_EQ.fp32": 3,
@@ -284,7 +237,6 @@
       "VCMAX.fp32": 4,
       "VCMIN.fp32": 4,
       "VDUP.fp32": 5,
-      "VSTS.fp32": 6,
       "VAND.fp32": 4,
       "VCGMAX.fp32": 4,
       "VCMP_EQ.fp32": 4,
@@ -311,7 +263,6 @@
       "VCMAX.fp32": 2,
       "VCMIN.fp32": 2,
       "VDUP.fp32": 3,
-      "VSTS.fp32": 4,
       "VCVT_F32_TO_F16.f32_to_f16": 2,
       "VCVT_F32_TO_S32.f32_to_s32": 2
     },
@@ -331,7 +282,6 @@
       "VCMAX.fp32": 2,
       "VCMIN.fp32": 2,
       "VDUP.fp32": 3,
-      "VSTS.fp32": 4,
       "VCVT_F32_TO_F16.f32_to_f16": 2,
       "VCVT_F32_TO_S32.f32_to_s32": 2,
       "VCMPS_EQ.fp32": 2
@@ -352,7 +302,6 @@
       "VCMAX.fp32": 2,
       "VCMIN.fp32": 2,
       "VDUP.fp32": 3,
-      "VSTS.fp32": 4,
       "VAND.fp32": 2,
       "VCGMAX.fp32": 2,
       "VCMP_EQ.fp32": 2,
@@ -379,7 +328,6 @@
       "VCMAX.fp32": 2,
       "VCMIN.fp32": 2,
       "VDUP.fp32": 3,
-      "VSTS.fp32": 4,
       "VCVT_F32_TO_F16.f32_to_f16": 2,
       "VCVT_F32_TO_S32.f32_to_s32": 2
     },
@@ -399,8 +347,6 @@
       "VSUB.fp32": 13,
       "VCMIN.fp32": 13,
       "VDUP.fp32": 13,
-      "VSTS.fp32": 14,
-      "VSTUS.fp32": 14,
       "VDUP.b32": 13
     },
     "VCMIN.fp32": {
@@ -418,9 +364,7 @@
       "VMULS.fp32": 13,
       "VSUB.fp32": 13,
       "VCMIN.fp32": 13,
-      "VDUP.fp32": 13,
-      "VSTS.fp32": 14,
-      "VSTUS.fp32": 14
+      "VDUP.fp32": 13
     },
     "VDUP.fp32": {
       "VADDS.fp32": 8,
@@ -438,8 +382,7 @@
       "VCMAX.fp32": 8,
       "VCMIN.fp32": 8,
       "VDUP.fp32": 8,
-      "VEXPDIF.fp32": 8,
-      "VSTS.fp32": 9
+      "VEXPDIF.fp32": 8
     },
     "VLDS.fp32": {
       "VMOV.fp32": 6,
@@ -486,8 +429,6 @@
       "VSCATTER.uint32": 8
     },
     "VCADD.fp32": {
-      "VSTS.fp32": 20,
-      "VSTUS.fp32": 20,
       "VCADD.fp32": 19,
       "VDUP.fp32": 19,
       "VDIV.fp32": 19,
@@ -502,7 +443,6 @@
       "VMAX.fp16": 3,
       "VMIN.fp16": 3,
       "VDUP.fp16": 4,
-      "VSTS.fp16": 5,
       "VAND.fp16": 3,
       "VCGMAX.fp16": 3,
       "VCMP_EQ.fp16": 3,
@@ -518,8 +458,7 @@
       "VMINS.fp16": 4,
       "VMAX.fp16": 4,
       "VMIN.fp16": 4,
-      "VDUP.fp16": 5,
-      "VSTS.fp16": 6
+      "VDUP.fp16": 5
     },
     "VADD.fp16": {
       "VCMAX.fp16": 3,
@@ -530,7 +469,6 @@
       "VMAX.fp16": 3,
       "VMIN.fp16": 3,
       "VDUP.fp16": 4,
-      "VSTS.fp16": 5,
       "VAND.fp16": 3,
       "VCGMAX.fp16": 3,
       "VCMP_EQ.fp16": 3,
@@ -547,8 +485,7 @@
       "VMINS.fp16": 18,
       "VMAX.fp16": 18,
       "VMIN.fp16": 18,
-      "VDUP.fp16": 13,
-      "VSTS.fp16": 19
+      "VDUP.fp16": 13
     },
     "VCMAX.fp16": {
       "VADDS.fp16": 14,
@@ -566,9 +503,7 @@
       "VMINS.fp16": 14,
       "VMAX.fp16": 14,
       "VMIN.fp16": 14,
-      "VDUP.fp16": 13,
-      "VSTS.fp16": 15,
-      "VSTUS.fp16": 15
+      "VDUP.fp16": 13
     },
     "VCMIN.fp16": {
       "VADDS.fp16": 14,
@@ -586,9 +521,7 @@
       "VMINS.fp16": 14,
       "VMAX.fp16": 14,
       "VMIN.fp16": 14,
-      "VDUP.fp16": 13,
-      "VSTS.fp16": 15,
-      "VSTUS.fp16": 15
+      "VDUP.fp16": 13
     },
     "VCADD.fp16": {
       "VADDS.fp16": 21,
@@ -606,9 +539,7 @@
       "VMINS.fp16": 21,
       "VMAX.fp16": 21,
       "VMIN.fp16": 21,
-      "VDUP.fp16": 19,
-      "VSTS.fp16": 22,
-      "VSTUS.fp16": 22
+      "VDUP.fp16": 19
     },
     "VDIV.fp16": {
       "VCMAX.fp16": 19,
@@ -618,8 +549,7 @@
       "VMINS.fp16": 19,
       "VMAX.fp16": 19,
       "VMIN.fp16": 19,
-      "VDUP.fp16": 14,
-      "VSTS.fp16": 20
+      "VDUP.fp16": 14
     },
     "VABS.fp16": {
       "VCMAX.fp16": 2,
@@ -629,8 +559,7 @@
       "VMINS.fp16": 2,
       "VMAX.fp16": 2,
       "VMIN.fp16": 2,
-      "VDUP.fp16": 2,
-      "VSTS.fp16": 3
+      "VDUP.fp16": 2
     },
     "VSUB.fp16": {
       "VCMAX.fp16": 3,
@@ -641,7 +570,6 @@
       "VMAX.fp16": 3,
       "VMIN.fp16": 3,
       "VDUP.fp16": 4,
-      "VSTS.fp16": 5,
       "VAND.fp16": 3,
       "VCGMAX.fp16": 3,
       "VCMP_EQ.fp16": 3,
@@ -658,7 +586,6 @@
       "VMAX.fp16": 4,
       "VMIN.fp16": 4,
       "VDUP.fp16": 5,
-      "VSTS.fp16": 6,
       "VAND.fp16": 4,
       "VCGMAX.fp16": 4,
       "VCMP_EQ.fp16": 4,
@@ -684,7 +611,6 @@
       "VMAX.fp16": 2,
       "VMIN.fp16": 2,
       "VDUP.fp16": 3,
-      "VSTS.fp16": 4,
       "VCVT_F16_TO_F32.f16_to_f32": 2
     },
     "VMINS.fp16": {
@@ -704,7 +630,6 @@
       "VMAX.fp16": 2,
       "VMIN.fp16": 2,
       "VDUP.fp16": 3,
-      "VSTS.fp16": 4,
       "VCVT_F16_TO_F32.f16_to_f32": 2
     },
     "VMAX.fp16": {
@@ -724,7 +649,6 @@
       "VMAX.fp16": 2,
       "VMIN.fp16": 2,
       "VDUP.fp16": 3,
-      "VSTS.fp16": 4,
       "VAND.fp16": 2,
       "VCGMAX.fp16": 2,
       "VCMP_EQ.fp16": 2,
@@ -750,7 +674,6 @@
       "VMAX.fp16": 2,
       "VMIN.fp16": 2,
       "VDUP.fp16": 3,
-      "VSTS.fp16": 4,
       "VCVT_F16_TO_F32.f16_to_f32": 2
     },
     "VDUP.fp16": {
@@ -830,7 +753,6 @@
       "VSEL.fp32": 2,
       "VSHRS.fp32": 2,
       "VSHLS.fp32": 2,
-      "VSTS.fp32": 4,
       "VCMPS_EQ.fp32": 2,
       "VCVT_F32_TO_F16.f32_to_f16": 2,
       "VDIV.fp32": 3
@@ -862,7 +784,6 @@
       "VSHLS.fp32": 2
     },
     "VCMP_EQ.fp32": {
-      "PSTS.b8": 4,
       "VMAX.fp32": 4,
       "VSUB.fp32": 4,
       "VADD.fp32": 4,
@@ -881,8 +802,7 @@
       "VMIN.fp32": 3,
       "VMINS.fp32": 3,
       "VCMP_GE.fp32": 3,
-      "VCMP_LE.fp32": 3,
-      "VSTS.fp32": 5
+      "VCMP_LE.fp32": 3
     },
     "VCVT_S32_TO_F32.s32_to_f32": {
       "VMAX.fp32": 4,
@@ -975,11 +895,9 @@
       "VMINS.fp16": 3,
       "VPACK.b32": 4,
       "VPACK.s32_to_u16": 4,
-      "VPACK.u32_to_u16": 4,
-      "VSTS.fp16": 5
+      "VPACK.u32_to_u16": 4
     },
     "VCVT_F32_TO_BF16.f32_to_bf16": {
-      "VSTS.bf16": 5,
       "VPACK.b32": 4,
       "VPACK.s32_to_u16": 4,
       "VPACK.u32_to_u16": 4
@@ -1016,15 +934,13 @@
       "VSUB.fp16": 2
     },
     "VPACK.b32": {
-      "VADD.fp16": 8,
-      "VSSTB.b16": 9
+      "VADD.fp16": 8
     },
     "VEXPDIF.fp32": {
       "VMULSCVT.f32_to_f16": 15,
       "VADD.fp32": 15,
       "VEXPDIF.fp32": 15,
-      "VCVT_F32_TO_F16.f32_to_f16": 15,
-      "VSTS.fp32": 16
+      "VCVT_F32_TO_F16.f32_to_f16": 15
     },
     "VMULSCVT.f32_to_f16": {
       "VPACK.b32": 5,
@@ -1045,12 +961,6 @@
     },
     "VABSDIF.fp32": {
       "VABSDIF.fp32": 3
-    },
-    "VADD.bf16": {
-      "VSTS.bf16": 5
-    },
-    "VADDS.bf16": {
-      "VSTS.bf16": 5
     },
     "VAND.bf16": {
       "VAND.bf16": 2
@@ -1113,7 +1023,6 @@
     "VCMP_GE.fp32": {
       "VCMP_GE.fp32": 2,
       "PAND.b8": 2,
-      "PSTS.b8": 4,
       "VSEL.fp32": 2
     },
     "VCMP_GE.int16": {
@@ -1173,7 +1082,6 @@
     "VCMP_LE.fp32": {
       "VCMP_LE.fp32": 2,
       "PAND.b8": 2,
-      "PSTS.b8": 4,
       "VSEL.fp32": 2
     },
     "VCMP_LE.int16": {
@@ -1202,7 +1110,6 @@
     },
     "VCMP_LT.fp32": {
       "VCMP_LT.fp32": 2,
-      "PSTS.b8": 4,
       "VSEL.fp32": 2
     },
     "VCMP_LT.int16": {
@@ -1258,7 +1165,6 @@
     },
     "VCMPS_EQ.fp32": {
       "VCMPS_EQ.fp32": 2,
-      "PSTS.b8": 4,
       "VSEL.fp32": 2
     },
     "VCMPS_EQ.int16": {
@@ -1314,7 +1220,6 @@
     },
     "VCMPS_GT.fp32": {
       "VCMPS_GT.fp32": 2,
-      "PSTS.b8": 4,
       "VSEL.fp32": 2
     },
     "VCMPS_GT.int16": {
@@ -1343,7 +1248,6 @@
     },
     "VCMPS_LE.fp32": {
       "VCMPS_LE.fp32": 2,
-      "PSTS.b8": 4,
       "VSEL.fp32": 2
     },
     "VCMPS_LE.int16": {
@@ -1372,7 +1276,6 @@
     },
     "VCMPS_LT.fp32": {
       "VCMPS_LT.fp32": 2,
-      "PSTS.b8": 4,
       "VSEL.fp32": 2
     },
     "VCMPS_LT.int16": {
@@ -1401,7 +1304,6 @@
     },
     "VCMPS_NE.fp32": {
       "VCMPS_NE.fp32": 2,
-      "PSTS.b8": 4,
       "VSEL.fp32": 2
     },
     "VCMPS_NE.int16": {
@@ -1422,9 +1324,6 @@
     "VCMPS_NE.uint8": {
       "VCMPS_NE.uint8": 2
     },
-    "VLN.fp16": {
-      "VSTS.fp16": 21
-    },
     "VLRELU.fp16": {
       "VLRELU.fp16": 4
     },
@@ -1433,7 +1332,6 @@
     },
     "VMAX.bf16": {
       "VMAX.bf16": 2,
-      "VSTS.bf16": 4,
       "VSUB.bf16": 2
     },
     "VMAX.int16": {
@@ -1519,19 +1417,11 @@
     "VMINS.uint8": {
       "VMINS.uint8": 2
     },
-    "VMUL.bf16": {
-      "VSTS.bf16": 6
-    },
     "VMULS.uint32": {
       "VGATHER2.b32": 6,
-      "VSCATTER.b32": 6,
-      "VSTS.fp32": 6,
       "VGATHER2.fp32": 6,
       "VGATHER2.int32": 6,
-      "VGATHER2.uint32": 6,
-      "VSCATTER.fp32": 6,
-      "VSCATTER.int32": 6,
-      "VSCATTER.uint32": 6
+      "VGATHER2.uint32": 6
     },
     "VNOT.bf16": {
       "VNOT.bf16": 2
@@ -1691,12 +1581,6 @@
     },
     "VSHRS.uint8": {
       "VSHRS.uint8": 2
-    },
-    "VSQRT.fp16": {
-      "VSTS.fp16": 20
-    },
-    "VSUB.bf16": {
-      "VSTS.bf16": 5
     },
     "VXOR.bf16": {
       "VXOR.bf16": 2
@@ -1925,17 +1809,14 @@
     },
     "VPACK.s32_to_u16": {
       "VPACK.s32_to_u16": 8,
-      "VADD.fp16": 8,
-      "VSSTB.b16": 9
+      "VADD.fp16": 8
     },
     "VPACK.u16_to_u8": {
       "VPACK.u16_to_u8": 8
     },
     "VPACK.u32_to_u16": {
       "VPACK.u32_to_u16": 8,
-      "VADD.fp16": 8,
-      "VSSTB.b16": 9,
-      "VSSTB.bf16": 9
+      "VADD.fp16": 8
     },
     "VUNPACK.s16_to_s32": {
       "VUNPACK.s16_to_s32": 8
@@ -2082,15 +1963,11 @@
     "VDUPS.fp32": {
       "VMOV.fp32": 2,
       "VMOV.b32": 2,
-      "VSTS.fp32": 4,
       "VADD.fp32": 2,
       "VMAX.fp32": 2,
       "VDIV.fp32": 3,
       "VMIN.fp32": 2,
       "VSEL.fp32": 2
-    },
-    "VDUPS.fp16": {
-      "VSTS.fp16": 4
     },
     "VDUP.bf16": {
       "VDUP.bf16": 8
@@ -2287,7 +2164,6 @@
     },
     "PLT.b32": {
       "PAND.b8": 2,
-      "PSTS.b8": 4,
       "VABS.fp32": 3,
       "VADD.fp32": 2,
       "VADDS.fp32": 2,
@@ -2315,17 +2191,11 @@
       "VMINS.fp32": 2,
       "VMUL.fp32": 2,
       "VMULS.fp32": 3,
-      "VSCATTER.b32": 4,
       "VSQRT.fp32": 3,
-      "VSTS.fp16": 4,
-      "VSTS.fp32": 4,
       "VSUB.fp32": 2,
       "VGATHER2.fp32": 4,
       "VGATHER2.int32": 4,
-      "VGATHER2.uint32": 4,
-      "VSCATTER.fp32": 4,
-      "VSCATTER.int32": 4,
-      "VSCATTER.uint32": 4
+      "VGATHER2.uint32": 4
     },
     "VGATHER2.b32": {
       "VADDS.fp32": 18,

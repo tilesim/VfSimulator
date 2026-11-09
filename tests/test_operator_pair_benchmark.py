@@ -112,6 +112,28 @@ class OperatorPairBenchmarkTests(unittest.TestCase):
         self.assertEqual(INVENTORY.timing_resolution(db, 'ii', 'VEXP.fp32', 'VDIV.fp32')[0], 'override')
         self.assertEqual(INVENTORY.timing_resolution(db, 'forwarding', 'VADD.fp32', 'VMUL.fp32')[0], 'resource_rule')
         self.assertEqual(INVENTORY.timing_resolution(db, 'forwarding', 'VLDS.fp32', 'VADD.fp32')[0], 'exact')
+        self.assertEqual(INVENTORY.timing_resolution(db, 'forwarding', 'VADD.fp32', 'VSTS.fp32')[0], 'compute_store_rule')
+
+    def test_compute_store_measurement_keeps_only_the_class_rule(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = self.parameter_root(directory)
+            measured = dict(isa={}, ii={}, forwarding={'VADD.fp32': {'VSTS.fp32': 5}})
+            _, conflicts = PARAMETERS.apply_parameters(measured, root, True)
+            self.assertEqual(conflicts, [])
+            for filename, key in (('forwarding.json', 'forwarding'), ('timing_overrides.json', 'forwarding')):
+                table = json.loads((root / 'configs' / filename).read_text())[key]
+                self.assertNotIn('VSTS.fp32', table.get('VADD.fp32', {}))
+
+    def test_compute_store_measurement_cannot_override_the_uniform_rule(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = self.parameter_root(directory)
+            measured = dict(isa={}, ii={}, forwarding={'VADD.fp32': {'VSTS.fp32': 8}})
+            _, conflicts = PARAMETERS.apply_parameters(measured, root, True,
+                replace=('forwarding.VADD.fp32->VSTS.fp32',))
+            self.assertEqual(conflicts, [dict(path='forwarding.VADD.fp32->VSTS.fp32', configured=5,
+                                            observed=8, rule='compute_latency_minus_two')])
+            overrides = json.loads((root / 'configs/timing_overrides.json').read_text())['forwarding']
+            self.assertNotIn('VSTS.fp32', overrides.get('VADD.fp32', {}))
 
     def test_predicate_golden_uses_sparse_dtype_bits(self):
         raw = PROBES.reference("PSET_B32.b32", b"", b"", 0, 2)

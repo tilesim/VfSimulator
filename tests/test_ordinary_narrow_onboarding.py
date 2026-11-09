@@ -65,7 +65,7 @@ class OrdinaryNarrowOnboardingTest(unittest.TestCase):
                 self.assertEqual(profile.dispatch_exu, "EXU01")
         self.assertEqual(db.get_warnings(), [])
 
-    def test_unmeasured_forwarding_and_ii_keep_fallback_warnings(self):
+    def test_store_rule_applies_while_missing_ii_keeps_warnings(self):
         db = ParamDB(base_dir=str(ROOT))
         for opcode, (form, dtype, _) in MEASURED.items():
             db.get_ii(
@@ -98,7 +98,7 @@ class OrdinaryNarrowOnboardingTest(unittest.TestCase):
                 for warning in warnings
                 if warning["kind"] == "missing_forwarding_pair"
             },
-            {f"{opcode}.{form}" for opcode, (form, _, _) in MEASURED.items()},
+            set(),
         )
 
     def test_archived_cce_reaches_core_with_real_opcodes(self):

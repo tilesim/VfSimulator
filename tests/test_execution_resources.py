@@ -2,6 +2,7 @@
 
 from collections import Counter
 from copy import deepcopy
+from dataclasses import replace
 import json
 from pathlib import Path
 import unittest
@@ -123,6 +124,51 @@ class ExecutionResourceTests(unittest.TestCase):
         kinds = {row['kind'] for row in db.get_warnings()}
         self.assertIn('missing_ii_pair', kinds)
         self.assertIn('missing_forwarding_pair', kinds)
+
+    def test_all_migrated_compute_store_parameters_keep_their_values(self):
+        db = ParamDB(base_dir=ROOT, parameters=self.parameters)
+        record = json.loads((ROOT / 'docs/data/compute_store_forwarding_20261109.json').read_text())
+        self.assertEqual(len(record['pairs']), 104)
+        for row in record['pairs']:
+            p, pf = row['producer'].split('.', 1)
+            c, cf = row['consumer'].split('.', 1)
+            with self.subTest(producer=row['producer'], consumer=row['consumer']):
+                self.assertEqual(db.get_forwarding_cycles(p, c, producer_form=pf, consumer_form=cf), row['value'])
+                self.assertNotIn(row['consumer'], db._fwd_table.get(row['producer'], {}))
+
+    def test_compute_store_rule_covers_ungrouped_predicate_and_memory_variants(self):
+        db = ParamDB(base_dir=ROOT, parameters=self.parameters)
+        for p, pf, c, cf, expected in (
+            ('VADD', 'fp32', 'VSTS', 'fp32', 5),
+            ('VEXP', 'fp16', 'VSTAS', 'fp16', 19),
+            ('VCADD', 'fp32', 'VSSTB', 'fp32', 20),
+            ('PLT', 'b32', 'PSTS', 'b8', 4),
+            ('VCVT_BF16_TO_F32', 'bf16_to_f32', 'VSTUS', 'fp32', 5),
+            ('VCI', 'int32', 'VSCATTER', 'int32', 5),
+        ):
+            with self.subTest(producer=p, consumer=c):
+                self.assertEqual(db.get_forwarding_cycles(p, c, producer_form=pf, consumer_form=cf), expected)
+        self.assertEqual(db.get_warnings(), [])
+
+    def test_compute_store_rule_uses_current_latency_and_precedes_explicit_values(self):
+        isa = deepcopy(self.parameters.isa)
+        isa['instructions']['VADD']['forms']['fp32']['latency'] = 14
+        overrides = deepcopy(self.parameters.timing_overrides)
+        overrides['forwarding']['VADD.fp32']['VSTS.fp32'] = 97
+        parameters = replace(self.parameters, isa=isa, timing_overrides=overrides,
+            forwarding={'forwarding': {'VADD.fp32': {'VSTS.fp32': 99, '*': 98}}})
+        db = ParamDB(base_dir=ROOT, parameters=parameters)
+        for _ in range(3):
+            self.assertEqual(db.get_forwarding_cycles('VADD', 'VSTS', 'fp32'), 12)
+        self.assertEqual(db.get_warnings(), [])
+
+    def test_compute_store_forwarding_clamps_short_latency_and_retains_other_paths(self):
+        isa = deepcopy(self.parameters.isa)
+        isa['instructions']['VADD']['forms']['fp32']['latency'] = 1
+        db = ParamDB(base_dir=ROOT, parameters=replace(self.parameters, isa=isa))
+        self.assertEqual(db.get_forwarding_cycles('VADD', 'VSTS', 'fp32'), 0)
+        self.assertEqual(db.get_forwarding_cycles('VLDS', 'VSTS', 'fp32'), 8)
+        self.assertEqual(db.get_forwarding_cycles('VMULL', 'VMULL', 'int32'), 5)
 
     def test_all_migrated_values_and_additional_measurements(self):
         db = ParamDB(base_dir=ROOT, parameters=self.parameters)

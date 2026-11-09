@@ -17,6 +17,11 @@ forwarding 使用真实 producer→consumer 的最早发射间隔，核对具体
 共同谓词及 IDU 源依赖。多结果指令分别检查每个结果，单值参数取所需间隔的最大值。
 同 opcode/form 没有合法 RAW 的指令不要求 self-forwarding。
 
+COMPUTE→STORE 的 forwarding 统一使用 `max(0, producer_latency-2)`，
+按指令类别覆盖向量、谓词和索引源，与 producer 的子执行单元分组独立。
+104 项既有配置的逐对值和来源摘要保存在[对照记录](data/compute_store_forwarding_20261109.json)。
+LOAD→STORE 及计算指令之间的依赖按各自的时序规则查询。
+
 探针保存源码、输入、独立 golden、输出、完整命令及动态日志。
 数值失败、编译失败和运行超时的样本保留诊断，不用于写入实测参数。
 `references/evidence/` 下的机器证据保留逐事件数据和配置变化，原始运行产物放在 Git 忽略的 `results/`。

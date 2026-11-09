@@ -54,8 +54,20 @@ EXQ 按资源分队列，所有资源队列共享同一物理端口的 `exq_dept
 
 ## 参数查询
 
-显式参数和资源公式分别承担已配置指令对与可推导组合的时序查询。
-查询顺序为 `timing_overrides.json`、显式参数表、分组公式、缺失回退。
+COMPUTE→STORE 的 forwarding 按 producer 的当前 latency 统一推导：
+
+```text
+fwd(COMPUTE, STORE) = max(0, latency(COMPUTE) - 2)
+```
+
+该规则按 Profile 的 `op_class` 匹配，覆盖向量数据、谓词和索引依赖；
+VSTS、VSTUS、VSTAS、PSTS、scatter 等 STORE 类指令均适用。
+已分组及未分组的计算指令使用同一规则，零周期下限保证短 latency 参数的结果有效。
+该类查询直接使用公式和查询缓存。重复的 104 条显式参数已归入
+[对照记录](data/compute_store_forwarding_20261109.json)，包含 96 条原生 form 和 8 条兼容 form，
+对应查询值全部与公式一致。
+
+其他时序查询按 `timing_overrides.json`、显式参数表、分组公式、缺失回退的顺序进行。
 forwarding 的 Catalog opcode 继承和 producer `*` 规则继续参与显式查询。
 
 交叉 II 的资源公式为：
@@ -69,7 +81,7 @@ gap(A, B) = 1             两者异组
 `gap+1`。例如 VMUL.fp32 latency=8、VADD.fp32 latency=7，基础间隔为 1，
 写回冲突使查询 II=2。实际发射通过完成周期预留检查所有在执行指令的冲突。
 
-forwarding 的资源公式由 [execution_resources.json](../configs/execution_resources.json) 定义：
+COMPUTE→COMPUTE 的资源公式由 [execution_resources.json](../configs/execution_resources.json) 定义：
 
 ```text
 fwd(A, B) = max(2, latency(A) - offset)
@@ -101,9 +113,10 @@ offset = 4    其余已分组组合
 753 项配置查询值和另 9 项混合 dtype 实测 II。Python 与 C++ 测试逐项检查这些值，
 并覆盖共享资源、空闲资源穿插、方向例外、EXQ 预测和寄存器完成 bank。
 
-benchmark 工具对符合公式的结果保留测量证据；偏离公式的结果写入例外表。
+benchmark 工具保留 COMPUTE→STORE 的测量证据，偏离固定公式的观测写入差异报告。
+其他已分组计算指令对偏离公式时写入例外表。
 已有显式值发生变化时，通过工具报告的精确 `--replace` 参数路径确认校准。
-尚未分组的指令对及访存指令对继续写入对应显式参数表。
+其余尚未分组的指令对及访存指令对继续写入对应显式参数表。
 
 ## 算子回归
 

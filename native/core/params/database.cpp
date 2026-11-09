@@ -164,8 +164,8 @@ int64_t ParamDB::forwardingCycles(const std::string &prod,
   const auto it = forwardingCache_.find(key);
   if (it != forwardingCache_.end())
     return it->second;
-  const int64_t cycles =
-      computeForwardingCycles(prod, prodForm, cons, consForm);
+  const auto store = computeStoreForwarding(inst(prod, prodForm), inst(cons, consForm));
+  const int64_t cycles = store ? *store : computeForwardingCycles(prod, prodForm, cons, consForm);
   forwardingCache_.emplace(key, cycles);
   return cycles;
 }

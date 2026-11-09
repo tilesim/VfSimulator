@@ -1,0 +1,748 @@
+{
+  "schema_version": 1,
+  "source_commit": "36636ebbf3e16eddf030a8c443220dbe94b71c41",
+  "source_forwarding_sha256": "23bf459f836df65c7893166082a34e1ee883d9367d71358cd41f0502c2186dc6",
+  "rule": "max(0, producer_latency - 2)",
+  "exact_form_pairs": 96,
+  "compatible_form_pairs": 8,
+  "pairs": [
+    {
+      "producer": "PAND.b8",
+      "consumer": "PSTS.b8",
+      "latency": 7,
+      "value": 5,
+      "compatible_form": false
+    },
+    {
+      "producer": "PAND.b8",
+      "consumer": "VSTS.fp32",
+      "latency": 7,
+      "value": 5,
+      "compatible_form": false
+    },
+    {
+      "producer": "MOVP_B16.b16",
+      "consumer": "PSTS.b8",
+      "latency": 6,
+      "value": 4,
+      "compatible_form": false
+    },
+    {
+      "producer": "MOVP_B32.b32",
+      "consumer": "PSTS.b8",
+      "latency": 6,
+      "value": 4,
+      "compatible_form": false
+    },
+    {
+      "producer": "VMOV.fp32",
+      "consumer": "VSTS.fp32",
+      "latency": 6,
+      "value": 4,
+      "compatible_form": false
+    },
+    {
+      "producer": "VMOV.fp32",
+      "consumer": "VSTS.b32",
+      "latency": 6,
+      "value": 4,
+      "compatible_form": true
+    },
+    {
+      "producer": "VMOV.b32",
+      "consumer": "VSTS.fp32",
+      "latency": 6,
+      "value": 4,
+      "compatible_form": false
+    },
+    {
+      "producer": "VMOV.b32",
+      "consumer": "VSTS.b32",
+      "latency": 6,
+      "value": 4,
+      "compatible_form": true
+    },
+    {
+      "producer": "VDUP.b32",
+      "consumer": "VSTS.fp32",
+      "latency": 11,
+      "value": 9,
+      "compatible_form": false
+    },
+    {
+      "producer": "VAXPY.fp32",
+      "consumer": "VSTS.fp32",
+      "latency": 9,
+      "value": 7,
+      "compatible_form": false
+    },
+    {
+      "producer": "VINTLV.fp32",
+      "consumer": "VSTS.fp32",
+      "latency": 11,
+      "value": 9,
+      "compatible_form": false
+    },
+    {
+      "producer": "VINTLV.fp32",
+      "consumer": "VSTS.b32",
+      "latency": 11,
+      "value": 9,
+      "compatible_form": true
+    },
+    {
+      "producer": "VINTLV.b32",
+      "consumer": "VSTS.fp32",
+      "latency": 11,
+      "value": 9,
+      "compatible_form": false
+    },
+    {
+      "producer": "VINTLV.b32",
+      "consumer": "VSTS.b32",
+      "latency": 11,
+      "value": 9,
+      "compatible_form": true
+    },
+    {
+      "producer": "VDINTLV.fp32",
+      "consumer": "VSTS.fp32",
+      "latency": 11,
+      "value": 9,
+      "compatible_form": false
+    },
+    {
+      "producer": "VDINTLV.fp32",
+      "consumer": "VSTS.b32",
+      "latency": 11,
+      "value": 9,
+      "compatible_form": true
+    },
+    {
+      "producer": "VDINTLV.b32",
+      "consumer": "VSTS.fp32",
+      "latency": 11,
+      "value": 9,
+      "compatible_form": false
+    },
+    {
+      "producer": "VDINTLV.b32",
+      "consumer": "VSTS.b32",
+      "latency": 11,
+      "value": 9,
+      "compatible_form": true
+    },
+    {
+      "producer": "PSET_B8.b8",
+      "consumer": "PSTS.b8",
+      "latency": 6,
+      "value": 4,
+      "compatible_form": false
+    },
+    {
+      "producer": "PSET_B16.b16",
+      "consumer": "PSTS.b8",
+      "latency": 6,
+      "value": 4,
+      "compatible_form": false
+    },
+    {
+      "producer": "PSET_B32.b32",
+      "consumer": "PSTS.b8",
+      "latency": 6,
+      "value": 4,
+      "compatible_form": false
+    },
+    {
+      "producer": "VOR.b32",
+      "consumer": "VSTS.uint32",
+      "latency": 6,
+      "value": 4,
+      "compatible_form": false
+    },
+    {
+      "producer": "VCI.int32",
+      "consumer": "VSTS.int32",
+      "latency": 7,
+      "value": 5,
+      "compatible_form": false
+    },
+    {
+      "producer": "VCI.int32",
+      "consumer": "VSTS.fp32",
+      "latency": 7,
+      "value": 5,
+      "compatible_form": false
+    },
+    {
+      "producer": "VSQRT.fp32",
+      "consumer": "VSTS.fp32",
+      "latency": 17,
+      "value": 15,
+      "compatible_form": false
+    },
+    {
+      "producer": "VLN.fp32",
+      "consumer": "VSTS.fp32",
+      "latency": 18,
+      "value": 16,
+      "compatible_form": false
+    },
+    {
+      "producer": "VADDS.fp32",
+      "consumer": "VSTS.fp32",
+      "latency": 7,
+      "value": 5,
+      "compatible_form": false
+    },
+    {
+      "producer": "VMULS.fp32",
+      "consumer": "VSTS.fp32",
+      "latency": 8,
+      "value": 6,
+      "compatible_form": false
+    },
+    {
+      "producer": "VADD.fp32",
+      "consumer": "VSTS.fp32",
+      "latency": 7,
+      "value": 5,
+      "compatible_form": false
+    },
+    {
+      "producer": "VADD.fp32",
+      "consumer": "VSTUS.fp32",
+      "latency": 7,
+      "value": 5,
+      "compatible_form": false
+    },
+    {
+      "producer": "VEXP.fp32",
+      "consumer": "VSTS.fp32",
+      "latency": 16,
+      "value": 14,
+      "compatible_form": false
+    },
+    {
+      "producer": "VDIV.fp32",
+      "consumer": "VSTS.fp32",
+      "latency": 17,
+      "value": 15,
+      "compatible_form": false
+    },
+    {
+      "producer": "VDIV.fp32",
+      "consumer": "VSTUS.fp32",
+      "latency": 17,
+      "value": 15,
+      "compatible_form": false
+    },
+    {
+      "producer": "VABS.fp32",
+      "consumer": "VSTS.fp32",
+      "latency": 5,
+      "value": 3,
+      "compatible_form": false
+    },
+    {
+      "producer": "VSUB.fp32",
+      "consumer": "VSTS.fp32",
+      "latency": 7,
+      "value": 5,
+      "compatible_form": false
+    },
+    {
+      "producer": "VMUL.fp32",
+      "consumer": "VSTS.fp32",
+      "latency": 8,
+      "value": 6,
+      "compatible_form": false
+    },
+    {
+      "producer": "VMAXS.fp32",
+      "consumer": "VSTS.fp32",
+      "latency": 6,
+      "value": 4,
+      "compatible_form": false
+    },
+    {
+      "producer": "VMINS.fp32",
+      "consumer": "VSTS.fp32",
+      "latency": 6,
+      "value": 4,
+      "compatible_form": false
+    },
+    {
+      "producer": "VMAX.fp32",
+      "consumer": "VSTS.fp32",
+      "latency": 6,
+      "value": 4,
+      "compatible_form": false
+    },
+    {
+      "producer": "VMIN.fp32",
+      "consumer": "VSTS.fp32",
+      "latency": 6,
+      "value": 4,
+      "compatible_form": false
+    },
+    {
+      "producer": "VCMAX.fp32",
+      "consumer": "VSTS.fp32",
+      "latency": 16,
+      "value": 14,
+      "compatible_form": false
+    },
+    {
+      "producer": "VCMAX.fp32",
+      "consumer": "VSTUS.fp32",
+      "latency": 16,
+      "value": 14,
+      "compatible_form": false
+    },
+    {
+      "producer": "VCMIN.fp32",
+      "consumer": "VSTS.fp32",
+      "latency": 16,
+      "value": 14,
+      "compatible_form": false
+    },
+    {
+      "producer": "VCMIN.fp32",
+      "consumer": "VSTUS.fp32",
+      "latency": 16,
+      "value": 14,
+      "compatible_form": false
+    },
+    {
+      "producer": "VDUP.fp32",
+      "consumer": "VSTS.fp32",
+      "latency": 11,
+      "value": 9,
+      "compatible_form": false
+    },
+    {
+      "producer": "VCADD.fp32",
+      "consumer": "VSTS.fp32",
+      "latency": 22,
+      "value": 20,
+      "compatible_form": false
+    },
+    {
+      "producer": "VCADD.fp32",
+      "consumer": "VSTUS.fp32",
+      "latency": 22,
+      "value": 20,
+      "compatible_form": false
+    },
+    {
+      "producer": "VADDS.fp16",
+      "consumer": "VSTS.fp16",
+      "latency": 7,
+      "value": 5,
+      "compatible_form": false
+    },
+    {
+      "producer": "VMULS.fp16",
+      "consumer": "VSTS.fp16",
+      "latency": 8,
+      "value": 6,
+      "compatible_form": false
+    },
+    {
+      "producer": "VADD.fp16",
+      "consumer": "VSTS.fp16",
+      "latency": 7,
+      "value": 5,
+      "compatible_form": false
+    },
+    {
+      "producer": "VEXP.fp16",
+      "consumer": "VSTS.fp16",
+      "latency": 21,
+      "value": 19,
+      "compatible_form": false
+    },
+    {
+      "producer": "VCMAX.fp16",
+      "consumer": "VSTS.fp16",
+      "latency": 17,
+      "value": 15,
+      "compatible_form": false
+    },
+    {
+      "producer": "VCMAX.fp16",
+      "consumer": "VSTUS.fp16",
+      "latency": 17,
+      "value": 15,
+      "compatible_form": false
+    },
+    {
+      "producer": "VCMIN.fp16",
+      "consumer": "VSTS.fp16",
+      "latency": 17,
+      "value": 15,
+      "compatible_form": false
+    },
+    {
+      "producer": "VCMIN.fp16",
+      "consumer": "VSTUS.fp16",
+      "latency": 17,
+      "value": 15,
+      "compatible_form": false
+    },
+    {
+      "producer": "VCADD.fp16",
+      "consumer": "VSTS.fp16",
+      "latency": 24,
+      "value": 22,
+      "compatible_form": false
+    },
+    {
+      "producer": "VCADD.fp16",
+      "consumer": "VSTUS.fp16",
+      "latency": 24,
+      "value": 22,
+      "compatible_form": false
+    },
+    {
+      "producer": "VDIV.fp16",
+      "consumer": "VSTS.fp16",
+      "latency": 22,
+      "value": 20,
+      "compatible_form": false
+    },
+    {
+      "producer": "VABS.fp16",
+      "consumer": "VSTS.fp16",
+      "latency": 5,
+      "value": 3,
+      "compatible_form": false
+    },
+    {
+      "producer": "VSUB.fp16",
+      "consumer": "VSTS.fp16",
+      "latency": 7,
+      "value": 5,
+      "compatible_form": false
+    },
+    {
+      "producer": "VMUL.fp16",
+      "consumer": "VSTS.fp16",
+      "latency": 8,
+      "value": 6,
+      "compatible_form": false
+    },
+    {
+      "producer": "VMAXS.fp16",
+      "consumer": "VSTS.fp16",
+      "latency": 6,
+      "value": 4,
+      "compatible_form": false
+    },
+    {
+      "producer": "VMINS.fp16",
+      "consumer": "VSTS.fp16",
+      "latency": 6,
+      "value": 4,
+      "compatible_form": false
+    },
+    {
+      "producer": "VMAX.fp16",
+      "consumer": "VSTS.fp16",
+      "latency": 6,
+      "value": 4,
+      "compatible_form": false
+    },
+    {
+      "producer": "VMIN.fp16",
+      "consumer": "VSTS.fp16",
+      "latency": 6,
+      "value": 4,
+      "compatible_form": false
+    },
+    {
+      "producer": "VSEL.fp32",
+      "consumer": "VSTS.fp32",
+      "latency": 6,
+      "value": 4,
+      "compatible_form": false
+    },
+    {
+      "producer": "VCMP_EQ.fp32",
+      "consumer": "PSTS.b8",
+      "latency": 6,
+      "value": 4,
+      "compatible_form": false
+    },
+    {
+      "producer": "VCVT_F16_TO_F32.f16_to_f32",
+      "consumer": "VSTS.fp32",
+      "latency": 7,
+      "value": 5,
+      "compatible_form": false
+    },
+    {
+      "producer": "VCVT_F32_TO_F16.f32_to_f16",
+      "consumer": "VSTS.fp16",
+      "latency": 7,
+      "value": 5,
+      "compatible_form": false
+    },
+    {
+      "producer": "VCVT_F32_TO_BF16.f32_to_bf16",
+      "consumer": "VSTS.bf16",
+      "latency": 7,
+      "value": 5,
+      "compatible_form": false
+    },
+    {
+      "producer": "VPACK.b32",
+      "consumer": "VSSTB.b16",
+      "latency": 11,
+      "value": 9,
+      "compatible_form": false
+    },
+    {
+      "producer": "VEXPDIF.fp32",
+      "consumer": "VSTS.fp32",
+      "latency": 18,
+      "value": 16,
+      "compatible_form": false
+    },
+    {
+      "producer": "VADD.bf16",
+      "consumer": "VSTS.bf16",
+      "latency": 7,
+      "value": 5,
+      "compatible_form": false
+    },
+    {
+      "producer": "VADDS.bf16",
+      "consumer": "VSTS.bf16",
+      "latency": 7,
+      "value": 5,
+      "compatible_form": false
+    },
+    {
+      "producer": "VCMP_GE.fp32",
+      "consumer": "PSTS.b8",
+      "latency": 6,
+      "value": 4,
+      "compatible_form": false
+    },
+    {
+      "producer": "VCMP_LE.fp32",
+      "consumer": "PSTS.b8",
+      "latency": 6,
+      "value": 4,
+      "compatible_form": false
+    },
+    {
+      "producer": "VCMP_LT.fp32",
+      "consumer": "PSTS.b8",
+      "latency": 6,
+      "value": 4,
+      "compatible_form": false
+    },
+    {
+      "producer": "VCMPS_EQ.fp32",
+      "consumer": "PSTS.b8",
+      "latency": 6,
+      "value": 4,
+      "compatible_form": false
+    },
+    {
+      "producer": "VCMPS_GT.fp32",
+      "consumer": "PSTS.b8",
+      "latency": 6,
+      "value": 4,
+      "compatible_form": false
+    },
+    {
+      "producer": "VCMPS_LE.fp32",
+      "consumer": "PSTS.b8",
+      "latency": 6,
+      "value": 4,
+      "compatible_form": false
+    },
+    {
+      "producer": "VCMPS_LT.fp32",
+      "consumer": "PSTS.b8",
+      "latency": 6,
+      "value": 4,
+      "compatible_form": false
+    },
+    {
+      "producer": "VCMPS_NE.fp32",
+      "consumer": "PSTS.b8",
+      "latency": 6,
+      "value": 4,
+      "compatible_form": false
+    },
+    {
+      "producer": "VLN.fp16",
+      "consumer": "VSTS.fp16",
+      "latency": 23,
+      "value": 21,
+      "compatible_form": false
+    },
+    {
+      "producer": "VMAX.bf16",
+      "consumer": "VSTS.bf16",
+      "latency": 6,
+      "value": 4,
+      "compatible_form": false
+    },
+    {
+      "producer": "VMUL.bf16",
+      "consumer": "VSTS.bf16",
+      "latency": 8,
+      "value": 6,
+      "compatible_form": false
+    },
+    {
+      "producer": "VMULS.uint32",
+      "consumer": "VSCATTER.b32",
+      "latency": 8,
+      "value": 6,
+      "compatible_form": true
+    },
+    {
+      "producer": "VMULS.uint32",
+      "consumer": "VSTS.fp32",
+      "latency": 8,
+      "value": 6,
+      "compatible_form": false
+    },
+    {
+      "producer": "VMULS.uint32",
+      "consumer": "VSCATTER.fp32",
+      "latency": 8,
+      "value": 6,
+      "compatible_form": false
+    },
+    {
+      "producer": "VMULS.uint32",
+      "consumer": "VSCATTER.int32",
+      "latency": 8,
+      "value": 6,
+      "compatible_form": false
+    },
+    {
+      "producer": "VMULS.uint32",
+      "consumer": "VSCATTER.uint32",
+      "latency": 8,
+      "value": 6,
+      "compatible_form": false
+    },
+    {
+      "producer": "VSQRT.fp16",
+      "consumer": "VSTS.fp16",
+      "latency": 22,
+      "value": 20,
+      "compatible_form": false
+    },
+    {
+      "producer": "VSUB.bf16",
+      "consumer": "VSTS.bf16",
+      "latency": 7,
+      "value": 5,
+      "compatible_form": false
+    },
+    {
+      "producer": "VPACK.s32_to_u16",
+      "consumer": "VSSTB.b16",
+      "latency": 11,
+      "value": 9,
+      "compatible_form": false
+    },
+    {
+      "producer": "VPACK.u32_to_u16",
+      "consumer": "VSSTB.b16",
+      "latency": 11,
+      "value": 9,
+      "compatible_form": false
+    },
+    {
+      "producer": "VPACK.u32_to_u16",
+      "consumer": "VSSTB.bf16",
+      "latency": 11,
+      "value": 9,
+      "compatible_form": false
+    },
+    {
+      "producer": "VDUPS.fp32",
+      "consumer": "VSTS.fp32",
+      "latency": 6,
+      "value": 4,
+      "compatible_form": false
+    },
+    {
+      "producer": "VDUPS.fp16",
+      "consumer": "VSTS.fp16",
+      "latency": 6,
+      "value": 4,
+      "compatible_form": false
+    },
+    {
+      "producer": "PLT.b32",
+      "consumer": "PSTS.b8",
+      "latency": 6,
+      "value": 4,
+      "compatible_form": false
+    },
+    {
+      "producer": "PLT.b32",
+      "consumer": "VSCATTER.b32",
+      "latency": 6,
+      "value": 4,
+      "compatible_form": true
+    },
+    {
+      "producer": "PLT.b32",
+      "consumer": "VSTS.fp16",
+      "latency": 6,
+      "value": 4,
+      "compatible_form": false
+    },
+    {
+      "producer": "PLT.b32",
+      "consumer": "VSTS.fp32",
+      "latency": 6,
+      "value": 4,
+      "compatible_form": false
+    },
+    {
+      "producer": "PLT.b32",
+      "consumer": "VSCATTER.fp32",
+      "latency": 6,
+      "value": 4,
+      "compatible_form": false
+    },
+    {
+      "producer": "PLT.b32",
+      "consumer": "VSCATTER.int32",
+      "latency": 6,
+      "value": 4,
+      "compatible_form": false
+    },
+    {
+      "producer": "PLT.b32",
+      "consumer": "VSCATTER.uint32",
+      "latency": 6,
+      "value": 4,
+      "compatible_form": false
+    }
+  ],
+  "validation": {
+    "python_tests": 501,
+    "cpp_ctest_targets": 8,
+    "complete_inputs": 48,
+    "python_cpp_matches": 48,
+    "changed_prediction_cases": 0,
+    "changed_warning_cases": 0,
+    "regression_definition": "regression_suite/cases/cost_model_regression_cases.json plus VFtest/cce/softmax and top-level VFtest/canonical inputs",
+    "forwarding_sha256": "a554c69fef947bded8494b8af5e5d2a6677b5b344978a5fb585f33857641b22d"
+  }
+}

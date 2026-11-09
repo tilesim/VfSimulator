@@ -10,7 +10,7 @@ from pathlib import Path
 from types import SimpleNamespace
 
 import vector_compute as probe
-from core.params.resources import forwarding_interval, instruction_banks, issue_interval
+from core.params.resources import compute_store_forwarding, forwarding_interval, instruction_banks, issue_interval
 
 
 def digest(path):
@@ -250,7 +250,8 @@ def apply_parameters(parameters, root, apply, replace=()):
         fields = {**documents["isa.json"].get("defaults", {}), **node,
                   **node.get("forms", {}).get(form, {})}
         return SimpleNamespace(execution_resource=fields.get("execution_resource", ""),
-            latency=fields.get("latency", 9), writeback_banks=instruction_banks(op),
+            op_class=fields.get("op_class", "COMPUTE"), latency=fields.get("latency", 9),
+            writeback_banks=instruction_banks(op),
             self_ii=ii_table.get(key, {}).get(key))
 
     for section, filename, table in [
@@ -263,6 +264,19 @@ def apply_parameters(parameters, root, apply, replace=()):
                     continue
                 path = section + "." + producer + "->" + consumer
                 previous, current = profile(producer), profile(consumer)
+                store = compute_store_forwarding(previous, current) if section == "forwarding" else None
+                if store is not None:
+                    if value != store:
+                        conflicts.append(dict(path=path, configured=store, observed=value,
+                                              rule="compute_latency_minus_two"))
+                    else:
+                        for explicit in (documents[filename][table],
+                                         documents.get("timing_overrides.json", {}).get("forwarding", {})):
+                            row = explicit.get(producer, {})
+                            row.pop(consumer, None)
+                            if producer in explicit and not row:
+                                del explicit[producer]
+                    continue
                 estimate = None
                 if resources:
                     estimate = (issue_interval(previous, current) if section == "ii"
