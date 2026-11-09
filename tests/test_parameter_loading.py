@@ -184,19 +184,19 @@ class ParameterReuseTest(unittest.TestCase):
         vf = InputAPI.load_json(ROOT / 'VFtest/canonical/fixtures/v1_valid_loop.json')
         with patch('core.params.loader.read_json', wraps=read_json) as reads:
             model = CoreVfCostModel(base_dir=ROOT, out_dir=None)
-            self.assertEqual(reads.call_count, 4)
+            self.assertEqual(reads.call_count, 6)
             baseline = model.run_vf_info(vf)
             overridden = InputAPI.from_canonical(replace(vf, uarch={'issue_ports': 1, 'vreg_num': 1}))
             model.run_vf_info(overridden)
             self.assertEqual(model.run_vf_info(vf), baseline)
-            self.assertEqual(reads.call_count, 4)
+            self.assertEqual(reads.call_count, 6)
 
     def test_file_updates_require_a_new_model(self):
         vf = InputAPI.load_json(ROOT / 'VFtest/canonical/fixtures/v1_valid_loop.json')
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             (root / 'configs').mkdir()
-            for name in ('isa.json', 'uarch.json', 'forwarding.json', 'InitiationInterval.json'):
+            for name in ('isa.json', 'uarch.json', 'forwarding.json', 'InitiationInterval.json', 'execution_resources.json', 'timing_overrides.json'):
                 (root / 'configs' / name).write_text((ROOT / 'configs' / name).read_text())
             model = CoreVfCostModel(base_dir=root, out_dir=None)
             baseline = model.run_vf_info(vf)
@@ -207,7 +207,7 @@ class ParameterReuseTest(unittest.TestCase):
             self.assertEqual(model.run_vf_info(vf), baseline)
             fresh = CoreVfCostModel(base_dir=root, out_dir=None)
             self.assertEqual(fresh.run_vf_info(vf)['vf_end_cycle'], baseline['vf_end_cycle'] + 17)
-            # All four files may disappear after construction; the snapshot is sufficient.
+            # All configuration files may disappear after construction; the snapshot is sufficient.
             for path in (root / 'configs').iterdir():
                 path.unlink()
             self.assertEqual(model.run_vf_info(vf), baseline)

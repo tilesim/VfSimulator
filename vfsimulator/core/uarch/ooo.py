@@ -175,7 +175,7 @@ class OoO:
                         best = (key, port)
                 chosen_port = best[1]
                 predicted_issue = best[0][0]
-            self.exq.enqueue(u, chosen_port, fu_type, recv_cycle, predicted_issue)
+            self.exq.enqueue(u, chosen_port, recv_cycle, predicted_issue)
             issued_shq.append(u)
             self.shq.release_credit(u, cycle)
             shq_to_exq_cnt[chosen_port] += 1

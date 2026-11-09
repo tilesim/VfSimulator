@@ -85,3 +85,5 @@ ISA、uarch、forwarding 和 II 路径也支持参数加载器的环境变量。
 [验证报告](validation/tilesim_python_sync_20261021.md)记录 TileSim 本机版本的两类适配点，
 并提供[可审阅的下游补丁](tilesim_compatibility/catalog_and_memory_units.patch)。
 补丁在临时副本验证，原仓库的应用可独立进行。
+
+资源分组、forwarding/II 推导和例外使用 `execution_resources.json`、`timing_overrides.json`。参数缓存同时跟踪这两份文件的路径和文件版本；修改参数会选择新的模型快照。资源路径支持 `EXECUTION_RESOURCES_JSON_PATH`，例外路径支持 `TIMING_OVERRIDES_JSON_PATH`。

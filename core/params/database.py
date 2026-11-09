@@ -8,6 +8,7 @@ from typing import Any, Dict, Optional
 from .types import InstructionProfile, LoadedParameters
 from .loader import load_parameters, merge_parameters
 from .uarch import allowed_exu_ports
+from .resources import compute_store_forwarding, forwarding_interval, instruction_banks, issue_interval
 from .fallback import (
     compatible_form,
     form_candidates,
@@ -50,12 +51,15 @@ class ParamDB:
         self._defaults = data.isa.get("defaults", {})
         self._insts = data.isa.get("instructions", {})
         self._isa_schema_version = data.isa.get("schema_version", 1)
+        self.resource_timing = data.resource_timing
         self._fwd_default_offset = data.forwarding.get(
-            "default", data.forwarding.get("defaults", 3)
+            "default", data.forwarding.get("defaults", self.resource_timing['forwarding']['fallback_offset'])
         )
         self._fwd_table = data.forwarding.get("forwarding", {})
-        self._ii_default = data.initiation_interval.get("defaults", 1)
+        self._ii_default = data.initiation_interval.get("defaults", self.resource_timing['ii']['different_resource_interval'])
         self._ii_table = data.initiation_interval.get("InitiationInterval", {})
+        self.timing_overrides = data.timing_overrides or {'ii': {}, 'forwarding': {}}
+        self.execution_resources = tuple(self.resource_timing['groups'])
         self._warnings = {}
         self._inst_param_templates = {}
         self._inst_param_cache = {}
@@ -381,6 +385,10 @@ class ParamDB:
             lsu_resource=str(params.get("lsu_resource", "")),
             lsu_issue_interval=int(params.get("lsu_issue_interval", 1)),
             align_state_latency=int(params.get("align_state_latency", 1)),
+            execution_resource=str(params.get("execution_resource", "")) if op_class == 'COMPUTE' else '',
+            self_ii=next((self._ii_table[a][b] for a,b,_ in pair_key_candidates(
+                opu, requested_form, opu, requested_form) if b in self._ii_table.get(a, {})), None),
+            writeback_banks=instruction_banks(opu),
         )
         if profile.lsu_issue_interval < 1:
             raise ValueError("lsu_issue_interval must be positive")
@@ -446,6 +454,10 @@ class ParamDB:
         cached = self._forwarding_profile_cache.get(key)
         if cached is not None:
             return cached
+        value = compute_store_forwarding(self.resource_timing, producer, consumer)
+        if value is not None:
+            self._forwarding_profile_cache[key] = value
+            return value
         form_key = (
             producer.op,
             producer.requested_form,
@@ -472,6 +484,23 @@ class ParamDB:
                 "InstructionProfile belongs to a different ParamDB instance"
             )
 
+    def issue_overrides_for_profile(self, profile: InstructionProfile):
+        """Outgoing constraints retain the producer's issue-time anchor."""
+        return self.timing_overrides['ii'].get(f'{profile.op}.{profile.resolved_form}', {})
+
+    def _timing_override(self, kind, p, pf, c, cf):
+        for a, b, compatible in pair_key_candidates(p, pf, c, cf):
+            value = self.timing_overrides[kind].get(a, {}).get(b)
+            if value is not None:
+                if compatible:
+                    fields = (dict(prev=f'{p}.{pf}', cur=f'{c}.{cf}', used_prev=a, used_cur=b)
+                              if kind == 'ii' else dict(producer=f'{p}.{pf}', consumer=f'{c}.{cf}',
+                                                        used_producer=a, used_consumer=b))
+                    self.record_warning('compatible_ii_pair_fallback' if kind == 'ii' else
+                                        'compatible_forwarding_pair_fallback', **fields)
+                return value
+        return None
+
     def _compute_forwarding_cycles(
         self,
         producer_op: str,
@@ -480,17 +509,13 @@ class ParamDB:
         producer_form: Optional[str] = None,
         consumer_form: Optional[str] = None,
     ) -> int:
-        """
-        Forwarding cycles for COMPUTE->COMPUTE dependency.
-
-        Lookup order:
-          1) forwarding.json explicit table:
-             forwarding[dtype][PRODUCER][CONSUMER] -> cycles
-          2) fallback: max(0, latency(PRODUCER) - default_offset)
-             where default_offset is forwarding.json["default"] (default 3 if file missing)
-        """
+        """Resolve forwarding from overrides, explicit values, resources or fallback."""
         p, parsed_pf = self._split_form_key(producer_op, producer_form)
         c, parsed_cf = self._split_form_key(consumer_op, consumer_form)
+        pf, cf = parsed_pf or self._dtype_to_form(dtype), parsed_cf or self._dtype_to_form(dtype)
+        override = self._timing_override('forwarding', p, pf, c, cf)
+        if override is not None:
+            return override
         from api.common.instruction_catalog import DEFAULT_INSTRUCTION_CATALOG
 
         spec = DEFAULT_INSTRUCTION_CATALOG.lookup(p)
@@ -542,10 +567,21 @@ class ParamDB:
             producer_defaults = (self._fwd_table or {}).get(producer_key, {})
             if "*" in producer_defaults:
                 return max(0, int(producer_defaults["*"]))
+        producer = self.resolve_inst(p, pf, dtype)
+        consumer = self.resolve_inst(c, cf, dtype)
+        derived = forwarding_interval(self.resource_timing, producer.execution_resource,
+                                      consumer.execution_resource, producer.latency)
+        if derived is not None:
+            if pf != producer.resolved_form or cf != consumer.resolved_form:
+                self.record_warning('compatible_forwarding_pair_fallback',
+                    producer=f'{p}.{pf}', consumer=f'{c}.{cf}',
+                    used_producer=f'{p}.{producer.resolved_form}', used_consumer=f'{c}.{consumer.resolved_form}')
+            return derived
         producer = self.get_inst_form(p, form=producer_form, dtype=dtype)
         consumer = self.get_inst_form(c, form=consumer_form, dtype=dtype)
         return missing_forwarding(
-            producer, consumer, self._fwd_default_offset, self._warnings
+            producer, consumer, self._fwd_default_offset,
+            self.resource_timing['forwarding']['load_store_interval'], self._warnings
         )
 
     def get_ii(
@@ -604,6 +640,10 @@ class ParamDB:
         c, parsed_cf = self._split_form_key(cur_op, cur_form)
         prev_form = parsed_pf
         cur_form = parsed_cf
+        pf, cf = parsed_pf or self._dtype_to_form(dtype), parsed_cf or self._dtype_to_form(dtype)
+        override = self._timing_override('ii', p, pf, c, cf)
+        if override is not None:
+            return override
         if self._is_v2_isa():
             p_form = self._normalize_form_key(p, prev_form) or self._dtype_to_form(
                 dtype
@@ -631,6 +671,15 @@ class ParamDB:
             prev_map = (self._ii_table or {}).get(dtype, {}).get(p, None)
             if isinstance(prev_map, dict) and c in prev_map:
                 return max(1, int(prev_map[c]))
+        previous = self.resolve_inst(p, pf, dtype)
+        current = self.resolve_inst(c, cf, dtype)
+        derived = issue_interval(self.resource_timing, previous, current)
+        if derived is not None:
+            if pf != previous.resolved_form or cf != current.resolved_form:
+                self.record_warning('compatible_ii_pair_fallback', prev=f'{p}.{pf}', cur=f'{c}.{cf}',
+                    used_prev=f'{p}.{previous.resolved_form}', used_cur=f'{c}.{current.resolved_form}')
+            return derived
         previous = self.get_inst_form(p, form=prev_form, dtype=dtype)
         current = self.get_inst_form(c, form=cur_form, dtype=dtype)
-        return missing_ii(previous, current, self._warnings)
+        return missing_ii(previous, current, self._ii_default,
+                          self.resource_timing['ii']['writeback_collision_penalty'], self._warnings)

@@ -73,36 +73,37 @@ class IssueIntervalTests(unittest.TestCase):
         self.assertFalse(engine.exu.can_issue(candidate, 0, 102, queued=True))
         self.assertTrue(engine.exu.can_issue(candidate, 1, 102, queued=True))
 
-    def test_history_tracks_each_opcode_form(self):
+    def test_shared_resource_tracks_mixed_precision_and_directional_overrides(self):
         engine = self.engine()
         self.start(engine, self.uop(engine, 0, "VEXP", "fp32"), 100)
-        self.start(engine, self.uop(engine, 1, "VEXP", "fp16"), 101)
-        self.start(engine, self.uop(engine, 2, "VADD"), 102)
+        self.assertFalse(engine.exu.can_issue(self.uop(engine, 1, "VEXP", "fp16"), 0, 101, queued=True))
+        self.start(engine, self.uop(engine, 1, "VEXP", "fp16"), 104)
+        self.start(engine, self.uop(engine, 2, "VADD"), 105)
         fp32 = self.uop(engine, 3, "VEXP", "fp32")
         fp16 = self.uop(engine, 4, "VEXP", "fp16")
-        self.assertEqual(engine.exu.next_issue_cycle(fp32, 0), 104)
-        self.assertEqual(engine.exu.next_issue_cycle(fp16, 0), 109)
+        self.assertEqual(engine.exu.next_issue_cycle(fp32, 0), 113)
+        self.assertEqual(engine.exu.next_issue_cycle(fp16, 0), 112)
 
     def test_exq_selection_waits_after_same_fu_interleaving(self):
         engine = self.engine()
         self.start(engine, self.uop(engine, 0, "VEXP"), 100)
         self.start(engine, self.uop(engine, 1, "VCMAX"), 101)
         last = self.uop(engine, 2, "VEXP")
-        engine.exq.enqueue(last, 0, "SFU", 102, 102)
+        engine.exq.enqueue(last, 0, 102, 102)
         self.assertIsNone(engine.exq.pop_ready(0, 102))
         self.assertEqual(engine.exq.pop_ready(0, 104), ("SFU", last))
 
     def test_exq_prediction_preserves_issued_same_form_history(self):
         engine = self.engine()
         self.start(engine, self.uop(engine, 0, "VEXP"), 100)
-        engine.exq.enqueue(self.uop(engine, 1, "VCMAX"), 0, "SFU", 101, 101)
+        engine.exq.enqueue(self.uop(engine, 1, "VCMAX"), 0, 101, 101)
         candidate = self.uop(engine, 9, "VEXP")
         self.assertEqual(engine.exq.predict_issue_cycle(0, candidate, 102), 104)
 
     def test_exq_prediction_preserves_pending_same_form_history(self):
         engine = self.engine()
-        engine.exq.enqueue(self.uop(engine, 0, "VEXP"), 0, "SFU", 100, 100)
-        engine.exq.enqueue(self.uop(engine, 1, "VCMAX"), 0, "SFU", 101, 101)
+        engine.exq.enqueue(self.uop(engine, 0, "VEXP"), 0, 100, 100)
+        engine.exq.enqueue(self.uop(engine, 1, "VCMAX"), 0, 101, 101)
         candidate = self.uop(engine, 9, "VEXP")
         self.assertEqual(engine.exq.predict_issue_cycle(0, candidate, 102), 104)
 

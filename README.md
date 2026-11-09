@@ -58,7 +58,7 @@ CCE / Canonical JSON / CanonicalVfInfo → InputAPI
 ```
 
 输入在 API 出口完成校验。各硬件组件持有自己的队列和状态，Engine 安排周期阶段。
-EXU 按 opcode/form 保留 self-II 历史，检查相邻指令 II，默认每端口最多 7 条在途指令，
+EXU 按子执行单元维护 self-II 接收时间，并检查独立的指令对例外，默认每端口最多 7 条在途指令，
 每周期最多发射一条计算指令；完成带宽分别允许一条写向量寄存器和一条写谓词寄存器的指令。
 
 源码工作区的命令行入口：
@@ -99,3 +99,5 @@ python3 -m pip wheel --no-deps -w dist .
 
 TileSim 安装 wheel 后，通过 `vfsimulator` 访问模型及随包提供的配置。
 [文档目录](docs/README.md)列出模型、参数和验证说明。
+
+子单元分组、forwarding/II 规则与参数位置见[子 EXU 模型](docs/execution_resources.md)。

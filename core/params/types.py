@@ -20,6 +20,9 @@ class InstructionProfile:
     lsu_resource: str = ""
     lsu_issue_interval: int = 1
     align_state_latency: int = 1
+    execution_resource: str = ""
+    self_ii: int | None = None
+    writeback_banks: frozenset[str] = frozenset()
 
 
 @dataclass(frozen=True, slots=True)
@@ -119,3 +122,5 @@ class LoadedParameters:
     forwarding: dict[str, Any]
     initiation_interval: dict[str, Any]
     vf_timing: VfTiming
+    resource_timing: dict[str, Any]
+    timing_overrides: dict[str, Any] | None = None

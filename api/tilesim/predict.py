@@ -13,7 +13,7 @@ from .program import VfSimProgram
 
 def _parameter_version(base_dir):
     """Track selected files so a new call observes configuration updates."""
-    version = []
+    paths = []
     for env_key, candidates, required in (
         ("ISA_JSON_PATH", ("configs/isa.json", "isa.json"), True),
         ("UARCH_JSON_PATH", ("configs/uarch.json", "uarch.json"), True),
@@ -22,6 +22,15 @@ def _parameter_version(base_dir):
     ):
         path = resolve_path(base_dir, explicit=None, env_key=env_key,
                             candidates=candidates, required=required)
+        paths.append(path)
+    config_dir = paths[0].parent
+    paths.append(resolve_path(config_dir, explicit=None, env_key="EXECUTION_RESOURCES_JSON_PATH",
+                              candidates=("execution_resources.json",), required=False)
+                 or Path(__file__).resolve().parents[2] / "configs/execution_resources.json")
+    paths.append(resolve_path(config_dir, explicit=None, env_key="TIMING_OVERRIDES_JSON_PATH",
+                              candidates=("timing_overrides.json",), required=False))
+    version = []
+    for path in paths:
         if path is None:
             version.append(None)
         else:

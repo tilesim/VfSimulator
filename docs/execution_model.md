@@ -42,8 +42,12 @@ SHQ/LSQ 容量和地址状态。队头受阻时结束本周期选择。`Engine.r
 指令预留目的资源、队列位置和共用信用，`admit()` 完成实际重命名与入队。
 
 COMPUTE 进入 SHQ，OoO 按数据就绪、合法端口、FU 轮转及 EXQ 容量分发。
-EXQ 为每端口维护 FU 队列，从满足接收延迟和 EXU 条件的队首选择指令。
-EXU 检查端口、成对 II 和在执行容量，记录开始并在 latency 到期时完成。
+EXQ 为每端口按 `execution_resource` 维护队列，未分组 form 按 ALU/SFU 排队。
+各队列共享端口容量，从满足接收延迟和 EXU 条件的队首选择指令。
+EXU 为 ADD_DUAL、ADD_CONV、MUL、MOV 和 LNEXP 分别维护下一次接收周期；
+指令开始时按自身 self-II 更新对应子单元。EXU 同时检查端口带宽、例外 II、
+完成 bank 和在执行容量，记录开始并在 latency 到期时完成。
+同一子单元受阻时，其他子单元的就绪队首仍可参与选择。详细规则见[子 EXU 模型](execution_resources.md)。
 关闭 EXQ 队列模型时，`OoO.issue_direct_from_shq()` 直接选择 SHQ→EXU 指令。
 
 LOAD 和 STORE 进入 LSQ，由 LSU 仲裁。STORE 同时占用 SHQ 共用信用。

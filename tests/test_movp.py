@@ -87,10 +87,8 @@ class MoveMaskTest(unittest.TestCase):
                         ),
                         expected,
                     )
-                forwarding = json.loads((ROOT / "configs/forwarding.json").read_text())[
-                    "forwarding"
-                ]
-                self.assertEqual(forwarding[f"{opcode}.{form}"]["PSTS.b8"], 4)
+                self.assertEqual(db.get_forwarding_cycles(opcode, 'PSTS',
+                    producer_form=form, consumer_form='b8'), 4)
         self.assertEqual(db.get_warnings(), [])
 
     def test_return_value_produces_a_real_predicate_dependency(self):

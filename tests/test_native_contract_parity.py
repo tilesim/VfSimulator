@@ -104,6 +104,30 @@ class NativeContractParityTests(unittest.TestCase):
                 self.compare(vf, root, arguments=['--cce',str(path)])
                 self.compare(vf, root)
 
+    def test_sub_exu_resources_and_interleaved_exceptions(self):
+        source = '''void vf(__ubuf__ float *input, __ubuf__ float *output) { __VEC_SCOPE__ {
+          vector_f32 x,a,b,c,d,e; vector_bool p=pset_b32(PAT_ALL);
+          for(int i=0;i<8;++i){
+            vlds(x,input,i*64,NORM);
+            vexp(a,x,p,MODE_ZEROING); vadd(b,x,x,p,MODE_ZEROING);
+            vdiv(c,x,x,p,MODE_ZEROING); vmul(d,b,x,p,MODE_ZEROING);
+            vexp(e,x,p,MODE_ZEROING);
+            vsts(a,output,i*320,NORM_B32,p);
+            vsts(c,output,i*320+64,NORM_B32,p);
+            vsts(d,output,i*320+128,NORM_B32,p);
+            vsts(e,output,i*320+192,NORM_B32,p);
+          }
+        }}'''
+        for queued in (False, True):
+            with self.subTest(queued=queued), tempfile.TemporaryDirectory() as folder:
+                root = Path(folder)
+                path = root / 'resources.cce'
+                path.write_text(source)
+                vf = InputAPI.load_cce(path)
+                vf = InputAPI.from_canonical(replace(vf, uarch={
+                    'issue_ports': 1, 'enable_isu_queue_model': queued}))
+                self.compare(vf, root)
+
     def test_cce_fixture_outputs(self):
         for fixture in sorted((ROOT / "VFtest/cce/contracts").glob("*.cce")):
             with self.subTest(fixture=fixture.name), tempfile.TemporaryDirectory() as folder:

@@ -20,3 +20,5 @@ python3 tools/sync_python_package.py --check
 带有外部 Native runner 的 Python 对照测试通过 `VFSIM_NATIVE_RUNNER` 选择匹配的可执行文件。
 
 `loop_invariants` 用例检查固定 mask、标量反馈、嵌套外提和循环出口；共享 pass 位于 `core/execution/optimization.py`。
+
+`test_execution_resources.py` 检查子单元接收状态、例外穿插、forwarding/II 参数及迁移值；TileSim 与安装包测试覆盖资源配置和例外表更新后的缓存失效。

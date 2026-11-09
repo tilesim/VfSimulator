@@ -16,6 +16,17 @@ def test_package_sources_are_synchronized():
     subprocess.run([sys.executable, str(Path(__file__).resolve().parents[1]/'tools/sync_python_package.py'), '--check'], check=True)
 
 
+def test_package_contains_sub_exu_rules_and_timing_parameters():
+    from vfsimulator.core.params.database import ParamDB
+    db = ParamDB()
+    assert db.resolve_inst('VADD', 'fp32').execution_resource == 'ADD_DUAL'
+    assert db.resolve_inst('VEXP', 'fp32').execution_resource == 'LNEXP'
+    assert db.get_forwarding_cycles('VADD', 'VSTS', 'fp32') == 5
+    assert db.get_forwarding_cycles('VEXP', 'VADD', 'fp32') == 13
+    assert db.get_ii('VEXP', 'VDIV', 'fp32') == 6
+    assert db.resource_timing['forwarding']['compute_store_offset'] == 2
+
+
 @pytest.mark.parametrize('feedback', [False, True])
 def test_loop_invariant_motion_preserves_program_feedback_in_package(tmp_path, feedback):
     from api.tilesim import program as root_api

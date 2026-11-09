@@ -81,7 +81,7 @@ configs/           指令语义与微架构时序参数
 | [register_bank.py](../core/uarch/register_bank.py) | `allocate/can_free/try_free` | 管理 vector/predicate 物理资源池及安全回收 |
 | [shq.py](../core/uarch/shq.py) | `enqueue/update_ready/reserve/release_credit` | 维护计算等待指令及 compute/store 共用信用 |
 | [ooo.py](../core/uarch/ooo.py) | `dispatch/issue_direct_from_shq` | 选择就绪计算指令、安排端口、执行轮转和 EXU0 预留策略 |
-| [exq.py](../core/uarch/exq.py) | `enqueue/can_accept/predict_issue_cycle/pop_ready` | 每端口 FU 队列、容量、接收延迟和队首选择 |
+| [exq.py](../core/uarch/exq.py) | `enqueue/can_accept/predict_issue_cycle/pop_ready` | 每端口资源队列、容量、接收延迟和队首选择 |
 | [exu.py](../core/uarch/exu.py) | `can_accept/can_issue/next_issue_cycle/start/finish` | 管理端口、II、在执行容量、开始和完成 |
 | [lsu.py](../core/uarch/lsu.py) | `enqueue/update_ready/_issue_ready_lsu/finish` | 维护 LSQ、访存依赖及共享 UB 发射预算 |
 
@@ -109,25 +109,11 @@ configs/           指令语义与微架构时序参数
 
 结果字段、日志格式和检查方法见[验证与精度](validation.md)。
 
-## C++ 子项目
+## 安装包
 
-`native/` 包含 C++ 的输入层、仿真核心、命令行入口、测试和 CMake 构建。
-两种实现按相同的职责划分目录：
+`vfsimulator/` 保存可独立安装的输入层、核心和配置。`tools/sync_python_package.py`
+从根目录的 `api/`、`core/`、`configs/` 生成对应模块，并将绝对导入转为包内命名空间。
+`api/tilesim/` 与 `vfsimulator/api/tilesim/` 提供 typed program 接收和预测接口。
 
-| Python | C++ | 职责 |
-| --- | --- | --- |
-| `api/input_api.py` | `native/api/input_api.h/.cpp` | 接收与校验 Canonical 输入 |
-| `api/common/` | `native/api/common/` | 数据合同、Catalog、通用与指令校验 |
-| `api/json/` | `native/api/json/` | Canonical JSON 输入 |
-| `core/simulator.py` | `native/core/simulator.h/.cpp` | 参数生命周期、组件组装和预测入口 |
-| `core/execution/` | `native/core/execution/` | 准备、展开、周期协调、循环与屏障 |
-| `core/uarch/` | `native/core/uarch/` | 各组件的状态与局部时序 |
-| `core/params/` | `native/core/params/` | 参数加载、Profile 和查询缓存 |
-| `core/trace/` | `native/core/trace/` | 事件记录、结果和 Perfetto 导出 |
-| `main.py` | `native/cli/json_runner.cpp` | 命令行入口 |
-
-C++ 使用 `.h/.cpp` 声明和实现模块；IFU、SHQ 和寄存器 bank 的小型实现位于头文件。
-两种核心都通过 Uop 的 Profile 引用取得执行时序和端口约束。
-两种实现的输入层均支持 CCE、Canonical JSON 和直接构造的 CanonicalVfInfo。
-`native/api/cce/` 对应 Python 的源码扫描、解析、规范化、仿射表达式和值版本化；
-`native/api/programmatic/` 提供显式 Builder 和 C++ 循环作用域守卫。
+`core/uarch/sub_exu.py` 按 self-II 维护子单元接收周期；
+`core/params/resources.py` 定义时序公式及参数校验。两份实现使用相同的共享配置。

@@ -1,0 +1,474 @@
+{
+  "date": "2026-11-09",
+  "reference_branch": "wch/VfSimulator-refactor",
+  "reference_commit": "97c1e122f27bb763b7c9cdb54c32aac0c5715de8",
+  "source_commits": [
+    "36636eb",
+    "ce1f87f",
+    "97c1e12"
+  ],
+  "targets": {
+    "wch/VfSim-tilesim": {
+      "python_tests_passed": 475,
+      "subtests_passed": 1943,
+      "packaged_files_checked": 71,
+      "preserved_interface": "api/tilesim and vfsimulator/api/tilesim",
+      "parameter_version_files": 6
+    },
+    "wch/vfsim-cpp-only": {
+      "ctest_targets_passed": 8,
+      "implementation": "C++17",
+      "python_source_files": 0
+    }
+  },
+  "wheel": {
+    "name": "vfsimulator-0.4.0-py3-none-any.whl",
+    "sha256": "f3ca897df0da88db8ab2c46a60ed71e871cd6a122b4a47ea3c04928f999000b6",
+    "isolated_install": true
+  },
+  "configuration_sha256": {
+    "cce_lowering.json": "4d4e4858815e5fdd070ffce3c40e3174354dfdd2d9e4c21bda4991478db17cc0",
+    "execution_resources.json": "25b2fa3b4215ce7acada28365b05346f50181161455af7bec7e52b6c928a787d",
+    "forwarding.json": "8fa38eddda63dd0e100a4a2d90c07c52f0688b26019e2476b3a30bac2282a5b1",
+    "InitiationInterval.json": "399229516de1a0dec4590c148c0d27b1937277cb793e4464883732a5ab7953b9",
+    "instruction_catalog.json": "4d0308fcb56119a0d378768b8c772e2ac1d04b2fa4df03eb6e1ec9db83a6ed47",
+    "isa.json": "aa5b6aa506c131f64b6e5e6c8de263e00b2b1a25d6f0b03c9d3458797b54ac1d",
+    "timing_overrides.json": "602389725ab85b786ea9306ce7b0b668106cdb02dfc6ff97977a8db2e349d004",
+    "uarch.json": "5917eb35b82101f49acde8e712b6177087b3208c4f0f0593cd07e57daa3a3e2c",
+    "uarch_override_schema.json": "4a53c7cd7a628945003ec04df188f080517042a6385a65227a4ffd46c7314a95"
+  },
+  "complete_input_comparisons": [
+    {
+      "id": "gelu_poly_i16_u1",
+      "cycles": 397,
+      "vf_end": 409,
+      "cpp_cycles": 397,
+      "cpp_vf_end": 409,
+      "matches_cpp": true,
+      "matches_refactor": true
+    },
+    {
+      "id": "gelu_poly_i64_u1",
+      "cycles": 1348,
+      "vf_end": 1360,
+      "cpp_cycles": 1348,
+      "cpp_vf_end": 1360,
+      "matches_cpp": true,
+      "matches_refactor": true
+    },
+    {
+      "id": "gelu_poly_i96_u1",
+      "cycles": 1980,
+      "vf_end": 1992,
+      "cpp_cycles": 1980,
+      "cpp_vf_end": 1992,
+      "matches_cpp": true,
+      "matches_refactor": true
+    },
+    {
+      "id": "gelu_i16_u1",
+      "cycles": 188,
+      "vf_end": 200,
+      "cpp_cycles": 188,
+      "cpp_vf_end": 200,
+      "matches_cpp": true,
+      "matches_refactor": true
+    },
+    {
+      "id": "online_update_i64_u1",
+      "cycles": 427,
+      "vf_end": 439,
+      "cpp_cycles": 427,
+      "cpp_vf_end": 439,
+      "matches_cpp": true,
+      "matches_refactor": true
+    },
+    {
+      "id": "probe_src_fanout",
+      "cycles": 270,
+      "vf_end": 282,
+      "cpp_cycles": 270,
+      "cpp_vf_end": 282,
+      "matches_cpp": true,
+      "matches_refactor": true
+    },
+    {
+      "id": "probe_branch_live_range",
+      "cycles": 206,
+      "vf_end": 218,
+      "cpp_cycles": 206,
+      "cpp_vf_end": 218,
+      "matches_cpp": true,
+      "matches_refactor": true
+    },
+    {
+      "id": "probe_store_capture_reuse",
+      "cycles": 305,
+      "vf_end": 317,
+      "cpp_cycles": 305,
+      "cpp_vf_end": 317,
+      "matches_cpp": true,
+      "matches_refactor": true
+    },
+    {
+      "id": "vadds_longchain_i16_1x512",
+      "cycles": 22141,
+      "vf_end": 22153,
+      "cpp_cycles": 22141,
+      "cpp_vf_end": 22153,
+      "matches_cpp": true,
+      "matches_refactor": true
+    },
+    {
+      "id": "vadds_longchain_i64_8x64",
+      "cycles": 39524,
+      "vf_end": 39536,
+      "cpp_cycles": 39524,
+      "cpp_vf_end": 39536,
+      "matches_cpp": true,
+      "matches_refactor": true
+    },
+    {
+      "id": "vadds_longchain_i128_128x4",
+      "cycles": 32815,
+      "vf_end": 32827,
+      "cpp_cycles": 32815,
+      "cpp_vf_end": 32827,
+      "matches_cpp": true,
+      "matches_refactor": true
+    },
+    {
+      "id": "vexp_longchain_i16_1x512",
+      "cycles": 95480,
+      "vf_end": 95492,
+      "cpp_cycles": 95480,
+      "cpp_vf_end": 95492,
+      "matches_cpp": true,
+      "matches_refactor": true
+    },
+    {
+      "id": "vexp_longchain_i64_8x64",
+      "cycles": 161186,
+      "vf_end": 161198,
+      "cpp_cycles": 161186,
+      "cpp_vf_end": 161198,
+      "matches_cpp": true,
+      "matches_refactor": true
+    },
+    {
+      "id": "vexp_longchain_i128_128x4",
+      "cycles": 131125,
+      "vf_end": 131137,
+      "cpp_cycles": 131125,
+      "cpp_vf_end": 131137,
+      "matches_cpp": true,
+      "matches_refactor": true
+    },
+    {
+      "id": "gelu_poly_i96_u2",
+      "cycles": 1931,
+      "vf_end": 1943,
+      "cpp_cycles": 1931,
+      "cpp_vf_end": 1943,
+      "matches_cpp": true,
+      "matches_refactor": true
+    },
+    {
+      "id": "gelu_poly_i96_u3",
+      "cycles": 1789,
+      "vf_end": 1801,
+      "cpp_cycles": 1789,
+      "cpp_vf_end": 1801,
+      "matches_cpp": true,
+      "matches_refactor": true
+    },
+    {
+      "id": "gelu_poly_i96_u4",
+      "cycles": 1735,
+      "vf_end": 1747,
+      "cpp_cycles": 1735,
+      "cpp_vf_end": 1747,
+      "matches_cpp": true,
+      "matches_refactor": true
+    },
+    {
+      "id": "gelu_poly_i96_u6",
+      "cycles": 1673,
+      "vf_end": 1685,
+      "cpp_cycles": 1673,
+      "cpp_vf_end": 1685,
+      "matches_cpp": true,
+      "matches_refactor": true
+    },
+    {
+      "id": "gelu_poly_i96_u8",
+      "cycles": 1679,
+      "vf_end": 1691,
+      "cpp_cycles": 1679,
+      "cpp_vf_end": 1691,
+      "matches_cpp": true,
+      "matches_refactor": true
+    },
+    {
+      "id": "silu_i16_u1",
+      "cycles": 151,
+      "vf_end": 163,
+      "cpp_cycles": 151,
+      "cpp_vf_end": 163,
+      "matches_cpp": true,
+      "matches_refactor": true
+    },
+    {
+      "id": "swiglu_i16_u1",
+      "cycles": 160,
+      "vf_end": 172,
+      "cpp_cycles": 160,
+      "cpp_vf_end": 172,
+      "matches_cpp": true,
+      "matches_refactor": true
+    },
+    {
+      "id": "silu_i64_u1",
+      "cycles": 407,
+      "vf_end": 419,
+      "cpp_cycles": 407,
+      "cpp_vf_end": 419,
+      "matches_cpp": true,
+      "matches_refactor": true
+    },
+    {
+      "id": "silu_i96_u1",
+      "cycles": 592,
+      "vf_end": 604,
+      "cpp_cycles": 592,
+      "cpp_vf_end": 604,
+      "matches_cpp": true,
+      "matches_refactor": true
+    },
+    {
+      "id": "swiglu_i64_u1",
+      "cycles": 462,
+      "vf_end": 474,
+      "cpp_cycles": 462,
+      "cpp_vf_end": 474,
+      "matches_cpp": true,
+      "matches_refactor": true
+    },
+    {
+      "id": "swiglu_i96_u1",
+      "cycles": 660,
+      "vf_end": 672,
+      "cpp_cycles": 660,
+      "cpp_vf_end": 672,
+      "matches_cpp": true,
+      "matches_refactor": true
+    },
+    {
+      "id": "softmax_expdif_mulcvt_u1_misched0_fa_softmax_macro_instr_ir_layout",
+      "cycles": 670,
+      "vf_end": 682,
+      "cpp_cycles": 670,
+      "cpp_vf_end": 682,
+      "matches_cpp": true,
+      "matches_refactor": true
+    },
+    {
+      "id": "softmax_expdif_mulcvt_u2_misched0_fa_softmax_macro_instr_ir_layout_u2",
+      "cycles": 615,
+      "vf_end": 627,
+      "cpp_cycles": 615,
+      "cpp_vf_end": 627,
+      "matches_cpp": true,
+      "matches_refactor": true
+    },
+    {
+      "id": "softmax_expdif_mulcvt_u4_misched0_fa_softmax_macro_instr_ir_layout_u4",
+      "cycles": 614,
+      "vf_end": 626,
+      "cpp_cycles": 614,
+      "cpp_vf_end": 626,
+      "matches_cpp": true,
+      "matches_refactor": true
+    },
+    {
+      "id": "softmax_expdif_vcvt_u1_misched0_fa_softmax_vcvt_only_u1",
+      "cycles": 650,
+      "vf_end": 662,
+      "cpp_cycles": 650,
+      "cpp_vf_end": 662,
+      "matches_cpp": true,
+      "matches_refactor": true
+    },
+    {
+      "id": "softmax_expdif_vcvt_u2_misched0_fa_softmax_vcvt_only_u2",
+      "cycles": 605,
+      "vf_end": 617,
+      "cpp_cycles": 605,
+      "cpp_vf_end": 617,
+      "matches_cpp": true,
+      "matches_refactor": true
+    },
+    {
+      "id": "softmax_expdif_vcvt_u4_misched0_fa_softmax_vcvt_only_u4",
+      "cycles": 603,
+      "vf_end": 615,
+      "cpp_cycles": 603,
+      "cpp_vf_end": 615,
+      "matches_cpp": true,
+      "matches_refactor": true
+    },
+    {
+      "id": "softmax_sub_exp_mulcvt_u1_misched0_fa_softmax_sub_exp_only_u1",
+      "cycles": 710,
+      "vf_end": 722,
+      "cpp_cycles": 710,
+      "cpp_vf_end": 722,
+      "matches_cpp": true,
+      "matches_refactor": true
+    },
+    {
+      "id": "softmax_sub_exp_mulcvt_u2_misched0_fa_softmax_sub_exp_only_u2",
+      "cycles": 663,
+      "vf_end": 675,
+      "cpp_cycles": 663,
+      "cpp_vf_end": 675,
+      "matches_cpp": true,
+      "matches_refactor": true
+    },
+    {
+      "id": "softmax_sub_exp_mulcvt_u4_misched0_fa_softmax_sub_exp_only_u4",
+      "cycles": 668,
+      "vf_end": 680,
+      "cpp_cycles": 668,
+      "cpp_vf_end": 680,
+      "matches_cpp": true,
+      "matches_refactor": true
+    },
+    {
+      "id": "softmax_sub_exp_vcvt_u1_misched0_fa_softmax_sub_exp_vcvt_u1",
+      "cycles": 678,
+      "vf_end": 690,
+      "cpp_cycles": 678,
+      "cpp_vf_end": 690,
+      "matches_cpp": true,
+      "matches_refactor": true
+    },
+    {
+      "id": "softmax_sub_exp_vcvt_u2_misched0_fa_softmax_sub_exp_vcvt_u2",
+      "cycles": 659,
+      "vf_end": 671,
+      "cpp_cycles": 659,
+      "cpp_vf_end": 671,
+      "matches_cpp": true,
+      "matches_refactor": true
+    },
+    {
+      "id": "softmax_sub_exp_vcvt_u4_misched0_fa_softmax_sub_exp_vcvt_u4",
+      "cycles": 659,
+      "vf_end": 671,
+      "cpp_cycles": 659,
+      "cpp_vf_end": 671,
+      "matches_cpp": true,
+      "matches_refactor": true
+    },
+    {
+      "id": "GeLU",
+      "cycles": 188,
+      "vf_end": 200,
+      "cpp_cycles": 188,
+      "cpp_vf_end": 200,
+      "matches_cpp": true,
+      "matches_refactor": true
+    },
+    {
+      "id": "GeLU_poly",
+      "cycles": 1735,
+      "vf_end": 1747,
+      "cpp_cycles": 1735,
+      "cpp_vf_end": 1747,
+      "matches_cpp": true,
+      "matches_refactor": true
+    },
+    {
+      "id": "SiLU",
+      "cycles": 151,
+      "vf_end": 163,
+      "cpp_cycles": 151,
+      "cpp_vf_end": 163,
+      "matches_cpp": true,
+      "matches_refactor": true
+    },
+    {
+      "id": "SwiGLU",
+      "cycles": 160,
+      "vf_end": 172,
+      "cpp_cycles": 160,
+      "cpp_vf_end": 172,
+      "matches_cpp": true,
+      "matches_refactor": true
+    },
+    {
+      "id": "VADD_oneloop",
+      "cycles": 123,
+      "vf_end": 135,
+      "cpp_cycles": 123,
+      "cpp_vf_end": 135,
+      "matches_cpp": true,
+      "matches_refactor": true
+    },
+    {
+      "id": "VADD_parallelloop",
+      "cycles": 2619,
+      "vf_end": 2631,
+      "cpp_cycles": 2619,
+      "cpp_vf_end": 2631,
+      "matches_cpp": true,
+      "matches_refactor": true
+    },
+    {
+      "id": "VADD_twoloop",
+      "cycles": 78,
+      "vf_end": 90,
+      "cpp_cycles": 78,
+      "cpp_vf_end": 90,
+      "matches_cpp": true,
+      "matches_refactor": true
+    },
+    {
+      "id": "online_update",
+      "cycles": 427,
+      "vf_end": 439,
+      "cpp_cycles": 427,
+      "cpp_vf_end": 439,
+      "matches_cpp": true,
+      "matches_refactor": true
+    },
+    {
+      "id": "online_update_I64_tmp",
+      "cycles": 427,
+      "vf_end": 439,
+      "cpp_cycles": 427,
+      "cpp_vf_end": 439,
+      "matches_cpp": true,
+      "matches_refactor": true
+    },
+    {
+      "id": "tadd_tcvt_tadd",
+      "cycles": 72,
+      "vf_end": 84,
+      "cpp_cycles": 72,
+      "cpp_vf_end": 84,
+      "matches_cpp": true,
+      "matches_refactor": true
+    },
+    {
+      "id": "two_loops_mem_bar_min",
+      "cycles": 75,
+      "vf_end": 87,
+      "cpp_cycles": 75,
+      "cpp_vf_end": 87,
+      "matches_cpp": true,
+      "matches_refactor": true
+    }
+  ]
+}

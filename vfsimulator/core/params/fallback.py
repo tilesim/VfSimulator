@@ -84,10 +84,10 @@ def missing_instruction(defaults, op, form, dtype, warnings, kind):
     return params
 
 
-def missing_forwarding(producer, consumer, offset, warnings):
+def missing_forwarding(producer, consumer, offset, load_store_interval, warnings):
     latency = int(producer.get("latency", 0))
     if producer.get("op_class") == "LOAD" and consumer.get("op_class") == "STORE":
-        cycles, rule = 6, "load_store_default"
+        cycles, rule = load_store_interval, "load_store_default"
     else:
         cycles, rule = max(0, latency-offset), "producer_latency_minus_default_offset"
     record_warning(warnings, "missing_forwarding_pair",
@@ -97,12 +97,13 @@ def missing_forwarding(producer, consumer, offset, warnings):
     return cycles
 
 
-def missing_ii(previous, current, warnings):
+def missing_ii(previous, current, default_interval, collision_penalty, warnings):
     prev_latency = int(previous.get("latency", 9))
     cur_latency = int(current.get("latency", 9))
-    cycles = 2 if prev_latency-cur_latency == 1 else 1
+    collision = prev_latency-cur_latency == default_interval
+    cycles = default_interval + (collision_penalty if collision else 0)
     record_warning(warnings, "missing_ii_pair",
                    prev=f"{previous['op']}.{previous['form']}", cur=f"{current['op']}.{current['form']}",
                    prev_latency=prev_latency, cur_latency=cur_latency, used_default=cycles,
-                   rule="prev_latency_minus_cur_latency_eq_1" if cycles==2 else "default_one")
+                   rule="latency_delta_equals_default_interval" if collision else "default_interval")
     return cycles

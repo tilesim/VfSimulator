@@ -2,6 +2,7 @@ from __future__ import annotations
 from typing import List, Optional
 from core.execution.instruction import Uop
 from core.params.types import InstructionProfile, UarchParameters
+from .sub_exu import SubEXU
 
 class EXU:
     """Execution ports, issue timing and per-bank writeback reservations."""
@@ -16,7 +17,9 @@ class EXU:
         self.last_issue_cycle_exu = [-10 ** 9] * self.issue_ports
         self.last_profile = {'ALU': [None] * self.issue_ports, 'SFU': [None] * self.issue_ports}
         self.last_profile_exu = [None] * self.issue_ports
-        self._self_issue_ready = [{} for _ in range(self.issue_ports)]
+        self.sub_exus = [{name: SubEXU() for name in db.execution_resources} for _ in range(self.issue_ports)]
+        self._entry_cycle = [-10**9] * self.issue_ports
+        self._override_ready = [{} for _ in range(self.issue_ports)]
         self._completion_cycles = [
             {'vector': set(), 'predicate': set()} for _ in range(self.issue_ports)
         ]
@@ -29,8 +32,13 @@ class EXU:
             return True
         return self.exq_inflight[port] < self.exq_issue_inflight_cap_per_port
 
-    def next_self_issue_cycle(self, profile: InstructionProfile, port: int) -> int:
-        return self._self_issue_ready[port].get((profile.op, profile.requested_form), -10 ** 9)
+    @staticmethod
+    def resource_key(profile: InstructionProfile) -> str:
+        return profile.execution_resource or f'op:{profile.op}.{profile.resolved_form}'
+
+    def next_resource_issue_cycle(self, profile: InstructionProfile, port: int) -> int:
+        unit = self.sub_exus[port].get(self.resource_key(profile))
+        return unit.ready_cycle if unit is not None else -10**9
 
     def next_completion_issue_cycle(self, uop: Uop, port: int, cycle: int) -> int:
         reserved = self._completion_cycles[port]
@@ -48,8 +56,13 @@ class EXU:
         else:
             previous_cycle = self.last_issue_cycle[fu_type][port]
             previous_profile = self.last_profile[fu_type][port]
-        adjacent_ready = previous_cycle + self.db.get_ii_for_profiles(previous_profile, profile)
-        earliest = max(not_before, adjacent_ready, self.next_self_issue_cycle(profile, port))
+        # Resource cooldowns and explicit exceptions keep their own anchors,
+        # independently of the most recently issued opcode or FU category.
+        earliest = max(not_before, self._entry_cycle[port]+1,
+                       self.next_resource_issue_cycle(profile, port),
+                       self._override_ready[port].get(f'{profile.op}.{profile.resolved_form}', -10**9))
+        if previous_profile is not None and (not profile.execution_resource or not previous_profile.execution_resource):
+            earliest = max(earliest, previous_cycle + self.db.get_ii_for_profiles(previous_profile, profile))
         return self.next_completion_issue_cycle(uop, port, earliest)
 
     def can_issue(self, uop: Uop, port: int, cycle: int, *, queued: bool = False) -> bool:
@@ -124,12 +137,12 @@ class EXU:
         for bank in uop.writeback_banks:
             self._completion_cycles[port][bank].add(done_cycle)
         self.exq_inflight[port] += 1
-        # Other opcodes, including those in the same FU class, cannot clear
-        # this form's outstanding self-II restriction.
         profile = uop.profile
-        self._self_issue_ready[port][(profile.op, profile.requested_form)] = (
-            cycle + self.db.get_ii_for_profiles(profile, profile)
-        )
+        unit = self.sub_exus[port].setdefault(self.resource_key(profile), SubEXU())
+        unit.start(cycle, self.db.get_ii_for_profiles(profile, profile))
+        self._entry_cycle[port] = cycle
+        for target, gap in self.db.issue_overrides_for_profile(profile).items():
+            self._override_ready[port][target] = max(self._override_ready[port].get(target, -10**9), cycle+gap)
         if queued or self.enable_cross_fu_ii:
             self.last_issue_cycle_exu[port] = cycle
             self.last_profile_exu[port] = uop.profile

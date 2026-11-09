@@ -92,19 +92,34 @@ def test_repeated_calls_reuse_parameters_and_observe_file_changes(tmp_path, pref
     output = tmp_path / "silent"
     with patch.object(loader, "read_json", wraps=loader.read_json) as read:
         first = api.predict_from_program(value, config_root=config, out_dir=output, dump_results=False)
-        assert read.call_count == 4
+        assert read.call_count == 6
         cycles = first["cycles"]
         first["raw"]["vf_end_cycle"] = -1
         second = api.predict_from_program(value, config_root=config, out_dir=output, dump_results=False)
         assert second["cycles"] == second["raw"]["vf_end_cycle"] == cycles
-        assert read.call_count == 4
+        assert read.call_count == 6
         assert not output.exists()
         path = config / "configs/uarch.json"
         settings = json.loads(path.read_text())
         settings["exq_issue_inflight_cap_per_port"] = 8
         path.write_text(json.dumps(settings))
         assert api.predict_from_program(value, config_root=config, dump_results=False)["cycles"] > 0
-        assert read.call_count == 8
+        assert read.call_count == 12
+        path = config / "configs/execution_resources.json"
+        settings = json.loads(path.read_text())
+        settings["forwarding"]["compute_store_offset"] = 5
+        path.write_text(json.dumps(settings))
+        api.predict_from_program(value, config_root=config, dump_results=False)
+        assert read.call_count == 18
+        path = config / "configs/timing_overrides.json"
+        settings = json.loads(path.read_text())
+        settings["forwarding"].setdefault("VLDS.fp32", {})["VADDS.fp32"] = 11
+        path.write_text(json.dumps(settings))
+        final = api.predict_from_program(value, config_root=config, dump_results=False)
+        assert read.call_count == 24
+        assert predict._model.cache_info().misses == 4
+    fresh = import_module(prefix + "core.simulator").CoreVfCostModel(base_dir=config, out_dir=None)
+    assert final["cycles"] == fresh.predict_vf_cycles(api.program_to_canonical(value))
 
 
 @pytest.mark.parametrize("kwargs", [{"offset": True, "span": 1}, {"offset": 0, "span": True}])

@@ -8,6 +8,7 @@ from pathlib import Path
 from copy import deepcopy
 from .types import LoadedParameters, VfTiming
 from .uarch import parse_uarch
+from .resources import validate_resources
 
 
 def resolve_path(base_dir, *, explicit, env_key, candidates, required=True):
@@ -72,14 +73,13 @@ def merge_parameters(base: Mapping, overrides: Mapping) -> dict:
 def load_parameters(
     base_dir, *, isa_path=None, uarch_path=None, forwarding_path=None, ii_path=None
 ):
-    isa = read_json(
-        resolve_path(
-            base_dir,
-            explicit=isa_path,
-            env_key="ISA_JSON_PATH",
-            candidates=("configs/isa.json", "isa.json"),
-        )
+    isa_file = resolve_path(
+        base_dir,
+        explicit=isa_path,
+        env_key="ISA_JSON_PATH",
+        candidates=("configs/isa.json", "isa.json"),
     )
+    isa = read_json(isa_file)
     uarch = read_json(
         resolve_path(
             base_dir,
@@ -131,14 +131,19 @@ def load_parameters(
                     raise ValueError(f"ISA {op}.{form} must be an object")
                 if "latency" in params:
                     _integer(params["latency"], f"ISA {op}.{form}.latency")
-    _integer(
-        forwarding.get("default", forwarding.get("defaults", 3)), "forwarding.default"
-    )
-    _integer(ii.get("defaults", 1), "II.defaults", 1)
+    resource_path = resolve_path(isa_file.parent, explicit=None,
+        env_key="EXECUTION_RESOURCES_JSON_PATH", candidates=("execution_resources.json",), required=False)
+    resources = read_json(resource_path or Path(__file__).resolve().parents[2] / 'configs/execution_resources.json')
+    overrides = read_json(resolve_path(isa_file.parent, explicit=None,
+        env_key="TIMING_OVERRIDES_JSON_PATH", candidates=("timing_overrides.json",), required=False))
+    validate_resources(resources, overrides, isa)
+    _integer(forwarding.get("default", forwarding.get("defaults", resources['forwarding']['fallback_offset'])),
+             "forwarding.default")
+    _integer(ii.get("defaults", resources['ii']['different_resource_interval']), "II.defaults", 1)
     validate_pair_table(forwarding.get("forwarding", {}), "forwarding", 0)
     validate_pair_table(ii.get("InitiationInterval", {}), "II", 1)
     timing = VfTiming(
         _integer(defaults.get("vf_startup_cost", 0), "vf_startup_cost"),
         _integer(defaults.get("vf_drain_cost", 0), "vf_drain_cost"),
     )
-    return LoadedParameters(isa, uarch, base_uarch, forwarding, ii, timing)
+    return LoadedParameters(isa, uarch, base_uarch, forwarding, ii, timing, resources, overrides)
