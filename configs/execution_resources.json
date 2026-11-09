@@ -30,6 +30,13 @@
         "MOV": 3,
         "LNEXP": 3
       }
-    }
+    },
+    "compute_store_offset": 2,
+    "fallback_offset": 3,
+    "load_store_interval": 6
+  },
+  "ii": {
+    "different_resource_interval": 1,
+    "writeback_collision_penalty": 1
   }
 }

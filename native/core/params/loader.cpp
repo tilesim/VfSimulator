@@ -140,9 +140,10 @@ ParamBundle loadParameters(const std::filesystem::path &baseDir) {
                            : std::unordered_map<std::string, JsonValue>{};
   const auto iiRoot = iiPath ? loadObjectFile(*iiPath)
                              : std::unordered_map<std::string, JsonValue>{};
-  const auto resourceRoot = resourcePath ? loadObjectFile(*resourcePath) : JsonValue::Object{};
+  const auto resourceRoot = loadObjectFile(resourcePath.value_or(
+      std::filesystem::path(VFSIM_SOURCE_ROOT) / "configs/execution_resources.json"));
   const auto overrideRoot = overridePath ? loadObjectFile(*overridePath) : JsonValue::Object{};
-  if (resourcePath) {
+  {
     if (readIntField(resourceRoot, "schema_version") != 1)
       throw std::runtime_error("execution_resources requires schema_version=1");
     const auto *groups = findKey(resourceRoot, "groups");
@@ -161,11 +162,25 @@ ParamBundle loadParameters(const std::filesystem::path &baseDir) {
     if (!forwarding || !forwarding->isObject())
       throw std::runtime_error("execution_resources.forwarding must be an object");
     const auto &policy = forwarding->asObject();
-    for (const auto *field : {"minimum", "default_offset", "pair_offsets"})
+    for (const auto *field : {"minimum", "default_offset", "pair_offsets", "compute_store_offset",
+                             "fallback_offset", "load_store_interval"})
       if (!findKey(policy, field))
         throw std::runtime_error("Missing resource forwarding field");
     bundle.resourceForwardingMinimum = readIntField(policy, "minimum");
     bundle.resourceForwardingDefaultOffset = readIntField(policy, "default_offset");
+    bundle.computeStoreForwardingOffset = readIntField(policy, "compute_store_offset");
+    bundle.forwardingDefaultOffset = readIntField(policy, "fallback_offset");
+    bundle.loadStoreForwardingInterval = readIntField(policy, "load_store_interval");
+    const auto *iiPolicy = findKey(resourceRoot, "ii");
+    if (!iiPolicy || !iiPolicy->isObject())
+      throw std::runtime_error("execution_resources.ii must be an object");
+    for (const auto *field : {"different_resource_interval", "writeback_collision_penalty"})
+      if (!findKey(iiPolicy->asObject(), field))
+        throw std::runtime_error("Missing resource II field");
+    bundle.crossResourceIssueInterval = readIntField(iiPolicy->asObject(), "different_resource_interval");
+    bundle.writebackCollisionPenalty = readIntField(iiPolicy->asObject(), "writeback_collision_penalty");
+    if (bundle.crossResourceIssueInterval < 1)
+      throw std::runtime_error("different_resource_interval must be positive");
     const auto &offsets = policy.at("pair_offsets");
     if (!offsets.isObject())
       throw std::runtime_error("Resource forwarding offsets must be an object");
@@ -267,7 +282,8 @@ ParamBundle loadParameters(const std::filesystem::path &baseDir) {
 
   bundle.uarch = parseUarch(uarchRoot);
   bundle.forwardingDefaultOffset =
-      readIntField(fwdRoot, "default", readIntField(fwdRoot, "defaults", 3));
+      readIntField(fwdRoot, "default", readIntField(fwdRoot, "defaults", bundle.forwardingDefaultOffset));
+  bundle.initiationIntervalDefault = readIntField(iiRoot, "defaults", bundle.crossResourceIssueInterval);
   auto readPairs = [&](const JsonValue::Object &root, const char *key,
                        int64_t minimum, auto &table) {
     const auto *node = findKey(root, key);

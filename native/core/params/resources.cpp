@@ -24,10 +24,10 @@ std::vector<std::string> instructionBanks(const std::string &op) {
   return banks;
 }
 
-std::optional<int64_t> computeStoreForwarding(const InstructionProfile &producer,
+std::optional<int64_t> computeStoreForwarding(const ParamBundle &rules, const InstructionProfile &producer,
                                             const InstructionProfile &consumer) {
   if (producer.opClass == "COMPUTE" && consumer.opClass == "STORE")
-    return std::max<int64_t>(0, producer.latency - 2);
+    return std::max<int64_t>(0, producer.latency - rules.computeStoreForwardingOffset);
   return std::nullopt;
 }
 
@@ -45,20 +45,20 @@ std::optional<int64_t> forwardingInterval(const ParamBundle &rules,
   return std::max(rules.resourceForwardingMinimum, producer.latency - offset);
 }
 
-std::optional<int64_t> issueInterval(const InstructionProfile &previous,
+std::optional<int64_t> issueInterval(const ParamBundle &rules, const InstructionProfile &previous,
                                    const InstructionProfile &current) {
   if (previous.executionResource.empty() || current.executionResource.empty())
     return std::nullopt;
   const bool sharedResource = previous.executionResource == current.executionResource;
   if (sharedResource && !previous.selfIi)
     return std::nullopt;
-  auto gap = sharedResource ? *previous.selfIi : 1;
+  auto gap = sharedResource ? *previous.selfIi : rules.crossResourceIssueInterval;
   const bool sharedBank = std::any_of(previous.writebackBanks.begin(), previous.writebackBanks.end(),
       [&](const auto &bank) {
         return std::find(current.writebackBanks.begin(), current.writebackBanks.end(), bank) != current.writebackBanks.end();
       });
   if (sharedBank && previous.latency == gap + current.latency)
-    ++gap;
+    gap += rules.writebackCollisionPenalty;
   return gap;
 }
 

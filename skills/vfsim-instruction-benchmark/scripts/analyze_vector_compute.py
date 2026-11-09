@@ -192,7 +192,8 @@ def apply_parameters(parameters, root, apply, replace=()):
     }
     documents = {name: json.loads(path.read_text()) for name, path in paths.items()}
     resource_path = root / "configs/execution_resources.json"
-    resources = json.loads(resource_path.read_text()) if resource_path.exists() else None
+    resources = json.loads((resource_path if resource_path.exists()
+                            else probe.ROOT / "configs/execution_resources.json").read_text())
     override_path = root / "configs/timing_overrides.json"
     if resources:
         paths["timing_overrides.json"] = override_path
@@ -264,11 +265,11 @@ def apply_parameters(parameters, root, apply, replace=()):
                     continue
                 path = section + "." + producer + "->" + consumer
                 previous, current = profile(producer), profile(consumer)
-                store = compute_store_forwarding(previous, current) if section == "forwarding" else None
+                store = compute_store_forwarding(resources, previous, current) if section == "forwarding" else None
                 if store is not None:
                     if value != store:
                         conflicts.append(dict(path=path, configured=store, observed=value,
-                                              rule="compute_latency_minus_two"))
+                                              rule="compute_latency_minus_store_offset"))
                     else:
                         for explicit in (documents[filename][table],
                                          documents.get("timing_overrides.json", {}).get("forwarding", {})):
@@ -279,7 +280,7 @@ def apply_parameters(parameters, root, apply, replace=()):
                     continue
                 estimate = None
                 if resources:
-                    estimate = (issue_interval(previous, current) if section == "ii"
+                    estimate = (issue_interval(resources, previous, current) if section == "ii"
                         else forwarding_interval(resources, previous.execution_resource,
                                                  current.execution_resource, previous.latency))
                 if not (resources and previous.execution_resource and current.execution_resource):

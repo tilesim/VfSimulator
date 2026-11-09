@@ -12,7 +12,7 @@
 | [uarch.json](../configs/uarch.json) | 资源容量、传输延迟、循环、调度和屏障参数 | `loader.py`、`uarch.py`、执行组件 |
 | [uarch_override_schema.json](../configs/uarch_override_schema.json) | Canonical 标量覆盖的字段类型及 Python/C++ 支持范围 | API 配置校验和共享表生成 |
 | [isa.json](../configs/isa.json) | 指令 form 的 latency、FU、端口、`execution_resource` 及 VF startup/drain | 指令 Profile 解析 |
-| [execution_resources.json](../configs/execution_resources.json) | 子 EXU 名称和 forwarding 推导规则 | 参数查询与 EXU 资源状态 |
+| [execution_resources.json](../configs/execution_resources.json) | 子 EXU 名称、forwarding 偏移和静态 II 推导系数 | 参数查询与 EXU 资源状态 |
 | [timing_overrides.json](../configs/timing_overrides.json) | 偏离分组规律的有向 II、forwarding 指令对 | 参数查询与发射约束 |
 | [forwarding.json](../configs/forwarding.json) | producer 到 consumer 的可用间隔 | 寄存器和对齐状态就绪查询 |
 | [InitiationInterval.json](../configs/InitiationInterval.json) | self-II 及未分组指令的显式交叉间隔 | 子单元接收间隔与 EXU 发射仲裁 |
@@ -28,8 +28,9 @@ Catalog 提供语义声明，ISA、forwarding 和 II 提供执行时序。Catalo
 `II_JSON_PATH`、`EXECUTION_RESOURCES_JSON_PATH` 和 `TIMING_OVERRIDES_JSON_PATH`。
 默认文件位于 `configs/`，loader 也检查根目录候选路径。
 资源规则和例外表默认从所选 ISA 文件的同目录加载；环境变量可单独指定这两份文件。
+本地缺少资源规则文件时，读取项目自带的 `configs/execution_resources.json`。
 ISA 与 uarch 文件必须存在；可选 forwarding/II 文件缺失时使用查询回退规则。
-资源分组与例外表可按需提供；声明 `execution_resource` 的 form 需要对应资源定义。
+例外表可按需提供；资源规则包含完整的系数声明，字段缺失或类型错误时加载失败。
 格式错误、未知资源、无效指令对及字段类型错误会抛出异常。
 
 `CoreVfCostModel` 创建时加载一次参数快照，连续调用 `run_vf_info()` 复用该快照。
@@ -112,12 +113,18 @@ form 优先精确匹配，查询可使用 `b16→fp16`、`b32→fp32` 备选。
 
 COMPUTE→STORE 的 forwarding 统一使用 `max(0, producer_latency-2)`，按指令类别匹配，
 覆盖向量、谓词、scatter 等源依赖。该类查询直接应用公式。
+其中 `2` 读取 `execution_resources.json.forwarding.compute_store_offset`。
 其他 forwarding 按例外表、显式指令对、producer 的 `*`、资源规则的顺序查询。
 两端均分组时使用 `max(2, producer_latency-offset)`，涉及 LNEXP 时 offset=3，
 其他分组对 offset=4。例外表保留偏离规则的参数。
 缺失 LOAD→STORE 对使用 6 cycles，其他缺失对使用 `max(0, producer_latency-3)`。
 II 按例外表、显式指令对、资源规则查询。同组使用前条指令的 self-II，异组基础间隔为 1；
 静态完成周期碰撞时加 1。缺失对在前条 latency 比后条大 1 时取 2，否则取 1。
+跨资源基础间隔和静态碰撞修正量分别由 `ii.different_resource_interval`、
+`ii.writeback_collision_penalty` 声明。缺失 II 使用 `InitiationInterval.json.defaults`，
+latency 差等于该默认间隔时加上碰撞修正量。该文件缺少 `defaults` 时采用跨资源基础间隔。
+缺失 forwarding 的偏移和 LOAD→STORE 默认间隔分别由 `forwarding.fallback_offset`、
+`forwarding.load_store_interval` 声明；显式参数文件中的 `default/defaults` 可覆盖 fallback 偏移。
 缺失参数记录于 `model_warnings.json`，精度覆盖需结合测量证据判断。
 资源规则属于有依据的估计；逐对实测范围和运行时约束见[子 EXU 模型](execution_resources.md)。
 

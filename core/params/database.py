@@ -51,14 +51,13 @@ class ParamDB:
         self._defaults = data.isa.get("defaults", {})
         self._insts = data.isa.get("instructions", {})
         self._isa_schema_version = data.isa.get("schema_version", 1)
+        self.resource_timing = data.resource_timing
         self._fwd_default_offset = data.forwarding.get(
-            "default", data.forwarding.get("defaults", 3)
+            "default", data.forwarding.get("defaults", self.resource_timing['forwarding']['fallback_offset'])
         )
         self._fwd_table = data.forwarding.get("forwarding", {})
-        self._ii_default = data.initiation_interval.get("defaults", 1)
+        self._ii_default = data.initiation_interval.get("defaults", self.resource_timing['ii']['different_resource_interval'])
         self._ii_table = data.initiation_interval.get("InitiationInterval", {})
-        self.resource_timing = data.resource_timing or {
-            'groups': [], 'forwarding': dict(minimum=2, default_offset=4, pair_offsets={})}
         self.timing_overrides = data.timing_overrides or {'ii': {}, 'forwarding': {}}
         self.execution_resources = tuple(self.resource_timing['groups'])
         self._warnings = {}
@@ -455,7 +454,7 @@ class ParamDB:
         cached = self._forwarding_profile_cache.get(key)
         if cached is not None:
             return cached
-        value = compute_store_forwarding(producer, consumer)
+        value = compute_store_forwarding(self.resource_timing, producer, consumer)
         if value is not None:
             self._forwarding_profile_cache[key] = value
             return value
@@ -581,7 +580,8 @@ class ParamDB:
         producer = self.get_inst_form(p, form=producer_form, dtype=dtype)
         consumer = self.get_inst_form(c, form=consumer_form, dtype=dtype)
         return missing_forwarding(
-            producer, consumer, self._fwd_default_offset, self._warnings
+            producer, consumer, self._fwd_default_offset,
+            self.resource_timing['forwarding']['load_store_interval'], self._warnings
         )
 
     def get_ii(
@@ -673,7 +673,7 @@ class ParamDB:
                 return max(1, int(prev_map[c]))
         previous = self.resolve_inst(p, pf, dtype)
         current = self.resolve_inst(c, cf, dtype)
-        derived = issue_interval(previous, current)
+        derived = issue_interval(self.resource_timing, previous, current)
         if derived is not None:
             if pf != previous.resolved_form or cf != current.resolved_form:
                 self.record_warning('compatible_ii_pair_fallback', prev=f'{p}.{pf}', cur=f'{c}.{cf}',
@@ -681,4 +681,5 @@ class ParamDB:
             return derived
         previous = self.get_inst_form(p, form=prev_form, dtype=dtype)
         current = self.get_inst_form(c, form=cur_form, dtype=dtype)
-        return missing_ii(previous, current, self._warnings)
+        return missing_ii(previous, current, self._ii_default,
+                          self.resource_timing['ii']['writeback_collision_penalty'], self._warnings)

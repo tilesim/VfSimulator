@@ -54,10 +54,28 @@ EXQ 按资源分队列，所有资源队列共享同一物理端口的 `exq_dept
 
 ## 参数查询
 
+推导系数保存在 [execution_resources.json](../configs/execution_resources.json)。
+Python、C++ 和 benchmark 分析工具读取同一份参数；模型创建时保存参数快照。
+
+| 参数字段 | 当前值 | 含义 |
+| --- | ---: | --- |
+| `forwarding.compute_store_offset` | 2 | COMPUTE→STORE 的 latency 偏移 |
+| `forwarding.minimum` | 2 | 已分组 COMPUTE→COMPUTE 的 forwarding 下限 |
+| `forwarding.default_offset` | 4 | 分组 forwarding 的默认偏移 |
+| `forwarding.pair_offsets` | 涉及 LNEXP 时为 3 | 特定有向资源组对的偏移 |
+| `forwarding.fallback_offset` | 3 | 缺失 forwarding 指令对的默认偏移 |
+| `forwarding.load_store_interval` | 6 | 缺失 LOAD→STORE 指令对的默认间隔 |
+| `ii.different_resource_interval` | 1 | 静态交叉 II 查询的异组基础间隔 |
+| `ii.writeback_collision_penalty` | 1 | 静态完成周期碰撞的 II 修正量 |
+
+指令 latency 保存在 `isa.json.instructions.OP.forms.FORM.latency`，self-II 保存在
+`InitiationInterval.json.InitiationInterval["OP.form"]["OP.form"]`；未测 II 的默认间隔
+读取该文件的 `defaults`。非负下限和每周期接收、完成名额由各自的模型约束维护。
+
 COMPUTE→STORE 的 forwarding 按 producer 的当前 latency 统一推导：
 
 ```text
-fwd(COMPUTE, STORE) = max(0, latency(COMPUTE) - 2)
+fwd(COMPUTE, STORE) = max(0, latency(COMPUTE) - compute_store_offset)
 ```
 
 该规则按 Profile 的 `op_class` 匹配，覆盖向量数据、谓词和索引依赖；
@@ -74,17 +92,17 @@ forwarding 的 Catalog opcode 继承和 producer `*` 规则继续参与显式查
 
 ```text
 gap(A, B) = self_II(A)    两者同组
-gap(A, B) = 1             两者异组
+gap(A, B) = different_resource_interval    两者异组
 ```
 
 若两者写同类寄存器，且 `latency(A) == gap + latency(B)`，静态 II 查询返回
-`gap+1`。例如 VMUL.fp32 latency=8、VADD.fp32 latency=7，基础间隔为 1，
+`gap+writeback_collision_penalty`。例如 VMUL.fp32 latency=8、VADD.fp32 latency=7，基础间隔为 1，
 写回冲突使查询 II=2。实际发射通过完成周期预留检查所有在执行指令的冲突。
 
 COMPUTE→COMPUTE 的资源公式由 [execution_resources.json](../configs/execution_resources.json) 定义：
 
 ```text
-fwd(A, B) = max(2, latency(A) - offset)
+fwd(A, B) = max(minimum, latency(A) - offset)
 offset = 3    任一端属于 LNEXP
 offset = 4    其余已分组组合
 ```

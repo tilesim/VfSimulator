@@ -122,5 +122,5 @@ class LoadedParameters:
     forwarding: dict[str, Any]
     initiation_interval: dict[str, Any]
     vf_timing: VfTiming
-    resource_timing: dict[str, Any] | None = None
+    resource_timing: dict[str, Any]
     timing_overrides: dict[str, Any] | None = None

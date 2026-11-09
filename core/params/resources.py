@@ -21,28 +21,27 @@ def forwarding_interval(rules, producer_group, consumer_group, latency):
     return max(policy['minimum'], latency-offset)
 
 
-def compute_store_forwarding(producer, consumer):
+def compute_store_forwarding(rules, producer, consumer):
     if producer.op_class == 'COMPUTE' and consumer.op_class == 'STORE':
-        return max(0, producer.latency - 2)
+        return max(0, producer.latency - rules['forwarding']['compute_store_offset'])
     return None
 
 
-def issue_interval(previous, current):
+def issue_interval(rules, previous, current):
     if not previous.execution_resource or not current.execution_resource:
         return None
-    gap = previous.self_ii if previous.execution_resource == current.execution_resource else 1
+    policy = rules['ii']
+    gap = (previous.self_ii if previous.execution_resource == current.execution_resource
+           else policy['different_resource_interval'])
     if gap is None:
         return None
     if (previous.writeback_banks & current.writeback_banks and
             previous.latency == gap + current.latency):
-        gap += 1
+        gap += policy['writeback_collision_penalty']
     return gap
 
 
 def validate_resources(rules, overrides, isa):
-    if not rules:
-        rules.update(schema_version=1, groups=[], forwarding=dict(
-            minimum=2, default_offset=4, pair_offsets={}))
     if rules.get('schema_version') != 1 or type(rules['schema_version']) is not int:
         raise ValueError('execution_resources requires schema_version=1')
     groups = rules.get('groups')
@@ -52,7 +51,7 @@ def validate_resources(rules, overrides, isa):
     forwarding = rules.get('forwarding')
     if not isinstance(forwarding, dict):
         raise ValueError('execution_resources.forwarding must be an object')
-    for key in ('minimum', 'default_offset'):
+    for key in ('minimum', 'default_offset', 'compute_store_offset', 'fallback_offset', 'load_store_interval'):
         if type(forwarding.get(key)) is not int or forwarding[key] < 0:
             raise ValueError(f'execution_resources.forwarding.{key} must be a nonnegative integer')
     offsets = forwarding.get('pair_offsets')
@@ -64,6 +63,12 @@ def validate_resources(rules, overrides, isa):
         for b, value in row.items():
             if b not in groups or type(value) is not int or value < 0:
                 raise ValueError(f'Invalid forwarding resource offset: {a}->{b}')
+    ii = rules.get('ii')
+    if not isinstance(ii, dict):
+        raise ValueError('execution_resources.ii must be an object')
+    for key, minimum in (('different_resource_interval', 1), ('writeback_collision_penalty', 0)):
+        if type(ii.get(key)) is not int or ii[key] < minimum:
+            raise ValueError(f'execution_resources.ii.{key} must be an integer >= {minimum}')
     instructions = isa.get('instructions', {})
     forms = {}
     for op, node in instructions.items():

@@ -131,9 +131,20 @@ class OperatorPairBenchmarkTests(unittest.TestCase):
             _, conflicts = PARAMETERS.apply_parameters(measured, root, True,
                 replace=('forwarding.VADD.fp32->VSTS.fp32',))
             self.assertEqual(conflicts, [dict(path='forwarding.VADD.fp32->VSTS.fp32', configured=5,
-                                            observed=8, rule='compute_latency_minus_two')])
+                                            observed=8, rule='compute_latency_minus_store_offset')])
             overrides = json.loads((root / 'configs/timing_overrides.json').read_text())['forwarding']
             self.assertNotIn('VSTS.fp32', overrides.get('VADD.fp32', {}))
+
+    def test_benchmark_uses_the_configured_store_offset(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = self.parameter_root(directory)
+            path = root / 'configs/execution_resources.json'
+            rules = json.loads(path.read_text())
+            rules['forwarding']['compute_store_offset'] = 5
+            path.write_text(json.dumps(rules))
+            measured = dict(isa={}, ii={}, forwarding={'VADD.fp32': {'VSTS.fp32': 2}})
+            _, conflicts = PARAMETERS.apply_parameters(measured, root, True)
+            self.assertEqual(conflicts, [])
 
     def test_predicate_golden_uses_sparse_dtype_bits(self):
         raw = PROBES.reference("PSET_B32.b32", b"", b"", 0, 2)

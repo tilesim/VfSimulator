@@ -33,6 +33,11 @@ description: 通过 CCE/CAModel benchmark 测量和校准重构版 VFSim 的指�
 
 LOAD/STORE 分别测量自身的 `latency`。LOAD→compute 的依赖间隔写入对应 forwarding 指令对。COMPUTE→STORE 依赖间隔与固定公式比较，保留测量证据和差异报告。`op_class`、`dtype`、签名及 form 来自语义定义，结合编译产物核对。
 
+公式系数从 `execution_resources.json` 读取：`forwarding.compute_store_offset` 当前为 2，
+`default_offset` 当前为 4，涉及 LNEXP 的 `pair_offsets` 当前为 3，`minimum` 当前为 2。
+II 的静态基础间隔与碰撞修正量读取同一文件的 `ii`，逐指令 self-II 读取显式 II 表。
+标定时核对目标模型目录的实际参数，保存参数文件摘要。
+
 **字段边界：** `pipeline_startup_cost`、`pipeline_drain_cost`、`data_load_cost`、`data_store_cost`、`throughput` 不作为此 skill 的标定输出；配置中残留的这些键也不构成继续写入的依据。VF 整体开销使用 `isa.json.defaults.vf_startup_cost/vf_drain_cost`，仅在任务包含整体启动/排空校准且具备对应边界事件时修改。资源容量、循环控制和屏障参数需要专门结构实验。
 
 ## 工具与测量记录

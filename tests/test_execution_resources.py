@@ -5,6 +5,7 @@ from copy import deepcopy
 from dataclasses import replace
 import json
 from pathlib import Path
+import tempfile
 import unittest
 from unittest.mock import patch
 
@@ -170,6 +171,51 @@ class ExecutionResourceTests(unittest.TestCase):
         self.assertEqual(db.get_forwarding_cycles('VLDS', 'VSTS', 'fp32'), 8)
         self.assertEqual(db.get_forwarding_cycles('VMULL', 'VMULL', 'int32'), 5)
 
+    def test_forwarding_offsets_and_minimum_are_read_from_parameters(self):
+        rules = deepcopy(self.parameters.resource_timing)
+        rules['forwarding'].update(compute_store_offset=5, default_offset=6, minimum=1)
+        rules['forwarding']['pair_offsets']['LNEXP']['ADD_DUAL'] = 5
+        db = ParamDB(base_dir=ROOT, parameters=replace(self.parameters, resource_timing=rules))
+        self.assertEqual(db.get_forwarding_cycles('VADD', 'VSTS', 'fp32'), 2)
+        self.assertEqual(db.get_forwarding_cycles('VADD', 'VMUL', 'fp32'), 1)
+        self.assertEqual(db.get_forwarding_cycles('VMOV', 'VADD', 'fp32'), 1)
+        self.assertEqual(db.get_forwarding_cycles('VEXP', 'VADD', 'fp32'), 11)
+
+    def test_resource_parameter_file_controls_store_offset(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / 'resources.json'
+            rules = deepcopy(self.parameters.resource_timing)
+            rules['forwarding']['compute_store_offset'] = 5
+            path.write_text(json.dumps(rules))
+            with patch.dict('os.environ', {'EXECUTION_RESOURCES_JSON_PATH': str(path)}):
+                db = ParamDB(base_dir=ROOT)
+            self.assertEqual(db.get_forwarding_cycles('VADD', 'VSTS', 'fp32'), 2)
+
+    def test_ii_intervals_and_collision_penalty_are_read_from_parameters(self):
+        rules = deepcopy(self.parameters.resource_timing)
+        rules['ii'].update(different_resource_interval=3, writeback_collision_penalty=2)
+        isa = deepcopy(self.parameters.isa)
+        isa['instructions']['VMUL']['forms']['fp32']['latency'] = 10
+        db = ParamDB(base_dir=ROOT, parameters=replace(self.parameters, resource_timing=rules, isa=isa))
+        self.assertEqual(db.get_ii('VMOV', 'VADD', 'fp32'), 3)
+        self.assertEqual(db.get_ii('VMUL', 'VADD', 'fp32'), 5)
+        self.assertEqual(db.get_ii('VCI', 'VADD', prev_form='int32', cur_form='fp32'), 2)
+
+    def test_missing_pair_rules_use_configured_values(self):
+        rules = deepcopy(self.parameters.resource_timing)
+        rules['forwarding'].update(fallback_offset=5, load_store_interval=10)
+        rules['ii']['writeback_collision_penalty'] = 2
+        isa = deepcopy(self.parameters.isa)
+        for op, latency in (('CUSTOM_A', 12), ('CUSTOM_B', 7)):
+            isa['instructions'][op] = dict(op_class='COMPUTE', forms={'fp32': {'latency': latency}})
+        intervals = deepcopy(self.parameters.initiation_interval)
+        intervals['defaults'] = 5
+        db = ParamDB(base_dir=ROOT, parameters=replace(self.parameters, resource_timing=rules,
+                                                     isa=isa, initiation_interval=intervals))
+        self.assertEqual(db.get_forwarding_cycles('CUSTOM_A', 'CUSTOM_B', 'fp32'), 7)
+        self.assertEqual(db.get_forwarding_cycles('VLD_FUTURE', 'VST_FUTURE', 'fp32'), 10)
+        self.assertEqual(db.get_ii('CUSTOM_A', 'CUSTOM_B', 'fp32'), 7)
+
     def test_all_migrated_values_and_additional_measurements(self):
         db = ParamDB(base_dir=ROOT, parameters=self.parameters)
         record = json.loads((ROOT / 'docs/data/sub_exu_timing_migration_20261109.json').read_text())
@@ -185,6 +231,12 @@ class ExecutionResourceTests(unittest.TestCase):
         mutations = (
             lambda r, o, i: r['groups'].append('ADD_DUAL'),
             lambda r, o, i: r['forwarding'].update(minimum=True),
+            lambda r, o, i: r['forwarding'].update(compute_store_offset=-1),
+            lambda r, o, i: r['forwarding'].update(fallback_offset=True),
+            lambda r, o, i: r['forwarding'].update(load_store_interval='6'),
+            lambda r, o, i: r['forwarding'].pop('compute_store_offset'),
+            lambda r, o, i: r['ii'].update(different_resource_interval=0),
+            lambda r, o, i: r['ii'].update(writeback_collision_penalty=True),
             lambda r, o, i: r['forwarding']['pair_offsets'].update(UNKNOWN={'MUL': 3}),
             lambda r, o, i: i['instructions']['VADD']['forms']['fp32'].update(execution_resource='UNKNOWN'),
             lambda r, o, i: i['instructions']['VADD']['forms']['fp32'].update(execution_resource=True),

@@ -8,6 +8,7 @@
 #include <fstream>
 #include <iostream>
 #include <iterator>
+#include <tuple>
 using namespace vfsim;
 namespace {
 void require(bool condition, const char *message) {
@@ -150,6 +151,74 @@ void testResourceParameters(const std::filesystem::path &root) {
     require(rejected, "Invalid sparse timing exceptions must fail loading");
   }
 }
+
+void testTimingPolicy(const std::filesystem::path &root) {
+  const auto source = std::filesystem::path(VFSIM_SOURCE_ROOT);
+  std::filesystem::create_directories(root / "configs");
+  for (const auto *name : {"isa.json", "uarch.json", "forwarding.json", "InitiationInterval.json",
+                           "execution_resources.json", "timing_overrides.json"})
+    std::filesystem::copy_file(source / "configs" / name, root / "configs" / name);
+  auto policy = json::parseFile(root / "configs/execution_resources.json").asObject();
+  auto forwarding = policy.at("forwarding").asObject();
+  forwarding["compute_store_offset"] = int64_t{5};
+  forwarding["default_offset"] = int64_t{6};
+  forwarding["minimum"] = int64_t{1};
+  forwarding["fallback_offset"] = int64_t{5};
+  forwarding["load_store_interval"] = int64_t{10};
+  auto offsets = forwarding.at("pair_offsets").asObject();
+  auto mathOffsets = offsets.at("LNEXP").asObject();
+  mathOffsets["ADD_DUAL"] = int64_t{5};
+  offsets["LNEXP"] = mathOffsets;
+  forwarding["pair_offsets"] = offsets;
+  policy["forwarding"] = forwarding;
+  auto ii = policy.at("ii").asObject();
+  ii["different_resource_interval"] = int64_t{3};
+  ii["writeback_collision_penalty"] = int64_t{2};
+  policy["ii"] = ii;
+  std::ofstream(root / "configs/execution_resources.json") << json::stringify(policy);
+  auto intervals = json::parseFile(root / "configs/InitiationInterval.json").asObject();
+  intervals["defaults"] = int64_t{5};
+  std::ofstream(root / "configs/InitiationInterval.json") << json::stringify(intervals);
+  ParamDB db(root);
+  require(db.forwardingCycles("VADD", "fp32", "VSTS", "fp32") == 2 &&
+              db.forwardingCycles("VADD", "fp32", "VMUL", "fp32") == 1 &&
+              db.forwardingCycles("VEXP", "fp32", "VADD", "fp32") == 11,
+          "Parameter files determine store, grouped and math forwarding offsets");
+  require(db.initiationInterval("VMOV", "fp32", "VADD", "fp32") == 3 &&
+              db.initiationInterval("VCI", "int32", "VADD", "fp32") == 2,
+          "Cross-resource policy is independent of measured self-II");
+  auto bundle = std::make_shared<ParamBundle>(db.bundle());
+  bundle->isa["VMUL"]["fp32"].latency = 10;
+  for (const auto &[op, latency] : std::vector<std::pair<std::string, int64_t>>{{"CUSTOM_A", 12}, {"CUSTOM_B", 7}}) {
+    InstructionProfile profile;
+    profile.opClass = "COMPUTE";
+    profile.latency = latency;
+    profile.resolvedForm = "fp32";
+    bundle->isa[op]["fp32"] = profile;
+  }
+  ParamDB modified(bundle);
+  require(modified.initiationInterval("VMUL", "fp32", "VADD", "fp32") == 5 &&
+              modified.initiationInterval("CUSTOM_A", "fp32", "CUSTOM_B", "fp32") == 7 &&
+              modified.forwardingCycles("CUSTOM_A", "fp32", "CUSTOM_B", "fp32") == 7 &&
+              modified.forwardingCycles("VLD_FUTURE", "fp32", "VST_FUTURE", "fp32") == 10,
+          "Collision and missing-pair policies use configured coefficients");
+  const std::vector<std::tuple<std::string, std::string, json::Value>> invalid = {
+      {"forwarding", "compute_store_offset", int64_t{-1}},
+      {"forwarding", "fallback_offset", true},
+      {"forwarding", "load_store_interval", "6"},
+      {"ii", "different_resource_interval", int64_t{0}},
+      {"ii", "writeback_collision_penalty", true}};
+  for (const auto &[section, field, value] : invalid) {
+    auto broken = policy;
+    auto fields = broken.at(section).asObject();
+    fields[field] = value;
+    broken[section] = fields;
+    std::ofstream(root / "configs/execution_resources.json") << json::stringify(broken);
+    bool rejected = false;
+    try { loadParameters(root); } catch (const std::runtime_error &) { rejected = true; }
+    require(rejected, "Invalid timing policy coefficients must fail loading");
+  }
+}
 } // namespace
 int main() {
   require(supportedUarchFields() ==
@@ -253,6 +322,7 @@ int main() {
               "PSTU fallback warning preserves its store classification");
   testParameterReuse(root / "snapshot");
   testResourceParameters(root / "resources");
+  testTimingPolicy(root / "policy");
   std::filesystem::remove_all(root);
   std::cout
       << "Parameter inheritance, pair lookup and format validation passed\n";

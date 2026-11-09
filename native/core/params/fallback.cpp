@@ -90,13 +90,13 @@ InstructionProfile ParamDB::fallbackInst(const std::string &op,
 } // namespace vfsim
 namespace vfsim::param_fallback {
 int64_t missingForwarding(const InstructionProfile &producer,
-                          const InstructionProfile &consumer, int64_t offset) {
+                          const InstructionProfile &consumer, int64_t offset, int64_t loadStoreInterval) {
   return producer.opClass == "LOAD" && consumer.opClass == "STORE"
-             ? 6
+             ? loadStoreInterval
              : std::max<int64_t>(0, producer.latency - offset);
 }
 int64_t missingII(const InstructionProfile &previous,
-                  const InstructionProfile &current) {
-  return previous.latency - current.latency == 1 ? 2 : 1;
+                  const InstructionProfile &current, int64_t defaultInterval, int64_t collisionPenalty) {
+  return defaultInterval + (previous.latency - current.latency == defaultInterval ? collisionPenalty : 0);
 }
 } // namespace vfsim::param_fallback

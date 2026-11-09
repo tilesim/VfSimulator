@@ -1,6 +1,5 @@
 {
   "schema_version": 2,
-  "defaults": 3,
   "forwarding": {
     "PNOT.b8": {
       "PNOT.b8": 2

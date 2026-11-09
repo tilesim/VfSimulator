@@ -131,17 +131,17 @@ def load_parameters(
                     raise ValueError(f"ISA {op}.{form} must be an object")
                 if "latency" in params:
                     _integer(params["latency"], f"ISA {op}.{form}.latency")
-    _integer(
-        forwarding.get("default", forwarding.get("defaults", 3)), "forwarding.default"
-    )
-    _integer(ii.get("defaults", 1), "II.defaults", 1)
-    validate_pair_table(forwarding.get("forwarding", {}), "forwarding", 0)
-    validate_pair_table(ii.get("InitiationInterval", {}), "II", 1)
-    resources = read_json(resolve_path(isa_file.parent, explicit=None,
-        env_key="EXECUTION_RESOURCES_JSON_PATH", candidates=("execution_resources.json",), required=False))
+    resource_path = resolve_path(isa_file.parent, explicit=None,
+        env_key="EXECUTION_RESOURCES_JSON_PATH", candidates=("execution_resources.json",), required=False)
+    resources = read_json(resource_path or Path(__file__).resolve().parents[2] / 'configs/execution_resources.json')
     overrides = read_json(resolve_path(isa_file.parent, explicit=None,
         env_key="TIMING_OVERRIDES_JSON_PATH", candidates=("timing_overrides.json",), required=False))
     validate_resources(resources, overrides, isa)
+    _integer(forwarding.get("default", forwarding.get("defaults", resources['forwarding']['fallback_offset'])),
+             "forwarding.default")
+    _integer(ii.get("defaults", resources['ii']['different_resource_interval']), "II.defaults", 1)
+    validate_pair_table(forwarding.get("forwarding", {}), "forwarding", 0)
+    validate_pair_table(ii.get("InitiationInterval", {}), "II", 1)
     timing = VfTiming(
         _integer(defaults.get("vf_startup_cost", 0), "vf_startup_cost"),
         _integer(defaults.get("vf_drain_cost", 0), "vf_drain_cost"),

@@ -164,7 +164,7 @@ int64_t ParamDB::forwardingCycles(const std::string &prod,
   const auto it = forwardingCache_.find(key);
   if (it != forwardingCache_.end())
     return it->second;
-  const auto store = computeStoreForwarding(inst(prod, prodForm), inst(cons, consForm));
+  const auto store = computeStoreForwarding(*bundle_, inst(prod, prodForm), inst(cons, consForm));
   const int64_t cycles = store ? *store : computeForwardingCycles(prod, prodForm, cons, consForm);
   forwardingCache_.emplace(key, cycles);
   return cycles;
@@ -234,7 +234,7 @@ int64_t ParamDB::computeForwardingCycles(const std::string &prod,
   const bool lsuDefault =
       prodCfg.opClass == "LOAD" && consCfg.opClass == "STORE";
   const int64_t value = param_fallback::missingForwarding(
-      prodCfg, consCfg, bundle_->forwardingDefaultOffset);
+      prodCfg, consCfg, bundle_->forwardingDefaultOffset, bundle_->loadStoreForwardingInterval);
   recordWarningOnce(
       "missing_forwarding_pair",
       {{"producer", qualifyOp(prod, prodForm)},
@@ -290,7 +290,7 @@ int64_t ParamDB::initiationInterval(const std::string &prev,
     }
   }
   const auto &previousProfile = inst(prev, prevForm), &currentProfile = inst(cur, curForm);
-  if (const auto derived = issueInterval(previousProfile, currentProfile)) {
+  if (const auto derived = issueInterval(*bundle_, previousProfile, currentProfile)) {
     if (prevForm != previousProfile.resolvedForm || curForm != currentProfile.resolvedForm)
       recordWarningOnce("compatible_ii_pair_fallback", {{"prev",requestedPrev},{"cur",requestedCur},
           {"used_prev",qualifyOp(prev,previousProfile.resolvedForm)},{"used_cur",qualifyOp(cur,currentProfile.resolvedForm)}});
@@ -298,15 +298,16 @@ int64_t ParamDB::initiationInterval(const std::string &prev,
   }
   const InstructionProfile &prevCfg = inst(prev, prevForm);
   const InstructionProfile &curCfg = inst(cur, curForm);
-  const int64_t value = param_fallback::missingII(prevCfg, curCfg);
+  const int64_t value = param_fallback::missingII(prevCfg, curCfg, bundle_->initiationIntervalDefault,
+                                                bundle_->writebackCollisionPenalty);
   recordWarningOnce("missing_ii_pair",
                     {{"prev", qualifyOp(prev, prevForm)},
                      {"cur", qualifyOp(cur, curForm)},
                      {"prev_latency", prevCfg.latency},
                      {"cur_latency", curCfg.latency},
                      {"used_default", value},
-                     {"rule", value == 2 ? "prev_latency_minus_cur_latency_eq_1"
-                                         : "default_one"}});
+                     {"rule", prevCfg.latency - curCfg.latency == bundle_->initiationIntervalDefault
+                                  ? "latency_delta_equals_default_interval" : "default_interval"}});
   return cache(value);
 }
 
