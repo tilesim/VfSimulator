@@ -111,7 +111,8 @@ void testRoundTripAndFailure() {
            std::chrono::steady_clock::now().time_since_epoch().count()));
   std::filesystem::create_directories(root / "configs");
   for (const auto *file :
-       {"isa.json", "uarch.json", "forwarding.json", "InitiationInterval.json"})
+       {"isa.json", "uarch.json", "forwarding.json", "InitiationInterval.json",
+        "execution_resources.json", "timing_overrides.json"})
     std::filesystem::copy_file(std::filesystem::path(VFSIM_SOURCE_ROOT) /
                                    "configs" / file,
                                root / "configs" / file);

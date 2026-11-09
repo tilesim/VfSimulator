@@ -1,6 +1,7 @@
 #pragma once
 #include "native/core/execution/instruction.h"
 #include "native/core/params/database.h"
+#include "native/core/uarch/sub_exu.h"
 #include <map>
 #include <unordered_set>
 #include <utility>
@@ -10,7 +11,7 @@ public:
   EXU(const UarchConfig &cfg, const ParamDB &db);
   bool legalPort(const Uop &u, int port) const;
   bool canAccept(int port, bool queued) const;
-  int64_t nextSelfIssueCycle(const Uop &u, int port) const;
+  int64_t nextResourceIssueCycle(const Uop &u, int port) const;
   int64_t nextCompletionIssueCycle(const Uop &u, int port, int64_t cycle) const;
   int64_t nextIssueCycle(const Uop &u, int port, bool perFu = false,
                          int64_t notBefore = -1000000000) const;
@@ -25,12 +26,15 @@ private:
   struct LastIssue {
     int64_t cycle = -1000000000;
     std::string op, form;
+    const InstructionProfile *profile = nullptr;
   };
   const UarchConfig &cfg_;
   const ParamDB &db_;
   std::vector<LastIssue> lastPort_;
   std::vector<std::map<std::string, LastIssue>> lastFu_;
-  std::vector<std::map<std::pair<std::string, std::string>, int64_t>> selfIssueReady_;
+  std::vector<std::map<std::string, SubEXU>> subExus_;
+  std::vector<int64_t> entryCycle_;
+  std::vector<std::unordered_map<std::string, int64_t>> overrideReady_;
   std::vector<std::map<std::string, std::unordered_set<int64_t>>> completionCycles_;
   std::vector<int64_t> inflight_;
   std::map<int64_t, UopPtr> running_;

@@ -5,6 +5,7 @@
 #include "native/api/common/instruction_catalog.h"
 #include "native/core/params/fallback.h"
 #include "native/core/params/loader.h"
+#include "native/core/params/resources.h"
 #include <algorithm>
 #include <cctype>
 #include <stdexcept>
@@ -59,6 +60,10 @@ const InstructionProfile &ParamDB::inst(const std::string &op,
       profile.latency = latency->second;
   if (!instructionClass.empty())
     profile.opClass = instructionClass;
+  if (profile.opClass != "COMPUTE")
+    profile.executionResource.clear();
+  if (profile.resolvedForm.empty())
+    profile.resolvedForm = form;
   if (profile.fuType.empty())
     profile.fuType = "ALU";
   profile.allowedExuPorts = profile.dispatchExu == "EXU0_ONLY"
@@ -169,6 +174,18 @@ int64_t ParamDB::computeForwardingCycles(const std::string &prod,
                                          const std::string &prodForm,
                                          const std::string &cons,
                                          const std::string &consForm) const {
+  for (const auto &candidate : param_fallback::pairKeyCandidates(prod, prodForm, cons, consForm)) {
+    const auto row = bundle_->forwardingOverrides.find(candidate.producer);
+    if (row != bundle_->forwardingOverrides.end()) {
+      const auto found = row->second.find(candidate.consumer);
+      if (found != row->second.end()) {
+        if (candidate.usedCompatible)
+          recordWarningOnce("compatible_forwarding_pair_fallback", {{"producer",qualifyOp(prod,prodForm)},
+              {"consumer",qualifyOp(cons,consForm)},{"used_producer",candidate.producer},{"used_consumer",candidate.consumer}});
+        return found->second;
+      }
+    }
+  }
   const auto *spec = defaultInstructionCatalog().lookup(prod);
   if (spec && !spec->forwardingOpcode.empty()) {
     const auto producer =
@@ -205,6 +222,13 @@ int64_t ParamDB::computeForwardingCycles(const std::string &prod,
     if (wildcard != defaults->second.end())
       return std::max<int64_t>(0, wildcard->second);
   }
+  const auto &producerProfile = inst(prod, prodForm), &consumerProfile = inst(cons, consForm);
+  if (const auto derived = forwardingInterval(*bundle_, producerProfile, consumerProfile)) {
+    if (prodForm != producerProfile.resolvedForm || consForm != consumerProfile.resolvedForm)
+      recordWarningOnce("compatible_forwarding_pair_fallback", {{"producer",requestedProd},{"consumer",requestedCons},
+          {"used_producer",qualifyOp(prod,producerProfile.resolvedForm)},{"used_consumer",qualifyOp(cons,consumerProfile.resolvedForm)}});
+    return *derived;
+  }
   const InstructionProfile &prodCfg = inst(prod, prodForm);
   const InstructionProfile &consCfg = inst(cons, consForm);
   const bool lsuDefault =
@@ -235,6 +259,18 @@ int64_t ParamDB::initiationInterval(const std::string &prev,
   };
   const std::string requestedPrev = qualifyOp(prev, prevForm);
   const std::string requestedCur = qualifyOp(cur, curForm);
+  for (const auto &candidate : param_fallback::pairKeyCandidates(prev, prevForm, cur, curForm)) {
+    const auto row = bundle_->iiOverrides.find(candidate.producer);
+    if (row != bundle_->iiOverrides.end()) {
+      const auto found = row->second.find(candidate.consumer);
+      if (found != row->second.end()) {
+        if (candidate.usedCompatible)
+          recordWarningOnce("compatible_ii_pair_fallback", {{"prev",requestedPrev},{"cur",requestedCur},
+              {"used_prev",candidate.producer},{"used_cur",candidate.consumer}});
+        return cache(found->second);
+      }
+    }
+  }
   for (const auto &candidate :
        param_fallback::pairKeyCandidates(prev, prevForm, cur, curForm)) {
     const auto prevIt =
@@ -253,6 +289,13 @@ int64_t ParamDB::initiationInterval(const std::string &prev,
       }
     }
   }
+  const auto &previousProfile = inst(prev, prevForm), &currentProfile = inst(cur, curForm);
+  if (const auto derived = issueInterval(previousProfile, currentProfile)) {
+    if (prevForm != previousProfile.resolvedForm || curForm != currentProfile.resolvedForm)
+      recordWarningOnce("compatible_ii_pair_fallback", {{"prev",requestedPrev},{"cur",requestedCur},
+          {"used_prev",qualifyOp(prev,previousProfile.resolvedForm)},{"used_cur",qualifyOp(cur,currentProfile.resolvedForm)}});
+    return cache(*derived);
+  }
   const InstructionProfile &prevCfg = inst(prev, prevForm);
   const InstructionProfile &curCfg = inst(cur, curForm);
   const int64_t value = param_fallback::missingII(prevCfg, curCfg);
@@ -265,6 +308,14 @@ int64_t ParamDB::initiationInterval(const std::string &prev,
                      {"rule", value == 2 ? "prev_latency_minus_cur_latency_eq_1"
                                          : "default_one"}});
   return cache(value);
+}
+
+const std::unordered_map<std::string, int64_t> &
+ParamDB::issueOverrides(const std::string &op, const std::string &form) const {
+  const auto &profile = inst(op, form);
+  const auto found = bundle_->iiOverrides.find(qualifyOp(upper(op), profile.resolvedForm));
+  static const std::unordered_map<std::string, int64_t> empty;
+  return found == bundle_->iiOverrides.end() ? empty : found->second;
 }
 
 } // namespace vfsim

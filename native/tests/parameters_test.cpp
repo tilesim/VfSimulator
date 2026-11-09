@@ -83,6 +83,46 @@ void testParameterReuse(const std::filesystem::path &root) {
   require(!std::filesystem::exists(warningsPath),
           "Clean runs do not inherit earlier warnings");
 }
+
+void testResourceParameters(const std::filesystem::path &root) {
+  const auto source = std::filesystem::path(VFSIM_SOURCE_ROOT);
+  ParamDB db(source);
+  const auto evidence = json::parseFile(source / "docs/data/sub_exu_timing_migration_20261109.json");
+  for (const auto *section : {"original_pair_values", "additional_measured_ii"})
+    for (const auto &value : evidence.asObject().at(section).asArray()) {
+      const auto &row = value.asObject();
+      const auto previous = row.at("previous").asString(), current = row.at("current").asString();
+      const auto split = previous.find('.'), otherSplit = current.find('.');
+      const auto p = previous.substr(0, split), pf = previous.substr(split+1);
+      const auto c = current.substr(0, otherSplit), cf = current.substr(otherSplit+1);
+      const auto kind = row.find("kind");
+      const auto actual = kind != row.end() && kind->second.asString() == "forwarding"
+          ? db.forwardingCycles(p, pf, c, cf) : db.initiationInterval(p, pf, c, cf);
+      require(actual == row.at("value").asInt(), "Migrated timing and additional measurements retain their values");
+    }
+  require(db.inst("VCI", "int32").executionResource == "ADD_DUAL" &&
+              db.inst("VCI", "int32").selfIi == 2 &&
+              db.inst("VMUL", "fp32").executionResource == "MUL",
+          "Instruction profiles carry resource and self-II metadata");
+  require(db.forwardingCycles("VADD", "fp32", "VMUL", "fp32") == 3 &&
+              db.forwardingCycles("VADD", "fp32", "VEXP", "fp32") == 4 &&
+              db.forwardingCycles("VMULL", "int32", "VMULL", "int32") == 5,
+          "Resource forwarding and sparse exceptions share lookup semantics");
+  std::filesystem::create_directories(root / "configs");
+  for (const auto *name : {"isa.json", "uarch.json", "forwarding.json", "InitiationInterval.json", "execution_resources.json"})
+    std::filesystem::copy_file(source / "configs" / name, root / "configs" / name);
+  for (const auto *invalid : {
+       R"({"schema_version":1,"ii":{"VADD.fp32":{"VADD.fp32":1}},"forwarding":{}})",
+       R"({"schema_version":1,"ii":{"VADD.fp32":{"VMUL.fp32":true}},"forwarding":{}})",
+       R"({"schema_version":1,"ii":{},"forwarding":{"VADD.fp32":{"UNKNOWN.fp32":2}}})",
+       R"({"schema_version":1,"ii":{},"forwarding":{"UNKNOWN.fp32":{}}})",
+       R"({"schema_version":1,"ii":{"fp32":{"VADD":{"VMUL":2}}},"forwarding":{}})"}) {
+    write(root / "configs/timing_overrides.json", invalid);
+    bool rejected = false;
+    try { loadParameters(root); } catch (const std::runtime_error &) { rejected = true; }
+    require(rejected, "Invalid sparse timing exceptions must fail loading");
+  }
+}
 } // namespace
 int main() {
   require(supportedUarchFields() ==
@@ -185,6 +225,7 @@ int main() {
                       .asString() == "STORE",
               "PSTU fallback warning preserves its store classification");
   testParameterReuse(root / "snapshot");
+  testResourceParameters(root / "resources");
   std::filesystem::remove_all(root);
   std::cout
       << "Parameter inheritance, pair lookup and format validation passed\n";

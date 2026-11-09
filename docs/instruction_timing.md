@@ -1,7 +1,8 @@
 # 指令时序与测量证据
 
 Catalog 声明签名、form 和地址语义，`isa.json`、`forwarding.json`、
-`InitiationInterval.json` 保存时序参数。目标为 CANN `9.0.0-beta.1`、
+`InitiationInterval.json` 保存显式时序参数，`execution_resources.json` 和
+`timing_overrides.json` 提供子单元规则与指令对例外。目标为 CANN `9.0.0-beta.1`、
 `dav-c310-vec`、`Ascend950PR_9599`。完整类型清单见 [A5 覆盖清单](a5_instruction_coverage.md)，
 数值实验、参数来源与限制见 [覆盖进度](instruction_coverage/a5/progress.md)。
 
@@ -53,24 +54,23 @@ LOAD→计算、计算→STORE 和 compare→select；II 按独立同端口流�
 [VFtest 算子指令对](instruction_coverage/a5/operator_pairs.md)。
 Membar 归档的 A5 算子覆盖 992 组 II 和 325 组静态 RAW 查询，
 范围、同编码继承和逐版本输入状态见 [归档算子指令对](instruction_coverage/a5/membar_pairs.md)。
-完整跨 opcode/dtype 笛卡尔积尚未逐对测量，精确配置缺失时 ParamDB 保留回退及 warning。
+完整跨 opcode/dtype 笛卡尔积尚未逐对测量。已分组的计算指令通过资源公式估计
+交叉 II 和 forwarding；无法推导且缺少显式值的组合使用回退并记录 warning。
 
-EXU 按端口和 opcode/form 保存 self-II 的最早允许发射周期。EXQ 实际发射同时检查
-该周期与同端口最近已发射指令的转换限制：
+EXU 为每个资源组维护下一次允许接收的周期，指令开始时按 self-II 更新本组状态。
+ADD_DUAL、ADD_CONV、MUL、MOV 和 LNEXP 分别计时；同组内不同 opcode/dtype
+共享接收状态。各端口每周期接收一条指令。
 
 ```text
-earliest(A) = max(last_issue(A) + II(A,A), last_issue(B) + II(B,A))
+resource_ready(R) = issue(A) + self_II(A)             A 属于 R
+exception_ready(B) = max(issue(P) + override_II(P,B))
+earliest(B) = max(resource_ready(group(B)), exception_ready(B), port_ready)
 ```
 
-其中 B 为同端口最近实际发射的指令。每项使用对应前序指令的发射时刻；
-其他 opcode 的发射保留 A 已有的 self-II 限制。操作数就绪、接收延迟、
-端口每周期接收一条及执行容量分别约束发射。直接发射模式遵循所选跨 FU 策略，
-并检查相同的 opcode/form self-II。
-
-EXQ 预测还检查已发射的 self-II 截止周期、队尾预测转换间隔和队列中最近同
-opcode/form 的预测发射间隔。预测用于端口选择，实际发射通过 EXU 再判断当前状态。
-回归范围与误差见
-[II 发射规则验证](validation/issue_interval_regression_20261020.md)。
+例外约束使用对应 producer 的发射周期。中间插入其他组指令、producer 完成都保留尚未到期的约束。
+尚未分组的 form 保留 opcode/form self-II 和显式指令对规则。
+EXQ 预测检查已发射资源状态、同资源队尾、待发射例外和完成周期；
+实际发射再次通过 EXU 检查当前状态。分组、参数规则、适用范围和证据见[子 EXU 模型](execution_resources.md)。
 
 每个 EXU 每周期最多完成一条写向量寄存器的指令和一条写谓词寄存器的指令。
 重命名根据实际目的操作数记录目标寄存器 bank。EXU 发射时按 bank 预留
@@ -84,7 +84,7 @@ opcode/form 的预测发射间隔。预测用于端口选择，实际发射通�
 一条指令的多个同类目的寄存器共用一个名额；同时写两类寄存器时同时占用两个名额；
 没有寄存器结果的指令不占用这两类名额。两个 EXU 分别维护预留状态，
 LSU 继续维护独立的访存完成规则。EXQ 预测读取已发射指令的预留状态，实际发射
-再次检查并预留。该规则支持多条指令重叠执行，并与 self-II、转换 II、每周期
+再次检查并预留。该规则支持多条指令重叠执行，并与子单元 self-II、例外 II、每周期
 发射带宽及 inflight 上限共同约束调度。默认 inflight 上限为每 EXU 7 条，输入覆盖
 值 0 表示无限制。四组对照与模型适用范围见
 [EXU 完成带宽验证](validation/exu_completion_bandwidth_20261020.md)。

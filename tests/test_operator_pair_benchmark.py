@@ -1,8 +1,11 @@
 """Check mixed dtype goldens and reject confounded operator timing samples."""
 
 import importlib
+import json
 from pathlib import Path
+import shutil
 import sys
+import tempfile
 from types import SimpleNamespace
 import unittest
 
@@ -11,6 +14,7 @@ sys.path.insert(0, str(SCRIPTS))
 PROBES = importlib.import_module("operator_pairs")
 ANALYSIS = importlib.import_module("analyze_operator_pairs")
 INVENTORY = importlib.import_module("operator_pair_inventory")
+PARAMETERS = importlib.import_module("analyze_vector_compute")
 sys.path.remove(str(SCRIPTS))
 
 
@@ -47,6 +51,68 @@ def forwarding(role="Vn", gap=2):
 
 
 class OperatorPairBenchmarkTests(unittest.TestCase):
+    def parameter_root(self, directory):
+        root = Path(directory)
+        (root / 'configs').mkdir()
+        source = Path(__file__).resolve().parents[1] / 'configs'
+        for name in ('isa.json', 'forwarding.json', 'InitiationInterval.json',
+                     'execution_resources.json', 'timing_overrides.json'):
+            shutil.copyfile(source / name, root / 'configs' / name)
+        return root
+
+    def test_rule_matching_measurements_keep_sparse_configuration(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = self.parameter_root(directory)
+            measured = dict(isa={}, ii={'VCI.int32': {'VMUL.fp32': 1}},
+                            forwarding={'VADD.fp32': {'VMUL.fp32': 3}})
+            _, conflicts = PARAMETERS.apply_parameters(measured, root, True)
+            self.assertEqual(conflicts, [])
+            overrides = json.loads((root / 'configs/timing_overrides.json').read_text())
+            self.assertNotIn('VMUL.fp32', overrides['forwarding'].get('VADD.fp32', {}))
+            self.assertNotIn('VCI.int32', overrides['ii'])
+            measured['forwarding']['VADD.fp32']['VMUL.fp32'] = 4
+            _, conflicts = PARAMETERS.apply_parameters(measured, root, True)
+            self.assertEqual(conflicts, [])
+            overrides = json.loads((root / 'configs/timing_overrides.json').read_text())
+            self.assertEqual(overrides['forwarding']['VADD.fp32']['VMUL.fp32'], 4)
+            table = json.loads((root / 'configs/forwarding.json').read_text())['forwarding']
+            self.assertNotIn('VMUL.fp32', table.get('VADD.fp32', {}))
+
+    def test_recalibrating_an_exception_requires_the_reported_replace_path(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = self.parameter_root(directory)
+            measured = dict(isa={}, ii={'VEXP.fp32': {'VDIV.fp32': 4}}, forwarding={})
+            _, conflicts = PARAMETERS.apply_parameters(measured, root, True)
+            self.assertEqual(conflicts[0]['configured'], 6)
+            overrides = json.loads((root / 'configs/timing_overrides.json').read_text())
+            self.assertEqual(overrides['ii']['VEXP.fp32']['VDIV.fp32'], 6)
+            _, conflicts = PARAMETERS.apply_parameters(measured, root, True,
+                replace=('ii.VEXP.fp32->VDIV.fp32',))
+            self.assertEqual(conflicts, [])
+            overrides = json.loads((root / 'configs/timing_overrides.json').read_text())
+            self.assertNotIn('VDIV.fp32', overrides['ii']['VEXP.fp32'])
+
+    def test_grouped_pair_with_missing_self_ii_is_saved_as_an_exception(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = self.parameter_root(directory)
+            path = root / 'configs/InitiationInterval.json'
+            document = json.loads(path.read_text())
+            del document['InitiationInterval']['VCI.int32']['VCI.int32']
+            path.write_text(json.dumps(document))
+            measured = dict(isa={}, ii={'VCI.int32': {'VADD.fp32': 2}}, forwarding={})
+            _, conflicts = PARAMETERS.apply_parameters(measured, root, True)
+            self.assertEqual(conflicts, [])
+            overrides = json.loads((root / 'configs/timing_overrides.json').read_text())
+            self.assertEqual(overrides['ii']['VCI.int32']['VADD.fp32'], 2)
+
+    def test_inventory_distinguishes_rules_exceptions_and_memory_pairs(self):
+        from core.params.database import ParamDB
+        db = ParamDB(base_dir=Path(__file__).resolve().parents[1])
+        self.assertEqual(INVENTORY.timing_resolution(db, 'ii', 'VCI.int32', 'VMUL.fp32')[0], 'resource_rule')
+        self.assertEqual(INVENTORY.timing_resolution(db, 'ii', 'VEXP.fp32', 'VDIV.fp32')[0], 'override')
+        self.assertEqual(INVENTORY.timing_resolution(db, 'forwarding', 'VADD.fp32', 'VMUL.fp32')[0], 'resource_rule')
+        self.assertEqual(INVENTORY.timing_resolution(db, 'forwarding', 'VLDS.fp32', 'VADD.fp32')[0], 'exact')
+
     def test_predicate_golden_uses_sparse_dtype_bits(self):
         raw = PROBES.reference("PSET_B32.b32", b"", b"", 0, 2)
         self.assertEqual(int.from_bytes(raw, "little"), 0x1111)

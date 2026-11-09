@@ -25,8 +25,11 @@ python3 -m unittest tests.test_ooo_dispatch
 `core_support.py` 提供测试环境、片段解析、动态展开、Engine 组装和日志读取。
 组件测试可单独设置队列和状态；完整预测测试通过 InputAPI 接收 Canonical 输入。
 参数组装使用 ParamDB.base_uarch 与 VF override。
-`test_issue_intervals` 检查穿插指令后的 self-II、端口与 form 独立性、EXQ 预测、
+`test_issue_intervals` 检查穿插指令后的 self-II、端口独立性、混合 dtype 共享资源、EXQ 预测、
 完成后的有效截止周期及 VEXP/VDIV 的方向转换间隔。
+`test_execution_resources` 检查子单元占用、其他资源穿插、例外截止周期、
+EXQ 分组选择、公式与显式值的查询及配置合法性，并逐项核对参数证据清单。
+`test_operator_pair_benchmark` 同时检查 benchmark 参数向分组规则、例外表与显式表的写入。
 `test_exu_completion` 检查每 EXU 的完成周期预留、连续冲突、跨 FU 共享、
 双端口独立性、端口选择、EXQ 预测与实际发射，以及重叠执行和状态释放。
 

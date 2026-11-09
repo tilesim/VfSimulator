@@ -52,6 +52,8 @@ public:
                              const std::string &prevForm,
                              const std::string &cur,
                              const std::string &curForm) const;
+  const std::unordered_map<std::string, int64_t> &
+  issueOverrides(const std::string &op, const std::string &form) const;
 
   static std::filesystem::path resolveBaseDir(std::filesystem::path baseDir);
 

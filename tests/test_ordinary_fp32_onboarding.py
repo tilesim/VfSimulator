@@ -43,7 +43,7 @@ class OrdinaryFp32OnboardingTest(unittest.TestCase):
             self.assertEqual(db.get_forwarding_cycles(op, op, 'fp32'), own)
             self.assertEqual(db.get_forwarding_cycles(op, 'VSTS', 'fp32'), store)
             self.assertEqual(db.get_ii(op, op, 'fp32'), 4)
-            self.assertEqual(forwarding[op+'.fp32'][op+'.fp32'], own)
+            self.assertEqual(db.resolve_inst(op, 'fp32').execution_resource, 'LNEXP')
             self.assertEqual(forwarding[op+'.fp32']['VSTS.fp32'], store)
             self.assertEqual(ii[op+'.fp32'][op+'.fp32'], 4)
         self.assertEqual(db.get_warnings(), [])
@@ -58,8 +58,8 @@ class OrdinaryFp32OnboardingTest(unittest.TestCase):
         for op in OPS:
             db.get_forwarding_cycles(op, 'VADD', 'fp32')
         warnings = db.get_warnings()
-        self.assertEqual(sum(w['kind']=='missing_ii_pair' for w in warnings), 2)
-        self.assertEqual(sum(w['kind']=='missing_forwarding_pair' for w in warnings), 2)
+        self.assertEqual(sum(w['kind']=='missing_ii_pair' for w in warnings), 1)
+        self.assertEqual(sum(w['kind']=='missing_forwarding_pair' for w in warnings), 0)
 
     def test_catalog_matches_configured_semantics(self):
         for op in OPS:

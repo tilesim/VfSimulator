@@ -444,7 +444,8 @@ def main():
             parser.error('--cases requires II probe specifications')
     else:
         inventory = json.loads(args.inventory.read_text())
-        needed = [row for row in inventory['ii'] if row['explicit'] is None]
+        needed = [row for row in inventory['ii']
+                  if row.get('resolution', 'fallback' if row['explicit'] is None else 'exact') == 'fallback']
         if args.pairs:
             needed = [row for row in needed if row['previous'] + '::' + row['current'] in args.pairs]
         selected = {}

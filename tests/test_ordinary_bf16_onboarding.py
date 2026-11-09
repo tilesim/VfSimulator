@@ -58,7 +58,7 @@ class OrdinaryBf16OnboardingTest(unittest.TestCase):
         )
         self.assertEqual(
             {warning["kind"] for warning in db.get_warnings()},
-            {"missing_ii_pair", "missing_forwarding_pair"},
+            {"missing_forwarding_pair"},
         )
 
 

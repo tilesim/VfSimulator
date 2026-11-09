@@ -89,7 +89,8 @@ class OrdinaryNarrowOnboardingTest(unittest.TestCase):
                 for warning in warnings
                 if warning["kind"] == "missing_ii_pair"
             },
-            {f"{opcode}.{form}" for opcode, (form, _, _) in MEASURED.items()},
+            {f"{opcode}.{form}" for opcode, (form, _, _) in MEASURED.items()
+             if not db.resolve_inst(opcode, form).execution_resource},
         )
         self.assertEqual(
             {

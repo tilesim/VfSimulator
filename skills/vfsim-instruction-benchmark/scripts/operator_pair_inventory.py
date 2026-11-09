@@ -20,6 +20,7 @@ from api.json.serialization import canonical_vf_info_to_dict
 from core.execution.prepare import prepare_program
 from core.params.database import ParamDB
 from core.params.fallback import pair_key_candidates
+from core.params.resources import issue_interval
 from core.params.uarch import resolve_uarch
 
 
@@ -56,6 +57,28 @@ def forwarding_resolution(table, previous, current):
             return ('compatible' if compatible else 'exact'), producer, consumer
     if '*' in table.get(previous, {}):
         return 'producer_wildcard', previous, '*'
+    return 'fallback', previous, current
+
+
+def timing_resolution(db, kind, previous, current):
+    op, form = previous.split('.', 1)
+    consumer_op, consumer_form = current.split('.', 1)
+    candidates = list(pair_key_candidates(op, form, consumer_op, consumer_form))
+    for producer, consumer, _ in candidates:
+        if consumer in db.timing_overrides[kind].get(producer, {}):
+            return 'override', producer, consumer
+    if kind == 'forwarding':
+        result = forwarding_resolution(db._fwd_table, previous, current)
+        if result[0] != 'fallback':
+            return result
+    else:
+        for producer, consumer, compatible in candidates:
+            if consumer in db._ii_table.get(producer, {}):
+                return ('compatible' if compatible else 'exact'), producer, consumer
+    a, b = db.resolve_inst(op, form), db.resolve_inst(consumer_op, consumer_form)
+    if a.execution_resource and b.execution_resource:
+        if kind == 'forwarding' or issue_interval(a, b) is not None:
+            return 'resource_rule', previous, current
     return 'fallback', previous, current
 
 
@@ -128,7 +151,8 @@ def inventory(root):
                               dynamic_instructions=sum(opcode_counts.values()),
                               opcode_counts=dict(opcode_counts),
                               ii_pairs=len(per_file_ii),
-                              ii_missing=sum(c not in interval_table.get(p, {}) for p, c in per_file_ii),
+                              ii_missing=sum(timing_resolution(db, 'ii', p, c)[0] == 'fallback'
+                                             for p, c in per_file_ii),
                               raw_pairs=[dict(producer=p, consumer=c, count=count)
                                          for (p, c), count in sorted(observed_raw.items())],
                               external_source_reads=dict(external_sources)))
@@ -139,14 +163,16 @@ def inventory(root):
         previous, current = pair
         explicit = interval_table.get(previous, {}).get(current)
         effective = db.get_ii_for_profiles(form_profiles[previous], form_profiles[current])
+        resolution, producer, consumer = timing_resolution(db, 'ii', previous, current)
         return dict(previous=previous, current=current, explicit=explicit,
-                    effective=effective, files=sorted(paths))
+                    effective=effective, resolution=resolution,
+                    configured_producer=producer, configured_consumer=consumer, files=sorted(paths))
 
     def forwarding_row(pair, paths):
         previous, current = pair
         explicit = forwarding_table.get(previous, {}).get(current)
         effective = db.get_forwarding_for_profiles(form_profiles[previous], form_profiles[current])
-        resolution, producer, consumer = forwarding_resolution(forwarding_table, previous, current)
+        resolution, producer, consumer = timing_resolution(db, 'forwarding', previous, current)
         return dict(producer=previous, consumer=current, explicit=explicit,
                     effective=effective, resolution=resolution,
                     configured_producer=producer, configured_consumer=consumer, files=sorted(paths),
@@ -161,12 +187,16 @@ def inventory(root):
                 summary=dict(files=len(files), semantic_programs=len({row['semantic_sha256'] for row in files}),
                              rejected_files=len(rejected), excluded_files=len(excluded),
                              compute_forms=len({key for row in files for key in row['compute_forms']}),
-                             ii_pairs=len(ii_rows), ii_missing=sum(row['explicit'] is None for row in ii_rows),
+                             ii_pairs=len(ii_rows), ii_missing=sum(row['resolution'] == 'fallback' for row in ii_rows),
+                             ii_resolution=dict(Counter(row['resolution'] for row in ii_rows)),
                              forwarding_pairs=len(fwd_rows),
+                             forwarding_resolution=dict(Counter(row['resolution'] for row in fwd_rows)),
                              forwarding_missing_exact=sum(row['explicit'] is None for row in fwd_rows),
                              forwarding_missing=sum(row['resolution'] == 'fallback' for row in fwd_rows)),
                 config_sha256={name:hashlib.sha256((root / 'configs' / name).read_bytes()).hexdigest()
-                               for name in ['isa.json', 'forwarding.json', 'InitiationInterval.json', 'instruction_catalog.json']},
+                               for name in ['isa.json', 'forwarding.json', 'InitiationInterval.json', 'instruction_catalog.json',
+                                            'execution_resources.json', 'timing_overrides.json']
+                               if (root / 'configs' / name).exists()},
                 files=files, rejected=rejected, excluded=excluded, ii=ii_rows, forwarding=fwd_rows,
                 parameter_warnings=db.get_warnings())
 

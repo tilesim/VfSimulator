@@ -63,7 +63,8 @@ class OrdinaryVorVciOnboardingTest(unittest.TestCase):
             fields = isa[op]["forms"][form]
             self.assertEqual(
                 set(fields),
-                {"latency", "EXU", "dispatch_exu", "src_dtypes", "dst_dtypes", "dtype"},
+                {"latency", "EXU", "dispatch_exu", "src_dtypes", "dst_dtypes", "dtype"}
+                | ({"execution_resource"} if op == "VCI" else set()),
             )
             self.assertEqual(fields["dtype"], dtype)
             profile = db.resolve_inst(op, form, dtype)

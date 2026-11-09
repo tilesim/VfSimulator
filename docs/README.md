@@ -16,6 +16,7 @@ CanonicalVfInfo 对象统一接收，微架构组件按周期推进指令、依�
 | [访存模型](lsu_model.md) | LSU 仲裁、地址更新、多结果和打包访存 |
 | [Membar 时序](membar_timing_model.md) | 屏障控制、方向、释放和退休 |
 | [指令时序与证据](instruction_timing.md) | 参数覆盖、测量口径、近似边界及探针 |
+| [子 EXU 模型](execution_resources.md) | 资源分组、self-II 接收时间、交叉 II、forwarding 和例外配置 |
 | [VFtest 算子指令对](instruction_coverage/a5/operator_pairs.md) | 完整算子与依赖探针所需的 II、forwarding 和实测证据 |
 | [Membar 归档算子指令对](instruction_coverage/a5/membar_pairs.md) | 归档算子的 II、forwarding、数值证据和输入验证状态 |
 | [A5 指令覆盖清单](a5_instruction_coverage.md) | CANN VF 声明、dtype、签名和时序参数缺口 |

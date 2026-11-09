@@ -30,6 +30,10 @@ struct InstructionProfile {
   std::string dispatchExu;
   std::string opClass;
   std::vector<int> allowedExuPorts;
+  std::string executionResource;
+  std::optional<int64_t> selfIi;
+  std::vector<std::string> writebackBanks;
+  std::string resolvedForm;
 };
 
 struct IsaDefaults {
@@ -136,6 +140,11 @@ struct ParamBundle {
   std::unordered_map<std::string, std::unordered_map<std::string, int64_t>>
       initiationIntervalByForm;
   int64_t forwardingDefaultOffset = 3;
+  std::vector<std::string> executionResources;
+  int64_t resourceForwardingMinimum = 2;
+  int64_t resourceForwardingDefaultOffset = 4;
+  std::unordered_map<std::string, std::unordered_map<std::string, int64_t>> resourceForwardingOffsets;
+  std::unordered_map<std::string, std::unordered_map<std::string, int64_t>> iiOverrides, forwardingOverrides;
   UarchConfig uarch;
 };
 

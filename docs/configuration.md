@@ -11,9 +11,11 @@
 | [instruction_catalog.json](../configs/instruction_catalog.json) | opcode、签名、operand、form、mode、地址语义、UB 预算和对齐操作 | API 参数绑定与指令校验、Core 入队 |
 | [uarch.json](../configs/uarch.json) | 资源容量、传输延迟、循环、调度和屏障参数 | `loader.py`、`uarch.py`、执行组件 |
 | [uarch_override_schema.json](../configs/uarch_override_schema.json) | Canonical 标量覆盖的字段类型及 Python/C++ 支持范围 | API 配置校验和共享表生成 |
-| [isa.json](../configs/isa.json) | 指令 form 的 latency、FU、端口及 VF startup/drain | 指令 Profile 解析 |
+| [isa.json](../configs/isa.json) | 指令 form 的 latency、FU、端口、`execution_resource` 及 VF startup/drain | 指令 Profile 解析 |
+| [execution_resources.json](../configs/execution_resources.json) | 子 EXU 名称和 forwarding 推导规则 | 参数查询与 EXU 资源状态 |
+| [timing_overrides.json](../configs/timing_overrides.json) | 偏离分组规律的有向 II、forwarding 指令对 | 参数查询与发射约束 |
 | [forwarding.json](../configs/forwarding.json) | producer 到 consumer 的可用间隔 | 寄存器和对齐状态就绪查询 |
-| [InitiationInterval.json](../configs/InitiationInterval.json) | 前后指令在同端口的发射间隔 | EXU 发射仲裁 |
+| [InitiationInterval.json](../configs/InitiationInterval.json) | self-II 及未分组指令的显式交叉间隔 | 子单元接收间隔与 EXU 发射仲裁 |
 
 Catalog 提供语义声明，ISA、forwarding 和 II 提供执行时序。Catalog 的语义支持范围和
 参数表的测量覆盖范围分别检查。`InstructionCatalog.compare_timing_config()` 返回
@@ -22,10 +24,13 @@ Catalog 提供语义声明，ISA、forwarding 和 II 提供执行时序。Catalo
 ## 加载与覆盖
 
 `loader.resolve_path()` 按以下顺序选择配置：显式路径、环境变量、默认候选文件。
-四类环境变量为 `ISA_JSON_PATH`、`UARCH_JSON_PATH`、`FORWARDING_JSON_PATH` 和
-`II_JSON_PATH`。默认文件位于 `configs/`，loader 也检查根目录候选路径。
+环境变量为 `ISA_JSON_PATH`、`UARCH_JSON_PATH`、`FORWARDING_JSON_PATH`、
+`II_JSON_PATH`、`EXECUTION_RESOURCES_JSON_PATH` 和 `TIMING_OVERRIDES_JSON_PATH`。
+默认文件位于 `configs/`，loader 也检查根目录候选路径。
+资源规则和例外表默认从所选 ISA 文件的同目录加载；环境变量可单独指定这两份文件。
 ISA 与 uarch 文件必须存在；可选 forwarding/II 文件缺失时使用查询回退规则。
-格式错误、字段类型错误和无效的表格单元会抛出异常。
+资源分组与例外表可按需提供；声明 `execution_resource` 的 form 需要对应资源定义。
+格式错误、未知资源、无效指令对及字段类型错误会抛出异常。
 
 `CoreVfCostModel` 创建时加载一次参数快照，连续调用 `run_vf_info()` 复用该快照。
 配置文件或路径环境变量的更新在创建新的模型实例后生效。
@@ -64,7 +69,8 @@ Profile 对缓存，缓存值为相对周期数。
 `enable_shq_credit_model=true` 启用 compute/store 共用信用。
 `exq_capacity_counts_inflight=false` 使用队列占用进行 EXQ 容量核算。
 
-`enable_cross_fu_ii` 控制跨 FU 的成对 II；`enforce_same_cycle_src_hazard` 控制同周期
+`enable_cross_fu_ii` 控制直接发射路径中未分组指令的跨 FU 成对 II；子单元接收时间、
+例外 II 和物理 EXU 单周期带宽始终生效。`enforce_same_cycle_src_hazard` 控制同周期
 源冲突检查。`enable_exq_greedy_balance`、`predict_exq_issue_with_cross_fu` 和
 `shq_exq_static_rr` 提供额外端口选择策略；其默认值在 `UarchParameters` 中均为 false。
 `assert_start_release_integrity` 默认 true，检查源释放事件的完整性。
@@ -104,10 +110,14 @@ Profile 对缓存，缓存值为相对周期数。
 form 优先精确匹配，查询可使用 `b16→fp16`、`b32→fp32` 备选。
 缺失指令参数使用 latency=9；计算指令的默认 FU/端口为 ALU/EXU01，并记录 warning。
 
-forwarding 优先查询指令对，随后检查 producer 的 `*` 默认 consumer。
+forwarding 按例外表、显式指令对、producer 的 `*`、资源规则的顺序查询。
+两端均分组时使用 `max(2, producer_latency-offset)`，涉及 LNEXP 时 offset=3，
+其他分组对 offset=4。例外表保留偏离规则的参数。
 缺失 LOAD→STORE 对使用 6 cycles，其他缺失对使用 `max(0, producer_latency-3)`。
-II 优先查显式指令对；缺失对在前条 latency 比后条大 1 时取 2，否则取 1。
+II 按例外表、显式指令对、资源规则查询。同组使用前条指令的 self-II，异组基础间隔为 1；
+静态完成周期碰撞时加 1。缺失对在前条 latency 比后条大 1 时取 2，否则取 1。
 缺失参数记录于 `model_warnings.json`，精度覆盖需结合测量证据判断。
+资源规则属于有依据的估计；逐对实测范围和运行时约束见[子 EXU 模型](execution_resources.md)。
 
 ## 理论模式
 
@@ -128,7 +138,7 @@ Profile 查询同时使用 opcode、form、dtype、类别和 memory mode。
 `lsu_resource` 与正整数 `lsu_issue_interval` 声明共享 GSU 或块存储服务资源；
 `align_state_latency` 声明状态发布间隔，默认值为 1。
 
-forwarding 查询优先检查精确指令对，再检查明确的 opcode alias 和已有回退规则。
+forwarding 查询先检查例外；明确的 opcode alias、显式指令对和资源规则共同提供时序。
 VDUP 表达向量源广播，VDUPS 表达标量源广播；两者使用各自的时序键。
 A5 类型与实测覆盖见 [指令清单](a5_instruction_coverage.md) 和
 [覆盖进度](instruction_coverage/a5/progress.md)。

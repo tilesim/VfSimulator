@@ -7,8 +7,10 @@ from collections import Counter, defaultdict
 import hashlib
 import json
 from pathlib import Path
+from types import SimpleNamespace
 
 import vector_compute as probe
+from core.params.resources import forwarding_interval, instruction_banks, issue_interval
 
 
 def digest(path):
@@ -189,6 +191,14 @@ def apply_parameters(parameters, root, apply, replace=()):
         for name in ("isa.json", "forwarding.json", "InitiationInterval.json")
     }
     documents = {name: json.loads(path.read_text()) for name, path in paths.items()}
+    resource_path = root / "configs/execution_resources.json"
+    resources = json.loads(resource_path.read_text()) if resource_path.exists() else None
+    override_path = root / "configs/timing_overrides.json"
+    if resources:
+        paths["timing_overrides.json"] = override_path
+        documents["timing_overrides.json"] = (
+            json.loads(override_path.read_text()) if override_path.exists()
+            else dict(schema_version=1, ii={}, forwarding={}))
     changes, conflicts = [], []
 
     def merge(destination, name, value, path):
@@ -226,16 +236,55 @@ def apply_parameters(parameters, root, apply, replace=()):
         target = item["forms"].setdefault(form, {})
         for field, value in fields.items():
             merge(target, field, value, "isa." + key + "." + field)
+    # Self-II is the measured occupancy of a resource; install it before
+    # comparing cross-instruction observations with the resource rule.
+    ii_table = documents["InitiationInterval.json"]["InitiationInterval"]
+    for producer, consumers in parameters["ii"].items():
+        if producer in consumers:
+            merge(ii_table.setdefault(producer, {}), producer, consumers[producer],
+                  "ii." + producer + "->" + producer)
+
+    def profile(key):
+        op, form = key.split(".", 1)
+        node = documents["isa.json"]["instructions"].get(op, {})
+        fields = {**documents["isa.json"].get("defaults", {}), **node,
+                  **node.get("forms", {}).get(form, {})}
+        return SimpleNamespace(execution_resource=fields.get("execution_resource", ""),
+            latency=fields.get("latency", 9), writeback_banks=instruction_banks(op),
+            self_ii=ii_table.get(key, {}).get(key))
+
     for section, filename, table in [
-        ("forwarding", "forwarding.json", "forwarding"),
         ("ii", "InitiationInterval.json", "InitiationInterval"),
+        ("forwarding", "forwarding.json", "forwarding"),
     ]:
         for producer, consumers in parameters[section].items():
-            target = documents[filename][table].setdefault(producer, {})
             for consumer, value in consumers.items():
-                merge(
-                    target, consumer, value, section + "." + producer + "->" + consumer
-                )
+                if section == "ii" and producer == consumer:
+                    continue
+                path = section + "." + producer + "->" + consumer
+                previous, current = profile(producer), profile(consumer)
+                estimate = None
+                if resources:
+                    estimate = (issue_interval(previous, current) if section == "ii"
+                        else forwarding_interval(resources, previous.execution_resource,
+                                                 current.execution_resource, previous.latency))
+                if not (resources and previous.execution_resource and current.execution_resource):
+                    merge(documents[filename][table].setdefault(producer, {}), consumer, value, path)
+                    continue
+                explicit = documents[filename][table].get(producer, {})
+                if consumer in explicit and explicit[consumer] != value and path not in replace:
+                    conflicts.append(dict(path=path, configured=explicit[consumer], observed=value))
+                    continue
+                overrides = documents["timing_overrides.json"][section]
+                target = overrides.setdefault(producer, {})
+                if value != estimate or consumer in target:
+                    merge(target, consumer, value, path)
+                    if target.get(consumer) == estimate:
+                        del target[consumer]
+                if consumer in explicit:
+                    del explicit[consumer]
+                if not target:
+                    overrides.pop(producer, None)
     if apply:
         for name, path in paths.items():
             path.write_text(

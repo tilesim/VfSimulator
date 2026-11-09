@@ -31,20 +31,20 @@ class OoODispatchTest(unittest.TestCase):
         self.assertEqual(len(core.exq.exq_wait[0]['ALU']), 1)
         self.assertEqual(core.exq.exq_wait[0]['ALU'][0].op, 'VPACK')
         self.assertEqual(core.exq.exq_wait[0]['ALU'][0].exu_port, 0)
-        self.assertEqual(len(core.exq.exq_wait[1]['ALU']), 0)
+        self.assertEqual(len(core.exq.exq_wait[1]['ADD_DUAL']), 0)
 
 
     def test_fu_round_robin_fifo_allows_alu_to_pass_blocked_exu0_only_alu(self):
         core = self._engine()
-        core.exq.exq_wait[0]['ALU'].append(self._uop(100, 'VADDS', db=core.db))
-        core.exq.exq_wait[0]['SFU'].append(self._uop(101, 'VEXP', db=core.db))
+        core.exq.exq_wait[0]['ADD_DUAL'].append(self._uop(100, 'VADDS', db=core.db))
+        core.exq.exq_wait[0]['LNEXP'].append(self._uop(101, 'VEXP', db=core.db))
         core.shq.SHQ.extend([self._uop(0, 'VPACK', form='b32', db=core.db), self._uop(1, 'VADDS', db=core.db)])
         issued = core.ooo.dispatch(0, set())
         self.assertEqual(issued, 1)
         self.assertEqual([u.op for u in core.shq.SHQ], ['VPACK'])
-        self.assertEqual(len(core.exq.exq_wait[1]['ALU']), 1)
-        self.assertEqual(core.exq.exq_wait[1]['ALU'][0].op, 'VADDS')
-        self.assertEqual(core.exq.exq_wait[1]['ALU'][0].exu_port, 1)
+        self.assertEqual(len(core.exq.exq_wait[1]['ADD_DUAL']), 1)
+        self.assertEqual(core.exq.exq_wait[1]['ADD_DUAL'][0].op, 'VADDS')
+        self.assertEqual(core.exq.exq_wait[1]['ADD_DUAL'][0].exu_port, 1)
 
 
     def test_fu_round_robin_fifo_allows_sfu_to_pass_blocked_alu_group(self):
@@ -58,8 +58,8 @@ class OoODispatchTest(unittest.TestCase):
         issued = core.ooo.dispatch(0, {'p_shared'})
         self.assertEqual(issued, 1)
         self.assertEqual([u.op for u in core.shq.SHQ], ['VADDS', 'VADDS'])
-        self.assertEqual(len(core.exq.exq_wait[0]['SFU']), 1)
-        self.assertEqual(core.exq.exq_wait[0]['SFU'][0].op, 'VEXP')
+        self.assertEqual(len(core.exq.exq_wait[0]['LNEXP']), 1)
+        self.assertEqual(core.exq.exq_wait[0]['LNEXP'][0].op, 'VEXP')
 
 
     def test_exu0_reserve_lookahead_min_count_sends_flexible_alu_to_exq1(self):
@@ -70,9 +70,9 @@ class OoODispatchTest(unittest.TestCase):
         self.assertEqual(len(core.exq.exq_wait[0]['ALU']), 1)
         self.assertEqual(core.exq.exq_wait[0]['ALU'][0].op, 'VPACK')
         self.assertEqual(core.exq.exq_wait[0]['ALU'][0].exu_port, 0)
-        self.assertEqual(len(core.exq.exq_wait[1]['ALU']), 1)
-        self.assertEqual(core.exq.exq_wait[1]['ALU'][0].op, 'VADDS')
-        self.assertEqual(core.exq.exq_wait[1]['ALU'][0].exu_port, 1)
+        self.assertEqual(len(core.exq.exq_wait[1]['ADD_DUAL']), 1)
+        self.assertEqual(core.exq.exq_wait[1]['ADD_DUAL'][0].op, 'VADDS')
+        self.assertEqual(core.exq.exq_wait[1]['ADD_DUAL'][0].exu_port, 1)
 
 
     def test_exu0_reserve_ignores_single_exu0_only_in_window(self):
@@ -81,10 +81,10 @@ class OoODispatchTest(unittest.TestCase):
         issued = core.ooo.dispatch(0, set())
         self.assertEqual(issued, 1)
         self.assertEqual([u.op for u in core.shq.SHQ], ['VPACK'])
-        self.assertEqual(len(core.exq.exq_wait[0]['ALU']), 1)
-        self.assertEqual(core.exq.exq_wait[0]['ALU'][0].op, 'VADDS')
-        self.assertEqual(core.exq.exq_wait[0]['ALU'][0].exu_port, 0)
-        self.assertEqual(len(core.exq.exq_wait[1]['ALU']), 0)
+        self.assertEqual(len(core.exq.exq_wait[0]['ADD_DUAL']), 1)
+        self.assertEqual(core.exq.exq_wait[0]['ADD_DUAL'][0].op, 'VADDS')
+        self.assertEqual(core.exq.exq_wait[0]['ADD_DUAL'][0].exu_port, 0)
+        self.assertEqual(len(core.exq.exq_wait[1]['ADD_DUAL']), 0)
 
 
     def test_default_exu0_reserve_min_count_reserves_for_single_exu0_only(self):
@@ -96,19 +96,19 @@ class OoODispatchTest(unittest.TestCase):
         issued = core.ooo.dispatch(0, set())
         self.assertEqual(issued, 2)
         self.assertEqual([u.op for u in core.exq.exq_wait[0]['ALU']], ['VPACK'])
-        self.assertEqual([u.op for u in core.exq.exq_wait[1]['ALU']], ['VADDS'])
+        self.assertEqual([u.op for u in core.exq.exq_wait[1]['ADD_DUAL']], ['VADDS'])
 
 
     def test_exu0_reserve_balances_queue_gap_instead_of_forcing_exq1(self):
         db = ParamDB(base_dir=str(ROOT))
         uarch = dict(db.get_uarch())
         core = component_engine(uarch, db, fallback_dtype='fp32')
-        core.exq.exq_wait[1]['ALU'].append(self._uop(100, 'VADDS', db=core.db))
+        core.exq.exq_wait[1]['ADD_DUAL'].append(self._uop(100, 'VADDS', db=core.db))
         core.shq.SHQ.extend([self._uop(0, 'VADDS', db=core.db), self._uop(1, 'VPACK', form='b32', db=core.db)])
         issued = core.ooo.dispatch(0, set())
         self.assertEqual(issued, 1)
-        self.assertEqual([u.op for u in core.exq.exq_wait[0]['ALU']], ['VADDS'])
-        self.assertEqual([u.op for u in core.exq.exq_wait[1]['ALU']], ['VADDS'])
+        self.assertEqual([u.op for u in core.exq.exq_wait[0]['ADD_DUAL']], ['VADDS'])
+        self.assertEqual([u.op for u in core.exq.exq_wait[1]['ADD_DUAL']], ['VADDS'])
         self.assertEqual([u.op for u in core.shq.SHQ], ['VPACK'])
 
 

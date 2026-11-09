@@ -208,7 +208,7 @@ class ExuCompletionTests(unittest.TestCase):
                 self.start(engine, self.uop(engine, 0, 'VEXP'), 100)
                 if pending:
                     tail = self.uop(engine, 1, 'VADD')
-                    engine.exq.enqueue(tail, 0, 'ALU', 107, 107)
+                    engine.exq.enqueue(tail, 0, 107, 107)
                 candidate = self.uop(engine, 9, 'VADD')
                 self.assertEqual(engine.exq.predict_issue_cycle(0, candidate, 109), 110)
                 self.assertEqual(engine.exq.predict_issue_cycle(0, candidate, 109), 110)
@@ -217,7 +217,7 @@ class ExuCompletionTests(unittest.TestCase):
         engine = self.engine()
         self.start(engine, self.uop(engine, 0, 'VEXP'), 100)
         candidate = self.uop(engine, 1, 'VADD')
-        engine.exq.enqueue(candidate, 0, 'ALU', 109, 109)
+        engine.exq.enqueue(candidate, 0, 109, 109)
         self.assertIsNone(engine.exq.pop_ready(0, 109))
         self.assertEqual(engine.exq.pop_ready(0, 110), ('ALU', candidate))
 
@@ -229,12 +229,12 @@ class ExuCompletionTests(unittest.TestCase):
                     self.start(engine, self.uop(engine, 0, 'VEXP'), 100)
                     predicate = self.uop(engine, 1, 'VCMP_GT', banks=('predicate',))
                     if pending:
-                        engine.exq.enqueue(self.uop(engine, 2, 'VADD'), 0, 'ALU', 107, 107)
+                        engine.exq.enqueue(self.uop(engine, 2, 'VADD'), 0, 107, 107)
                     self.assertEqual(engine.exq.predict_issue_cycle(0, predicate, 110), 110)
                     self.assertEqual(engine.exu.pick_port(predicate, 110, [False, True]), 0)
                     if pending:
                         self.assertIsNotNone(engine.exq.pop_ready(0, 107))
-                    engine.exq.enqueue(predicate, 0, 'ALU', 110, 110)
+                    engine.exq.enqueue(predicate, 0, 110, 110)
                     self.assertEqual(engine.exq.pop_ready(0, 110), ('ALU', predicate))
 
     def test_pipelined_independent_instructions_still_overlap(self):

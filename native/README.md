@@ -68,10 +68,12 @@ native/
 | `core/uarch/register_bank.h`、`core/uarch/registers.*` | 物理寄存器、重命名、源释放、可见信用和对齐状态 |
 | `core/uarch/shq.h` | 计算等待队列及共享 SHQ 信用 |
 | `core/uarch/ooo.*` | 就绪指令选择、SHQ 到 EXQ 的端口分配和直接发射 |
-| `core/uarch/exq.*` | 各端口的 FU 队列、接收时间和队首选择 |
-| `core/uarch/exu.*` | EXU 端口约束、II、运行中指令和完成 |
+| `core/uarch/exq.*` | 各端口的资源队列、共享容量、接收时间和队首选择 |
+| `core/uarch/exu.*` | EXU 端口约束、子单元接收状态、例外 II、运行中指令和完成 bank |
+| `core/uarch/sub_exu.h` | 单个子单元按 self-II 更新的接收周期 |
 | `core/uarch/lsu.*` | LSQ、访存依赖、load/store 优先级及共享 UB 预算 |
 | `core/params/` | 参数类型、文件读取、配置解析、指令查询和缺失项回退 |
+| `core/params/resources.*` | 子单元规则、静态 II、forwarding 与资源参数校验 |
 | `core/trace/` | 事件快照、结果类型、日志及 Perfetto Trace 写出 |
 | `cli/` | CCE / Canonical JSON 命令行工具 |
 | `tests/` | 输入契约、组件时序、资源、地址、谓词和 membar 测试 |
@@ -117,6 +119,10 @@ JSON runner 独立于测试开关构建。`--max-cycles` 可覆盖程序的周�
 同一模型的连续运行共享只读 `ParamBundle`，配置文件和路径环境变量的更新在创建
 新的模型实例后生效。每次运行创建独立的 `ParamDB`、查询缓存、警告和微架构状态。
 forwarding 按 producer opcode/form 与 consumer opcode/form 缓存相对周期数。
+`isa.json` 的 `execution_resource` 将已确认 form 分入 ADD_DUAL、ADD_CONV、MUL、MOV、
+LNEXP。各物理 EXU 的子单元分别维护接收周期；资源规则、交叉时序与指令对例外见
+[子 EXU 模型](../docs/execution_resources.md)。`execution_resources.json` 和
+`timing_overrides.json` 默认与所选 ISA 同目录，按模型参数快照加载。
 
 结果包括 cyclesExecuted、vfEndCycle、linearInstCount、resultsDir 和 tracePath。
 linearInstCount 统计静态线性布局条目，包含循环首尾控制条目。

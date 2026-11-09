@@ -1,0 +1,35 @@
+{
+  "schema_version": 1,
+  "groups": [
+    "ADD_DUAL",
+    "ADD_CONV",
+    "MUL",
+    "MOV",
+    "LNEXP"
+  ],
+  "forwarding": {
+    "minimum": 2,
+    "default_offset": 4,
+    "pair_offsets": {
+      "ADD_DUAL": {
+        "LNEXP": 3
+      },
+      "ADD_CONV": {
+        "LNEXP": 3
+      },
+      "MUL": {
+        "LNEXP": 3
+      },
+      "MOV": {
+        "LNEXP": 3
+      },
+      "LNEXP": {
+        "ADD_DUAL": 3,
+        "ADD_CONV": 3,
+        "MUL": 3,
+        "MOV": 3,
+        "LNEXP": 3
+      }
+    }
+  }
+}

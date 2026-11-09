@@ -81,8 +81,9 @@ configs/           指令语义与微架构时序参数
 | [register_bank.py](../core/uarch/register_bank.py) | `allocate/can_free/try_free` | 管理 vector/predicate 物理资源池及安全回收 |
 | [shq.py](../core/uarch/shq.py) | `enqueue/update_ready/reserve/release_credit` | 维护计算等待指令及 compute/store 共用信用 |
 | [ooo.py](../core/uarch/ooo.py) | `dispatch/issue_direct_from_shq` | 选择就绪计算指令、安排端口、执行轮转和 EXU0 预留策略 |
-| [exq.py](../core/uarch/exq.py) | `enqueue/can_accept/predict_issue_cycle/pop_ready` | 每端口 FU 队列、容量、接收延迟和队首选择 |
-| [exu.py](../core/uarch/exu.py) | `can_accept/can_issue/next_issue_cycle/start/finish` | 管理端口、II、在执行容量、开始和完成 |
+| [exq.py](../core/uarch/exq.py) | `enqueue/can_accept/predict_issue_cycle/pop_ready` | 每端口资源队列、共享容量、接收延迟和队首选择 |
+| [exu.py](../core/uarch/exu.py) | `can_accept/can_issue/next_issue_cycle/start/finish` | 管理物理端口、子单元、例外间隔、在执行容量和完成 bank |
+| [sub_exu.py](../core/uarch/sub_exu.py) | `SubEXU.start` | 按 self-II 维护单个子单元的下一次接收周期 |
 | [lsu.py](../core/uarch/lsu.py) | `enqueue/update_ready/_issue_ready_lsu/finish` | 维护 LSQ、访存依赖及共享 UB 发射预算 |
 
 `idu.py` 中的 `DispatchBudget` 保存本周期可用额度；`AddressStateTracker` 记录指针更新
@@ -98,6 +99,7 @@ configs/           指令语义与微架构时序参数
 | [database.py](../core/params/database.py) | 解析并缓存指令 Profile，查询 forwarding 与 II，收集缺失参数诊断 |
 | [uarch.py](../core/params/uarch.py) | 合并基础配置和 VF override，检查模型端口范围，应用理论场景 |
 | [fallback.py](../core/params/fallback.py) | 选择 form 候选和缺失时序的默认值 |
+| [resources.py](../core/params/resources.py) | 校验资源配置，按分组和 self-II 推导交叉 II、forwarding |
 
 参数的字段和加载优先级见[配置参数](configuration.md)。
 

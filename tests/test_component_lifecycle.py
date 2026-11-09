@@ -24,7 +24,7 @@ class ComponentLifecycleTest(unittest.TestCase):
         tail = self.uop(engine, 1)
         other_fu = self.uop(engine, 2, 'VEXP')
         for u in (head, tail, other_fu):
-            engine.exq.enqueue(u, 0, u.profile.fu_type, 100, 100)
+            engine.exq.enqueue(u, 0, 100, 100)
         self.assertEqual(engine.exq.pop_ready(0, 100), ('SFU', other_fu))
         self.assertEqual(engine.exq.occupancy(0), 2)
         self.assertIsNone(engine.exq.pop_ready(0, 100))
@@ -37,7 +37,7 @@ class ComponentLifecycleTest(unittest.TestCase):
     def test_exq_waits_for_reception_and_exu_completion_capacity(self):
         engine = self.engine(exq_issue_inflight_cap_per_port=1)
         candidate = self.uop(engine, 1)
-        engine.exq.enqueue(candidate, 0, 'ALU', 103, 103)
+        engine.exq.enqueue(candidate, 0, 103, 103)
         self.assertIsNone(engine.exq.pop_ready(0, 102))
         producer = self.uop(engine, 0)
         engine.exu.start(producer, 0, 'ALU', 100, queued=True)
@@ -54,7 +54,7 @@ class ComponentLifecycleTest(unittest.TestCase):
             with self.subTest(counts_inflight=counts_inflight):
                 engine = self.engine(exq_depth=2, exq_capacity_counts_inflight=counts_inflight)
                 waiting = self.uop(engine, 1)
-                engine.exq.enqueue(waiting, 0, 'ALU', 100, 100)
+                engine.exq.enqueue(waiting, 0, 100, 100)
                 running = self.uop(engine, 0)
                 engine.exu.start(running, 0, 'ALU', 100, queued=True)
                 self.assertEqual(engine.exq.occupancy(0), 1)
@@ -62,12 +62,13 @@ class ComponentLifecycleTest(unittest.TestCase):
                 engine.exu.finish(running.done_cycle)
                 self.assertTrue(engine.exq.can_accept(0))
 
-    def test_exu_direct_and_queued_issue_keep_distinct_ii_rules(self):
+    def test_physical_entry_bandwidth_applies_in_direct_and_queue_modes(self):
         engine = self.engine(enable_cross_fu_ii=False, exq_issue_inflight_cap_per_port=0)
         producer = self.uop(engine, 0, 'VEXP')
         consumer = self.uop(engine, 1)
         engine.exu.start(producer, 0, 'SFU', 100, queued=True)
-        self.assertTrue(engine.exu.can_issue(consumer, 0, 100))
+        self.assertFalse(engine.exu.can_issue(consumer, 0, 100))
+        self.assertTrue(engine.exu.can_issue(consumer, 0, 101))
         self.assertFalse(engine.exu.can_issue(consumer, 0, 100, queued=True))
         self.assertEqual(len(engine.exu.running), 1)
         next_cycle = engine.exu.next_issue_cycle(consumer, 0)

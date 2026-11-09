@@ -47,11 +47,13 @@ void testIssueIntervals(const ParamDB &db) {
 
   EXU forms(cfg, db);
   forms.start(compute(0, "VEXP", db), 0, 100, true);
-  forms.start(compute(1, "VEXP", db, "fp16"), 0, 101, true);
-  forms.start(compute(2, "VADD", db), 0, 102, true);
-  require(forms.nextIssueCycle(*compute(3, "VEXP", db), 0) == 104 &&
-              forms.nextIssueCycle(*compute(4, "VEXP", db, "fp16"), 0) == 109,
-          "Each opcode/form preserves its own self-II deadline");
+  require(!forms.canIssue(*compute(1, "VEXP", db, "fp16"), 0, 101, true),
+          "Mixed precision instructions share the LNEXP resource");
+  forms.start(compute(1, "VEXP", db, "fp16"), 0, 104, true);
+  forms.start(compute(2, "VADD", db), 0, 105, true);
+  require(forms.nextIssueCycle(*compute(3, "VEXP", db), 0) == 113 &&
+              forms.nextIssueCycle(*compute(4, "VEXP", db, "fp16"), 0) == 112,
+          "Resource cooldown and mixed-precision exception preserve their deadlines");
 
   std::unordered_map<std::string, ValueInfo> values;
   Registers regs(cfg, db, values);
@@ -177,6 +179,62 @@ void testCompletionBandwidth(const ParamDB &db) {
     pipeline.start(current, 0, 100 + i, true);
   }
   require(pipeline.inflight(0) == 6, "Completion bandwidth preserves pipelined overlap");
+}
+void testSubExecutionResources(const ParamDB &db) {
+  auto cfg = db.uarch();
+  cfg.exqIssueInflightCapPerPort = 0;
+  for (bool queued : {false, true}) {
+    EXU exu(cfg, db);
+    exu.start(compute(0, "VCI", db, "int32"), 0, 100, queued);
+    auto add = compute(1, "VADD", db);
+    require(!exu.canIssue(*add, 0, 101, queued) &&
+                exu.canIssue(*compute(2, "VMUL", db), 0, 101, queued),
+            "VCI occupies ADD_DUAL while MUL is independently available");
+    require(exu.canIssue(*add, 1, 100, queued),
+            "Each physical EXU owns separate sub-units");
+    exu.start(compute(3, "VEXP", db), 0, 101, queued);
+    require(exu.nextIssueCycle(*add, 0) == 102,
+            "Another resource cannot reset the ADD_DUAL receive deadline");
+  }
+  std::unordered_map<std::string, ValueInfo> values;
+  Registers regs(cfg, db, values);
+  EXU exu(cfg, db);
+  exu.start(compute(0, "VCI", db, "int32"), 0, 100, true);
+  EXQ queues(cfg, db, regs, exu);
+  auto add = compute(1, "VADD", db), mul = compute(2, "VMUL", db);
+  queues.enqueue(add, 0, 101, 102);
+  queues.enqueue(mul, 0, 101, 101);
+  require(queues.popReady(0, 101) == mul && queues.occupancy(0) == 1 &&
+              queues.popReady(0, 102) == add,
+          "An idle resource bypasses a blocked resource queue head");
+  EXU empty(cfg, db);
+  EXQ pending(cfg, db, regs, empty);
+  pending.enqueue(compute(0, "VCI", db, "int32"), 0, 100, 100);
+  require(pending.predictIssueCycle(0, *add, 101) == 102 &&
+              pending.predictIssueCycle(0, *mul, 101) == 101,
+          "Pending resource occupancy applies across different opcodes");
+  EXU exceptions(cfg, db);
+  exceptions.start(compute(0, "VEXP", db), 0, 100, true);
+  exceptions.start(compute(1, "VADD", db), 0, 101, true);
+  auto divide = compute(2, "VDIV", db);
+  require(exceptions.nextResourceIssueCycle(*divide, 0) == 104 &&
+              exceptions.nextIssueCycle(*divide, 0) == 106,
+          "Sparse pair exceptions survive intervening independent instructions");
+  EXU pendingExu(cfg, db);
+  EXQ pendingExceptions(cfg, db, regs, pendingExu);
+  pendingExceptions.enqueue(compute(0, "VEXP", db), 0, 100, 100);
+  pendingExceptions.enqueue(compute(1, "VADD", db), 0, 101, 101);
+  require(pendingExceptions.predictIssueCycle(0, *divide, 102) == 106,
+          "EXQ prediction checks pending exception producers");
+  auto bundle = std::make_shared<ParamBundle>(db.bundle());
+  bundle->iiOverrides["VEXP.fp32"]["VDIV.fp32"] = 30;
+  ParamDB extended(bundle);
+  EXU completion(cfg, extended);
+  completion.start(compute(0, "VEXP", extended), 0, 100, true);
+  completion.finish(116);
+  completion.start(compute(1, "VADD", extended), 0, 117, true);
+  require(completion.nextIssueCycle(*compute(2, "VDIV", extended), 0) == 130,
+          "Producer completion retains an unexpired pair constraint");
 }
 void testSeparateWritebackBanks(const ParamDB &db) {
   auto cfg = db.uarch();
@@ -307,6 +365,7 @@ void testRenameWritebackBanks(const ParamDB &db) {
 int main() {
   ParamDB db(VFSIM_SOURCE_ROOT);
   testIssueIntervals(db);
+  testSubExecutionResources(db);
   testCompletionBandwidth(db);
   testSeparateWritebackBanks(db);
   testRenameWritebackBanks(db);
