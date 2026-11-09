@@ -70,8 +70,8 @@ VfSimulator/
 | `core/uarch/register_bank.h`、`core/uarch/registers.*` | 物理寄存器、重命名、源释放、可见信用和对齐状态 |
 | `core/uarch/shq.h` | 计算等待队列及共享 SHQ 信用 |
 | `core/uarch/ooo.*` | 就绪指令选择、SHQ 到 EXQ 的端口分配和直接发射 |
-| `core/uarch/exq.*` | 各端口的 FU 队列、接收时间和队首选择 |
-| `core/uarch/exu.*` | EXU 端口约束、II、运行中指令和完成 |
+| `core/uarch/exq.*` | 各端口的资源队列、共享容量、接收时间和队首选择 |
+| `core/uarch/exu.*` | EXU 端口、子单元接收时间、例外 II、运行中指令和完成 bank |
 | `core/uarch/lsu.*` | LSQ、访存依赖、load/store 优先级及共享 UB 预算 |
 | `core/params/` | 参数类型、文件读取、配置解析、指令查询和缺失项回退 |
 | `core/trace/` | 事件快照、结果类型、日志及 Perfetto Trace 写出 |
@@ -131,3 +131,5 @@ idu_to_ooo.json、地址与资源阻塞日志、vloop_trace.json 和 trace.json�
 记录定义及其动态迭代路径。每个迭代项包含 loop ID、iteration、induction variable 和 induction value。
 Perfetto 输出进程及线程元数据、真实开始/完成区间和对应的 Canonical 身份。
 警告记录保留数字、字符串及嵌套对象类型。
+
+`core/uarch/sub_exu.h` 按 self-II 维护单个子单元接收周期；`core/params/resources.h/.cpp` 定义资源时序公式及参数校验。

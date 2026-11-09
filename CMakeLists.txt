@@ -30,6 +30,7 @@ add_library(vfsim_native_core STATIC
   core/params/database.cpp
   core/params/fallback.cpp
   core/params/loader.cpp
+  core/params/resources.cpp
   core/params/uarch.cpp
   core/simulator.cpp
   core/trace/perfetto.cpp

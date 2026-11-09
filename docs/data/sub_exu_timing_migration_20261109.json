@@ -1,0 +1,6318 @@
+{
+  "schema_version": 1,
+  "source_commit": "96e16636be1b25a7581283df72f4a99da61c56ff",
+  "source_parameter_sha256": {
+    "isa.json": "5588e6d9dff05a204e0cc6b0b59b49f5cfd795fec42ccb100a92bae5502a14eb",
+    "InitiationInterval.json": "174ba61536b3f4b9c1ba4f2a27558e1325d7290ef1a314d9fb44c2d9ce1cefea",
+    "forwarding.json": "a699c34605d91e2c77fffef5de268542a96d818015d61bda2583ff67ca5c53dc"
+  },
+  "a5_study": {
+    "repository": "https://github.com/wang-chonghao/VfSimulator-multiSoC",
+    "commit": "4eb76758860808e049786ee34244b3595c05b48e",
+    "path": "docs/data/a5_resource_model_validation_20261029.json",
+    "sha256": "431238fd5e2f49da4bad61544f84b48ee9b6c1ab1a4f5c335ac1e74ecd268f99"
+  },
+  "group_counts": {
+    "MOV": 11,
+    "MUL": 27,
+    "ADD_DUAL": 50,
+    "LNEXP": 8,
+    "ADD_CONV": 57
+  },
+  "removed_redundant_entries": {
+    "ii": 414,
+    "forwarding": 339
+  },
+  "override_counts": {
+    "ii": 21,
+    "forwarding": 19
+  },
+  "original_pair_values": [
+    {
+      "kind": "ii",
+      "previous": "VMOV.fp32",
+      "current": "VMOV.b32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VMOV.fp32",
+      "current": "VADD.fp32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VMOV.fp32",
+      "current": "VADDS.fp32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VMOV.fp32",
+      "current": "VAXPY.fp32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VMOV.fp32",
+      "current": "VCI.int32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VMOV.fp32",
+      "current": "VDIV.fp32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VMOV.fp32",
+      "current": "VEXP.fp32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VMOV.fp32",
+      "current": "VMUL.fp32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VMOV.fp32",
+      "current": "VMULS.fp32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VMOV.fp32",
+      "current": "VMULS.uint32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VMOV.fp32",
+      "current": "VSQRT.fp32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VMOV.fp32",
+      "current": "VSUB.fp32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VMOV.b32",
+      "current": "VMOV.fp32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VAXPY.fp32",
+      "current": "VADD.fp32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VAXPY.fp32",
+      "current": "VADDS.fp32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VAXPY.fp32",
+      "current": "VDIV.fp32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VAXPY.fp32",
+      "current": "VEXP.fp32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VAXPY.fp32",
+      "current": "VMOV.fp32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VAXPY.fp32",
+      "current": "VMUL.fp32",
+      "value": 2,
+      "rule": 2,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VAXPY.fp32",
+      "current": "VMULS.fp32",
+      "value": 2,
+      "rule": 2,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VCI.int32",
+      "current": "VADD.fp32",
+      "value": 2,
+      "rule": 2,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VCI.int32",
+      "current": "VADDS.fp32",
+      "value": 2,
+      "rule": 2,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VCI.int32",
+      "current": "VDIV.fp32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VCI.int32",
+      "current": "VEXP.fp32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VCI.int32",
+      "current": "VMOV.fp32",
+      "value": 2,
+      "rule": 2,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VCI.int32",
+      "current": "VMUL.fp32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VCI.int32",
+      "current": "VMULS.fp32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VCI.int32",
+      "current": "VMULS.uint32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VCI.int32",
+      "current": "VSQRT.fp32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VCI.int32",
+      "current": "VSUB.fp32",
+      "value": 2,
+      "rule": 2,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VSQRT.fp32",
+      "current": "VMUL.fp32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VSQRT.fp32",
+      "current": "VABS.fp32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VSQRT.fp32",
+      "current": "VADD.fp32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VSQRT.fp32",
+      "current": "VADDS.fp32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VSQRT.fp32",
+      "current": "VCI.int32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VSQRT.fp32",
+      "current": "VDIV.fp32",
+      "value": 4,
+      "rule": 4,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VSQRT.fp32",
+      "current": "VEXP.fp32",
+      "value": 5,
+      "rule": 4,
+      "override": true
+    },
+    {
+      "kind": "ii",
+      "previous": "VSQRT.fp32",
+      "current": "VLN.fp32",
+      "value": 4,
+      "rule": 4,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VSQRT.fp32",
+      "current": "VMOV.fp32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VSQRT.fp32",
+      "current": "VMULS.fp32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VSQRT.fp32",
+      "current": "VMULS.uint32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VSQRT.fp32",
+      "current": "VSUB.fp32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VLN.fp32",
+      "current": "VMUL.fp32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VLN.fp32",
+      "current": "VABS.fp32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VLN.fp32",
+      "current": "VADD.fp32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VLN.fp32",
+      "current": "VADDS.fp32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VLN.fp32",
+      "current": "VDIV.fp32",
+      "value": 5,
+      "rule": 4,
+      "override": true
+    },
+    {
+      "kind": "ii",
+      "previous": "VLN.fp32",
+      "current": "VEXP.fp32",
+      "value": 6,
+      "rule": 4,
+      "override": true
+    },
+    {
+      "kind": "ii",
+      "previous": "VLN.fp32",
+      "current": "VMULS.fp32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VLN.fp32",
+      "current": "VSQRT.fp32",
+      "value": 5,
+      "rule": 4,
+      "override": true
+    },
+    {
+      "kind": "ii",
+      "previous": "VLN.fp32",
+      "current": "VSUB.fp32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VADDS.fp32",
+      "current": "VMULS.fp32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VADDS.fp32",
+      "current": "VADD.fp32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VADDS.fp32",
+      "current": "VEXP.fp32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VADDS.fp32",
+      "current": "VDIV.fp32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VADDS.fp32",
+      "current": "VABS.fp32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VADDS.fp32",
+      "current": "VSUB.fp32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VADDS.fp32",
+      "current": "VMUL.fp32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VADDS.fp32",
+      "current": "VCVT_F16_TO_F32.f16_to_f32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VADDS.fp32",
+      "current": "VCVT_F32_TO_F16.f32_to_f16",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VADDS.fp32",
+      "current": "VCVT_F32_TO_S32.f32_to_s32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VADDS.fp32",
+      "current": "VCVT_S32_TO_F32.s32_to_f32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VADDS.fp32",
+      "current": "VAXPY.fp32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VADDS.fp32",
+      "current": "VCI.int32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VADDS.fp32",
+      "current": "VLN.fp32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VADDS.fp32",
+      "current": "VMOV.fp32",
+      "value": 2,
+      "rule": 2,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VADDS.fp32",
+      "current": "VMULS.uint32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VADDS.fp32",
+      "current": "VSQRT.fp32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VMULS.fp32",
+      "current": "VADDS.fp32",
+      "value": 2,
+      "rule": 2,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VMULS.fp32",
+      "current": "VADD.fp32",
+      "value": 2,
+      "rule": 2,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VMULS.fp32",
+      "current": "VEXP.fp32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VMULS.fp32",
+      "current": "VDIV.fp32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VMULS.fp32",
+      "current": "VABS.fp32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VMULS.fp32",
+      "current": "VSUB.fp32",
+      "value": 2,
+      "rule": 2,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VMULS.fp32",
+      "current": "VMUL.fp32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VMULS.fp32",
+      "current": "VCVT_F16_TO_F32.f16_to_f32",
+      "value": 2,
+      "rule": 2,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VMULS.fp32",
+      "current": "VCVT_F32_TO_F16.f32_to_f16",
+      "value": 2,
+      "rule": 2,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VMULS.fp32",
+      "current": "VCVT_F32_TO_S32.f32_to_s32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VMULS.fp32",
+      "current": "VCVT_S32_TO_F32.s32_to_f32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VMULS.fp32",
+      "current": "VAXPY.fp32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VMULS.fp32",
+      "current": "VCI.int32",
+      "value": 2,
+      "rule": 2,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VMULS.fp32",
+      "current": "VLN.fp32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VMULS.fp32",
+      "current": "VMOV.fp32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VMULS.fp32",
+      "current": "VMULS.uint32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VMULS.fp32",
+      "current": "VSQRT.fp32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VADD.fp32",
+      "current": "VADDS.fp32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VADD.fp32",
+      "current": "VMULS.fp32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VADD.fp32",
+      "current": "VEXP.fp32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VADD.fp32",
+      "current": "VDIV.fp32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VADD.fp32",
+      "current": "VABS.fp32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VADD.fp32",
+      "current": "VSUB.fp32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VADD.fp32",
+      "current": "VMUL.fp32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VADD.fp32",
+      "current": "VCVT_F16_TO_F32.f16_to_f32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VADD.fp32",
+      "current": "VCVT_F32_TO_F16.f32_to_f16",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VADD.fp32",
+      "current": "VCVT_F32_TO_S32.f32_to_s32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VADD.fp32",
+      "current": "VCVT_S32_TO_F32.s32_to_f32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VADD.fp32",
+      "current": "VADD.fp16",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VADD.fp32",
+      "current": "VAXPY.fp32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VADD.fp32",
+      "current": "VCI.int32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VADD.fp32",
+      "current": "VLN.fp32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VADD.fp32",
+      "current": "VMOV.fp32",
+      "value": 2,
+      "rule": 2,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VADD.fp32",
+      "current": "VMULS.uint32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VADD.fp32",
+      "current": "VSQRT.fp32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VEXP.fp32",
+      "current": "VADDS.fp32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VEXP.fp32",
+      "current": "VMULS.fp32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VEXP.fp32",
+      "current": "VADD.fp32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VEXP.fp32",
+      "current": "VDIV.fp32",
+      "value": 6,
+      "rule": 4,
+      "override": true
+    },
+    {
+      "kind": "ii",
+      "previous": "VEXP.fp32",
+      "current": "VABS.fp32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VEXP.fp32",
+      "current": "VSUB.fp32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VEXP.fp32",
+      "current": "VMUL.fp32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VEXP.fp32",
+      "current": "VCVT_F16_TO_F32.f16_to_f32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VEXP.fp32",
+      "current": "VCVT_F32_TO_F16.f32_to_f16",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VEXP.fp32",
+      "current": "VCVT_F32_TO_S32.f32_to_s32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VEXP.fp32",
+      "current": "VCVT_S32_TO_F32.s32_to_f32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VEXP.fp32",
+      "current": "VAXPY.fp32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VEXP.fp32",
+      "current": "VCI.int32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VEXP.fp32",
+      "current": "VLN.fp32",
+      "value": 6,
+      "rule": 4,
+      "override": true
+    },
+    {
+      "kind": "ii",
+      "previous": "VEXP.fp32",
+      "current": "VMOV.fp32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VEXP.fp32",
+      "current": "VMULS.uint32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VEXP.fp32",
+      "current": "VSQRT.fp32",
+      "value": 6,
+      "rule": 4,
+      "override": true
+    },
+    {
+      "kind": "ii",
+      "previous": "VDIV.fp32",
+      "current": "VADDS.fp32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VDIV.fp32",
+      "current": "VMULS.fp32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VDIV.fp32",
+      "current": "VADD.fp32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VDIV.fp32",
+      "current": "VEXP.fp32",
+      "value": 5,
+      "rule": 4,
+      "override": true
+    },
+    {
+      "kind": "ii",
+      "previous": "VDIV.fp32",
+      "current": "VABS.fp32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VDIV.fp32",
+      "current": "VSUB.fp32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VDIV.fp32",
+      "current": "VMUL.fp32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VDIV.fp32",
+      "current": "VCVT_F16_TO_F32.f16_to_f32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VDIV.fp32",
+      "current": "VCVT_F32_TO_F16.f32_to_f16",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VDIV.fp32",
+      "current": "VCVT_F32_TO_S32.f32_to_s32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VDIV.fp32",
+      "current": "VCVT_S32_TO_F32.s32_to_f32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VDIV.fp32",
+      "current": "VAXPY.fp32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VDIV.fp32",
+      "current": "VCI.int32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VDIV.fp32",
+      "current": "VLN.fp32",
+      "value": 4,
+      "rule": 4,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VDIV.fp32",
+      "current": "VMOV.fp32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VDIV.fp32",
+      "current": "VMULS.uint32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VDIV.fp32",
+      "current": "VSQRT.fp32",
+      "value": 4,
+      "rule": 4,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VABS.fp32",
+      "current": "VADDS.fp32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VABS.fp32",
+      "current": "VMULS.fp32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VABS.fp32",
+      "current": "VADD.fp32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VABS.fp32",
+      "current": "VEXP.fp32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VABS.fp32",
+      "current": "VDIV.fp32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VABS.fp32",
+      "current": "VSUB.fp32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VABS.fp32",
+      "current": "VMUL.fp32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VABS.fp32",
+      "current": "VCVT_F16_TO_F32.f16_to_f32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VABS.fp32",
+      "current": "VCVT_F32_TO_F16.f32_to_f16",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VABS.fp32",
+      "current": "VCVT_F32_TO_S32.f32_to_s32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VABS.fp32",
+      "current": "VCVT_S32_TO_F32.s32_to_f32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VABS.fp32",
+      "current": "VLN.fp32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VABS.fp32",
+      "current": "VSQRT.fp32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VSUB.fp32",
+      "current": "VADDS.fp32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VSUB.fp32",
+      "current": "VMULS.fp32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VSUB.fp32",
+      "current": "VADD.fp32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VSUB.fp32",
+      "current": "VEXP.fp32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VSUB.fp32",
+      "current": "VDIV.fp32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VSUB.fp32",
+      "current": "VABS.fp32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VSUB.fp32",
+      "current": "VMUL.fp32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VSUB.fp32",
+      "current": "VCVT_F16_TO_F32.f16_to_f32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VSUB.fp32",
+      "current": "VCVT_F32_TO_F16.f32_to_f16",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VSUB.fp32",
+      "current": "VCVT_F32_TO_S32.f32_to_s32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VSUB.fp32",
+      "current": "VCVT_S32_TO_F32.s32_to_f32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VSUB.fp32",
+      "current": "VCI.int32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VSUB.fp32",
+      "current": "VLN.fp32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VSUB.fp32",
+      "current": "VMOV.fp32",
+      "value": 2,
+      "rule": 2,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VSUB.fp32",
+      "current": "VMULS.uint32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VSUB.fp32",
+      "current": "VSQRT.fp32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VMUL.fp32",
+      "current": "VADDS.fp32",
+      "value": 2,
+      "rule": 2,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VMUL.fp32",
+      "current": "VMULS.fp32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VMUL.fp32",
+      "current": "VADD.fp32",
+      "value": 2,
+      "rule": 2,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VMUL.fp32",
+      "current": "VEXP.fp32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VMUL.fp32",
+      "current": "VDIV.fp32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VMUL.fp32",
+      "current": "VABS.fp32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VMUL.fp32",
+      "current": "VSUB.fp32",
+      "value": 2,
+      "rule": 2,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VMUL.fp32",
+      "current": "VCVT_F16_TO_F32.f16_to_f32",
+      "value": 2,
+      "rule": 2,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VMUL.fp32",
+      "current": "VCVT_F32_TO_F16.f32_to_f16",
+      "value": 2,
+      "rule": 2,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VMUL.fp32",
+      "current": "VCVT_F32_TO_S32.f32_to_s32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VMUL.fp32",
+      "current": "VCVT_S32_TO_F32.s32_to_f32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VMUL.fp32",
+      "current": "VLN.fp32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VMUL.fp32",
+      "current": "VSQRT.fp32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VMUL.fp32",
+      "current": "VAXPY.fp32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VMUL.fp32",
+      "current": "VCI.int32",
+      "value": 2,
+      "rule": 2,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VMUL.fp32",
+      "current": "VMOV.fp32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VMUL.fp32",
+      "current": "VMULS.uint32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VADDS.fp16",
+      "current": "VMULS.fp16",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VADDS.fp16",
+      "current": "VADD.fp16",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VADDS.fp16",
+      "current": "VEXP.fp16",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VADDS.fp16",
+      "current": "VDIV.fp16",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VADDS.fp16",
+      "current": "VABS.fp16",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VADDS.fp16",
+      "current": "VSUB.fp16",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VADDS.fp16",
+      "current": "VMUL.fp16",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VADDS.fp16",
+      "current": "VCVT_F16_TO_F32.f16_to_f32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VADDS.fp16",
+      "current": "VCVT_F32_TO_F16.f32_to_f16",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VADDS.fp16",
+      "current": "VCVT_F32_TO_S32.f32_to_s32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VADDS.fp16",
+      "current": "VCVT_S32_TO_F32.s32_to_f32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VMULS.fp16",
+      "current": "VADDS.fp16",
+      "value": 2,
+      "rule": 2,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VMULS.fp16",
+      "current": "VADD.fp16",
+      "value": 2,
+      "rule": 2,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VMULS.fp16",
+      "current": "VEXP.fp16",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VMULS.fp16",
+      "current": "VDIV.fp16",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VMULS.fp16",
+      "current": "VABS.fp16",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VMULS.fp16",
+      "current": "VSUB.fp16",
+      "value": 2,
+      "rule": 2,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VMULS.fp16",
+      "current": "VMUL.fp16",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VMULS.fp16",
+      "current": "VCVT_F16_TO_F32.f16_to_f32",
+      "value": 2,
+      "rule": 2,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VMULS.fp16",
+      "current": "VCVT_F32_TO_F16.f32_to_f16",
+      "value": 2,
+      "rule": 2,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VMULS.fp16",
+      "current": "VCVT_F32_TO_S32.f32_to_s32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VMULS.fp16",
+      "current": "VCVT_S32_TO_F32.s32_to_f32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VADD.fp16",
+      "current": "VADDS.fp16",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VADD.fp16",
+      "current": "VMULS.fp16",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VADD.fp16",
+      "current": "VEXP.fp16",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VADD.fp16",
+      "current": "VDIV.fp16",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VADD.fp16",
+      "current": "VABS.fp16",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VADD.fp16",
+      "current": "VSUB.fp16",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VADD.fp16",
+      "current": "VMUL.fp16",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VADD.fp16",
+      "current": "VCVT_F16_TO_F32.f16_to_f32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VADD.fp16",
+      "current": "VCVT_F32_TO_F16.f32_to_f16",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VADD.fp16",
+      "current": "VCVT_F32_TO_S32.f32_to_s32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VADD.fp16",
+      "current": "VCVT_S32_TO_F32.s32_to_f32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VADD.fp16",
+      "current": "VADD.fp32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VEXP.fp16",
+      "current": "VADDS.fp16",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VEXP.fp16",
+      "current": "VMULS.fp16",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VEXP.fp16",
+      "current": "VADD.fp16",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VEXP.fp16",
+      "current": "VDIV.fp16",
+      "value": 10,
+      "rule": 8,
+      "override": true
+    },
+    {
+      "kind": "ii",
+      "previous": "VEXP.fp16",
+      "current": "VABS.fp16",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VEXP.fp16",
+      "current": "VSUB.fp16",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VEXP.fp16",
+      "current": "VMUL.fp16",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VEXP.fp16",
+      "current": "VCVT_F16_TO_F32.f16_to_f32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VEXP.fp16",
+      "current": "VCVT_F32_TO_F16.f32_to_f16",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VEXP.fp16",
+      "current": "VCVT_F32_TO_S32.f32_to_s32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VEXP.fp16",
+      "current": "VCVT_S32_TO_F32.s32_to_f32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VDIV.fp16",
+      "current": "VADDS.fp16",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VDIV.fp16",
+      "current": "VMULS.fp16",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VDIV.fp16",
+      "current": "VADD.fp16",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VDIV.fp16",
+      "current": "VEXP.fp16",
+      "value": 9,
+      "rule": 8,
+      "override": true
+    },
+    {
+      "kind": "ii",
+      "previous": "VDIV.fp16",
+      "current": "VABS.fp16",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VDIV.fp16",
+      "current": "VSUB.fp16",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VDIV.fp16",
+      "current": "VMUL.fp16",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VDIV.fp16",
+      "current": "VCVT_F16_TO_F32.f16_to_f32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VDIV.fp16",
+      "current": "VCVT_F32_TO_F16.f32_to_f16",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VDIV.fp16",
+      "current": "VCVT_F32_TO_S32.f32_to_s32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VDIV.fp16",
+      "current": "VCVT_S32_TO_F32.s32_to_f32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VABS.fp16",
+      "current": "VADDS.fp16",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VABS.fp16",
+      "current": "VMULS.fp16",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VABS.fp16",
+      "current": "VADD.fp16",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VABS.fp16",
+      "current": "VEXP.fp16",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VABS.fp16",
+      "current": "VDIV.fp16",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VABS.fp16",
+      "current": "VSUB.fp16",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VABS.fp16",
+      "current": "VMUL.fp16",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VABS.fp16",
+      "current": "VCVT_F16_TO_F32.f16_to_f32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VABS.fp16",
+      "current": "VCVT_F32_TO_F16.f32_to_f16",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VABS.fp16",
+      "current": "VCVT_F32_TO_S32.f32_to_s32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VABS.fp16",
+      "current": "VCVT_S32_TO_F32.s32_to_f32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VSUB.fp16",
+      "current": "VADDS.fp16",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VSUB.fp16",
+      "current": "VMULS.fp16",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VSUB.fp16",
+      "current": "VADD.fp16",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VSUB.fp16",
+      "current": "VEXP.fp16",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VSUB.fp16",
+      "current": "VDIV.fp16",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VSUB.fp16",
+      "current": "VABS.fp16",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VSUB.fp16",
+      "current": "VMUL.fp16",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VSUB.fp16",
+      "current": "VCVT_F16_TO_F32.f16_to_f32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VSUB.fp16",
+      "current": "VCVT_F32_TO_F16.f32_to_f16",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VSUB.fp16",
+      "current": "VCVT_F32_TO_S32.f32_to_s32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VSUB.fp16",
+      "current": "VCVT_S32_TO_F32.s32_to_f32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VMUL.fp16",
+      "current": "VADDS.fp16",
+      "value": 2,
+      "rule": 2,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VMUL.fp16",
+      "current": "VMULS.fp16",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VMUL.fp16",
+      "current": "VADD.fp16",
+      "value": 2,
+      "rule": 2,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VMUL.fp16",
+      "current": "VEXP.fp16",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VMUL.fp16",
+      "current": "VDIV.fp16",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VMUL.fp16",
+      "current": "VABS.fp16",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VMUL.fp16",
+      "current": "VSUB.fp16",
+      "value": 2,
+      "rule": 2,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VMUL.fp16",
+      "current": "VCVT_F16_TO_F32.f16_to_f32",
+      "value": 2,
+      "rule": 2,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VMUL.fp16",
+      "current": "VCVT_F32_TO_F16.f32_to_f16",
+      "value": 2,
+      "rule": 2,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VMUL.fp16",
+      "current": "VCVT_F32_TO_S32.f32_to_s32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VMUL.fp16",
+      "current": "VCVT_S32_TO_F32.s32_to_f32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VMUL.fp16",
+      "current": "VLN.fp16",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VMUL.fp16",
+      "current": "VSQRT.fp16",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VCVT_F16_TO_F32.f16_to_f32",
+      "current": "VABS.fp32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VCVT_F16_TO_F32.f16_to_f32",
+      "current": "VADD.fp32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VCVT_F16_TO_F32.f16_to_f32",
+      "current": "VADDS.fp32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VCVT_F16_TO_F32.f16_to_f32",
+      "current": "VDIV.fp32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VCVT_F16_TO_F32.f16_to_f32",
+      "current": "VEXP.fp32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VCVT_F16_TO_F32.f16_to_f32",
+      "current": "VMUL.fp32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VCVT_F16_TO_F32.f16_to_f32",
+      "current": "VMULS.fp32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VCVT_F16_TO_F32.f16_to_f32",
+      "current": "VSUB.fp32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VCVT_F16_TO_F32.f16_to_f32",
+      "current": "VCVT_F32_TO_S32.f32_to_s32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VCVT_F16_TO_F32.f16_to_f32",
+      "current": "VCVT_S32_TO_F32.s32_to_f32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VCVT_F16_TO_F32.f16_to_f32",
+      "current": "VCVT_F32_TO_F16.f32_to_f16",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VCVT_F16_TO_F32.f16_to_f32",
+      "current": "VABS.fp16",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VCVT_F16_TO_F32.f16_to_f32",
+      "current": "VADD.fp16",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VCVT_F16_TO_F32.f16_to_f32",
+      "current": "VADDS.fp16",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VCVT_F16_TO_F32.f16_to_f32",
+      "current": "VDIV.fp16",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VCVT_F16_TO_F32.f16_to_f32",
+      "current": "VEXP.fp16",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VCVT_F16_TO_F32.f16_to_f32",
+      "current": "VMUL.fp16",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VCVT_F16_TO_F32.f16_to_f32",
+      "current": "VMULS.fp16",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VCVT_F16_TO_F32.f16_to_f32",
+      "current": "VSUB.fp16",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VCVT_F16_TO_F32.f16_to_f32",
+      "current": "VABS.int32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VCVT_F16_TO_F32.f16_to_f32",
+      "current": "VADD.int32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VCVT_F16_TO_F32.f16_to_f32",
+      "current": "VADDS.int32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VCVT_F16_TO_F32.f16_to_f32",
+      "current": "VMUL.int32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VCVT_F16_TO_F32.f16_to_f32",
+      "current": "VMULS.int32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VCVT_F16_TO_F32.f16_to_f32",
+      "current": "VSUB.int32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VCVT_F32_TO_F16.f32_to_f16",
+      "current": "VABS.fp32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VCVT_F32_TO_F16.f32_to_f16",
+      "current": "VADD.fp32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VCVT_F32_TO_F16.f32_to_f16",
+      "current": "VADDS.fp32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VCVT_F32_TO_F16.f32_to_f16",
+      "current": "VDIV.fp32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VCVT_F32_TO_F16.f32_to_f16",
+      "current": "VEXP.fp32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VCVT_F32_TO_F16.f32_to_f16",
+      "current": "VMUL.fp32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VCVT_F32_TO_F16.f32_to_f16",
+      "current": "VMULS.fp32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VCVT_F32_TO_F16.f32_to_f16",
+      "current": "VSUB.fp32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VCVT_F32_TO_F16.f32_to_f16",
+      "current": "VCVT_F16_TO_F32.f16_to_f32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VCVT_F32_TO_F16.f32_to_f16",
+      "current": "VCVT_F32_TO_S32.f32_to_s32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VCVT_F32_TO_F16.f32_to_f16",
+      "current": "VCVT_S32_TO_F32.s32_to_f32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VCVT_F32_TO_F16.f32_to_f16",
+      "current": "VABS.fp16",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VCVT_F32_TO_F16.f32_to_f16",
+      "current": "VADD.fp16",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VCVT_F32_TO_F16.f32_to_f16",
+      "current": "VADDS.fp16",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VCVT_F32_TO_F16.f32_to_f16",
+      "current": "VDIV.fp16",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VCVT_F32_TO_F16.f32_to_f16",
+      "current": "VEXP.fp16",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VCVT_F32_TO_F16.f32_to_f16",
+      "current": "VMUL.fp16",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VCVT_F32_TO_F16.f32_to_f16",
+      "current": "VMULS.fp16",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VCVT_F32_TO_F16.f32_to_f16",
+      "current": "VSUB.fp16",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VCVT_F32_TO_F16.f32_to_f16",
+      "current": "VABS.int32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VCVT_F32_TO_F16.f32_to_f16",
+      "current": "VADD.int32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VCVT_F32_TO_F16.f32_to_f16",
+      "current": "VADDS.int32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VCVT_F32_TO_F16.f32_to_f16",
+      "current": "VMUL.int32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VCVT_F32_TO_F16.f32_to_f16",
+      "current": "VMULS.int32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VCVT_F32_TO_F16.f32_to_f16",
+      "current": "VSUB.int32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VCVT_F32_TO_S32.f32_to_s32",
+      "current": "VABS.fp32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VCVT_F32_TO_S32.f32_to_s32",
+      "current": "VADD.fp32",
+      "value": 2,
+      "rule": 2,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VCVT_F32_TO_S32.f32_to_s32",
+      "current": "VADDS.fp32",
+      "value": 2,
+      "rule": 2,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VCVT_F32_TO_S32.f32_to_s32",
+      "current": "VDIV.fp32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VCVT_F32_TO_S32.f32_to_s32",
+      "current": "VEXP.fp32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VCVT_F32_TO_S32.f32_to_s32",
+      "current": "VMUL.fp32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VCVT_F32_TO_S32.f32_to_s32",
+      "current": "VMULS.fp32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VCVT_F32_TO_S32.f32_to_s32",
+      "current": "VSUB.fp32",
+      "value": 2,
+      "rule": 2,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VCVT_F32_TO_S32.f32_to_s32",
+      "current": "VCVT_F16_TO_F32.f16_to_f32",
+      "value": 2,
+      "rule": 2,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VCVT_F32_TO_S32.f32_to_s32",
+      "current": "VCVT_F32_TO_F16.f32_to_f16",
+      "value": 2,
+      "rule": 2,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VCVT_F32_TO_S32.f32_to_s32",
+      "current": "VCVT_S32_TO_F32.s32_to_f32",
+      "value": 2,
+      "rule": 2,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VCVT_F32_TO_S32.f32_to_s32",
+      "current": "VABS.fp16",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VCVT_F32_TO_S32.f32_to_s32",
+      "current": "VADD.fp16",
+      "value": 2,
+      "rule": 2,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VCVT_F32_TO_S32.f32_to_s32",
+      "current": "VADDS.fp16",
+      "value": 2,
+      "rule": 2,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VCVT_F32_TO_S32.f32_to_s32",
+      "current": "VDIV.fp16",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VCVT_F32_TO_S32.f32_to_s32",
+      "current": "VEXP.fp16",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VCVT_F32_TO_S32.f32_to_s32",
+      "current": "VMUL.fp16",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VCVT_F32_TO_S32.f32_to_s32",
+      "current": "VMULS.fp16",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VCVT_F32_TO_S32.f32_to_s32",
+      "current": "VSUB.fp16",
+      "value": 2,
+      "rule": 2,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VCVT_F32_TO_S32.f32_to_s32",
+      "current": "VABS.int32",
+      "value": 1,
+      "rule": 2,
+      "override": true
+    },
+    {
+      "kind": "ii",
+      "previous": "VCVT_F32_TO_S32.f32_to_s32",
+      "current": "VADD.int32",
+      "value": 2,
+      "rule": 2,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VCVT_F32_TO_S32.f32_to_s32",
+      "current": "VADDS.int32",
+      "value": 2,
+      "rule": 2,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VCVT_F32_TO_S32.f32_to_s32",
+      "current": "VMUL.int32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VCVT_F32_TO_S32.f32_to_s32",
+      "current": "VMULS.int32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VCVT_F32_TO_S32.f32_to_s32",
+      "current": "VSUB.int32",
+      "value": 2,
+      "rule": 2,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VCVT_S32_TO_F32.s32_to_f32",
+      "current": "VABS.fp32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VCVT_S32_TO_F32.s32_to_f32",
+      "current": "VADD.fp32",
+      "value": 2,
+      "rule": 2,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VCVT_S32_TO_F32.s32_to_f32",
+      "current": "VADDS.fp32",
+      "value": 2,
+      "rule": 2,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VCVT_S32_TO_F32.s32_to_f32",
+      "current": "VDIV.fp32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VCVT_S32_TO_F32.s32_to_f32",
+      "current": "VEXP.fp32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VCVT_S32_TO_F32.s32_to_f32",
+      "current": "VMUL.fp32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VCVT_S32_TO_F32.s32_to_f32",
+      "current": "VMULS.fp32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VCVT_S32_TO_F32.s32_to_f32",
+      "current": "VSUB.fp32",
+      "value": 2,
+      "rule": 2,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VCVT_S32_TO_F32.s32_to_f32",
+      "current": "VCVT_F16_TO_F32.f16_to_f32",
+      "value": 2,
+      "rule": 2,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VCVT_S32_TO_F32.s32_to_f32",
+      "current": "VCVT_F32_TO_F16.f32_to_f16",
+      "value": 2,
+      "rule": 2,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VCVT_S32_TO_F32.s32_to_f32",
+      "current": "VCVT_F32_TO_S32.f32_to_s32",
+      "value": 2,
+      "rule": 2,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VCVT_S32_TO_F32.s32_to_f32",
+      "current": "VABS.fp16",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VCVT_S32_TO_F32.s32_to_f32",
+      "current": "VADD.fp16",
+      "value": 2,
+      "rule": 2,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VCVT_S32_TO_F32.s32_to_f32",
+      "current": "VADDS.fp16",
+      "value": 2,
+      "rule": 2,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VCVT_S32_TO_F32.s32_to_f32",
+      "current": "VDIV.fp16",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VCVT_S32_TO_F32.s32_to_f32",
+      "current": "VEXP.fp16",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VCVT_S32_TO_F32.s32_to_f32",
+      "current": "VMUL.fp16",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VCVT_S32_TO_F32.s32_to_f32",
+      "current": "VMULS.fp16",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VCVT_S32_TO_F32.s32_to_f32",
+      "current": "VSUB.fp16",
+      "value": 2,
+      "rule": 2,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VCVT_S32_TO_F32.s32_to_f32",
+      "current": "VABS.int32",
+      "value": 1,
+      "rule": 2,
+      "override": true
+    },
+    {
+      "kind": "ii",
+      "previous": "VCVT_S32_TO_F32.s32_to_f32",
+      "current": "VADD.int32",
+      "value": 2,
+      "rule": 2,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VCVT_S32_TO_F32.s32_to_f32",
+      "current": "VADDS.int32",
+      "value": 2,
+      "rule": 2,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VCVT_S32_TO_F32.s32_to_f32",
+      "current": "VMUL.int32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VCVT_S32_TO_F32.s32_to_f32",
+      "current": "VMULS.int32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VCVT_S32_TO_F32.s32_to_f32",
+      "current": "VSUB.int32",
+      "value": 2,
+      "rule": 2,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VABS.int32",
+      "current": "VCVT_F16_TO_F32.f16_to_f32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VABS.int32",
+      "current": "VCVT_F32_TO_F16.f32_to_f16",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VABS.int32",
+      "current": "VCVT_F32_TO_S32.f32_to_s32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VABS.int32",
+      "current": "VCVT_S32_TO_F32.s32_to_f32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VADD.int32",
+      "current": "VCVT_F16_TO_F32.f16_to_f32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VADD.int32",
+      "current": "VCVT_F32_TO_F16.f32_to_f16",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VADD.int32",
+      "current": "VCVT_F32_TO_S32.f32_to_s32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VADD.int32",
+      "current": "VCVT_S32_TO_F32.s32_to_f32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VADDS.int32",
+      "current": "VCVT_F16_TO_F32.f16_to_f32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VADDS.int32",
+      "current": "VCVT_F32_TO_F16.f32_to_f16",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VADDS.int32",
+      "current": "VCVT_F32_TO_S32.f32_to_s32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VADDS.int32",
+      "current": "VCVT_S32_TO_F32.s32_to_f32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VMUL.int32",
+      "current": "VCVT_F16_TO_F32.f16_to_f32",
+      "value": 2,
+      "rule": 2,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VMUL.int32",
+      "current": "VCVT_F32_TO_F16.f32_to_f16",
+      "value": 2,
+      "rule": 2,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VMUL.int32",
+      "current": "VCVT_F32_TO_S32.f32_to_s32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VMUL.int32",
+      "current": "VCVT_S32_TO_F32.s32_to_f32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VMULS.int32",
+      "current": "VCVT_F16_TO_F32.f16_to_f32",
+      "value": 2,
+      "rule": 2,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VMULS.int32",
+      "current": "VCVT_F32_TO_F16.f32_to_f16",
+      "value": 2,
+      "rule": 2,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VMULS.int32",
+      "current": "VCVT_F32_TO_S32.f32_to_s32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VMULS.int32",
+      "current": "VCVT_S32_TO_F32.s32_to_f32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VSUB.int32",
+      "current": "VCVT_F16_TO_F32.f16_to_f32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VSUB.int32",
+      "current": "VCVT_F32_TO_F16.f32_to_f16",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VSUB.int32",
+      "current": "VCVT_F32_TO_S32.f32_to_s32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VSUB.int32",
+      "current": "VCVT_S32_TO_F32.s32_to_f32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VADD.bf16",
+      "current": "VMUL.bf16",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VADDS.bf16",
+      "current": "VMUL.bf16",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VLN.fp16",
+      "current": "VMUL.fp16",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VMUL.bf16",
+      "current": "VADD.bf16",
+      "value": 2,
+      "rule": 2,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VMUL.bf16",
+      "current": "VADDS.bf16",
+      "value": 2,
+      "rule": 2,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VMULS.uint32",
+      "current": "VADD.fp32",
+      "value": 2,
+      "rule": 2,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VMULS.uint32",
+      "current": "VADDS.fp32",
+      "value": 2,
+      "rule": 2,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VMULS.uint32",
+      "current": "VCI.int32",
+      "value": 2,
+      "rule": 2,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VMULS.uint32",
+      "current": "VDIV.fp32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VMULS.uint32",
+      "current": "VEXP.fp32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VMULS.uint32",
+      "current": "VMOV.fp32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VMULS.uint32",
+      "current": "VMUL.fp32",
+      "value": 2,
+      "rule": 2,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VMULS.uint32",
+      "current": "VMULS.fp32",
+      "value": 2,
+      "rule": 2,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VMULS.uint32",
+      "current": "VSQRT.fp32",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VMULS.uint32",
+      "current": "VSUB.fp32",
+      "value": 2,
+      "rule": 2,
+      "override": false
+    },
+    {
+      "kind": "ii",
+      "previous": "VSQRT.fp16",
+      "current": "VMUL.fp16",
+      "value": 1,
+      "rule": 1,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VMOV.fp32",
+      "current": "VMOV.fp32",
+      "value": 2,
+      "rule": 2,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VMOV.fp32",
+      "current": "VMOV.b32",
+      "value": 2,
+      "rule": 2,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VMOV.fp32",
+      "current": "VAXPY.fp32",
+      "value": 2,
+      "rule": 2,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VMOV.fp32",
+      "current": "VADD.fp32",
+      "value": 2,
+      "rule": 2,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VMOV.fp32",
+      "current": "VDIV.fp32",
+      "value": 3,
+      "rule": 3,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VMOV.fp32",
+      "current": "VMUL.fp32",
+      "value": 2,
+      "rule": 2,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VMOV.fp32",
+      "current": "VSQRT.fp32",
+      "value": 3,
+      "rule": 3,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VMOV.b32",
+      "current": "VMOV.fp32",
+      "value": 2,
+      "rule": 2,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VMOV.b32",
+      "current": "VMOV.b32",
+      "value": 2,
+      "rule": 2,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VMOV.b32",
+      "current": "VAXPY.fp32",
+      "value": 2,
+      "rule": 2,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VAXPY.fp32",
+      "current": "VAXPY.fp32",
+      "value": 5,
+      "rule": 5,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VAXPY.fp32",
+      "current": "VADDS.fp32",
+      "value": 5,
+      "rule": 5,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VAXPY.fp32",
+      "current": "VDIV.fp32",
+      "value": 6,
+      "rule": 6,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VAXPY.fp32",
+      "current": "VMUL.fp32",
+      "value": 5,
+      "rule": 5,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VCI.int32",
+      "current": "VMULS.uint32",
+      "value": 3,
+      "rule": 3,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VSQRT.fp32",
+      "current": "VSQRT.fp32",
+      "value": 14,
+      "rule": 14,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VSQRT.fp32",
+      "current": "VMUL.fp32",
+      "value": 14,
+      "rule": 14,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VSQRT.fp32",
+      "current": "VADD.fp32",
+      "value": 14,
+      "rule": 14,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VSQRT.fp32",
+      "current": "VADDS.fp32",
+      "value": 14,
+      "rule": 14,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VSQRT.fp32",
+      "current": "VDIV.fp32",
+      "value": 14,
+      "rule": 14,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VLN.fp32",
+      "current": "VLN.fp32",
+      "value": 15,
+      "rule": 15,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VLN.fp32",
+      "current": "VMUL.fp32",
+      "value": 15,
+      "rule": 15,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VLN.fp32",
+      "current": "VADD.fp32",
+      "value": 15,
+      "rule": 15,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VLN.fp32",
+      "current": "VSUB.fp32",
+      "value": 15,
+      "rule": 15,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VADDS.fp32",
+      "current": "VADDS.fp32",
+      "value": 3,
+      "rule": 3,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VADDS.fp32",
+      "current": "VMULS.fp32",
+      "value": 3,
+      "rule": 3,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VADDS.fp32",
+      "current": "VADD.fp32",
+      "value": 3,
+      "rule": 3,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VADDS.fp32",
+      "current": "VEXP.fp32",
+      "value": 4,
+      "rule": 4,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VADDS.fp32",
+      "current": "VDIV.fp32",
+      "value": 4,
+      "rule": 4,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VADDS.fp32",
+      "current": "VABS.fp32",
+      "value": 4,
+      "rule": 3,
+      "override": true
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VADDS.fp32",
+      "current": "VSUB.fp32",
+      "value": 3,
+      "rule": 3,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VADDS.fp32",
+      "current": "VMUL.fp32",
+      "value": 3,
+      "rule": 3,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VADDS.fp32",
+      "current": "VCVT_F32_TO_F16.f32_to_f16",
+      "value": 3,
+      "rule": 3,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VADDS.fp32",
+      "current": "VCVT_F32_TO_S32.f32_to_s32",
+      "value": 3,
+      "rule": 3,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VADDS.fp32",
+      "current": "VLN.fp32",
+      "value": 4,
+      "rule": 4,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VADDS.fp32",
+      "current": "VSQRT.fp32",
+      "value": 4,
+      "rule": 4,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VMULS.fp32",
+      "current": "VADDS.fp32",
+      "value": 4,
+      "rule": 4,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VMULS.fp32",
+      "current": "VMULS.fp32",
+      "value": 4,
+      "rule": 4,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VMULS.fp32",
+      "current": "VADD.fp32",
+      "value": 4,
+      "rule": 4,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VMULS.fp32",
+      "current": "VEXP.fp32",
+      "value": 5,
+      "rule": 5,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VMULS.fp32",
+      "current": "VDIV.fp32",
+      "value": 5,
+      "rule": 5,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VMULS.fp32",
+      "current": "VABS.fp32",
+      "value": 5,
+      "rule": 4,
+      "override": true
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VMULS.fp32",
+      "current": "VSUB.fp32",
+      "value": 4,
+      "rule": 4,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VMULS.fp32",
+      "current": "VMUL.fp32",
+      "value": 4,
+      "rule": 4,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VMULS.fp32",
+      "current": "VCVT_F32_TO_F16.f32_to_f16",
+      "value": 4,
+      "rule": 4,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VMULS.fp32",
+      "current": "VCVT_F32_TO_S32.f32_to_s32",
+      "value": 4,
+      "rule": 4,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VADD.fp32",
+      "current": "VADDS.fp32",
+      "value": 3,
+      "rule": 3,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VADD.fp32",
+      "current": "VMULS.fp32",
+      "value": 3,
+      "rule": 3,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VADD.fp32",
+      "current": "VADD.fp32",
+      "value": 3,
+      "rule": 3,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VADD.fp32",
+      "current": "VEXP.fp32",
+      "value": 4,
+      "rule": 4,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VADD.fp32",
+      "current": "VDIV.fp32",
+      "value": 4,
+      "rule": 4,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VADD.fp32",
+      "current": "VABS.fp32",
+      "value": 4,
+      "rule": 3,
+      "override": true
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VADD.fp32",
+      "current": "VSUB.fp32",
+      "value": 3,
+      "rule": 3,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VADD.fp32",
+      "current": "VMUL.fp32",
+      "value": 3,
+      "rule": 3,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VADD.fp32",
+      "current": "VCVT_F32_TO_F16.f32_to_f16",
+      "value": 3,
+      "rule": 3,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VADD.fp32",
+      "current": "VCVT_F32_TO_S32.f32_to_s32",
+      "value": 3,
+      "rule": 3,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VADD.fp32",
+      "current": "VMOV.fp32",
+      "value": 3,
+      "rule": 3,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VADD.fp32",
+      "current": "VSQRT.fp32",
+      "value": 4,
+      "rule": 4,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VEXP.fp32",
+      "current": "VADDS.fp32",
+      "value": 13,
+      "rule": 13,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VEXP.fp32",
+      "current": "VMULS.fp32",
+      "value": 13,
+      "rule": 13,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VEXP.fp32",
+      "current": "VADD.fp32",
+      "value": 13,
+      "rule": 13,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VEXP.fp32",
+      "current": "VEXP.fp32",
+      "value": 13,
+      "rule": 13,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VEXP.fp32",
+      "current": "VCVT_F32_TO_BF16.f32_to_bf16",
+      "value": 13,
+      "rule": 13,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VEXP.fp32",
+      "current": "VDIV.fp32",
+      "value": 13,
+      "rule": 13,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VEXP.fp32",
+      "current": "VABS.fp32",
+      "value": 13,
+      "rule": 13,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VEXP.fp32",
+      "current": "VSUB.fp32",
+      "value": 13,
+      "rule": 13,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VEXP.fp32",
+      "current": "VMUL.fp32",
+      "value": 13,
+      "rule": 13,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VEXP.fp32",
+      "current": "VCVT_F32_TO_F16.f32_to_f16",
+      "value": 13,
+      "rule": 13,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VEXP.fp32",
+      "current": "VCVT_F32_TO_S32.f32_to_s32",
+      "value": 13,
+      "rule": 13,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VEXP.fp32",
+      "current": "VAXPY.fp32",
+      "value": 13,
+      "rule": 13,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VEXP.fp32",
+      "current": "VMOV.fp32",
+      "value": 13,
+      "rule": 13,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VDIV.fp32",
+      "current": "VADDS.fp32",
+      "value": 14,
+      "rule": 14,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VDIV.fp32",
+      "current": "VMULS.fp32",
+      "value": 14,
+      "rule": 14,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VDIV.fp32",
+      "current": "VADD.fp32",
+      "value": 14,
+      "rule": 14,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VDIV.fp32",
+      "current": "VEXP.fp32",
+      "value": 14,
+      "rule": 14,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VDIV.fp32",
+      "current": "VDIV.fp32",
+      "value": 14,
+      "rule": 14,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VDIV.fp32",
+      "current": "VABS.fp32",
+      "value": 14,
+      "rule": 14,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VDIV.fp32",
+      "current": "VSUB.fp32",
+      "value": 14,
+      "rule": 14,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VDIV.fp32",
+      "current": "VMUL.fp32",
+      "value": 14,
+      "rule": 14,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VDIV.fp32",
+      "current": "VCVT_F32_TO_F16.f32_to_f16",
+      "value": 14,
+      "rule": 14,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VDIV.fp32",
+      "current": "VCVT_F32_TO_S32.f32_to_s32",
+      "value": 14,
+      "rule": 14,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VDIV.fp32",
+      "current": "VMOV.fp32",
+      "value": 14,
+      "rule": 14,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VABS.fp32",
+      "current": "VADDS.fp32",
+      "value": 2,
+      "rule": 2,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VABS.fp32",
+      "current": "VMULS.fp32",
+      "value": 2,
+      "rule": 2,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VABS.fp32",
+      "current": "VADD.fp32",
+      "value": 2,
+      "rule": 2,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VABS.fp32",
+      "current": "VEXP.fp32",
+      "value": 2,
+      "rule": 2,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VABS.fp32",
+      "current": "VDIV.fp32",
+      "value": 2,
+      "rule": 2,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VABS.fp32",
+      "current": "VABS.fp32",
+      "value": 2,
+      "rule": 2,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VABS.fp32",
+      "current": "VSUB.fp32",
+      "value": 2,
+      "rule": 2,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VABS.fp32",
+      "current": "VMUL.fp32",
+      "value": 2,
+      "rule": 2,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VABS.fp32",
+      "current": "VCVT_F32_TO_F16.f32_to_f16",
+      "value": 2,
+      "rule": 2,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VABS.fp32",
+      "current": "VCVT_F32_TO_S32.f32_to_s32",
+      "value": 2,
+      "rule": 2,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VSUB.fp32",
+      "current": "VADDS.fp32",
+      "value": 3,
+      "rule": 3,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VSUB.fp32",
+      "current": "VMULS.fp32",
+      "value": 3,
+      "rule": 3,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VSUB.fp32",
+      "current": "VADD.fp32",
+      "value": 3,
+      "rule": 3,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VSUB.fp32",
+      "current": "VEXP.fp32",
+      "value": 4,
+      "rule": 4,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VSUB.fp32",
+      "current": "VDIV.fp32",
+      "value": 4,
+      "rule": 4,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VSUB.fp32",
+      "current": "VABS.fp32",
+      "value": 4,
+      "rule": 3,
+      "override": true
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VSUB.fp32",
+      "current": "VSUB.fp32",
+      "value": 3,
+      "rule": 3,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VSUB.fp32",
+      "current": "VMUL.fp32",
+      "value": 3,
+      "rule": 3,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VSUB.fp32",
+      "current": "VCVT_F32_TO_F16.f32_to_f16",
+      "value": 3,
+      "rule": 3,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VSUB.fp32",
+      "current": "VCVT_F32_TO_S32.f32_to_s32",
+      "value": 3,
+      "rule": 3,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VSUB.fp32",
+      "current": "VLN.fp32",
+      "value": 4,
+      "rule": 4,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VMUL.fp32",
+      "current": "VADDS.fp32",
+      "value": 4,
+      "rule": 4,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VMUL.fp32",
+      "current": "VMULS.fp32",
+      "value": 4,
+      "rule": 4,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VMUL.fp32",
+      "current": "VADD.fp32",
+      "value": 4,
+      "rule": 4,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VMUL.fp32",
+      "current": "VEXP.fp32",
+      "value": 5,
+      "rule": 5,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VMUL.fp32",
+      "current": "VDIV.fp32",
+      "value": 5,
+      "rule": 5,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VMUL.fp32",
+      "current": "VABS.fp32",
+      "value": 5,
+      "rule": 4,
+      "override": true
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VMUL.fp32",
+      "current": "VSUB.fp32",
+      "value": 4,
+      "rule": 4,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VMUL.fp32",
+      "current": "VMUL.fp32",
+      "value": 4,
+      "rule": 4,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VMUL.fp32",
+      "current": "VCVT_F32_TO_F16.f32_to_f16",
+      "value": 4,
+      "rule": 4,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VMUL.fp32",
+      "current": "VCVT_F32_TO_S32.f32_to_s32",
+      "value": 4,
+      "rule": 4,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VMUL.fp32",
+      "current": "VAXPY.fp32",
+      "value": 4,
+      "rule": 4,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VADDS.fp16",
+      "current": "VADDS.fp16",
+      "value": 3,
+      "rule": 3,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VADDS.fp16",
+      "current": "VMULS.fp16",
+      "value": 3,
+      "rule": 3,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VADDS.fp16",
+      "current": "VADD.fp16",
+      "value": 3,
+      "rule": 3,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VADDS.fp16",
+      "current": "VEXP.fp16",
+      "value": 4,
+      "rule": 4,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VADDS.fp16",
+      "current": "VDIV.fp16",
+      "value": 4,
+      "rule": 4,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VADDS.fp16",
+      "current": "VABS.fp16",
+      "value": 4,
+      "rule": 3,
+      "override": true
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VADDS.fp16",
+      "current": "VSUB.fp16",
+      "value": 3,
+      "rule": 3,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VADDS.fp16",
+      "current": "VMUL.fp16",
+      "value": 3,
+      "rule": 3,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VADDS.fp16",
+      "current": "VCVT_F16_TO_F32.f16_to_f32",
+      "value": 3,
+      "rule": 3,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VMULS.fp16",
+      "current": "VADDS.fp16",
+      "value": 4,
+      "rule": 4,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VMULS.fp16",
+      "current": "VMULS.fp16",
+      "value": 4,
+      "rule": 4,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VMULS.fp16",
+      "current": "VADD.fp16",
+      "value": 4,
+      "rule": 4,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VMULS.fp16",
+      "current": "VEXP.fp16",
+      "value": 5,
+      "rule": 5,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VMULS.fp16",
+      "current": "VDIV.fp16",
+      "value": 5,
+      "rule": 5,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VMULS.fp16",
+      "current": "VABS.fp16",
+      "value": 5,
+      "rule": 4,
+      "override": true
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VMULS.fp16",
+      "current": "VSUB.fp16",
+      "value": 4,
+      "rule": 4,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VMULS.fp16",
+      "current": "VMUL.fp16",
+      "value": 4,
+      "rule": 4,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VMULS.fp16",
+      "current": "VCVT_F16_TO_F32.f16_to_f32",
+      "value": 4,
+      "rule": 4,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VADD.fp16",
+      "current": "VADDS.fp16",
+      "value": 3,
+      "rule": 3,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VADD.fp16",
+      "current": "VMULS.fp16",
+      "value": 3,
+      "rule": 3,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VADD.fp16",
+      "current": "VADD.fp16",
+      "value": 3,
+      "rule": 3,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VADD.fp16",
+      "current": "VEXP.fp16",
+      "value": 4,
+      "rule": 4,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VADD.fp16",
+      "current": "VDIV.fp16",
+      "value": 4,
+      "rule": 4,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VADD.fp16",
+      "current": "VABS.fp16",
+      "value": 4,
+      "rule": 3,
+      "override": true
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VADD.fp16",
+      "current": "VSUB.fp16",
+      "value": 3,
+      "rule": 3,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VADD.fp16",
+      "current": "VMUL.fp16",
+      "value": 3,
+      "rule": 3,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VADD.fp16",
+      "current": "VCVT_F16_TO_F32.f16_to_f32",
+      "value": 3,
+      "rule": 3,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VEXP.fp16",
+      "current": "VADDS.fp16",
+      "value": 18,
+      "rule": 18,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VEXP.fp16",
+      "current": "VMULS.fp16",
+      "value": 13,
+      "rule": 18,
+      "override": true
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VEXP.fp16",
+      "current": "VADD.fp16",
+      "value": 18,
+      "rule": 18,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VEXP.fp16",
+      "current": "VEXP.fp16",
+      "value": 18,
+      "rule": 18,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VEXP.fp16",
+      "current": "VDIV.fp16",
+      "value": 18,
+      "rule": 18,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VEXP.fp16",
+      "current": "VABS.fp16",
+      "value": 18,
+      "rule": 18,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VEXP.fp16",
+      "current": "VSUB.fp16",
+      "value": 18,
+      "rule": 18,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VEXP.fp16",
+      "current": "VMUL.fp16",
+      "value": 18,
+      "rule": 18,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VEXP.fp16",
+      "current": "VCVT_F16_TO_F32.f16_to_f32",
+      "value": 18,
+      "rule": 18,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VDIV.fp16",
+      "current": "VADDS.fp16",
+      "value": 19,
+      "rule": 19,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VDIV.fp16",
+      "current": "VMULS.fp16",
+      "value": 19,
+      "rule": 19,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VDIV.fp16",
+      "current": "VADD.fp16",
+      "value": 19,
+      "rule": 19,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VDIV.fp16",
+      "current": "VEXP.fp16",
+      "value": 19,
+      "rule": 19,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VDIV.fp16",
+      "current": "VDIV.fp16",
+      "value": 19,
+      "rule": 19,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VDIV.fp16",
+      "current": "VABS.fp16",
+      "value": 19,
+      "rule": 19,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VDIV.fp16",
+      "current": "VSUB.fp16",
+      "value": 14,
+      "rule": 19,
+      "override": true
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VDIV.fp16",
+      "current": "VMUL.fp16",
+      "value": 19,
+      "rule": 19,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VDIV.fp16",
+      "current": "VCVT_F16_TO_F32.f16_to_f32",
+      "value": 19,
+      "rule": 19,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VABS.fp16",
+      "current": "VADDS.fp16",
+      "value": 2,
+      "rule": 2,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VABS.fp16",
+      "current": "VMULS.fp16",
+      "value": 2,
+      "rule": 2,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VABS.fp16",
+      "current": "VADD.fp16",
+      "value": 2,
+      "rule": 2,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VABS.fp16",
+      "current": "VEXP.fp16",
+      "value": 2,
+      "rule": 2,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VABS.fp16",
+      "current": "VDIV.fp16",
+      "value": 2,
+      "rule": 2,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VABS.fp16",
+      "current": "VABS.fp16",
+      "value": 2,
+      "rule": 2,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VABS.fp16",
+      "current": "VSUB.fp16",
+      "value": 2,
+      "rule": 2,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VABS.fp16",
+      "current": "VMUL.fp16",
+      "value": 2,
+      "rule": 2,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VABS.fp16",
+      "current": "VCVT_F16_TO_F32.f16_to_f32",
+      "value": 2,
+      "rule": 2,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VSUB.fp16",
+      "current": "VADDS.fp16",
+      "value": 3,
+      "rule": 3,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VSUB.fp16",
+      "current": "VMULS.fp16",
+      "value": 3,
+      "rule": 3,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VSUB.fp16",
+      "current": "VADD.fp16",
+      "value": 3,
+      "rule": 3,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VSUB.fp16",
+      "current": "VEXP.fp16",
+      "value": 4,
+      "rule": 4,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VSUB.fp16",
+      "current": "VDIV.fp16",
+      "value": 4,
+      "rule": 4,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VSUB.fp16",
+      "current": "VABS.fp16",
+      "value": 4,
+      "rule": 3,
+      "override": true
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VSUB.fp16",
+      "current": "VSUB.fp16",
+      "value": 3,
+      "rule": 3,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VSUB.fp16",
+      "current": "VMUL.fp16",
+      "value": 3,
+      "rule": 3,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VSUB.fp16",
+      "current": "VCVT_F16_TO_F32.f16_to_f32",
+      "value": 3,
+      "rule": 3,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VMUL.fp16",
+      "current": "VADDS.fp16",
+      "value": 4,
+      "rule": 4,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VMUL.fp16",
+      "current": "VMULS.fp16",
+      "value": 4,
+      "rule": 4,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VMUL.fp16",
+      "current": "VADD.fp16",
+      "value": 4,
+      "rule": 4,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VMUL.fp16",
+      "current": "VEXP.fp16",
+      "value": 5,
+      "rule": 5,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VMUL.fp16",
+      "current": "VDIV.fp16",
+      "value": 5,
+      "rule": 5,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VMUL.fp16",
+      "current": "VABS.fp16",
+      "value": 5,
+      "rule": 4,
+      "override": true
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VMUL.fp16",
+      "current": "VSUB.fp16",
+      "value": 4,
+      "rule": 4,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VMUL.fp16",
+      "current": "VMUL.fp16",
+      "value": 4,
+      "rule": 4,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VMUL.fp16",
+      "current": "VCVT_F16_TO_F32.f16_to_f32",
+      "value": 4,
+      "rule": 4,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VCVT_F16_TO_F32.f16_to_f32",
+      "current": "VABS.fp32",
+      "value": 4,
+      "rule": 3,
+      "override": true
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VCVT_F16_TO_F32.f16_to_f32",
+      "current": "VADD.fp32",
+      "value": 3,
+      "rule": 3,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VCVT_F16_TO_F32.f16_to_f32",
+      "current": "VADDS.fp32",
+      "value": 3,
+      "rule": 3,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VCVT_F16_TO_F32.f16_to_f32",
+      "current": "VDIV.fp32",
+      "value": 4,
+      "rule": 4,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VCVT_F16_TO_F32.f16_to_f32",
+      "current": "VEXP.fp32",
+      "value": 4,
+      "rule": 4,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VCVT_F16_TO_F32.f16_to_f32",
+      "current": "VMUL.fp32",
+      "value": 3,
+      "rule": 3,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VCVT_F16_TO_F32.f16_to_f32",
+      "current": "VMULS.fp32",
+      "value": 3,
+      "rule": 3,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VCVT_F16_TO_F32.f16_to_f32",
+      "current": "VSUB.fp32",
+      "value": 3,
+      "rule": 3,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VCVT_F16_TO_F32.f16_to_f32",
+      "current": "VCVT_F16_TO_F32.f16_to_f32",
+      "value": 3,
+      "rule": 3,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VCVT_S32_TO_F32.s32_to_f32",
+      "current": "VABS.fp32",
+      "value": 5,
+      "rule": 4,
+      "override": true
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VCVT_S32_TO_F32.s32_to_f32",
+      "current": "VADD.fp32",
+      "value": 4,
+      "rule": 4,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VCVT_S32_TO_F32.s32_to_f32",
+      "current": "VADDS.fp32",
+      "value": 4,
+      "rule": 4,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VCVT_S32_TO_F32.s32_to_f32",
+      "current": "VDIV.fp32",
+      "value": 5,
+      "rule": 5,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VCVT_S32_TO_F32.s32_to_f32",
+      "current": "VEXP.fp32",
+      "value": 5,
+      "rule": 5,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VCVT_S32_TO_F32.s32_to_f32",
+      "current": "VMUL.fp32",
+      "value": 4,
+      "rule": 4,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VCVT_S32_TO_F32.s32_to_f32",
+      "current": "VMULS.fp32",
+      "value": 4,
+      "rule": 4,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VCVT_S32_TO_F32.s32_to_f32",
+      "current": "VSUB.fp32",
+      "value": 4,
+      "rule": 4,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VCVT_S32_TO_F32.s32_to_f32",
+      "current": "VCVT_S32_TO_F32.s32_to_f32",
+      "value": 4,
+      "rule": 4,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VCVT_F32_TO_F16.f32_to_f16",
+      "current": "VABS.fp16",
+      "value": 4,
+      "rule": 3,
+      "override": true
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VCVT_F32_TO_F16.f32_to_f16",
+      "current": "VADD.fp16",
+      "value": 3,
+      "rule": 3,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VCVT_F32_TO_F16.f32_to_f16",
+      "current": "VADDS.fp16",
+      "value": 3,
+      "rule": 3,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VCVT_F32_TO_F16.f32_to_f16",
+      "current": "VDIV.fp16",
+      "value": 4,
+      "rule": 4,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VCVT_F32_TO_F16.f32_to_f16",
+      "current": "VEXP.fp16",
+      "value": 4,
+      "rule": 4,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VCVT_F32_TO_F16.f32_to_f16",
+      "current": "VMUL.fp16",
+      "value": 3,
+      "rule": 3,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VCVT_F32_TO_F16.f32_to_f16",
+      "current": "VMULS.fp16",
+      "value": 3,
+      "rule": 3,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VCVT_F32_TO_F16.f32_to_f16",
+      "current": "VSUB.fp16",
+      "value": 3,
+      "rule": 3,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VCVT_F32_TO_F16.f32_to_f16",
+      "current": "VCVT_F32_TO_F16.f32_to_f16",
+      "value": 3,
+      "rule": 3,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VCVT_F32_TO_BF16.f32_to_bf16",
+      "current": "VCVT_F32_TO_BF16.f32_to_bf16",
+      "value": 3,
+      "rule": 3,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VABS.int16",
+      "current": "VABS.int16",
+      "value": 3,
+      "rule": 3,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VABS.int32",
+      "current": "VABS.int32",
+      "value": 3,
+      "rule": 3,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VABS.int8",
+      "current": "VABS.int8",
+      "value": 3,
+      "rule": 3,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VADD.bf16",
+      "current": "VADD.bf16",
+      "value": 3,
+      "rule": 3,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VADD.bf16",
+      "current": "VMUL.bf16",
+      "value": 3,
+      "rule": 3,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VADD.int16",
+      "current": "VADD.int16",
+      "value": 3,
+      "rule": 3,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VADD.int32",
+      "current": "VADD.int32",
+      "value": 3,
+      "rule": 3,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VADD.int8",
+      "current": "VADD.int8",
+      "value": 3,
+      "rule": 3,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VADD.uint16",
+      "current": "VADD.uint16",
+      "value": 3,
+      "rule": 3,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VADD.uint32",
+      "current": "VADD.uint32",
+      "value": 3,
+      "rule": 3,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VADD.uint8",
+      "current": "VADD.uint8",
+      "value": 3,
+      "rule": 3,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VADDS.bf16",
+      "current": "VADDS.bf16",
+      "value": 3,
+      "rule": 3,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VADDS.bf16",
+      "current": "VMUL.bf16",
+      "value": 3,
+      "rule": 3,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VADDS.int16",
+      "current": "VADDS.int16",
+      "value": 3,
+      "rule": 3,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VADDS.int32",
+      "current": "VADDS.int32",
+      "value": 3,
+      "rule": 3,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VADDS.int8",
+      "current": "VADDS.int8",
+      "value": 3,
+      "rule": 3,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VADDS.uint16",
+      "current": "VADDS.uint16",
+      "value": 3,
+      "rule": 3,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VADDS.uint32",
+      "current": "VADDS.uint32",
+      "value": 3,
+      "rule": 3,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VADDS.uint8",
+      "current": "VADDS.uint8",
+      "value": 3,
+      "rule": 3,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VAXPY.fp16",
+      "current": "VAXPY.fp16",
+      "value": 5,
+      "rule": 5,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VLN.fp16",
+      "current": "VLN.fp16",
+      "value": 20,
+      "rule": 20,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VLN.fp16",
+      "current": "VMUL.fp16",
+      "value": 20,
+      "rule": 20,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VMADD.bf16",
+      "current": "VMADD.bf16",
+      "value": 5,
+      "rule": 5,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VMADD.fp16",
+      "current": "VMADD.fp16",
+      "value": 5,
+      "rule": 5,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VMADD.fp32",
+      "current": "VMADD.fp32",
+      "value": 5,
+      "rule": 5,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VMUL.bf16",
+      "current": "VMUL.bf16",
+      "value": 4,
+      "rule": 4,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VMUL.bf16",
+      "current": "VADD.bf16",
+      "value": 4,
+      "rule": 4,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VMUL.bf16",
+      "current": "VADDS.bf16",
+      "value": 4,
+      "rule": 4,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VMUL.int16",
+      "current": "VMUL.int16",
+      "value": 4,
+      "rule": 4,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VMUL.int32",
+      "current": "VMUL.int32",
+      "value": 4,
+      "rule": 4,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VMUL.uint16",
+      "current": "VMUL.uint16",
+      "value": 4,
+      "rule": 4,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VMUL.uint32",
+      "current": "VMUL.uint32",
+      "value": 4,
+      "rule": 4,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VMULA.bf16",
+      "current": "VMULA.bf16",
+      "value": 5,
+      "rule": 5,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VMULA.fp16",
+      "current": "VMULA.fp16",
+      "value": 5,
+      "rule": 5,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VMULA.fp32",
+      "current": "VMULA.fp32",
+      "value": 5,
+      "rule": 5,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VMULA.int16",
+      "current": "VMULA.int16",
+      "value": 5,
+      "rule": 5,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VMULA.int32",
+      "current": "VMULA.int32",
+      "value": 5,
+      "rule": 5,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VMULA.uint16",
+      "current": "VMULA.uint16",
+      "value": 5,
+      "rule": 5,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VMULA.uint32",
+      "current": "VMULA.uint32",
+      "value": 5,
+      "rule": 5,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VMULS.int16",
+      "current": "VMULS.int16",
+      "value": 4,
+      "rule": 4,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VMULS.int32",
+      "current": "VMULS.int32",
+      "value": 4,
+      "rule": 4,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VMULS.uint16",
+      "current": "VMULS.uint16",
+      "value": 4,
+      "rule": 4,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VMULS.uint32",
+      "current": "VMULS.uint32",
+      "value": 4,
+      "rule": 4,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VNEG.fp16",
+      "current": "VNEG.fp16",
+      "value": 2,
+      "rule": 2,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VNEG.fp32",
+      "current": "VNEG.fp32",
+      "value": 2,
+      "rule": 2,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VNEG.int16",
+      "current": "VNEG.int16",
+      "value": 3,
+      "rule": 3,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VNEG.int32",
+      "current": "VNEG.int32",
+      "value": 3,
+      "rule": 3,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VNEG.int8",
+      "current": "VNEG.int8",
+      "value": 3,
+      "rule": 3,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VSQRT.fp16",
+      "current": "VSQRT.fp16",
+      "value": 19,
+      "rule": 19,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VSQRT.fp16",
+      "current": "VMUL.fp16",
+      "value": 19,
+      "rule": 19,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VSUB.bf16",
+      "current": "VSUB.bf16",
+      "value": 3,
+      "rule": 3,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VSUB.int16",
+      "current": "VSUB.int16",
+      "value": 3,
+      "rule": 3,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VSUB.int32",
+      "current": "VSUB.int32",
+      "value": 3,
+      "rule": 3,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VSUB.int8",
+      "current": "VSUB.int8",
+      "value": 3,
+      "rule": 3,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VSUB.uint16",
+      "current": "VSUB.uint16",
+      "value": 3,
+      "rule": 3,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VSUB.uint32",
+      "current": "VSUB.uint32",
+      "value": 3,
+      "rule": 3,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VSUB.uint8",
+      "current": "VSUB.uint8",
+      "value": 3,
+      "rule": 3,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VADDC.int32",
+      "current": "VADDC.int32",
+      "value": 3,
+      "rule": 3,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VADDC.uint32",
+      "current": "VADDC.uint32",
+      "value": 3,
+      "rule": 3,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VMULL.int32",
+      "current": "VMULL.int32",
+      "value": 5,
+      "rule": 4,
+      "override": true
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VMULL.uint32",
+      "current": "VMULL.uint32",
+      "value": 5,
+      "rule": 4,
+      "override": true
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VSUBC.int32",
+      "current": "VSUBC.int32",
+      "value": 3,
+      "rule": 3,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VSUBC.uint32",
+      "current": "VSUBC.uint32",
+      "value": 3,
+      "rule": 3,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VCVT_BF16_TO_F16.bf16_to_f16",
+      "current": "VCVT_BF16_TO_F16.bf16_to_f16",
+      "value": 4,
+      "rule": 4,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VCVT_BF16_TO_F32.bf16_to_f32",
+      "current": "VCVT_BF16_TO_F32.bf16_to_f32",
+      "value": 3,
+      "rule": 3,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VCVT_BF16_TO_S32.bf16_to_s32",
+      "current": "VCVT_BF16_TO_S32.bf16_to_s32",
+      "value": 4,
+      "rule": 4,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VCVT_F16_TO_BF16.f16_to_bf16",
+      "current": "VCVT_F16_TO_BF16.f16_to_bf16",
+      "value": 4,
+      "rule": 4,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VCVT_F16_TO_S16.f16_to_s16",
+      "current": "VCVT_F16_TO_S16.f16_to_s16",
+      "value": 4,
+      "rule": 4,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VCVT_F16_TO_S32.f16_to_s32",
+      "current": "VCVT_F16_TO_S32.f16_to_s32",
+      "value": 4,
+      "rule": 4,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VCVT_F16_TO_S8.f16_to_s8",
+      "current": "VCVT_F16_TO_S8.f16_to_s8",
+      "value": 4,
+      "rule": 4,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VCVT_F16_TO_U8.f16_to_u8",
+      "current": "VCVT_F16_TO_U8.f16_to_u8",
+      "value": 4,
+      "rule": 4,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VCVT_F32_TO_S16.f32_to_s16",
+      "current": "VCVT_F32_TO_S16.f32_to_s16",
+      "value": 4,
+      "rule": 4,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VCVT_F32_TO_S32.f32_to_s32",
+      "current": "VCVT_F32_TO_S32.f32_to_s32",
+      "value": 4,
+      "rule": 4,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VCVT_F32_TO_S64.f32_to_s64",
+      "current": "VCVT_F32_TO_S64.f32_to_s64",
+      "value": 4,
+      "rule": 4,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VCVT_S16_TO_F16.s16_to_f16",
+      "current": "VCVT_S16_TO_F16.s16_to_f16",
+      "value": 4,
+      "rule": 4,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VCVT_S16_TO_F32.s16_to_f32",
+      "current": "VCVT_S16_TO_F32.s16_to_f32",
+      "value": 4,
+      "rule": 4,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VCVT_S16_TO_S32.s16_to_s32",
+      "current": "VCVT_S16_TO_S32.s16_to_s32",
+      "value": 3,
+      "rule": 3,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VCVT_S16_TO_U32.s16_to_u32",
+      "current": "VCVT_S16_TO_U32.s16_to_u32",
+      "value": 3,
+      "rule": 3,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VCVT_S16_TO_U8.s16_to_u8",
+      "current": "VCVT_S16_TO_U8.s16_to_u8",
+      "value": 3,
+      "rule": 3,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VCVT_S32_TO_S16.s32_to_s16",
+      "current": "VCVT_S32_TO_S16.s32_to_s16",
+      "value": 3,
+      "rule": 3,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VCVT_S32_TO_S64.s32_to_s64",
+      "current": "VCVT_S32_TO_S64.s32_to_s64",
+      "value": 3,
+      "rule": 3,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VCVT_S32_TO_U16.s32_to_u16",
+      "current": "VCVT_S32_TO_U16.s32_to_u16",
+      "value": 3,
+      "rule": 3,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VCVT_S32_TO_U8.s32_to_u8",
+      "current": "VCVT_S32_TO_U8.s32_to_u8",
+      "value": 3,
+      "rule": 3,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VCVT_S64_TO_F32.s64_to_f32",
+      "current": "VCVT_S64_TO_F32.s64_to_f32",
+      "value": 4,
+      "rule": 4,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VCVT_S64_TO_S32.s64_to_s32",
+      "current": "VCVT_S64_TO_S32.s64_to_s32",
+      "value": 3,
+      "rule": 3,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VCVT_S8_TO_F16.s8_to_f16",
+      "current": "VCVT_S8_TO_F16.s8_to_f16",
+      "value": 4,
+      "rule": 4,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VCVT_S8_TO_S16.s8_to_s16",
+      "current": "VCVT_S8_TO_S16.s8_to_s16",
+      "value": 3,
+      "rule": 3,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VCVT_S8_TO_S32.s8_to_s32",
+      "current": "VCVT_S8_TO_S32.s8_to_s32",
+      "value": 3,
+      "rule": 3,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VCVT_U16_TO_U32.u16_to_u32",
+      "current": "VCVT_U16_TO_U32.u16_to_u32",
+      "value": 3,
+      "rule": 3,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VCVT_U16_TO_U8.u16_to_u8",
+      "current": "VCVT_U16_TO_U8.u16_to_u8",
+      "value": 3,
+      "rule": 3,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VCVT_U32_TO_S16.u32_to_s16",
+      "current": "VCVT_U32_TO_S16.u32_to_s16",
+      "value": 3,
+      "rule": 3,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VCVT_U32_TO_U16.u32_to_u16",
+      "current": "VCVT_U32_TO_U16.u32_to_u16",
+      "value": 3,
+      "rule": 3,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VCVT_U32_TO_U8.u32_to_u8",
+      "current": "VCVT_U32_TO_U8.u32_to_u8",
+      "value": 3,
+      "rule": 3,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VCVT_U8_TO_F16.u8_to_f16",
+      "current": "VCVT_U8_TO_F16.u8_to_f16",
+      "value": 4,
+      "rule": 4,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VCVT_U8_TO_U16.u8_to_u16",
+      "current": "VCVT_U8_TO_U16.u8_to_u16",
+      "value": 3,
+      "rule": 3,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VCVT_U8_TO_U32.u8_to_u32",
+      "current": "VCVT_U8_TO_U32.u8_to_u32",
+      "value": 3,
+      "rule": 3,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VCVT_BF16_TO_F4E1M2X2.bf16_to_f4e1m2x2",
+      "current": "VCVT_BF16_TO_F4E1M2X2.bf16_to_f4e1m2x2",
+      "value": 4,
+      "rule": 4,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VCVT_BF16_TO_F4E2M1X2.bf16_to_f4e2m1x2",
+      "current": "VCVT_BF16_TO_F4E2M1X2.bf16_to_f4e2m1x2",
+      "value": 4,
+      "rule": 4,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VCVT_F16_TO_HIF8.f16_to_hif8",
+      "current": "VCVT_F16_TO_HIF8.f16_to_hif8",
+      "value": 4,
+      "rule": 4,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VCVT_F16_TO_S4X2.f16_to_s4x2",
+      "current": "VCVT_F16_TO_S4X2.f16_to_s4x2",
+      "value": 4,
+      "rule": 4,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VCVT_F32_TO_F8E4M3.f32_to_f8e4m3",
+      "current": "VCVT_F32_TO_F8E4M3.f32_to_f8e4m3",
+      "value": 4,
+      "rule": 4,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VCVT_F32_TO_F8E5M2.f32_to_f8e5m2",
+      "current": "VCVT_F32_TO_F8E5M2.f32_to_f8e5m2",
+      "value": 4,
+      "rule": 4,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VCVT_F32_TO_HIF8.f32_to_hif8",
+      "current": "VCVT_F32_TO_HIF8.f32_to_hif8",
+      "value": 4,
+      "rule": 4,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VCVT_F4E1M2X2_TO_BF16.f4e1m2x2_to_bf16",
+      "current": "VCVT_F4E1M2X2_TO_BF16.f4e1m2x2_to_bf16",
+      "value": 4,
+      "rule": 4,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VCVT_F4E2M1X2_TO_BF16.f4e2m1x2_to_bf16",
+      "current": "VCVT_F4E2M1X2_TO_BF16.f4e2m1x2_to_bf16",
+      "value": 4,
+      "rule": 4,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VCVT_F8E4M3_TO_F32.f8e4m3_to_f32",
+      "current": "VCVT_F8E4M3_TO_F32.f8e4m3_to_f32",
+      "value": 4,
+      "rule": 4,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VCVT_F8E5M2_TO_F32.f8e5m2_to_f32",
+      "current": "VCVT_F8E5M2_TO_F32.f8e5m2_to_f32",
+      "value": 4,
+      "rule": 4,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VCVT_HIF8_TO_F16.hif8_to_f16",
+      "current": "VCVT_HIF8_TO_F16.hif8_to_f16",
+      "value": 4,
+      "rule": 4,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VCVT_HIF8_TO_F32.hif8_to_f32",
+      "current": "VCVT_HIF8_TO_F32.hif8_to_f32",
+      "value": 4,
+      "rule": 4,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VCVT_S16_TO_S4X2.s16_to_s4x2",
+      "current": "VCVT_S16_TO_S4X2.s16_to_s4x2",
+      "value": 3,
+      "rule": 3,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VCVT_S4X2_TO_BF16.s4x2_to_bf16",
+      "current": "VCVT_S4X2_TO_BF16.s4x2_to_bf16",
+      "value": 4,
+      "rule": 4,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VCVT_S4X2_TO_F16.s4x2_to_f16",
+      "current": "VCVT_S4X2_TO_F16.s4x2_to_f16",
+      "value": 4,
+      "rule": 4,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VCVT_S4X2_TO_S16.s4x2_to_s16",
+      "current": "VCVT_S4X2_TO_S16.s4x2_to_s16",
+      "value": 3,
+      "rule": 3,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VTRC.bf16",
+      "current": "VTRC.bf16",
+      "value": 6,
+      "rule": 4,
+      "override": true
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VTRC.fp16",
+      "current": "VTRC.fp16",
+      "value": 6,
+      "rule": 4,
+      "override": true
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VTRC.fp32",
+      "current": "VTRC.fp32",
+      "value": 4,
+      "rule": 4,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VMOV.bf16",
+      "current": "VMOV.bf16",
+      "value": 2,
+      "rule": 2,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VMOV.fp16",
+      "current": "VMOV.fp16",
+      "value": 2,
+      "rule": 2,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VMOV.int16",
+      "current": "VMOV.int16",
+      "value": 2,
+      "rule": 2,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VMOV.int32",
+      "current": "VMOV.int32",
+      "value": 2,
+      "rule": 2,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VMOV.int8",
+      "current": "VMOV.int8",
+      "value": 2,
+      "rule": 2,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VMOV.uint16",
+      "current": "VMOV.uint16",
+      "value": 2,
+      "rule": 2,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VMOV.uint32",
+      "current": "VMOV.uint32",
+      "value": 2,
+      "rule": 2,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VMOV.uint8",
+      "current": "VMOV.uint8",
+      "value": 2,
+      "rule": 2,
+      "override": false
+    },
+    {
+      "kind": "forwarding",
+      "previous": "VMOV.int64",
+      "current": "VMOV.int64",
+      "value": 2,
+      "rule": 2,
+      "override": false
+    }
+  ],
+  "additional_measured_ii": [
+    {
+      "previous": "VDIV.fp16",
+      "current": "VDIV.fp32",
+      "value": 9,
+      "minimum_ports": [
+        0,
+        1
+      ],
+      "minimum_samples": 8
+    },
+    {
+      "previous": "VDIV.fp16",
+      "current": "VEXP.fp32",
+      "value": 10,
+      "minimum_ports": [
+        0,
+        1
+      ],
+      "minimum_samples": 4
+    },
+    {
+      "previous": "VEXP.fp16",
+      "current": "VDIV.fp32",
+      "value": 11,
+      "minimum_ports": [
+        0,
+        1
+      ],
+      "minimum_samples": 8
+    },
+    {
+      "previous": "VEXP.fp16",
+      "current": "VEXP.fp32",
+      "value": 9,
+      "minimum_ports": [
+        0,
+        1
+      ],
+      "minimum_samples": 8
+    },
+    {
+      "previous": "VEXP.fp16",
+      "current": "VLN.fp16",
+      "value": 10,
+      "minimum_ports": [
+        0,
+        1
+      ],
+      "minimum_samples": 4
+    },
+    {
+      "previous": "VEXP.fp32",
+      "current": "VDIV.fp16",
+      "value": 5,
+      "minimum_ports": [
+        0,
+        1
+      ],
+      "minimum_samples": 4
+    },
+    {
+      "previous": "VLN.fp16",
+      "current": "VEXP.fp16",
+      "value": 10,
+      "minimum_ports": [
+        0,
+        1
+      ],
+      "minimum_samples": 4
+    },
+    {
+      "previous": "VLN.fp16",
+      "current": "VLN.fp32",
+      "value": 9,
+      "minimum_ports": [
+        0,
+        1
+      ],
+      "minimum_samples": 8
+    },
+    {
+      "previous": "VSQRT.fp16",
+      "current": "VSQRT.fp32",
+      "value": 9,
+      "minimum_ports": [
+        0,
+        1
+      ],
+      "minimum_samples": 8
+    }
+  ],
+  "forwarding_rule_validation": {
+    "configured_pairs": {
+      "pairs": 339,
+      "exact": 320,
+      "mean_absolute_error": 0.0855457227138643
+    },
+    "archived_pairs": {
+      "pairs": 195,
+      "exact": 191,
+      "mean_absolute_error": 0.03076923076923077
+    },
+    "archived_exceptions": [
+      {
+        "producer": "VMULL.int32",
+        "consumer": "VMULL.int32",
+        "value": 5,
+        "rule": 4,
+        "evidence": [
+          {
+            "source": "skills/vfsim-instruction-benchmark/references/evidence/a5-vector-structural.json",
+            "value": 5,
+            "latencies": [
+              8
+            ],
+            "source_sha256": "eabd0df48a0e64fcb98ba3dca5fb8170b3aea2515595c87066c4a9da8f79b58a"
+          }
+        ]
+      },
+      {
+        "producer": "VMULL.uint32",
+        "consumer": "VMULL.uint32",
+        "value": 5,
+        "rule": 4,
+        "evidence": [
+          {
+            "source": "skills/vfsim-instruction-benchmark/references/evidence/a5-vector-structural.json",
+            "value": 5,
+            "latencies": [
+              8
+            ],
+            "source_sha256": "eabd0df48a0e64fcb98ba3dca5fb8170b3aea2515595c87066c4a9da8f79b58a"
+          }
+        ]
+      },
+      {
+        "producer": "VTRC.bf16",
+        "consumer": "VTRC.bf16",
+        "value": 6,
+        "rule": 4,
+        "evidence": [
+          {
+            "source": "skills/vfsim-instruction-benchmark/references/evidence/a5-register-rearrangement.json",
+            "value": 6,
+            "latencies": [
+              8
+            ],
+            "source_sha256": "73440f3b94c4f78a87c7e924b30a63257d29182484d2a8f0b268abbc38a7f536"
+          }
+        ]
+      },
+      {
+        "producer": "VTRC.fp16",
+        "consumer": "VTRC.fp16",
+        "value": 6,
+        "rule": 4,
+        "evidence": [
+          {
+            "source": "skills/vfsim-instruction-benchmark/references/evidence/a5-register-rearrangement.json",
+            "value": 6,
+            "latencies": [
+              8
+            ],
+            "source_sha256": "73440f3b94c4f78a87c7e924b30a63257d29182484d2a8f0b268abbc38a7f536"
+          }
+        ]
+      }
+    ],
+    "retained_unarchived_overrides": [
+      {
+        "producer": "VADDS.fp32",
+        "consumer": "VABS.fp32",
+        "value": 4,
+        "rule": 3
+      },
+      {
+        "producer": "VMULS.fp32",
+        "consumer": "VABS.fp32",
+        "value": 5,
+        "rule": 4
+      },
+      {
+        "producer": "VADD.fp32",
+        "consumer": "VABS.fp32",
+        "value": 4,
+        "rule": 3
+      },
+      {
+        "producer": "VSUB.fp32",
+        "consumer": "VABS.fp32",
+        "value": 4,
+        "rule": 3
+      },
+      {
+        "producer": "VMUL.fp32",
+        "consumer": "VABS.fp32",
+        "value": 5,
+        "rule": 4
+      },
+      {
+        "producer": "VADDS.fp16",
+        "consumer": "VABS.fp16",
+        "value": 4,
+        "rule": 3
+      },
+      {
+        "producer": "VMULS.fp16",
+        "consumer": "VABS.fp16",
+        "value": 5,
+        "rule": 4
+      },
+      {
+        "producer": "VADD.fp16",
+        "consumer": "VABS.fp16",
+        "value": 4,
+        "rule": 3
+      },
+      {
+        "producer": "VEXP.fp16",
+        "consumer": "VMULS.fp16",
+        "value": 13,
+        "rule": 18
+      },
+      {
+        "producer": "VDIV.fp16",
+        "consumer": "VSUB.fp16",
+        "value": 14,
+        "rule": 19
+      },
+      {
+        "producer": "VSUB.fp16",
+        "consumer": "VABS.fp16",
+        "value": 4,
+        "rule": 3
+      },
+      {
+        "producer": "VMUL.fp16",
+        "consumer": "VABS.fp16",
+        "value": 5,
+        "rule": 4
+      },
+      {
+        "producer": "VCVT_F16_TO_F32.f16_to_f32",
+        "consumer": "VABS.fp32",
+        "value": 4,
+        "rule": 3
+      },
+      {
+        "producer": "VCVT_S32_TO_F32.s32_to_f32",
+        "consumer": "VABS.fp32",
+        "value": 5,
+        "rule": 4
+      },
+      {
+        "producer": "VCVT_F32_TO_F16.f32_to_f16",
+        "consumer": "VABS.fp16",
+        "value": 4,
+        "rule": 3
+      }
+    ]
+  }
+}

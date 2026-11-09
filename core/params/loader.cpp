@@ -3,10 +3,12 @@
 
 #include "core/params/loader.h"
 #include "api/json/value.h"
+#include "core/params/resources.h"
 #include "core/params/fallback.h"
 #include "core/params/uarch.h"
 #include <algorithm>
 #include <cstdlib>
+#include <cctype>
 #include <stdexcept>
 namespace vfsim {
 namespace {
@@ -70,6 +72,7 @@ InstructionProfile readInstructionProfile(const JsonValue::Object &object) {
   cfg.fuType = readStringField(object, "EXU");
   cfg.dispatchExu = readStringField(object, "dispatch_exu");
   cfg.opClass = readStringField(object, "op_class");
+  cfg.executionResource = readStringField(object, "execution_resource");
   return cfg;
 }
 
@@ -122,6 +125,10 @@ ParamBundle loadParameters(const std::filesystem::path &baseDir) {
   const std::optional<std::filesystem::path> iiPath = resolvePath(
       baseDir, "II_JSON_PATH",
       {"configs/InitiationInterval.json", "Initiation_Interval.json"}, false);
+  const auto resourcePath = resolvePath(isaPath.parent_path(), "EXECUTION_RESOURCES_JSON_PATH",
+      {"execution_resources.json"}, false);
+  const auto overridePath = resolvePath(isaPath.parent_path(), "TIMING_OVERRIDES_JSON_PATH",
+      {"timing_overrides.json"}, false);
 
   const auto isaRoot = loadObjectFile(isaPath);
   const auto uarchRoot = loadObjectFile(uarchPath);
@@ -133,6 +140,63 @@ ParamBundle loadParameters(const std::filesystem::path &baseDir) {
                            : std::unordered_map<std::string, JsonValue>{};
   const auto iiRoot = iiPath ? loadObjectFile(*iiPath)
                              : std::unordered_map<std::string, JsonValue>{};
+  const auto resourceRoot = loadObjectFile(resourcePath.value_or(
+      std::filesystem::path(VFSIM_SOURCE_ROOT) / "configs/execution_resources.json"));
+  const auto overrideRoot = overridePath ? loadObjectFile(*overridePath) : JsonValue::Object{};
+  {
+    if (readIntField(resourceRoot, "schema_version") != 1)
+      throw std::runtime_error("execution_resources requires schema_version=1");
+    const auto *groups = findKey(resourceRoot, "groups");
+    if (!groups || !groups->isArray())
+      throw std::runtime_error("execution_resources.groups must be an array");
+    for (const auto &value : groups->asArray()) {
+      if (!value.isString() || value.asString().empty())
+        throw std::runtime_error("Resource names must be nonempty strings");
+      const auto &name = value.asString();
+      if (std::any_of(name.begin(), name.end(), [](unsigned char c) { return std::islower(c); }) ||
+          std::find(bundle.executionResources.begin(), bundle.executionResources.end(), name) != bundle.executionResources.end())
+        throw std::runtime_error("Resource names must be unique uppercase strings");
+      bundle.executionResources.push_back(name);
+    }
+    const auto *forwarding = findKey(resourceRoot, "forwarding");
+    if (!forwarding || !forwarding->isObject())
+      throw std::runtime_error("execution_resources.forwarding must be an object");
+    const auto &policy = forwarding->asObject();
+    for (const auto *field : {"minimum", "default_offset", "pair_offsets", "compute_store_offset",
+                             "fallback_offset", "load_store_interval"})
+      if (!findKey(policy, field))
+        throw std::runtime_error("Missing resource forwarding field");
+    bundle.resourceForwardingMinimum = readIntField(policy, "minimum");
+    bundle.resourceForwardingDefaultOffset = readIntField(policy, "default_offset");
+    bundle.computeStoreForwardingOffset = readIntField(policy, "compute_store_offset");
+    bundle.forwardingDefaultOffset = readIntField(policy, "fallback_offset");
+    bundle.loadStoreForwardingInterval = readIntField(policy, "load_store_interval");
+    const auto *iiPolicy = findKey(resourceRoot, "ii");
+    if (!iiPolicy || !iiPolicy->isObject())
+      throw std::runtime_error("execution_resources.ii must be an object");
+    for (const auto *field : {"different_resource_interval", "writeback_collision_penalty"})
+      if (!findKey(iiPolicy->asObject(), field))
+        throw std::runtime_error("Missing resource II field");
+    bundle.crossResourceIssueInterval = readIntField(iiPolicy->asObject(), "different_resource_interval");
+    bundle.writebackCollisionPenalty = readIntField(iiPolicy->asObject(), "writeback_collision_penalty");
+    if (bundle.crossResourceIssueInterval < 1)
+      throw std::runtime_error("different_resource_interval must be positive");
+    const auto &offsets = policy.at("pair_offsets");
+    if (!offsets.isObject())
+      throw std::runtime_error("Resource forwarding offsets must be an object");
+    auto known = [&](const std::string &name) {
+      return std::find(bundle.executionResources.begin(), bundle.executionResources.end(), name) != bundle.executionResources.end();
+    };
+    for (const auto &[a, row] : offsets.asObject()) {
+      if (!known(a) || !row.isObject())
+        throw std::runtime_error("Unknown forwarding resource: " + a);
+      for (const auto &[b, value] : row.asObject()) {
+        if (!known(b) || !value.isInt() || value.asInt() < 0)
+          throw std::runtime_error("Invalid resource forwarding offset");
+        bundle.resourceForwardingOffsets[a][b] = value.asInt();
+      }
+    }
+  }
 
   const auto *defaultNode = findKey(isaRoot, "defaults");
   if (const JsonValue *defaults = defaultNode) {
@@ -195,6 +259,7 @@ ParamBundle loadParameters(const std::filesystem::path &baseDir) {
             }
           }
           InstructionProfile config = readInstructionProfile(effectiveForm);
+          config.resolvedForm = formName;
           if (config.opClass.empty())
             config.opClass = inheritedOpClass;
           dtypeMap.emplace(formName, std::move(config));
@@ -207,6 +272,7 @@ ParamBundle loadParameters(const std::filesystem::path &baseDir) {
           continue;
         InstructionProfile config = readInstructionProfile(
             mergeObjects(defaults, dtypeValue.asObject()));
+        config.resolvedForm = dtypeName;
         if (config.opClass.empty())
           config.opClass = inheritedOpClass;
         dtypeMap.emplace(dtypeName, std::move(config));
@@ -216,7 +282,8 @@ ParamBundle loadParameters(const std::filesystem::path &baseDir) {
 
   bundle.uarch = parseUarch(uarchRoot);
   bundle.forwardingDefaultOffset =
-      readIntField(fwdRoot, "default", readIntField(fwdRoot, "defaults", 3));
+      readIntField(fwdRoot, "default", readIntField(fwdRoot, "defaults", bundle.forwardingDefaultOffset));
+  bundle.initiationIntervalDefault = readIntField(iiRoot, "defaults", bundle.crossResourceIssueInterval);
   auto readPairs = [&](const JsonValue::Object &root, const char *key,
                        int64_t minimum, auto &table) {
     const auto *node = findKey(root, key);
@@ -254,6 +321,41 @@ ParamBundle loadParameters(const std::filesystem::path &baseDir) {
     throw std::runtime_error("II.defaults must be a positive integer");
   readPairs(fwdRoot, "forwarding", 0, bundle.forwardingByForm);
   readPairs(iiRoot, "InitiationInterval", 1, bundle.initiationIntervalByForm);
+  if (overridePath) {
+    if (readIntField(overrideRoot, "schema_version") != 1 || !findKey(overrideRoot, "ii") ||
+        !findKey(overrideRoot, "forwarding"))
+      throw std::runtime_error("timing_overrides requires schema_version=1 and ii/forwarding tables");
+    for (bool initiation : {false, true}) {
+      const auto *key = initiation ? "ii" : "forwarding";
+      const auto &values = overrideRoot.at(key);
+      if (!values.isObject())
+        throw std::runtime_error(std::string("timing_overrides.") + key + " must be an object");
+      auto &table = initiation ? bundle.iiOverrides : bundle.forwardingOverrides;
+      for (const auto &[producer, consumers] : values.asObject()) {
+        if (producer.find('.') == std::string::npos || !consumers.isObject())
+          throw std::runtime_error("Timing overrides require qualified producer rows");
+        auto &row = table[producer];
+        for (const auto &[consumer, value] : consumers.asObject()) {
+          if (!value.isInt() || value.asInt() < (initiation ? 1 : 0))
+            throw std::runtime_error("Invalid timing override: " + producer + " -> " + consumer);
+          row[consumer] = value.asInt();
+        }
+      }
+    }
+  }
+  for (auto &[op, forms] : bundle.isa) {
+    for (auto &[form, profile] : forms) {
+      for (const auto &candidate : param_fallback::pairKeyCandidates(op, form, op, form)) {
+        const auto row = bundle.initiationIntervalByForm.find(candidate.producer);
+        if (row != bundle.initiationIntervalByForm.end()) {
+          const auto value = row->second.find(candidate.consumer);
+          if (value != row->second.end()) { profile.selfIi = value->second; break; }
+        }
+      }
+      profile.writebackBanks = instructionBanks(op);
+    }
+  }
+  validateResources(bundle);
   return bundle;
 }
 } // namespace vfsim

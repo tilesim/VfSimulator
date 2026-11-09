@@ -9,14 +9,16 @@
 | `configs/uarch_override_schema.json` | Canonical 配置覆盖的字段类型与支持范围 |
 | `configs/uarch.json` | 队列、寄存器、端口、带宽、循环及屏障参数 |
 | `configs/isa.json` | 各指令 form 的 latency、FU、端口与 VF startup/drain |
+| `configs/execution_resources.json` | 子 EXU 分组、forwarding 偏移和静态 II 推导系数 |
+| `configs/timing_overrides.json` | 偏离分组规则的有向 II 与 forwarding 指令对 |
 | `configs/forwarding.json` | producer 到 consumer 的数据可用间隔 |
 | `configs/InitiationInterval.json` | 前后指令在同端口的发射间隔 |
 
-Catalog、软件展开和覆盖字段表编译在 `api/generated/*.inc` 中；变更其语义声明时同步维护对应数据表并重新构建。ISA、uarch、forwarding 和 II 参数文件在模型构造时读取。
+Catalog、软件展开和覆盖字段表编译在 `api/generated/*.inc` 中；变更其语义声明时同步维护对应数据表并重新构建。ISA、uarch、forwarding、II、资源规则和例外参数文件在模型构造时读取。
 
 ## 文件选择与快照
 
-环境变量 `ISA_JSON_PATH`、`UARCH_JSON_PATH`、`FORWARDING_JSON_PATH` 和 `II_JSON_PATH` 可分别指定参数文件。显式环境路径优先，其次查找模型 `baseDir` 下的 `configs/` 和根目录候选文件。ISA 和 uarch 必须存在，forwarding/II 缺失时采用查询回退规则。格式、类型或表格单元无效时抛出异常。
+环境变量 `ISA_JSON_PATH`、`UARCH_JSON_PATH`、`FORWARDING_JSON_PATH`、`II_JSON_PATH`、`EXECUTION_RESOURCES_JSON_PATH` 和 `TIMING_OVERRIDES_JSON_PATH` 可分别指定参数文件。显式环境路径优先，其次查找模型 `baseDir` 下的 `configs/` 和根目录候选文件。ISA 和 uarch 必须存在，forwarding/II 缺失时采用查询回退规则。资源规则及例外默认与所选 ISA 同目录；本地缺少资源规则时读取项目自带的 `configs/execution_resources.json`。格式、类型或表格单元无效时抛出异常。
 
 `CoreVfCostModel` 构造时加载只读 `ParamBundle`。同一实例连续调用 `runVfInfo()` 复用快照；配置文件和路径环境变量的更新在创建新模型后生效。
 
@@ -28,7 +30,7 @@ Catalog、软件展开和覆盖字段表编译在 `api/generated/*.inc` 中；�
 
 `ParamDB::inst()` 返回缓存的 `InstructionProfile`，提供 latency、FU、指令类别和允许的 EXU 端口。查询区分 opcode、form、dtype、类别和 memory mode。form 优先精确匹配，支持 `b16→fp16`、`b32→fp32` 备选。缺失指令参数采用 latency=9，计算指令默认使用 ALU 和两个 EXU 端口，并记录警告。
 
-forwarding 优先查询指令对及 producer 的 wildcard 项。缺失 LOAD→STORE 使用 6 cycles，其他缺失对使用 producer latency 减配置 offset，并截断到非负值。II 缺失时，若前条 latency 比后条大 1 则取 2，其他情况取 1。警告通过 `model_warnings.json` 输出。
+COMPUTE→STORE 的 forwarding 使用当前 producer latency 减 `forwarding.compute_store_offset`，并截断到非负值。其他 forwarding 按例外、显式指令对及 wildcard、分组公式、缺失回退查询。资源公式、下限和偏移量均读取 `execution_resources.json`。同组 II 使用 producer 的 self-II；异组及静态碰撞修正读取该文件的 `ii`。缺失 II 使用 `InitiationInterval.json.defaults` 与碰撞修正参数。警告通过 `model_warnings.json` 输出，完整规则见[子 EXU 模型](execution_resources.md)。
 
 理论场景通过 `CoreVfCostModel` 构造参数 `vloopOnly`、`directIssue` 或对应的 `theoretical_limit_*` 配置字段启用，用于放宽结构资源后的周期比较。
 
@@ -39,7 +41,7 @@ forwarding 优先查询指令对及 producer 的 wildcard 项。缺失 LOAD→ST
 `align_state_latency` 定义状态发布间隔，默认值为 1。
 
 EXU 的 `exq_issue_inflight_cap_per_port` 默认值为 7；值为 0 时关闭在途容量限制。
-self-II 历史、相邻指令 II、单周期发射和完成带宽分别参与调度，详见
+子单元 self-II 接收时间、指令对例外、单周期发射和完成带宽分别参与调度，详见
 [执行模型](execution_model.md)和[指令时序](instruction_timing.md)。
 
 A5 参数范围、实测来源、同编码继承与缺口分别记录在

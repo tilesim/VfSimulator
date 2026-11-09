@@ -18,3 +18,7 @@
 | [C++ 一致性验证](validation/cpp_refactor_sync_20261021.md) | 源码映射、共享配置与 37 组逐指令回归 |
 
 构建与运行见[项目说明](../README.md)，测试入口见[测试说明](../tests/README.md)。
+
+[子 EXU 资源与时序](execution_resources.md)描述分组、forwarding/II 系数、参数来源和例外。
+
+[子 EXU 跨分支验证](validation/sub_exu_sync_20261109.md)记录源码、独立 wheel 和纯 C++ 的同步检查。

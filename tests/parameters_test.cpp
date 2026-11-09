@@ -8,6 +8,7 @@
 #include <fstream>
 #include <iostream>
 #include <iterator>
+#include <tuple>
 using namespace vfsim;
 namespace {
 void require(bool condition, const char *message) {
@@ -82,6 +83,141 @@ void testParameterReuse(const std::filesystem::path &root) {
   model.runVfInfo(vf);
   require(!std::filesystem::exists(warningsPath),
           "Clean runs do not inherit earlier warnings");
+}
+
+void testResourceParameters(const std::filesystem::path &root) {
+  const auto source = std::filesystem::path(VFSIM_SOURCE_ROOT);
+  ParamDB db(source);
+  const auto evidence = json::parseFile(source / "docs/data/sub_exu_timing_migration_20261109.json");
+  for (const auto *section : {"original_pair_values", "additional_measured_ii"})
+    for (const auto &value : evidence.asObject().at(section).asArray()) {
+      const auto &row = value.asObject();
+      const auto previous = row.at("previous").asString(), current = row.at("current").asString();
+      const auto split = previous.find('.'), otherSplit = current.find('.');
+      const auto p = previous.substr(0, split), pf = previous.substr(split+1);
+      const auto c = current.substr(0, otherSplit), cf = current.substr(otherSplit+1);
+      const auto kind = row.find("kind");
+      const auto actual = kind != row.end() && kind->second.asString() == "forwarding"
+          ? db.forwardingCycles(p, pf, c, cf) : db.initiationInterval(p, pf, c, cf);
+      require(actual == row.at("value").asInt(), "Migrated timing and additional measurements retain their values");
+    }
+  require(db.inst("VCI", "int32").executionResource == "ADD_DUAL" &&
+              db.inst("VCI", "int32").selfIi == 2 &&
+              db.inst("VMUL", "fp32").executionResource == "MUL",
+          "Instruction profiles carry resource and self-II metadata");
+  require(db.forwardingCycles("VADD", "fp32", "VMUL", "fp32") == 3 &&
+              db.forwardingCycles("VADD", "fp32", "VEXP", "fp32") == 4 &&
+              db.forwardingCycles("VMULL", "int32", "VMULL", "int32") == 5,
+          "Resource forwarding and sparse exceptions share lookup semantics");
+  const auto stores = json::parseFile(source / "docs/data/compute_store_forwarding_20261109.json");
+  for (const auto &value : stores.asObject().at("pairs").asArray()) {
+    const auto &row = value.asObject();
+    const auto p = row.at("producer").asString(), c = row.at("consumer").asString();
+    require(db.forwardingCycles(p.substr(0, p.find('.')), p.substr(p.find('.')+1),
+                                c.substr(0, c.find('.')), c.substr(c.find('.')+1)) == row.at("value").asInt(),
+            "Compute-to-store migration preserves all configured intervals");
+  }
+  require(db.forwardingCycles("VCADD", "fp32", "VSSTB", "fp32") == 20 &&
+              db.forwardingCycles("PLT", "b32", "PSTS", "b8") == 4 &&
+              db.forwardingCycles("VCI", "int32", "VSCATTER", "int32") == 5,
+          "Compute-to-store timing covers ungrouped, predicate and scatter inputs");
+  auto bundle = std::make_shared<ParamBundle>(db.bundle());
+  bundle->isa["VADD"]["fp32"].latency = 14;
+  bundle->forwardingByForm["VADD.fp32"]["VSTS.fp32"] = 99;
+  bundle->forwardingByForm["VADD.fp32"]["*"] = 98;
+  bundle->forwardingOverrides["VADD.fp32"]["VSTS.fp32"] = 97;
+  ParamDB changed(bundle);
+  for (int i = 0; i < 3; ++i)
+    require(changed.forwardingCycles("VADD", "fp32", "VSTS", "fp32") == 12,
+            "Current producer latency determines compute-to-store timing before explicit values");
+  auto shortBundle = std::make_shared<ParamBundle>(db.bundle());
+  shortBundle->isa["VADD"]["fp32"].latency = 1;
+  ParamDB shortLatency(shortBundle);
+  require(shortLatency.forwardingCycles("VADD", "fp32", "VSTS", "fp32") == 0 &&
+              shortLatency.forwardingCycles("VLDS", "fp32", "VSTS", "fp32") == 8,
+          "Short compute latency is clamped while LOAD-to-STORE keeps its own timing");
+  std::filesystem::create_directories(root / "configs");
+  for (const auto *name : {"isa.json", "uarch.json", "forwarding.json", "InitiationInterval.json", "execution_resources.json"})
+    std::filesystem::copy_file(source / "configs" / name, root / "configs" / name);
+  for (const auto *invalid : {
+       R"({"schema_version":1,"ii":{"VADD.fp32":{"VADD.fp32":1}},"forwarding":{}})",
+       R"({"schema_version":1,"ii":{"VADD.fp32":{"VMUL.fp32":true}},"forwarding":{}})",
+       R"({"schema_version":1,"ii":{},"forwarding":{"VADD.fp32":{"UNKNOWN.fp32":2}}})",
+       R"({"schema_version":1,"ii":{},"forwarding":{"UNKNOWN.fp32":{}}})",
+       R"({"schema_version":1,"ii":{"fp32":{"VADD":{"VMUL":2}}},"forwarding":{}})"}) {
+    write(root / "configs/timing_overrides.json", invalid);
+    bool rejected = false;
+    try { loadParameters(root); } catch (const std::runtime_error &) { rejected = true; }
+    require(rejected, "Invalid sparse timing exceptions must fail loading");
+  }
+}
+
+void testTimingPolicy(const std::filesystem::path &root) {
+  const auto source = std::filesystem::path(VFSIM_SOURCE_ROOT);
+  std::filesystem::create_directories(root / "configs");
+  for (const auto *name : {"isa.json", "uarch.json", "forwarding.json", "InitiationInterval.json",
+                           "execution_resources.json", "timing_overrides.json"})
+    std::filesystem::copy_file(source / "configs" / name, root / "configs" / name);
+  auto policy = json::parseFile(root / "configs/execution_resources.json").asObject();
+  auto forwarding = policy.at("forwarding").asObject();
+  forwarding["compute_store_offset"] = int64_t{5};
+  forwarding["default_offset"] = int64_t{6};
+  forwarding["minimum"] = int64_t{1};
+  forwarding["fallback_offset"] = int64_t{5};
+  forwarding["load_store_interval"] = int64_t{10};
+  auto offsets = forwarding.at("pair_offsets").asObject();
+  auto mathOffsets = offsets.at("LNEXP").asObject();
+  mathOffsets["ADD_DUAL"] = int64_t{5};
+  offsets["LNEXP"] = mathOffsets;
+  forwarding["pair_offsets"] = offsets;
+  policy["forwarding"] = forwarding;
+  auto ii = policy.at("ii").asObject();
+  ii["different_resource_interval"] = int64_t{3};
+  ii["writeback_collision_penalty"] = int64_t{2};
+  policy["ii"] = ii;
+  std::ofstream(root / "configs/execution_resources.json") << json::stringify(policy);
+  auto intervals = json::parseFile(root / "configs/InitiationInterval.json").asObject();
+  intervals["defaults"] = int64_t{5};
+  std::ofstream(root / "configs/InitiationInterval.json") << json::stringify(intervals);
+  ParamDB db(root);
+  require(db.forwardingCycles("VADD", "fp32", "VSTS", "fp32") == 2 &&
+              db.forwardingCycles("VADD", "fp32", "VMUL", "fp32") == 1 &&
+              db.forwardingCycles("VEXP", "fp32", "VADD", "fp32") == 11,
+          "Parameter files determine store, grouped and math forwarding offsets");
+  require(db.initiationInterval("VMOV", "fp32", "VADD", "fp32") == 3 &&
+              db.initiationInterval("VCI", "int32", "VADD", "fp32") == 2,
+          "Cross-resource policy is independent of measured self-II");
+  auto bundle = std::make_shared<ParamBundle>(db.bundle());
+  bundle->isa["VMUL"]["fp32"].latency = 10;
+  for (const auto &[op, latency] : std::vector<std::pair<std::string, int64_t>>{{"CUSTOM_A", 12}, {"CUSTOM_B", 7}}) {
+    InstructionProfile profile;
+    profile.opClass = "COMPUTE";
+    profile.latency = latency;
+    profile.resolvedForm = "fp32";
+    bundle->isa[op]["fp32"] = profile;
+  }
+  ParamDB modified(bundle);
+  require(modified.initiationInterval("VMUL", "fp32", "VADD", "fp32") == 5 &&
+              modified.initiationInterval("CUSTOM_A", "fp32", "CUSTOM_B", "fp32") == 7 &&
+              modified.forwardingCycles("CUSTOM_A", "fp32", "CUSTOM_B", "fp32") == 7 &&
+              modified.forwardingCycles("VLD_FUTURE", "fp32", "VST_FUTURE", "fp32") == 10,
+          "Collision and missing-pair policies use configured coefficients");
+  const std::vector<std::tuple<std::string, std::string, json::Value>> invalid = {
+      {"forwarding", "compute_store_offset", int64_t{-1}},
+      {"forwarding", "fallback_offset", true},
+      {"forwarding", "load_store_interval", "6"},
+      {"ii", "different_resource_interval", int64_t{0}},
+      {"ii", "writeback_collision_penalty", true}};
+  for (const auto &[section, field, value] : invalid) {
+    auto broken = policy;
+    auto fields = broken.at(section).asObject();
+    fields[field] = value;
+    broken[section] = fields;
+    std::ofstream(root / "configs/execution_resources.json") << json::stringify(broken);
+    bool rejected = false;
+    try { loadParameters(root); } catch (const std::runtime_error &) { rejected = true; }
+    require(rejected, "Invalid timing policy coefficients must fail loading");
+  }
 }
 } // namespace
 int main() {
@@ -185,6 +321,8 @@ int main() {
                       .asString() == "STORE",
               "PSTU fallback warning preserves its store classification");
   testParameterReuse(root / "snapshot");
+  testResourceParameters(root / "resources");
+  testTimingPolicy(root / "policy");
   std::filesystem::remove_all(root);
   std::cout
       << "Parameter inheritance, pair lookup and format validation passed\n";

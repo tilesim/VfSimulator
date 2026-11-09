@@ -1,0 +1,105 @@
+{
+  "schema_version": 1,
+  "ii": {
+    "VSQRT.fp32": {
+      "VEXP.fp32": 5
+    },
+    "VLN.fp32": {
+      "VDIV.fp32": 5,
+      "VEXP.fp32": 6,
+      "VSQRT.fp32": 5
+    },
+    "VEXP.fp32": {
+      "VDIV.fp32": 6,
+      "VLN.fp32": 6,
+      "VSQRT.fp32": 6,
+      "VDIV.fp16": 5
+    },
+    "VDIV.fp32": {
+      "VEXP.fp32": 5
+    },
+    "VEXP.fp16": {
+      "VDIV.fp16": 10,
+      "VDIV.fp32": 11,
+      "VEXP.fp32": 9,
+      "VLN.fp16": 10
+    },
+    "VDIV.fp16": {
+      "VEXP.fp16": 9,
+      "VDIV.fp32": 9,
+      "VEXP.fp32": 10
+    },
+    "VCVT_F32_TO_S32.f32_to_s32": {
+      "VABS.int32": 1
+    },
+    "VCVT_S32_TO_F32.s32_to_f32": {
+      "VABS.int32": 1
+    },
+    "VLN.fp16": {
+      "VEXP.fp16": 10,
+      "VLN.fp32": 9
+    },
+    "VSQRT.fp16": {
+      "VSQRT.fp32": 9
+    }
+  },
+  "forwarding": {
+    "VADDS.fp32": {
+      "VABS.fp32": 4
+    },
+    "VMULS.fp32": {
+      "VABS.fp32": 5
+    },
+    "VADD.fp32": {
+      "VABS.fp32": 4
+    },
+    "VSUB.fp32": {
+      "VABS.fp32": 4
+    },
+    "VMUL.fp32": {
+      "VABS.fp32": 5
+    },
+    "VADDS.fp16": {
+      "VABS.fp16": 4
+    },
+    "VMULS.fp16": {
+      "VABS.fp16": 5
+    },
+    "VADD.fp16": {
+      "VABS.fp16": 4
+    },
+    "VEXP.fp16": {
+      "VMULS.fp16": 13
+    },
+    "VDIV.fp16": {
+      "VSUB.fp16": 14
+    },
+    "VSUB.fp16": {
+      "VABS.fp16": 4
+    },
+    "VMUL.fp16": {
+      "VABS.fp16": 5
+    },
+    "VCVT_F16_TO_F32.f16_to_f32": {
+      "VABS.fp32": 4
+    },
+    "VCVT_S32_TO_F32.s32_to_f32": {
+      "VABS.fp32": 5
+    },
+    "VCVT_F32_TO_F16.f32_to_f16": {
+      "VABS.fp16": 4
+    },
+    "VMULL.int32": {
+      "VMULL.int32": 5
+    },
+    "VMULL.uint32": {
+      "VMULL.uint32": 5
+    },
+    "VTRC.bf16": {
+      "VTRC.bf16": 6
+    },
+    "VTRC.fp16": {
+      "VTRC.fp16": 6
+    }
+  }
+}

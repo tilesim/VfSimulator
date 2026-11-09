@@ -11,9 +11,9 @@
 namespace vfsim::param_fallback {
 
 int64_t missingForwarding(const InstructionProfile &producer,
-                          const InstructionProfile &consumer, int64_t offset);
+                          const InstructionProfile &consumer, int64_t offset, int64_t loadStoreInterval);
 int64_t missingII(const InstructionProfile &previous,
-                  const InstructionProfile &current);
+                  const InstructionProfile &current, int64_t defaultInterval, int64_t collisionPenalty);
 
 std::string compatibleForm(const std::string &form);
 std::vector<std::string> formCandidates(const std::string &form);

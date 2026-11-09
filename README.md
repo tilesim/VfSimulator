@@ -23,7 +23,7 @@ build/vfsim_native_json_runner --cce VFtest/cce/contracts/mixed.cce --out_dir re
 
 CCE 前端解析声明、Catalog 指令调用、循环和访存地址，进行规范化与定义版本化，最终构造并校验 Canonical 程序。支持范围见 [输入层说明](docs/input_api.md)。理论模式使用 `--theoretical-limit-vloop-only` 和 `--theoretical-limit-vloop-only-legacy-forwarding-direct-issue`。
 
-指令签名、dtype 与 CANN 软件展开规则由 Catalog 和共享配置定义，A5 支持范围见[指令覆盖清单](docs/a5_instruction_coverage.md)。EXU 按 opcode/form 保留 self-II 历史，每端口默认最多 7 条在途计算指令，每周期最多发射一条，完成带宽分别允许一条写向量寄存器和一条写谓词寄存器的指令；规则见[指令时序](docs/instruction_timing.md)。
+指令签名、dtype 与 CANN 软件展开规则由 Catalog 和共享配置定义，A5 支持范围见[指令覆盖清单](docs/a5_instruction_coverage.md)。EXU 按子执行单元维护 self-II 接收时间，并检查独立的指令对例外，每端口默认最多 7 条在途计算指令，每周期最多发射一条，完成带宽分别允许一条写向量寄存器和一条写谓词寄存器的指令；规则见[指令时序](docs/instruction_timing.md)。
 
 `vfEndCycle` 表示包含 VF drain 的结束周期；输出目录保存指令开始/完成、资源阻塞、循环、屏障和 Perfetto 事件。
 
@@ -60,3 +60,5 @@ const auto cycles = result.vfEndCycle;
 输入转换见[输入层说明](docs/input_api.md)，实现细节见 [C++ 模块说明](docs/code_structure_guide.md)、[执行模型](docs/execution_model.md)、[寄存器模型](docs/register_model.md)、[LSU 模型](docs/lsu_model.md)、[屏障时序](docs/membar_timing_model.md)和[参数配置](docs/configuration.md)。Canonical JSON 的结构定义位于 [canonical_vf_info.schema.json](api/json/canonical_vf_info.schema.json)，语义约束由输入校验器检查。
 
 循环外提由 `core/execution/optimization.*` 在 Canonical 层完成，规则见[循环外提](docs/loop_invariants.md)。
+
+子单元分组、forwarding/II 规则与参数位置见[子 EXU 模型](docs/execution_resources.md)。
