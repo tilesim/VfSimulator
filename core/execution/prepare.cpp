@@ -35,14 +35,17 @@ int64_t checkExecutionSupport(const std::vector<CanonicalNode> &nodes) {
 }
 } // namespace
 PreparedProgram prepareProgram(const CanonicalVfInfo &input, const ParamDB &db,
-                               const UarchConfig &cfg) {
+                               const UarchConfig &cfg, bool retainDiagnostics) {
   const auto optimized = hoistLoopInvariants(input);
   const auto &vf = optimized.vfInfo;
   const int64_t linearCount = checkExecutionSupport(vf.context);
   std::unordered_map<std::string, ValueInfo> values;
-  for (const auto &[id, value] : vf.values)
-    values.emplace(id, ValueInfo{id, value.storage, value.dtype, value.shape});
-  auto program = expandCanonicalProgram(vf, db, cfg, std::move(values));
+  if (retainDiagnostics)
+    for (const auto &[id, value] : vf.values)
+      values.emplace(id,
+                     ValueInfo{id, value.storage, value.dtype, value.shape});
+  auto program =
+      expandCanonicalProgram(vf, db, cfg, std::move(values), retainDiagnostics);
   program.linearInstCount = linearCount;
   program.compilerOptimizationStats = optimized.stats;
   return program;

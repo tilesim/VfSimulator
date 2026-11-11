@@ -43,6 +43,17 @@ const auto cycles = result.vfEndCycle;
 
 嵌入其他 CMake 项目可使用 `add_subdirectory(/path/to/VfSimulator vfsim-build)` 并链接 `vfsim::native_core`。`VFSIM_BUILD_TESTS=OFF` 关闭组件测试构建。
 
+只需周期数的评分调用可显式关闭输出：
+
+```cpp
+vfsim::CoreVfCostModel scorer("/path/to/VfSimulator", {});
+const auto result = scorer.runVfInfo(vf);
+```
+
+空输出路径使用紧凑准备流程，省去 trace 专用的动态 value/provenance 表和诊断记录，仍保留逐周期调度、依赖、寄存器与队列约束、循环外提统计和执行预算。指定输出目录时继续保留完整 trace。直接调用底层接口时，`prepareProgram(vf, db, cfg, false)` 选择相同的评分准备流程；默认参数保留诊断信息。紧凑准备结果不能随后导出 trace，需要导出时应重新使用默认准备流程。
+
+Engine 的执行管线借用 `PreparedProgram` 的不可变指令，程序和本次 `ParamDB` 必须在执行期间保持有效。此次优化扩展了内部数据结构和准备接口，嵌入项目需要使用同一版本的头文件重新构建库及调用方。
+
 ## 目录与文档
 
 | 目录 | 职责 |

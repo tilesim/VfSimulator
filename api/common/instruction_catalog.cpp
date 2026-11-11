@@ -304,7 +304,9 @@ InstructionCatalog::specializeOpcode(const std::string &opcode,
 
 const NativeInstructionSpec *
 InstructionCatalog::lookup(const std::string &opcode) const {
-  auto spec = specs_.find(canonicalOpcode(opcode));
+  auto spec = specs_.find(opcode);
+  if (spec == specs_.end())
+    spec = specs_.find(canonicalOpcode(opcode));
   return spec == specs_.end() ? nullptr : &spec->second;
 }
 

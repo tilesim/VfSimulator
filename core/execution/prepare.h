@@ -62,10 +62,15 @@ struct PreparedProgram {
   int64_t totalTopBlocks = 1;
   int64_t linearInstCount = 0;
   CompilerOptimizationStats compilerOptimizationStats;
+  bool retainsDiagnostics = true;
 };
 
+// Diagnostic preparation retains full value/provenance tables for trace
+// export. Cost-only preparation retains all scheduling/dependency metadata
+// and budgets, but cannot subsequently export a trace.
 PreparedProgram prepareProgram(const CanonicalVfInfo &, const ParamDB &,
-                               const UarchConfig &);
+                               const UarchConfig &,
+                               bool retainDiagnostics = true);
 } // namespace vfsim
 
 #endif // VFSIM_NATIVE_EXECUTION_PREPARE_H

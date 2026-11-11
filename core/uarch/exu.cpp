@@ -7,16 +7,18 @@
 namespace vfsim {
 namespace {
 std::string formKey(const Uop &u) {
-  return u.op + "." + (u.profile->resolvedForm.empty() ? u.form : u.profile->resolvedForm);
+  return u.op + "." +
+         (u.profile->resolvedForm.empty() ? u.form : u.profile->resolvedForm);
 }
 std::string resourceKey(const Uop &u) {
-  return u.profile->executionResource.empty() ? "op:" + formKey(u) : u.profile->executionResource;
+  return u.profile->executionResource.empty() ? "op:" + formKey(u)
+                                              : u.profile->executionResource;
 }
-}
+} // namespace
 EXU::EXU(const UarchConfig &cfg, const ParamDB &db)
     : cfg_(cfg), db_(db), lastPort_(cfg.issuePorts), lastFu_(cfg.issuePorts),
-      subExus_(cfg.issuePorts), entryCycle_(cfg.issuePorts, -1000000000), overrideReady_(cfg.issuePorts),
-      completionCycles_(cfg.issuePorts),
+      subExus_(cfg.issuePorts), entryCycle_(cfg.issuePorts, -1000000000),
+      overrideReady_(cfg.issuePorts), completionCycles_(cfg.issuePorts),
       inflight_(cfg.issuePorts) {
   for (auto &port : subExus_)
     for (const auto &name : db.bundle().executionResources)
@@ -33,8 +35,8 @@ EXU::EXU(const UarchConfig &cfg, const ParamDB &db)
 bool EXU::legalPort(const Uop &u, int port) const {
   return port >= 0 && port < cfg_.issuePorts &&
          std::find(u.profile->allowedExuPorts.begin(),
-                   u.profile->allowedExuPorts.end(), port) !=
-             u.profile->allowedExuPorts.end();
+                   u.profile->allowedExuPorts.end(),
+                   port) != u.profile->allowedExuPorts.end();
 }
 bool EXU::canAccept(int port, bool queued) const {
   return !queued || cfg_.exqIssueInflightCapPerPort <= 0 ||
@@ -45,29 +47,36 @@ int64_t EXU::nextResourceIssueCycle(const Uop &u, int port) const {
   const auto found = units.find(resourceKey(u));
   return found == units.end() ? -1000000000 : found->second.readyCycle;
 }
-int64_t EXU::nextCompletionIssueCycle(const Uop &u, int port, int64_t cycle) const {
+int64_t EXU::nextCompletionIssueCycle(const Uop &u, int port,
+                                      int64_t cycle) const {
   const auto &reserved = completionCycles_.at(port);
-  while (std::any_of(u.writebackBanks.begin(), u.writebackBanks.end(),
-                     [&](const auto &bank) {
-                       const auto &slots = reserved.at(bank);
-                       return slots.find(cycle + u.profile->latency) != slots.end();
-                     }))
+  while (std::any_of(
+      u.writebackBanks.begin(), u.writebackBanks.end(), [&](const auto &bank) {
+        const auto &slots = reserved.at(bank);
+        return slots.find(cycle + u.profile->latency) != slots.end();
+      }))
     ++cycle;
   return cycle;
 }
 int64_t EXU::nextIssueCycle(const Uop &u, int port, bool perFu,
-                          int64_t notBefore) const {
-  const auto &last = perFu ? lastFu_.at(port).at(u.profile->fuType) : lastPort_.at(port);
-  auto ready = std::max({notBefore, entryCycle_.at(port)+1, nextResourceIssueCycle(u, port)});
-  if (const auto override = overrideReady_.at(port).find(formKey(u)); override != overrideReady_.at(port).end())
+                            int64_t notBefore) const {
+  const auto &last =
+      perFu ? lastFu_.at(port).at(u.profile->fuType) : lastPort_.at(port);
+  auto ready = std::max(
+      {notBefore, entryCycle_.at(port) + 1, nextResourceIssueCycle(u, port)});
+  if (const auto override = overrideReady_.at(port).find(formKey(u));
+      override != overrideReady_.at(port).end())
     ready = std::max(ready, override->second);
-  if (last.profile && (last.profile->executionResource.empty() || u.profile->executionResource.empty()))
-    ready = std::max(ready, last.cycle+db_.initiationInterval(last.op, last.form, u.op, u.form));
+  if (last.profile && (last.profile->executionResource.empty() ||
+                       u.profile->executionResource.empty()))
+    ready = std::max(
+        ready, last.cycle + db_.initiationInterval(*last.profile, *u.profile));
   return nextCompletionIssueCycle(u, port, ready);
 }
 bool EXU::canIssue(const Uop &u, int port, int64_t cycle, bool queued) const {
   return legalPort(u, port) && canAccept(port, queued) &&
-         cycle >= nextIssueCycle(u, port, !queued && !cfg_.enableCrossFuIi, cycle);
+         cycle >=
+             nextIssueCycle(u, port, !queued && !cfg_.enableCrossFuIi, cycle);
 }
 std::optional<int> EXU::pickPort(const Uop &u, int64_t cycle,
                                  const std::vector<bool> &used) {
@@ -106,11 +115,12 @@ void EXU::start(const UopPtr &u, int port, int64_t cycle, bool queued) {
   for (const auto &bank : u->writebackBanks)
     reserved.at(bank).insert(doneCycle);
   ++inflight_[port];
-  subExus_[port][resourceKey(*u)].start(cycle, db_.initiationInterval(u->op, u->form, u->op, u->form));
+  subExus_[port][resourceKey(*u)].start(
+      cycle, db_.initiationInterval(*u->profile, *u->profile));
   entryCycle_[port] = cycle;
   for (const auto &[target, gap] : db_.issueOverrides(u->op, u->form)) {
     auto &ready = overrideReady_[port][target];
-    ready = std::max(ready, cycle+gap);
+    ready = std::max(ready, cycle + gap);
   }
   if (queued || cfg_.enableCrossFuIi)
     lastPort_[port] = {cycle, u->op, u->form, u->profile};

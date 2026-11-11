@@ -7,8 +7,8 @@ class OoO {
 public:
   OoO(const UarchConfig &cfg, Registers &regs, SHQ &shq, EXQ &exq, EXU &exu,
       TraceRecorder &trace)
-      : cfg_(cfg), regs_(regs), shq_(shq), exq_(exq), exu_(exu), trace_(trace) {
-  }
+      : cfg_(cfg), regs_(regs), shq_(shq), exq_(exq), exu_(exu), trace_(trace),
+        admitted_(cfg.issuePorts) {}
   void dispatch(int64_t cycle);
   void issueDirect(int64_t cycle);
 
@@ -22,6 +22,7 @@ private:
   EXU &exu_;
   TraceRecorder &trace_;
   std::map<std::string, int> fuRr_{{"ALU", 0}, {"SFU", 0}};
+  std::vector<int64_t> admitted_, selected_;
   int rr_ = 0;
 };
 } // namespace vfsim

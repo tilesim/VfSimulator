@@ -6,9 +6,10 @@
 namespace vfsim {
 namespace {
 std::string queueName(const Uop &u) {
-  return u.profile->executionResource.empty() ? u.profile->fuType : u.profile->executionResource;
+  return u.profile->executionResource.empty() ? u.profile->fuType
+                                              : u.profile->executionResource;
 }
-}
+} // namespace
 EXQ::EXQ(const UarchConfig &cfg, const ParamDB &db, Registers &regs, EXU &exu)
     : cfg_(cfg), db_(db), regs_(regs), exu_(exu), queues_(cfg.issuePorts) {
   for (auto &q : queues_) {
@@ -30,29 +31,31 @@ int64_t EXQ::admissionOccupancy(int port) const {
 }
 int64_t EXQ::predictIssueCycle(int port, const Uop &u, int64_t recv) const {
   const auto &q = queues_.at(port).at(queueName(u));
-  int64_t predicted = std::max(recv, exu_.nextIssueCycle(u, port, u.profile->executionResource.empty()));
+  int64_t predicted = std::max(
+      recv, exu_.nextIssueCycle(u, port, u.profile->executionResource.empty()));
   if (!q.empty()) {
     const auto &previous = *q.back();
     predicted = std::max(
-        predicted,
-        previous.exqPredIssue +
-            db_.initiationInterval(previous.op, previous.form, u.op, u.form));
+        predicted, previous.exqPredIssue +
+                       db_.initiationInterval(*previous.profile, *u.profile));
     predicted = std::max(predicted, exu_.nextResourceIssueCycle(u, port));
     for (auto pending = q.rbegin(); pending != q.rend(); ++pending) {
       if ((*pending)->op == u.op && (*pending)->form == u.form) {
         predicted = std::max(
             predicted, (*pending)->exqPredIssue +
-                           db_.initiationInterval(u.op, u.form, u.op, u.form));
+                           db_.initiationInterval(*u.profile, *u.profile));
         break;
       }
     }
   }
-  const auto target = u.op + "." + (u.profile->resolvedForm.empty() ? u.form : u.profile->resolvedForm);
+  const auto target =
+      u.op + "." +
+      (u.profile->resolvedForm.empty() ? u.form : u.profile->resolvedForm);
   for (const auto &[name, waiting] : queues_.at(port))
     for (const auto &pending : waiting) {
       const auto &overrides = db_.issueOverrides(pending->op, pending->form);
       if (const auto found = overrides.find(target); found != overrides.end())
-        predicted = std::max(predicted, pending->exqPredIssue+found->second);
+        predicted = std::max(predicted, pending->exqPredIssue + found->second);
     }
   if (cfg_.predictExqIssueWithCrossFu)
     predicted = std::max(predicted, exu_.nextIssueCycle(u, port));

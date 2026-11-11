@@ -69,6 +69,9 @@ const InstructionProfile &ParamDB::inst(const std::string &op,
   profile.allowedExuPorts = profile.dispatchExu == "EXU0_ONLY"
                                 ? std::vector<int>{0}
                                 : std::vector<int>{0, 1};
+  profile.opcode = canonical;
+  profile.form = form;
+  profile.cacheId = static_cast<uint32_t>(profileCache_.size());
   return profileCache_.emplace(key, std::move(profile)).first->second;
 }
 std::filesystem::path ParamDB::resolveBaseDir(std::filesystem::path baseDir) {
@@ -155,6 +158,28 @@ void ParamDB::recordWarningOnce(
   warningOrder_.push_back(key);
 }
 
+int64_t ParamDB::forwardingCycles(const InstructionProfile &prod,
+                                  const InstructionProfile &cons) const {
+  const uint64_t key = (uint64_t(prod.cacheId) << 32) | cons.cacheId;
+  const auto it = profileForwardingCache_.find(key);
+  if (it != profileForwardingCache_.end())
+    return it->second;
+  const auto result =
+      forwardingCycles(prod.opcode, prod.form, cons.opcode, cons.form);
+  profileForwardingCache_.emplace(key, result);
+  return result;
+}
+int64_t ParamDB::initiationInterval(const InstructionProfile &prev,
+                                    const InstructionProfile &cur) const {
+  const uint64_t key = (uint64_t(prev.cacheId) << 32) | cur.cacheId;
+  const auto it = profileIiCache_.find(key);
+  if (it != profileIiCache_.end())
+    return it->second;
+  const auto result =
+      initiationInterval(prev.opcode, prev.form, cur.opcode, cur.form);
+  profileIiCache_.emplace(key, result);
+  return result;
+}
 int64_t ParamDB::forwardingCycles(const std::string &prod,
                                   const std::string &prodForm,
                                   const std::string &cons,
@@ -164,8 +189,10 @@ int64_t ParamDB::forwardingCycles(const std::string &prod,
   const auto it = forwardingCache_.find(key);
   if (it != forwardingCache_.end())
     return it->second;
-  const auto store = computeStoreForwarding(*bundle_, inst(prod, prodForm), inst(cons, consForm));
-  const int64_t cycles = store ? *store : computeForwardingCycles(prod, prodForm, cons, consForm);
+  const auto store = computeStoreForwarding(*bundle_, inst(prod, prodForm),
+                                            inst(cons, consForm));
+  const int64_t cycles =
+      store ? *store : computeForwardingCycles(prod, prodForm, cons, consForm);
   forwardingCache_.emplace(key, cycles);
   return cycles;
 }
@@ -174,14 +201,18 @@ int64_t ParamDB::computeForwardingCycles(const std::string &prod,
                                          const std::string &prodForm,
                                          const std::string &cons,
                                          const std::string &consForm) const {
-  for (const auto &candidate : param_fallback::pairKeyCandidates(prod, prodForm, cons, consForm)) {
+  for (const auto &candidate :
+       param_fallback::pairKeyCandidates(prod, prodForm, cons, consForm)) {
     const auto row = bundle_->forwardingOverrides.find(candidate.producer);
     if (row != bundle_->forwardingOverrides.end()) {
       const auto found = row->second.find(candidate.consumer);
       if (found != row->second.end()) {
         if (candidate.usedCompatible)
-          recordWarningOnce("compatible_forwarding_pair_fallback", {{"producer",qualifyOp(prod,prodForm)},
-              {"consumer",qualifyOp(cons,consForm)},{"used_producer",candidate.producer},{"used_consumer",candidate.consumer}});
+          recordWarningOnce("compatible_forwarding_pair_fallback",
+                            {{"producer", qualifyOp(prod, prodForm)},
+                             {"consumer", qualifyOp(cons, consForm)},
+                             {"used_producer", candidate.producer},
+                             {"used_consumer", candidate.consumer}});
         return found->second;
       }
     }
@@ -222,11 +253,18 @@ int64_t ParamDB::computeForwardingCycles(const std::string &prod,
     if (wildcard != defaults->second.end())
       return std::max<int64_t>(0, wildcard->second);
   }
-  const auto &producerProfile = inst(prod, prodForm), &consumerProfile = inst(cons, consForm);
-  if (const auto derived = forwardingInterval(*bundle_, producerProfile, consumerProfile)) {
-    if (prodForm != producerProfile.resolvedForm || consForm != consumerProfile.resolvedForm)
-      recordWarningOnce("compatible_forwarding_pair_fallback", {{"producer",requestedProd},{"consumer",requestedCons},
-          {"used_producer",qualifyOp(prod,producerProfile.resolvedForm)},{"used_consumer",qualifyOp(cons,consumerProfile.resolvedForm)}});
+  const auto &producerProfile = inst(prod, prodForm),
+             &consumerProfile = inst(cons, consForm);
+  if (const auto derived =
+          forwardingInterval(*bundle_, producerProfile, consumerProfile)) {
+    if (prodForm != producerProfile.resolvedForm ||
+        consForm != consumerProfile.resolvedForm)
+      recordWarningOnce(
+          "compatible_forwarding_pair_fallback",
+          {{"producer", requestedProd},
+           {"consumer", requestedCons},
+           {"used_producer", qualifyOp(prod, producerProfile.resolvedForm)},
+           {"used_consumer", qualifyOp(cons, consumerProfile.resolvedForm)}});
     return *derived;
   }
   const InstructionProfile &prodCfg = inst(prod, prodForm);
@@ -234,7 +272,8 @@ int64_t ParamDB::computeForwardingCycles(const std::string &prod,
   const bool lsuDefault =
       prodCfg.opClass == "LOAD" && consCfg.opClass == "STORE";
   const int64_t value = param_fallback::missingForwarding(
-      prodCfg, consCfg, bundle_->forwardingDefaultOffset, bundle_->loadStoreForwardingInterval);
+      prodCfg, consCfg, bundle_->forwardingDefaultOffset,
+      bundle_->loadStoreForwardingInterval);
   recordWarningOnce(
       "missing_forwarding_pair",
       {{"producer", qualifyOp(prod, prodForm)},
@@ -259,14 +298,18 @@ int64_t ParamDB::initiationInterval(const std::string &prev,
   };
   const std::string requestedPrev = qualifyOp(prev, prevForm);
   const std::string requestedCur = qualifyOp(cur, curForm);
-  for (const auto &candidate : param_fallback::pairKeyCandidates(prev, prevForm, cur, curForm)) {
+  for (const auto &candidate :
+       param_fallback::pairKeyCandidates(prev, prevForm, cur, curForm)) {
     const auto row = bundle_->iiOverrides.find(candidate.producer);
     if (row != bundle_->iiOverrides.end()) {
       const auto found = row->second.find(candidate.consumer);
       if (found != row->second.end()) {
         if (candidate.usedCompatible)
-          recordWarningOnce("compatible_ii_pair_fallback", {{"prev",requestedPrev},{"cur",requestedCur},
-              {"used_prev",candidate.producer},{"used_cur",candidate.consumer}});
+          recordWarningOnce("compatible_ii_pair_fallback",
+                            {{"prev", requestedPrev},
+                             {"cur", requestedCur},
+                             {"used_prev", candidate.producer},
+                             {"used_cur", candidate.consumer}});
         return cache(found->second);
       }
     }
@@ -289,32 +332,43 @@ int64_t ParamDB::initiationInterval(const std::string &prev,
       }
     }
   }
-  const auto &previousProfile = inst(prev, prevForm), &currentProfile = inst(cur, curForm);
-  if (const auto derived = issueInterval(*bundle_, previousProfile, currentProfile)) {
-    if (prevForm != previousProfile.resolvedForm || curForm != currentProfile.resolvedForm)
-      recordWarningOnce("compatible_ii_pair_fallback", {{"prev",requestedPrev},{"cur",requestedCur},
-          {"used_prev",qualifyOp(prev,previousProfile.resolvedForm)},{"used_cur",qualifyOp(cur,currentProfile.resolvedForm)}});
+  const auto &previousProfile = inst(prev, prevForm),
+             &currentProfile = inst(cur, curForm);
+  if (const auto derived =
+          issueInterval(*bundle_, previousProfile, currentProfile)) {
+    if (prevForm != previousProfile.resolvedForm ||
+        curForm != currentProfile.resolvedForm)
+      recordWarningOnce(
+          "compatible_ii_pair_fallback",
+          {{"prev", requestedPrev},
+           {"cur", requestedCur},
+           {"used_prev", qualifyOp(prev, previousProfile.resolvedForm)},
+           {"used_cur", qualifyOp(cur, currentProfile.resolvedForm)}});
     return cache(*derived);
   }
   const InstructionProfile &prevCfg = inst(prev, prevForm);
   const InstructionProfile &curCfg = inst(cur, curForm);
-  const int64_t value = param_fallback::missingII(prevCfg, curCfg, bundle_->initiationIntervalDefault,
-                                                bundle_->writebackCollisionPenalty);
+  const int64_t value = param_fallback::missingII(
+      prevCfg, curCfg, bundle_->initiationIntervalDefault,
+      bundle_->writebackCollisionPenalty);
   recordWarningOnce("missing_ii_pair",
                     {{"prev", qualifyOp(prev, prevForm)},
                      {"cur", qualifyOp(cur, curForm)},
                      {"prev_latency", prevCfg.latency},
                      {"cur_latency", curCfg.latency},
                      {"used_default", value},
-                     {"rule", prevCfg.latency - curCfg.latency == bundle_->initiationIntervalDefault
-                                  ? "latency_delta_equals_default_interval" : "default_interval"}});
+                     {"rule", prevCfg.latency - curCfg.latency ==
+                                      bundle_->initiationIntervalDefault
+                                  ? "latency_delta_equals_default_interval"
+                                  : "default_interval"}});
   return cache(value);
 }
 
 const std::unordered_map<std::string, int64_t> &
 ParamDB::issueOverrides(const std::string &op, const std::string &form) const {
   const auto &profile = inst(op, form);
-  const auto found = bundle_->iiOverrides.find(qualifyOp(upper(op), profile.resolvedForm));
+  const auto found =
+      bundle_->iiOverrides.find(qualifyOp(upper(op), profile.resolvedForm));
   static const std::unordered_map<std::string, int64_t> empty;
   return found == bundle_->iiOverrides.end() ? empty : found->second;
 }

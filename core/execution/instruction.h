@@ -14,6 +14,7 @@ struct ValueInfo {
   std::string dtype;
   std::vector<int64_t> shape;
 };
+struct ProducerState;
 struct AlignProducerRecord;
 struct AlignGeneration;
 struct IterationIdentity {
@@ -41,6 +42,9 @@ struct DynamicInst {
   std::string alignStateId;
   std::string catalogMode;
   std::vector<CanonicalMemoryAccess> memoryAccesses;
+  std::vector<ValueStorageKind> srcStorage, dstStorage;
+  int64_t vectorDestCount = -1, predicateDestCount = -1;
+  std::vector<std::string> normalizedBlockKeys;
   std::vector<bool> srcValueRelease;
   std::vector<bool> dstValueKeep;
   std::string staticInstructionId;
@@ -61,6 +65,7 @@ struct Uop {
   std::vector<std::string> dst;
   std::vector<std::optional<std::string>> pregSrc;
   std::vector<std::optional<int64_t>> pregSrcGen;
+  std::vector<ProducerState *> sourceStates, destinationStates;
   std::vector<std::string> pregDst;
   // Destination banks used by this instruction, recorded during rename.
   std::set<std::string> writebackBanks;
@@ -72,6 +77,11 @@ struct Uop {
 
   std::string state = "blocked";
   int64_t readyCycle = 0;
+  // Cache the prefix whose renamed sources have known producer start times.
+  // Source generations remain live until this consumer starts; queue delays
+  // are still applied separately on every readiness query.
+  mutable size_t resolvedSourceCount = 0;
+  mutable int64_t sourceReadyCycle = 0;
   std::optional<int64_t> startCycle;
   std::optional<int64_t> doneCycle;
   std::optional<std::string> blockedReason;
@@ -80,6 +90,7 @@ struct Uop {
   std::optional<std::string> producerFormForStore;
   std::optional<int64_t> producerStartForStore;
   bool storeDependenciesResolved = false;
+  int64_t storeSourceReadyCycle = 0;
   std::string alignStateOperation;
   std::string alignStateId;
   std::shared_ptr<AlignGeneration> alignGeneration;

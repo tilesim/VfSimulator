@@ -55,6 +55,13 @@ public:
   const std::unordered_map<std::string, int64_t> &
   issueOverrides(const std::string &op, const std::string &form) const;
 
+  // Profiles must come from this instance's inst(); their IDs and the pair
+  // caches are local to one ParamDB lifetime.
+  int64_t forwardingCycles(const InstructionProfile &prod,
+                           const InstructionProfile &cons) const;
+  int64_t initiationInterval(const InstructionProfile &prev,
+                             const InstructionProfile &cur) const;
+
   static std::filesystem::path resolveBaseDir(std::filesystem::path baseDir);
 
 private:
@@ -75,6 +82,8 @@ private:
   mutable std::map<std::string, ModelWarning> warnings_;
   mutable std::vector<std::string> warningOrder_;
   mutable std::map<ForwardingKey, int64_t, std::less<>> iiCache_;
+  mutable std::unordered_map<uint64_t, int64_t> profileForwardingCache_,
+      profileIiCache_;
   mutable std::mutex warningsMutex_;
 
   InstructionProfile fallbackInst(const std::string &op,

@@ -14,28 +14,27 @@ bool LSU::hasPendingBefore(int64_t seq, const std::string &cls) const {
   return false;
 }
 int64_t LSU::storeReady(Uop &u) const {
+  if (u.storeDependenciesResolved)
+    return std::max(u.storeSourceReadyCycle, u.lsqReadyCycle);
   u.storeDependenciesResolved = false;
   int64_t best = -1;
   u.producerOpForStore.reset();
   u.producerFormForStore.reset();
   u.producerStartForStore.reset();
-  for (const auto &id : u.pregSrc)
-    if (id) {
-      auto p = regs_.producer(*id);
-      if (!p && regs_.pending(*id))
-        return 1000000000;
-    }
-  for (const auto &id : u.pregSrc)
-    if (id) {
-      auto p = regs_.producer(*id);
-      if (!p || (p->kind != "COMPUTE" && p->kind != "LOAD"))
+  for (const auto *state : u.sourceStates)
+    if (state && !state->producer && state->pending)
+      return 1000000000;
+  for (const auto *state : u.sourceStates)
+    if (state && state->producer) {
+      const auto &p = *state->producer;
+      if (p.kind != "COMPUTE" && p.kind != "LOAD")
         continue;
-      auto t = regs_.readyTimeForSource(*p, u);
+      auto t = regs_.readyTimeForSource(p, u);
       if (t > best) {
         best = t;
-        u.producerOpForStore = p->op;
-        u.producerFormForStore = p->form;
-        u.producerStartForStore = p->startCycle;
+        u.producerOpForStore = p.op;
+        u.producerFormForStore = p.form;
+        u.producerStartForStore = p.startCycle;
       }
     }
   auto align = regs_.alignReady(u);
@@ -47,6 +46,7 @@ int64_t LSU::storeReady(Uop &u) const {
   if (best < 0)
     return 1000000000;
   u.storeDependenciesResolved = true;
+  u.storeSourceReadyCycle = best;
   return std::max(best, u.lsqReadyCycle);
 }
 void LSU::updateReady(int64_t cycle, bool storesOnly) {
@@ -83,9 +83,10 @@ LsuIssueCounts LSU::issue(int64_t cycle, LsuIssueCounts counts,
                            u->streamSeq < 0 ? u->instId : u->streamSeq,
                            u->instId);
   };
-  std::stable_sort(
-      candidates.begin(), candidates.end(),
-      [&](const auto &a, const auto &b) { return key(a) < key(b); });
+  if (candidates.size() > 1)
+    std::stable_sort(
+        candidates.begin(), candidates.end(),
+        [&](const auto &a, const auto &b) { return key(a) < key(b); });
   std::unordered_set<int64_t> issued;
   for (auto &u : candidates) {
     if (counts.total >= cfg_.ubSlots)
