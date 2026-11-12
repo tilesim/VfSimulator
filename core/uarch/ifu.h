@@ -5,7 +5,13 @@ class IFU {
 public:
   explicit IFU(const std::vector<DynamicInst> &instructions)
       : pending_(instructions.begin(), instructions.end()) {}
-  bool done() const { return pending_.empty(); }
+  struct Borrowed {};
+  IFU(const std::vector<DynamicInst> &instructions, Borrowed)
+      : borrowed_(&instructions) {}
+  bool done() const {
+    return borrowed_ ? next_ == borrowed_->size() : pending_.empty();
+  }
+  const DynamicInst &nextBorrowed() { return borrowed_->at(next_++); }
   DynamicInst nextInst() {
     auto inst = std::move(pending_.front());
     pending_.pop_front();
@@ -14,5 +20,7 @@ public:
 
 private:
   std::deque<DynamicInst> pending_;
+  const std::vector<DynamicInst> *borrowed_ = nullptr;
+  size_t next_ = 0;
 };
 } // namespace vfsim

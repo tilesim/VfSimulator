@@ -5,6 +5,8 @@
 #include "core/uarch/registers.h"
 namespace vfsim {
 void TraceRecorder::log(const std::string &event, const Uop &u, int64_t cycle) {
+  if (!enabled_)
+    return;
   TraceEvent row{cycle,
                  event,
                  u,

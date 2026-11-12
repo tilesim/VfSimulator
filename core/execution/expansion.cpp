@@ -47,11 +47,15 @@ class Expander {
 public:
   explicit Expander(const CanonicalVfInfo &vfInfo, const ParamDB &db,
                     const UarchConfig &cfg,
-                    std::unordered_map<std::string, ValueInfo> values)
+                    std::unordered_map<std::string, ValueInfo> values,
+                    bool retainDiagnostics)
       : vfInfo_(vfInfo), db_(db), cfg_(cfg) {
+    runtime_.retainsDiagnostics = retainDiagnostics;
     runtime_.params = vfInfo.params;
     runtime_.values = std::move(values);
     indexLoops(vfInfo.context, 0);
+    if (!retainDiagnostics)
+      return;
     std::set<std::string> occupied;
     for (const auto &[id, value] : vfInfo.values)
       occupied.insert(id);
@@ -67,12 +71,15 @@ public:
       const auto name = value.storage == CanonicalStorageKind::UB
                             ? ubNames.at(*value.storageObjectId)
                             : id;
+      if (value.storage == CanonicalStorageKind::UB)
+        ubAliases_[name].push_back(id);
       staticNames_.emplace(id, name);
       instances_.emplace(id, ValueInstance{name, {}});
     }
   }
 
   PreparedProgram run() {
+    runtime_.instructions.reserve(estimateInstructions(vfInfo_.context));
     expandTopLevelNodes(vfInfo_.context);
     annotateLifetimes();
     annotateSchedulingBoundaries();
@@ -108,10 +115,39 @@ private:
   std::vector<Frame> frames_;
   std::unordered_map<std::string, ValueInstance> instances_;
   std::unordered_map<std::string, std::string> staticNames_;
+  // UB versions share one storage object. Index aliases once instead of
+  // rescanning all register/scalar definitions at every dynamic store.
+  std::unordered_map<std::string, std::vector<std::string>> ubAliases_;
   std::unordered_map<std::string, int64_t> staticLoopIds_, staticPc_;
+  int64_t nextValueId_ = 0;
   int64_t nextPc_ = 0;
   int64_t nextTopBlockId_ = 0;
   int64_t activeTopBlockId_ = 0;
+
+  size_t estimateInstructions(const std::vector<CanonicalNode> &nodes) const {
+    const uint64_t cap =
+        cfg_.canonicalDynamicInstructionLimit > 0
+            ? std::min<int64_t>(cfg_.canonicalDynamicInstructionLimit, 100000) +
+                  1
+            : 100000;
+    uint64_t result = 0;
+    for (const auto &node : nodes) {
+      uint64_t count = 1;
+      if (const auto *loop = std::get_if<std::shared_ptr<const CanonicalLoop>>(
+              &node.payload)) {
+        if (!*loop)
+          continue;
+        const auto trips =
+            resolveInteger((*loop)->count, vfInfo_.params, "loop count");
+        count = trips <= 0 ? 0
+                           : std::min<uint64_t>(
+                                 cap, std::min<uint64_t>(cap, trips) *
+                                          estimateInstructions((*loop)->body));
+      }
+      result = std::min(cap, result + count);
+    }
+    return result;
+  }
 
   void indexLoops(const std::vector<CanonicalNode> &nodes, int depth) {
     for (const auto &node : nodes) {
@@ -144,13 +180,22 @@ private:
   std::string dynamicName(const std::string &definitionId) {
     if (frames_.empty())
       return definitionId;
-    std::ostringstream name;
-    name << definitionId;
-    for (const auto &frame : frames_)
-      name << "@" << frame.loopId << "=" << frame.iteration;
-    const std::string identity = name.str();
+    std::string identity;
+    if (!runtime_.retainsDiagnostics) {
+      do {
+        identity = "@" + std::to_string(nextValueId_++);
+      } while (vfInfo_.values.count(identity));
+    } else {
+      identity = definitionId;
+      for (const auto &frame : frames_) {
+        identity += "@";
+        identity += frame.loopId;
+        identity += "=";
+        identity += std::to_string(frame.iteration);
+      }
+    }
     const auto source = vfInfo_.values.find(definitionId);
-    if (source != vfInfo_.values.end()) {
+    if (runtime_.retainsDiagnostics && source != vfInfo_.values.end()) {
       ValueInfo value;
       value.valueId = identity;
       value.storage = source->second.storage;
@@ -164,17 +209,21 @@ private:
   void fillDynamicMetadata(DynamicInst &inst) const {
     inst.topBlockId =
         frames_.empty() ? activeTopBlockId_ : frames_.front().topBlockId;
+    inst.iterStack.reserve(frames_.size());
+    if (runtime_.retainsDiagnostics)
+      inst.iterationPath.reserve(frames_.size());
     for (const auto &frame : frames_) {
       inst.iterStack.push_back(frame.scheduledIteration);
-      inst.iterationPath.push_back(
-          {frame.loopId, frame.iteration, frame.variable,
-           frame.start + frame.iteration * frame.step});
+      if (runtime_.retainsDiagnostics)
+        inst.iterationPath.push_back(
+            {frame.loopId, frame.iteration, frame.variable,
+             frame.start + frame.iteration * frame.step});
     }
   }
 
   void expandInstruction(const CanonicalInstruction &instruction) {
     countInstruction();
-    DynamicInst dynamic;
+    auto &dynamic = runtime_.instructions.emplace_back();
     dynamic.type = "inst";
     dynamic.op = instruction.opcode;
     dynamic.opClass =
@@ -186,7 +235,12 @@ private:
     if (auto mode = instruction.attributes.find("catalog_mode");
         mode != instruction.attributes.end())
       dynamic.catalogMode = std::get<std::string>(mode->second);
-    dynamic.staticInstructionId = instruction.instructionId;
+    if (runtime_.retainsDiagnostics)
+      dynamic.staticInstructionId = instruction.instructionId;
+    dynamic.src.reserve(instruction.inputs.size());
+    dynamic.srcStorage.reserve(instruction.inputs.size());
+    dynamic.dst.reserve(instruction.outputs.size());
+    dynamic.dstStorage.reserve(instruction.outputs.size());
     dynamic.pc = staticPc_.at(instruction.instructionId);
     for (const auto &operand : instruction.inputs)
       if (operand.memoryAccess)
@@ -212,39 +266,46 @@ private:
       dynamic.alignStateId = *value;
     }
     fillDynamicMetadata(dynamic);
+    dynamic.vectorDestCount = dynamic.predicateDestCount = 0;
     for (const auto &operand : instruction.inputs) {
+      dynamic.srcStorage.push_back(vfInfo_.values.at(operand.valueId).storage);
       const auto identity = resolve(operand.valueId);
       dynamic.src.push_back(identity);
-      dynamic.srcValueInstances.push_back(instances_.at(identity));
+      if (runtime_.retainsDiagnostics)
+        dynamic.srcValueInstances.push_back(instances_.at(identity));
     }
     for (const auto &operand : instruction.outputs) {
       const std::string identity = dynamicName(operand.valueId);
       dynamic.dst.push_back(identity);
-      ValueInstance instance{staticNames_.at(operand.valueId),
-                             dynamic.iterationPath};
-      instances_[identity] = instance;
-      if (vfInfo_.values.at(operand.valueId).storage ==
-          CanonicalStorageKind::UB) {
-        for (const auto &[id, value] : vfInfo_.values)
-          if (value.storage == CanonicalStorageKind::UB &&
-              staticNames_.at(id) == instance.definitionId)
+      const auto storage = vfInfo_.values.at(operand.valueId).storage;
+      dynamic.dstStorage.push_back(storage);
+      dynamic.vectorDestCount += storage == ValueStorageKind::Register;
+      dynamic.predicateDestCount +=
+          storage == ValueStorageKind::PredicateRegister;
+      if (runtime_.retainsDiagnostics) {
+        ValueInstance instance{staticNames_.at(operand.valueId),
+                               dynamic.iterationPath};
+        instances_[identity] = instance;
+        if (vfInfo_.values.at(operand.valueId).storage ==
+            CanonicalStorageKind::UB) {
+          for (const auto &id : ubAliases_.at(instance.definitionId))
             instances_[id] = instance;
+        }
+        dynamic.dstValueInstances.push_back(std::move(instance));
       }
-      dynamic.dstValueInstances.push_back(std::move(instance));
       bindings_[operand.valueId] = identity;
     }
-    runtime_.instructions.push_back(std::move(dynamic));
   }
 
   void expandMembar(const CanonicalMembar &membar) {
     countInstruction();
-    DynamicInst dynamic;
+    auto &dynamic = runtime_.instructions.emplace_back();
     dynamic.type = "membar";
     dynamic.barrier = membar.barrier;
-    dynamic.staticInstructionId = membar.instructionId;
+    if (runtime_.retainsDiagnostics)
+      dynamic.staticInstructionId = membar.instructionId;
     dynamic.pc = staticPc_.at(membar.instructionId);
     fillDynamicMetadata(dynamic);
-    runtime_.instructions.push_back(std::move(dynamic));
   }
 
   bool containsLoop(const CanonicalLoop &loop) const {
@@ -346,23 +407,22 @@ private:
                                  "induction step")});
         const size_t start = runtime_.instructions.size();
         expandNodes(loop.body, depth + 1);
-        std::vector<DynamicInst> laneInstructions(
-            std::make_move_iterator(runtime_.instructions.begin() +
-                                    static_cast<std::ptrdiff_t>(start)),
-            std::make_move_iterator(runtime_.instructions.end()));
-        runtime_.instructions.erase(runtime_.instructions.begin() +
-                                        static_cast<std::ptrdiff_t>(start),
-                                    runtime_.instructions.end());
+        if (unroll > 1) {
+          std::vector<DynamicInst> laneInstructions(
+              std::make_move_iterator(runtime_.instructions.begin() +
+                                      static_cast<std::ptrdiff_t>(start)),
+              std::make_move_iterator(runtime_.instructions.end()));
+          runtime_.instructions.erase(runtime_.instructions.begin() +
+                                          static_cast<std::ptrdiff_t>(start),
+                                      runtime_.instructions.end());
+          lanes.push_back(std::move(laneInstructions));
+        }
         frames_.pop_back();
         for (size_t index = 0; index < loop.carriedValues.size(); ++index)
           currentValues[index] =
               resolve(loop.carriedValues[index].backEdgeValueId);
-        lanes.push_back(std::move(laneInstructions));
       }
-      if (unroll == 1) {
-        for (auto &instruction : lanes.front())
-          runtime_.instructions.push_back(std::move(instruction));
-      } else {
+      if (unroll > 1) {
         const size_t width = lanes.front().size();
         if (std::any_of(lanes.begin(), lanes.end(), [width](const auto &lane) {
               return lane.size() != width;
@@ -454,18 +514,22 @@ private:
       if (instruction.type != "inst")
         continue;
       lastByTopBlock[instruction.topBlockId] = index;
-      for (size_t level = 0; level < instruction.iterationPath.size();
-           ++level) {
+      for (size_t level = 0; level < instruction.iterStack.size(); ++level) {
         std::vector<int64_t> prefix(instruction.iterStack.begin(),
                                     instruction.iterStack.begin() +
                                         static_cast<std::ptrdiff_t>(level));
-        instruction.blockKeyByLevel.emplace_back("loop" + std::to_string(level),
-                                                 prefix);
-        std::ostringstream key;
-        key << instruction.topBlockId << ":" << level;
-        for (const auto value : prefix)
-          key << ":" << value;
-        lastByBlock[key.str()] = index;
+        if (runtime_.retainsDiagnostics)
+          instruction.blockKeyByLevel.emplace_back(
+              "loop" + std::to_string(level), prefix);
+        std::string key = std::to_string(instruction.topBlockId) + "|loop" +
+                          std::to_string(level) + "|";
+        for (size_t i = 0; i < prefix.size(); ++i) {
+          if (i)
+            key += ",";
+          key += std::to_string(prefix[i]);
+        }
+        instruction.normalizedBlockKeys.push_back(std::move(key));
+        lastByBlock[instruction.normalizedBlockKeys.back()] = index;
       }
     }
     for (size_t index = 0; index < runtime_.instructions.size(); ++index) {
@@ -473,13 +537,9 @@ private:
       if (instruction.type != "inst")
         continue;
       for (int64_t level =
-               static_cast<int64_t>(instruction.iterationPath.size()) - 1;
+               static_cast<int64_t>(instruction.iterStack.size()) - 1;
            level >= 0; --level) {
-        std::ostringstream key;
-        key << instruction.topBlockId << ":" << level;
-        for (int64_t prefix = 0; prefix < level; ++prefix)
-          key << ":" << instruction.iterStack[static_cast<size_t>(prefix)];
-        if (lastByBlock[key.str()] == index)
+        if (lastByBlock[instruction.normalizedBlockKeys[level]] == index)
           instruction.blockEndLevels.push_back(level);
       }
       instruction.isLastInTopBlock =
@@ -489,10 +549,9 @@ private:
 };
 
 } // namespace
-PreparedProgram
-expandCanonicalProgram(const CanonicalVfInfo &vf, const ParamDB &db,
-                       const UarchConfig &cfg,
-                       std::unordered_map<std::string, ValueInfo> values) {
-  return Expander(vf, db, cfg, std::move(values)).run();
+PreparedProgram expandCanonicalProgram(
+    const CanonicalVfInfo &vf, const ParamDB &db, const UarchConfig &cfg,
+    std::unordered_map<std::string, ValueInfo> values, bool retainDiagnostics) {
+  return Expander(vf, db, cfg, std::move(values), retainDiagnostics).run();
 }
 } // namespace vfsim

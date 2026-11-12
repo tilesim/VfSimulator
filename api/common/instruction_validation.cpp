@@ -71,15 +71,16 @@ const NativeInstructionSpec *validateInstructionForm(
                   inst.sourceLocation);
     }
   }
-  for (const auto *operands : {&inst.inputs, &inst.outputs})
-    for (const auto &operand : *operands) {
-      auto value = vfInfo.values.find(operand.valueId);
-      if (!catalogSpec && value != vfInfo.values.end() &&
-          value->second.storage == CanonicalStorageKind::PredicateRegister)
-        error("unsupported_predicate_semantics",
-              "Predicate instructions require a complete Catalog signature",
-              nodePath, inst.sourceLocation);
-    }
+  if (!catalogSpec)
+    for (const auto *operands : {&inst.inputs, &inst.outputs})
+      for (const auto &operand : *operands) {
+        auto value = vfInfo.values.find(operand.valueId);
+        if (value != vfInfo.values.end() &&
+            value->second.storage == CanonicalStorageKind::PredicateRegister)
+          error("unsupported_predicate_semantics",
+                "Predicate instructions require a complete Catalog signature",
+                nodePath, inst.sourceLocation);
+      }
   for (const auto &[key, value] : inst.attributes)
     if (const auto *text = std::get_if<std::string>(&value);
         text && *text == "MODE_MERGING")
@@ -168,41 +169,46 @@ void validateInstructionOperands(const CanonicalVfInfo &vfInfo,
                                  const std::string &nodePath,
                                  const InstructionError &error) {
   if (catalogSpec) {
-    std::vector<const NativeOperandSpec *> expectedInputs;
-    std::vector<const NativeOperandSpec *> expectedOutputs;
-    for (const auto &operand : catalogSpec->operands) {
-      if ((operand.direction == CatalogOperandDirection::Input ||
-           operand.direction == CatalogOperandDirection::ReadWrite) &&
-          (vfInfo.schemaVersion == 2 ||
-           operand.kind != CatalogArgumentKind::Predicate))
-        expectedInputs.push_back(&operand);
-      if (operand.direction == CatalogOperandDirection::Output ||
-          operand.direction == CatalogOperandDirection::ReadWrite)
-        expectedOutputs.push_back(&operand);
-    }
-    auto actualOperands = [](const std::vector<CanonicalOperand> &operands) {
-      std::vector<const CanonicalOperand *> result;
-      for (const auto &operand : operands)
-        if (operand.role != CanonicalOperandRole::Config)
-          result.push_back(&operand);
-      return result;
-    };
-    const auto actualInputs = actualOperands(inst.inputs);
-    const auto actualOutputs = actualOperands(inst.outputs);
-    auto validateCatalogOperands = [&](const auto &actual, const auto &expected,
+    auto validateCatalogOperands = [&](bool input,
                                        const std::string &direction) {
-      if (actual.size() != expected.size()) {
+      const auto &actual = input ? inst.inputs : inst.outputs;
+      const auto expectedOperand = [&](const NativeOperandSpec &operand) {
+        if (input)
+          return (operand.direction == CatalogOperandDirection::Input ||
+                  operand.direction == CatalogOperandDirection::ReadWrite) &&
+                 (vfInfo.schemaVersion == 2 ||
+                  operand.kind != CatalogArgumentKind::Predicate);
+        return operand.direction == CatalogOperandDirection::Output ||
+               operand.direction == CatalogOperandDirection::ReadWrite;
+      };
+      const auto actualOperand = [](const CanonicalOperand &operand) {
+        return operand.role != CanonicalOperandRole::Config;
+      };
+      const auto actualCount =
+          std::count_if(actual.begin(), actual.end(), actualOperand);
+      const auto expectedCount =
+          std::count_if(catalogSpec->operands.begin(),
+                        catalogSpec->operands.end(), expectedOperand);
+      if (actualCount != expectedCount) {
         error("catalog_operand_count_mismatch",
               "Operand count conflicts with Catalog signature", nodePath,
               inst.sourceLocation);
         return;
       }
-      for (size_t operandIndex = 0; operandIndex < actual.size();
-           ++operandIndex) {
-        const auto &operand = *actual[operandIndex];
-        const auto &operandSpec = *expected[operandIndex];
-        const std::string operandPath = nodePath + "." + direction + "[" +
-                                        std::to_string(operandIndex) + "]";
+      auto actualIt = actual.begin();
+      auto expectedIt = catalogSpec->operands.begin();
+      for (size_t operandIndex = 0;
+           operandIndex < static_cast<size_t>(actualCount);
+           ++operandIndex, ++actualIt, ++expectedIt) {
+        actualIt = std::find_if(actualIt, actual.end(), actualOperand);
+        expectedIt = std::find_if(expectedIt, catalogSpec->operands.end(),
+                                  expectedOperand);
+        const auto &operand = *actualIt;
+        const auto &operandSpec = *expectedIt;
+        const auto operandPath = [&] {
+          return nodePath + "." + direction + "[" +
+                 std::to_string(operandIndex) + "]";
+        };
         const auto expectedRole =
             direction == "inputs" &&
                     operandSpec.direction == CatalogOperandDirection::ReadWrite
@@ -210,7 +216,7 @@ void validateInstructionOperands(const CanonicalVfInfo &vfInfo,
                 : operandSpec.role;
         if (operandRoleName(operand.role) != expectedRole)
           error("catalog_operand_role_mismatch",
-                "Operand role conflicts with Catalog signature", operandPath,
+                "Operand role conflicts with Catalog signature", operandPath(),
                 inst.sourceLocation);
         auto value = vfInfo.values.find(operand.valueId);
         if (value == vfInfo.values.end())
@@ -218,14 +224,14 @@ void validateInstructionOperands(const CanonicalVfInfo &vfInfo,
         if (!operandSpec.allowedDtypes.empty() &&
             !operandSpec.allowedDtypes.count(value->second.dtype))
           error("catalog_operand_dtype_mismatch",
-                "Operand dtype conflicts with Catalog signature", operandPath,
+                "Operand dtype conflicts with Catalog signature", operandPath(),
                 inst.sourceLocation);
         if (catalogSpec->memorySpan &&
             value->second.storage == CanonicalStorageKind::Register &&
             !catalogSpec->forms.count(value->second.dtype))
           error("catalog_operand_dtype_mismatch",
-                "Operand dtype conflicts with Catalog memory mode", operandPath,
-                inst.sourceLocation);
+                "Operand dtype conflicts with Catalog memory mode",
+                operandPath(), inst.sourceLocation);
         const CanonicalStorageKind storage = value->second.storage;
         bool storageMatches = true;
         switch (operandSpec.kind) {
@@ -251,12 +257,12 @@ void validateInstructionOperands(const CanonicalVfInfo &vfInfo,
         }
         if (!storageMatches)
           error("catalog_operand_storage_mismatch",
-                "Operand storage conflicts with Catalog signature", operandPath,
-                inst.sourceLocation);
+                "Operand storage conflicts with Catalog signature",
+                operandPath(), inst.sourceLocation);
       }
     };
-    validateCatalogOperands(actualInputs, expectedInputs, "inputs");
-    validateCatalogOperands(actualOutputs, expectedOutputs, "outputs");
+    validateCatalogOperands(true, "inputs");
+    validateCatalogOperands(false, "outputs");
   }
 }
 } // namespace vfsim

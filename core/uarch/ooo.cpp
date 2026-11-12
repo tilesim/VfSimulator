@@ -42,27 +42,34 @@ int64_t OoO::exu0Pressure(size_t index) const {
                                                                     : 0;
 }
 void OoO::dispatch(int64_t cycle) {
+  if (shq_.empty())
+    return;
   const auto &policy = cfg_.shqExqDispatchPolicy;
   const bool fuFifo = policy == "fu_round_robin_fifo" ||
                       policy == "fu_rr_fifo" || policy == "fu_round_robin" ||
                       policy == "fu_round_robin_exu0_reserve";
   std::unordered_set<std::string> usedSources, blockedFu;
-  std::vector<int64_t> admitted(cfg_.issuePorts);
+  auto &admitted = admitted_;
+  std::fill(admitted.begin(), admitted.end(), 0);
   int count = 0;
   size_t index = 0;
-  std::unordered_set<int64_t> selected;
+  auto &selected = selected_;
+  selected.clear();
   auto &q = shq_.entries();
   for (auto it = q.begin(); it != q.end(); ++index) {
     auto u = *it;
-    const auto src = sources(*u);
     if (count >= cfg_.issuePorts)
       break;
-    if (u->state != "ready" || (fuFifo && blockedFu.count(u->profile->fuType))) {
+    if (u->state != "ready" ||
+        (fuFifo && blockedFu.count(u->profile->fuType))) {
       ++it;
       continue;
     }
-    if (cfg_.enforceSameCycleSrcHazard && !cfg_.theoreticalLimitMode &&
-        hazard(usedSources, src)) {
+    const auto src =
+        cfg_.enforceSameCycleSrcHazard && !cfg_.theoreticalLimitMode
+            ? sources(*u)
+            : std::unordered_set<std::string>{};
+    if (hazard(usedSources, src)) {
       if (fuFifo)
         blockedFu.insert(u->profile->fuType);
       ++it;
@@ -120,13 +127,15 @@ void OoO::dispatch(int64_t cycle) {
     ++admitted[port];
     ++count;
     usedSources.insert(src.begin(), src.end());
-    selected.insert(u->instId);
+    selected.push_back(u->instId);
     ++it;
   }
-  q.erase(
-      std::remove_if(q.begin(), q.end(),
-                     [&](const auto &u) { return selected.count(u->instId); }),
-      q.end());
+  q.erase(std::remove_if(q.begin(), q.end(),
+                         [&](const auto &u) {
+                           return std::find(selected.begin(), selected.end(),
+                                            u->instId) != selected.end();
+                         }),
+          q.end());
 }
 void OoO::issueDirect(int64_t cycle) {
   std::unordered_set<std::string> usedSources;
@@ -135,12 +144,17 @@ void OoO::issueDirect(int64_t cycle) {
   auto &q = shq_.entries();
   for (auto it = q.begin(); it != q.end();) {
     auto u = *it;
-    const auto src = sources(*u);
     if (count >= cfg_.issuePorts)
       break;
-    if (u->state != "ready" ||
-        (cfg_.enforceSameCycleSrcHazard && !cfg_.theoreticalLimitMode &&
-         hazard(usedSources, src))) {
+    if (u->state != "ready") {
+      ++it;
+      continue;
+    }
+    const auto src =
+        cfg_.enforceSameCycleSrcHazard && !cfg_.theoreticalLimitMode
+            ? sources(*u)
+            : std::unordered_set<std::string>{};
+    if (hazard(usedSources, src)) {
       ++it;
       continue;
     }

@@ -110,6 +110,11 @@ LoopControl::currentInnerBlockKey(const DynamicInst &inst) const {
 void LoopControl::updateLastDispatch(const DynamicInst &inst, int64_t cycle) {
   const int64_t topBlockId = inst.topBlockId;
   const auto &bk = inst.blockKeyByLevel;
+  if (!inst.normalizedBlockKeys.empty()) {
+    for (const auto &key : inst.normalizedBlockKeys)
+      lastDispatchTime_[key] = cycle;
+    return;
+  }
   if (!bk.empty()) {
     for (const auto &raw : bk) {
       if (auto key = normalizeBlockKey(raw, topBlockId))
@@ -224,8 +229,16 @@ bool LoopControl::canDispatch(const DynamicInst &inst, int64_t cycle) {
   if (topOpenIt == topBlockBodyOpenTime_.end() || cycle < topOpenIt->second)
     return false;
 
+  std::optional<std::string> fallback;
+  const std::string *innerKey = nullptr;
+  if (!inst.normalizedBlockKeys.empty())
+    innerKey = &inst.normalizedBlockKeys.back();
+  else {
+    fallback = currentInnerBlockKey(inst);
+    if (fallback)
+      innerKey = &*fallback;
+  }
   if (!cfg_.theoreticalLimitVloopOnly) {
-    const auto innerKey = currentInnerBlockKey(inst);
     if (innerKey) {
       const auto openIt = bodyOpenTime_.find(*innerKey);
       if (openIt == bodyOpenTime_.end() || cycle < openIt->second)
@@ -235,7 +248,6 @@ bool LoopControl::canDispatch(const DynamicInst &inst, int64_t cycle) {
 
   const int64_t iterId = inst.iterStack.empty() ? 0 : inst.iterStack.back();
   if (!cfg_.theoreticalLimitMode && !cfg_.theoreticalLimitVloopOnly) {
-    const auto innerKey = currentInnerBlockKey(inst);
     if (innerKey) {
       if (iterId == 0 && !blockBaseCycle_.count(*innerKey))
         blockBaseCycle_[*innerKey] = cycle;

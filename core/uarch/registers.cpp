@@ -29,56 +29,82 @@ UopPtr Registers::rename(const DynamicInst &inst, int64_t cycle) {
   u.instId = inst.instId;
   u.op = inst.op;
   u.form = inst.form;
-  u.profile = &db_.inst(u.op, u.form, inst.opClass, inst.catalogMode);
-  u.src = inst.src;
-  u.dst = inst.dst;
-  u.topBlockId = inst.topBlockId;
-  u.iterStack = inst.iterStack;
-  u.isLastInTopBlock = inst.isLastInTopBlock;
-  u.streamSeq = inst.streamSeq;
-  u.staticInstructionId = inst.staticInstructionId;
-  u.iterationPath = inst.iterationPath;
-  u.srcValueInstances = inst.srcValueInstances;
-  u.dstValueInstances = inst.dstValueInstances;
-  int vec = 0, pred = 0;
-  for (const auto &d : u.dst) {
-    vec += valueStorage_.isRegister(d);
-    pred += valueStorage_.isPredicate(d);
+  const InstructionProfile *&cached = staticProfiles_[inst.pc];
+  if (inst.pc >= 0 && cached)
+    u.profile = cached;
+  else {
+    u.profile = &db_.inst(u.op, u.form, inst.opClass, inst.catalogMode);
+    if (inst.pc >= 0)
+      cached = u.profile;
   }
+  if (traceEnabled_) {
+    u.src = inst.src;
+    u.dst = inst.dst;
+    u.topBlockId = inst.topBlockId;
+    u.iterStack = inst.iterStack;
+    u.isLastInTopBlock = inst.isLastInTopBlock;
+    u.streamSeq = inst.streamSeq;
+    u.staticInstructionId = inst.staticInstructionId;
+    u.iterationPath = inst.iterationPath;
+    u.srcValueInstances = inst.srcValueInstances;
+    u.dstValueInstances = inst.dstValueInstances;
+  }
+  u.streamSeq = inst.streamSeq;
+  int vec = 0, pred = 0;
+  if (inst.vectorDestCount >= 0) {
+    vec = inst.vectorDestCount;
+    pred = inst.predicateDestCount;
+  } else
+    for (const auto &d : inst.dst) {
+      const auto storage = valueStorage_.storageOf(d);
+      vec += storage == ValueStorageKind::Register;
+      pred += storage == ValueStorageKind::PredicateRegister;
+    }
   if (!cfg_.theoreticalLimitMode &&
       (vec > vector_.freeCount() || pred > predicate_.freeCount()))
     throw std::runtime_error(
         "Atomic rename precheck failed: physical register credit");
-  std::vector<std::string> released;
-  for (size_t i = 0; i < u.src.size(); ++i) {
-    const auto &id = u.src[i];
+  std::vector<ProducerState *> released;
+  u.pregSrc.reserve(inst.src.size());
+  u.pregSrcGen.reserve(inst.src.size());
+  u.sourceStates.reserve(inst.src.size());
+  u.pregDst.reserve(inst.dst.size());
+  u.destinationStates.reserve(inst.dst.size());
+  for (size_t i = 0; i < inst.src.size(); ++i) {
+    const auto &id = inst.src[i];
+    const auto storage = inst.srcStorage.empty() ? valueStorage_.storageOf(id)
+                                                 : inst.srcStorage[i];
+    const bool pred = storage == ValueStorageKind::PredicateRegister;
     auto it = rat_.find(id);
-    if (!valueStorage_.isRenameable(id) || it == rat_.end()) {
-      if (valueStorage_.isPredicate(id))
+    if ((storage != ValueStorageKind::Register && !pred) || it == rat_.end()) {
+      if (pred)
         throw std::runtime_error("Predicate source has no renamed producer: " +
                                  id);
       u.pregSrc.push_back(std::nullopt);
       u.pregSrcGen.push_back(std::nullopt);
+      u.sourceStates.push_back(nullptr);
       continue;
     }
-    u.pregSrc.push_back(it->second);
-    u.pregSrcGen.push_back(pregGeneration_[it->second]);
+    auto *state = it->second;
+    u.pregSrc.push_back(state->physical);
+    u.pregSrcGen.push_back(state->generation);
+    u.sourceStates.push_back(state);
+    ++state->consumers;
+    state->releaseEligibleCycle.reset();
+    releaseEligible_.erase(state->physical);
     if (i < inst.srcValueRelease.size() && inst.srcValueRelease[i]) {
       released.push_back(it->second);
+      --it->second->ratBindings;
       rat_.erase(it);
     }
   }
-  for (const auto &preg : u.pregSrc)
-    if (preg) {
-      ++pregConsumerCount_[*preg];
-      pregReleaseEligibleCycle_.erase(*preg);
-    }
-  for (size_t i = 0; i < u.dst.size(); ++i) {
-    const auto &id = u.dst[i];
-    if (!valueStorage_.isRenameable(id)) {
+  for (size_t i = 0; i < inst.dst.size(); ++i) {
+    const auto &id = inst.dst[i];
+    const auto storage = inst.dstStorage.empty() ? valueStorage_.storageOf(id)
+                                                 : inst.dstStorage[i];
+    const bool pred = storage == ValueStorageKind::PredicateRegister;
+    if (storage != ValueStorageKind::Register && !pred)
       continue;
-    }
-    const bool pred = valueStorage_.isPredicate(id);
     const std::string physical =
         (pred ? predicate_ : vector_)
             .allocate(cfg_.theoreticalLimitMode,
@@ -88,34 +114,43 @@ UopPtr Registers::rename(const DynamicInst &inst, int64_t cycle) {
     auto old = rat_.find(id);
     if (old != rat_.end()) {
       released.push_back(old->second);
+      --old->second->ratBindings;
       rat_.erase(old);
     }
-    if (i >= inst.dstValueKeep.size() || inst.dstValueKeep[i])
-      rat_[id] = physical;
+    const bool keep = i >= inst.dstValueKeep.size() || inst.dstValueKeep[i];
+    auto &state = producerStates_[physical];
+    if (keep)
+      rat_[id] = &state;
     u.pregDst.push_back(physical);
     u.writebackBanks.insert(pred ? "predicate" : "vector");
-    ++pregGeneration_[physical];
-    pregConsumerCount_[physical] = 0;
-    pregPending_.insert(physical);
-    pregReleaseEligibleCycle_.erase(physical);
+    ++state.generation;
+    state.producer.reset();
+    state.pending = true;
+    state.ratBindings = keep ? 1u : 0u;
+    state.consumers = 0;
+    state.physical = physical;
+    state.predicate = pred;
+    state.releaseEligibleCycle.reset();
+    releaseEligible_.erase(state.physical);
+    u.destinationStates.push_back(&state);
     if (pred)
       --visiblePredicate_;
     else if (cfg_.enableCreditVisibilityDelay)
       --visibleVector_;
   }
   bindAlignState(u, inst);
-  for (const auto &physical : released)
-    tryFree(physical, cycle);
+  for (auto *state : released)
+    tryFree(*state, cycle);
   return ptr;
 }
 std::optional<ProducerInfo> Registers::producer(const std::string &id) const {
-  auto it = pregProducer_.find(id);
-  return it == pregProducer_.end() ? std::nullopt
-                                   : std::optional<ProducerInfo>{it->second};
+  const auto it = producerStates_.find(id);
+  return it == producerStates_.end() ? std::nullopt : it->second.producer;
 }
 int64_t Registers::readyTimeForSource(const ProducerInfo &p,
                                       const Uop &u) const {
-  const auto fwd = db_.forwardingCycles(p.op, p.form, u.op, u.form);
+  const auto fwd = p.profile ? db_.forwardingCycles(*p.profile, *u.profile)
+                             : db_.forwardingCycles(p.op, p.form, u.op, u.form);
   return p.startCycle +
          ((u.profile->opClass == "COMPUTE" && cfg_.enableIsuQueueModel &&
            !cfg_.theoreticalLimitLegacyForwarding)
@@ -123,16 +158,30 @@ int64_t Registers::readyTimeForSource(const ProducerInfo &p,
               : fwd);
 }
 int64_t Registers::readyCycle(const Uop &u) const {
-  int64_t ready = std::max(db_.isaDefaults().vfStartupCost, u.shqReadyCycle);
-  for (const auto &id : u.pregSrc)
-    if (id) {
-      auto p = producer(*id);
-      if (p)
-        ready = std::max(ready, readyTimeForSource(*p, u));
-      else if (pending(*id))
-        return 1000000000;
+  const int64_t queueReady =
+      std::max(db_.isaDefaults().vfStartupCost, u.shqReadyCycle);
+  int64_t sourceReady = u.sourceReadyCycle;
+  bool resolved = true;
+  for (size_t i = u.resolvedSourceCount; i < u.pregSrc.size(); ++i) {
+    const auto *state = u.sourceStates[i];
+    if (state) {
+      if (state->producer)
+        sourceReady =
+            std::max(sourceReady, readyTimeForSource(*state->producer, u));
+      else {
+        resolved = false;
+        if (state->pending)
+          return 1000000000;
+      }
     }
-  return ready;
+    // Remember only a fully resolved prefix. Unknown external sources must
+    // still be checked again; unstarted producers never become cached times.
+    if (resolved) {
+      u.resolvedSourceCount = i + 1;
+      u.sourceReadyCycle = sourceReady;
+    }
+  }
+  return std::max(queueReady, sourceReady);
 }
 std::optional<int64_t> Registers::alignReady(const Uop &u) const {
   std::vector<std::shared_ptr<AlignProducerRecord>> producers;
@@ -159,45 +208,44 @@ void Registers::scheduleSrcReleaseFromStart(const Uop &u) {
   for (size_t i = 0; i < u.pregSrc.size(); ++i)
     if (u.pregSrc[i])
       events.push_back(SrcReleaseEvent{u.instId, *u.pregSrc[i],
-                                       u.pregSrcGen[i].value_or(0)});
+                                       u.pregSrcGen[i].value_or(0),
+                                       u.sourceStates[i]});
 }
 void Registers::onStart(Uop &u, int64_t cycle) {
   if (u.alignProducerRecord)
     u.alignProducerRecord->startCycle = cycle;
   scheduleSrcReleaseFromStart(u);
   if (u.profile->opClass == "LOAD" || u.profile->opClass == "COMPUTE")
-    for (const auto &id : u.pregDst)
-      if (!id.empty()) {
-        pregProducer_[id] =
-            ProducerInfo{u.op, u.form, cycle, u.profile->opClass};
-        pregPending_.erase(id);
-      }
+    for (auto *state : u.destinationStates) {
+      state->producer =
+          ProducerInfo{u.op, u.form, cycle, u.profile->opClass, u.profile};
+      state->pending = false;
+    }
 }
 void Registers::onDone(Uop &u, int64_t cycle) {
   if (u.alignProducerRecord)
     u.alignProducerRecord->doneCycle = u.doneCycle;
-  for (const auto &id : u.pregDst)
-    if (!id.empty())
-      tryFree(id, cycle);
+  for (auto *state : u.destinationStates)
+    tryFree(*state, cycle);
 }
-bool Registers::tryFree(const std::string &id, int64_t cycle) {
+bool Registers::tryFree(ProducerState &state, int64_t cycle) {
+  const auto &id = state.physical;
   if (cfg_.theoreticalLimitMode)
     return false;
-  auto &bank = predicateIds_.count(id) ? predicate_ : vector_;
+  auto &bank = state.predicate ? predicate_ : vector_;
   if (!bank.allocated(id))
     return false;
-  if (std::any_of(rat_.begin(), rat_.end(),
-                  [&](const auto &x) { return x.second == id; }))
+  if (state.ratBindings != 0)
     return false;
-  if (pregPending_.count(id) || pregConsumerCount_[id] > 0)
+  if (state.pending || state.consumers > 0)
     return false;
-  auto eligible = pregReleaseEligibleCycle_.find(id);
-  if (eligible != pregReleaseEligibleCycle_.end() && cycle < eligible->second)
+  if (state.releaseEligibleCycle && cycle < *state.releaseEligibleCycle)
     return false;
   bank.release(id);
-  pregProducer_.erase(id);
-  pregConsumerCount_.erase(id);
-  pregReleaseEligibleCycle_.erase(id);
+  state.producer.reset();
+  state.consumers = 0;
+  state.releaseEligibleCycle.reset();
+  releaseEligible_.erase(state.physical);
   const auto delay =
       cfg_.enableCreditVisibilityDelay ? cfg_.iduVisiblePregDelay : 0;
   if (&bank == &predicate_) {
@@ -222,32 +270,39 @@ void Registers::runReleaseEvents(int64_t cycle) {
   if (it == srcReleaseEvents_.end())
     return;
   for (const auto &e : it->second) {
-    if (pregGeneration_[e.preg] != e.gen) {
+    auto &state = *e.state;
+    if (state.generation != e.gen) {
       if (cfg_.assertStartReleaseIntegrity)
         throw std::runtime_error("Stale source release generation");
       continue;
     }
-    auto &count = pregConsumerCount_[e.preg];
+    auto &count = state.consumers;
     if (count > 0)
       --count;
-    if (count == 0)
-      pregReleaseEligibleCycle_[e.preg] = cycle;
-    tryFree(e.preg, cycle);
+    if (count == 0) {
+      state.releaseEligibleCycle = cycle;
+      releaseEligible_[state.physical] = &state;
+    }
+    tryFree(state, cycle);
   }
   srcReleaseEvents_.erase(it);
 }
 void Registers::tryFreeEligible(int64_t cycle) {
-  std::vector<std::string> ids;
-  for (const auto &[id, t] : pregReleaseEligibleCycle_)
-    ids.push_back(id);
-  for (const auto &id : ids)
-    tryFree(id, cycle);
+  for (auto it = releaseEligible_.begin(); it != releaseEligible_.end();) {
+    auto *state = (it++)->second;
+    tryFree(*state, cycle);
+  }
 }
 std::pair<int64_t, int64_t> Registers::updateVisibility(int64_t cycle) {
-  const auto v = visibleVectorEvents_[cycle],
-             p = visiblePredicateEvents_[cycle];
-  visibleVectorEvents_.erase(cycle);
-  visiblePredicateEvents_.erase(cycle);
+  const auto take = [cycle](auto &events) {
+    const auto it = events.find(cycle);
+    if (it == events.end())
+      return int64_t{0};
+    const auto count = it->second;
+    events.erase(it);
+    return count;
+  };
+  const auto v = take(visibleVectorEvents_), p = take(visiblePredicateEvents_);
   visibleVector_ += v;
   visiblePredicate_ += p;
   auto result = std::make_pair(vectorDelta_ + v, predicateDelta_ + p);

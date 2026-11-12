@@ -15,11 +15,13 @@ struct TraceEvent {
 class TraceRecorder {
 public:
   explicit TraceRecorder(const Registers &regs) : regs_(regs) {}
+  void setEnabled(bool enabled) { enabled_ = enabled; }
   void log(const std::string &event, const Uop &u, int64_t cycle);
   const std::vector<TraceEvent> &history() const { return history_; }
 
 private:
   const Registers &regs_;
+  bool enabled_ = true;
   std::vector<TraceEvent> history_;
 };
 } // namespace vfsim

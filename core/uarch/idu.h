@@ -35,9 +35,12 @@ public:
 
   bool canDispatch(const std::vector<CanonicalMemoryAccess> &accesses,
                    int64_t cycle) const {
-    for (const auto &d : dependencies(accesses))
-      if (cycle < d.readyCycle)
-        return false;
+    for (const auto &access : accesses)
+      if (access.addressStateId) {
+        const auto it = updates_.find(*access.addressStateId);
+        if (it != updates_.end() && cycle < it->second.readyCycle)
+          return false;
+      }
     return true;
   }
 
@@ -107,11 +110,25 @@ public:
   void accept(const DynamicInst &inst) {
     if (!canAccept())
       throw std::runtime_error("IDU window is full");
-    window_.push_back(inst);
+    owned_.push_back(inst);
+    window_.push_back(&owned_.back());
   }
+  void acceptBorrowed(const DynamicInst &inst) {
+    if (!canAccept())
+      throw std::runtime_error("IDU window is full");
+    window_.push_back(&inst);
+  }
+  void setTraceEnabled(bool enabled) { traceEnabled_ = enabled; }
+  std::vector<const DynamicInst *>
+  dispatchBorrowed(int64_t cycle, const IDUDispatchBudget &budget);
   std::vector<DynamicInst> dispatch(int64_t cycle,
                                     const IDUDispatchBudget &budget);
-  const std::deque<DynamicInst> &window() const { return window_; }
+  // The ordinary API owns its pending instructions. Engine callers borrow
+  // immutable PreparedProgram storage and inspect the pointer window instead.
+  const std::deque<DynamicInst> &window() const { return owned_; }
+  const std::deque<const DynamicInst *> &borrowedWindow() const {
+    return window_;
+  }
   const std::vector<IDUDispatchRecord> &dispatchLog() const {
     return dispatchLog_;
   }
@@ -128,7 +145,9 @@ private:
   ValueStorageLookup valueStorage_;
   AddressStateTracker addressStates_;
   int64_t vfStartupCost_;
-  std::deque<DynamicInst> window_;
+  std::deque<const DynamicInst *> window_;
+  std::deque<DynamicInst> owned_;
+  bool traceEnabled_ = true;
   std::vector<IDUDispatchRecord> dispatchLog_, addressBlockLog_,
       resourceBlockLog_;
 };

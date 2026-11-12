@@ -7,18 +7,19 @@
 #include "core/params/uarch.h"
 namespace vfsim {
 CoreVfCostModel::CoreVfCostModel(std::filesystem::path baseDir,
-                               std::filesystem::path outDir,
-                               bool vloopOnly, bool directIssue)
+                                 std::filesystem::path outDir, bool vloopOnly,
+                                 bool directIssue)
     : baseDir_(ParamDB::resolveBaseDir(std::move(baseDir))),
       outDir_(std::move(outDir)), vloopOnly_(vloopOnly),
       directIssue_(directIssue),
-      parameters_(std::make_shared<const ParamBundle>(loadParameters(baseDir_))) {}
+      parameters_(
+          std::make_shared<const ParamBundle>(loadParameters(baseDir_))) {}
 
 SimulationResult CoreVfCostModel::runVfInfo(const CanonicalVfInfo &vf,
                                             int64_t maxCycles) const {
   ParamDB db(parameters_);
   const auto cfg = resolveUarch(db.uarch(), vf.uarch, vloopOnly_, directIssue_);
-  const auto program = prepareProgram(vf, db, cfg);
+  const auto program = prepareProgram(vf, db, cfg, !outDir_.empty());
   Engine engine(program, cfg, db);
   auto output = outDir_;
   if (!output.empty() && !output.is_absolute())

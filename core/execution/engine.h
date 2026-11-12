@@ -32,7 +32,7 @@ private:
   IDU idu_;
   OoO ooo_;
   IFU ifu_;
-  std::deque<std::pair<int64_t, DynamicInst>> pipe_;
+  std::deque<std::pair<int64_t, const DynamicInst *>> pipe_;
   std::map<int64_t, UopPtr> active_;
   int64_t cycle_ = 0, lastDone_ = 0, vectorCredit_, predicateCredit_,
           shqCredit_, pendingShq_ = 0, pendingLsq_ = 0;

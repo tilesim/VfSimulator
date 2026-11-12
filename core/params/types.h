@@ -34,6 +34,8 @@ struct InstructionProfile {
   std::optional<int64_t> selfIi;
   std::vector<std::string> writebackBanks;
   std::string resolvedForm;
+  std::string opcode, form;
+  uint32_t cacheId = 0;
 };
 
 struct IsaDefaults {
@@ -148,8 +150,10 @@ struct ParamBundle {
   int64_t crossResourceIssueInterval = 0;
   int64_t writebackCollisionPenalty = 0;
   int64_t initiationIntervalDefault = 0;
-  std::unordered_map<std::string, std::unordered_map<std::string, int64_t>> resourceForwardingOffsets;
-  std::unordered_map<std::string, std::unordered_map<std::string, int64_t>> iiOverrides, forwardingOverrides;
+  std::unordered_map<std::string, std::unordered_map<std::string, int64_t>>
+      resourceForwardingOffsets;
+  std::unordered_map<std::string, std::unordered_map<std::string, int64_t>>
+      iiOverrides, forwardingOverrides;
   UarchConfig uarch;
 };
 
