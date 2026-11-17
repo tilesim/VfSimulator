@@ -72,6 +72,8 @@ struct Uop {
 
   std::string state = "blocked";
   int64_t readyCycle = 0;
+  mutable size_t resolvedSourceCount = 0;
+  mutable int64_t sourceReadyCycle = 0;
   std::optional<int64_t> startCycle;
   std::optional<int64_t> doneCycle;
   std::optional<std::string> blockedReason;

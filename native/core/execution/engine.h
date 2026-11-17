@@ -8,6 +8,7 @@ namespace vfsim {
 class Engine {
 public:
   Engine(const PreparedProgram &, const UarchConfig &, const ParamDB &);
+  void setTraceEnabled(bool enabled) { trace_.setEnabled(enabled); }
   SimulationResult run(const std::filesystem::path &outDir = {},
                        int64_t maxCycles = 0);
 

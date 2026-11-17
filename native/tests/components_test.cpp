@@ -406,6 +406,19 @@ int main() {
   instruction.opClass = "COMPUTE";
   instruction.dst = {"mem_like_vector"};
   auto renamed = regs.rename(instruction, 0);
+  instruction.src = {"mem_like_vector"};
+  instruction.dst.clear();
+  auto consumer = regs.rename(instruction, 0);
+  require(regs.readyCycle(*consumer) == 1000000000,
+          "Pending producer must not be cached as ready");
+  require(consumer->resolvedSourceCount == 0, "Pending source remains unresolved");
+  regs.onStart(*renamed, 100);
+  const auto ready = regs.readyCycle(*consumer);
+  require(ready >= 100 && consumer->resolvedSourceCount == 1,
+          "Started producer has immutable cached readiness");
+  consumer->shqReadyCycle = ready + 20;
+  require(regs.readyCycle(*consumer) == ready + 20,
+          "Cached source readiness does not freeze queue readiness");
   const auto *profile = &db.inst("VADD", "fp32", "COMPUTE");
   require(renamed->profile == profile,
           "Renamed instructions reference the database profile");

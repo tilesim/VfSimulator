@@ -20,6 +20,7 @@ SimulationResult CoreVfCostModel::runVfInfo(const CanonicalVfInfo &vf,
   const auto cfg = resolveUarch(db.uarch(), vf.uarch, vloopOnly_, directIssue_);
   const auto program = prepareProgram(vf, db, cfg);
   Engine engine(program, cfg, db);
+  engine.setTraceEnabled(!outDir_.empty());
   auto output = outDir_;
   if (!output.empty() && !output.is_absolute())
     output = baseDir_ / output;

@@ -123,16 +123,19 @@ int64_t Registers::readyTimeForSource(const ProducerInfo &p,
               : fwd);
 }
 int64_t Registers::readyCycle(const Uop &u) const {
-  int64_t ready = std::max(db_.isaDefaults().vfStartupCost, u.shqReadyCycle);
-  for (const auto &id : u.pregSrc)
+  // Cache only immutable producer readiness, never queue/resource readiness.
+  while (u.resolvedSourceCount < u.pregSrc.size()) {
+    const auto &id = u.pregSrc[u.resolvedSourceCount];
     if (id) {
       auto p = producer(*id);
       if (p)
-        ready = std::max(ready, readyTimeForSource(*p, u));
+        u.sourceReadyCycle = std::max(u.sourceReadyCycle, readyTimeForSource(*p, u));
       else if (pending(*id))
         return 1000000000;
     }
-  return ready;
+    ++u.resolvedSourceCount;
+  }
+  return std::max({db_.isaDefaults().vfStartupCost, u.shqReadyCycle, u.sourceReadyCycle});
 }
 std::optional<int64_t> Registers::alignReady(const Uop &u) const {
   std::vector<std::shared_ptr<AlignProducerRecord>> producers;
