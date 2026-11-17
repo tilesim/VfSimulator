@@ -16,6 +16,24 @@ def test_package_sources_are_synchronized():
     subprocess.run([sys.executable, str(Path(__file__).resolve().parents[1]/'tools/sync_python_package.py'), '--check'], check=True)
 
 
+def test_packaged_headless_scoring_preserves_cycles(tmp_path):
+    p = packaged.VfSimProgram(
+        values={
+            "mask": packaged.VfSimValue("mask", "PredicateRegister", "bool"),
+            "one": packaged.VfSimValue("one", "Scalar", "fp32"),
+            "x": packaged.VfSimValue("x", "Register", "fp32"),
+        },
+        body=[
+            packaged.VfSimInst("PSET_B32", [], ["mask"], "b32"),
+            packaged.VfSimInst("VDUP", ["one", "mask"], ["x"]),
+        ],
+    )
+    traced = packaged.predict_from_program(p, out_dir=tmp_path / "traced")
+    headless = packaged.predict_from_program(p, out_dir=tmp_path / "headless", dump_results=False)
+    assert traced["cycles"] == headless["cycles"]
+    assert not (tmp_path / "headless").exists()
+
+
 def test_package_contains_sub_exu_rules_and_timing_parameters():
     from vfsimulator.core.params.database import ParamDB
     db = ParamDB()

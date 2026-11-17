@@ -7,6 +7,7 @@ class TraceRecorder:
 
     def __init__(self, registers):
         self.registers = registers
+        self.enabled = True
         self.cycle: int = 0
         self.history: List[Dict[str, Any]] = []
         self.cyc_start_log: List[Dict[str, Any]] = []
@@ -21,6 +22,8 @@ class TraceRecorder:
                 f.write(json.dumps(item, ensure_ascii=False) + '\n')
 
     def _log_start_simple(self, u: Uop) -> None:
+        if not self.enabled:
+            return
         profile = u.profile
         op_class = profile.op_class if profile is not None else None
         self.cyc_start_log.append({
@@ -44,6 +47,8 @@ class TraceRecorder:
         })
 
     def _log_done_simple(self, u: Uop) -> None:
+        if not self.enabled:
+            return
         profile = u.profile
         op_class = profile.op_class if profile is not None else None
         self.cyc_done_log.append({
@@ -63,6 +68,8 @@ class TraceRecorder:
         })
 
     def _log(self, event: str, u: Uop) -> None:
+        if not self.enabled:
+            return
         self.history.append({
             'cy': self.cycle,
             'event': event,

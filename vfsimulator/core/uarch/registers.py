@@ -211,22 +211,26 @@ class Registers:
         return prod_start + fwd
 
     def ready_cycle(self, u: Uop) -> int:
-        t = max(self.vf_startup_cost, int(getattr(u, "shq_ready_cycle", 0)))
-        for ps in u.preg_src:
+        # Producer start times are immutable. Queue admission remains dynamic.
+        while u.resolved_source_count < len(u.preg_src):
+            ps = u.preg_src[u.resolved_source_count]
             if ps is None:
+                u.resolved_source_count += 1
                 continue
             info = self.preg_producer.get(ps)
             if info is None:
                 if ps in self.preg_pending:
                     return 10**9
+                u.resolved_source_count += 1
                 continue
-            t = max(
-                t,
+            u.source_ready_cycle = max(
+                u.source_ready_cycle,
                 self._ready_time_for_src(
                     info, u.op, u.form, self.preg_producer_profile.get(ps), u.profile
                 ),
             )
-        return t
+            u.resolved_source_count += 1
+        return max(self.vf_startup_cost, u.shq_ready_cycle, u.source_ready_cycle)
 
     def is_current_mapping(self, preg: str) -> bool:
         return preg in self.RAT.values()

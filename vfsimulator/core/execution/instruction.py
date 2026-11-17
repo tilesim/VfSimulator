@@ -64,6 +64,8 @@ class Uop:
     ub_transfer_bytes: int = 0
     state: str = "blocked"
     ready_cycle: int = 0
+    resolved_source_count: int = 0
+    source_ready_cycle: int = 0
     start_cycle: Optional[int] = None
     done_cycle: Optional[int] = None
     blocked_reason: Optional[str] = None

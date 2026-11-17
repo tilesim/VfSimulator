@@ -36,6 +36,7 @@ class CoreVfCostModel:
         program = prepare_program(vf_info, db, uarch)
         engine = Engine(program, uarch, db, fallback_dtype=self.fallback_dtype)
         output = Path(self.out_dir) if self.out_dir is not None else None
+        engine.trace.enabled = output is not None
         if output is not None and (not output.is_absolute()):
             output = Path(self.base_dir) / output
         result = engine.run(output).to_dict()
