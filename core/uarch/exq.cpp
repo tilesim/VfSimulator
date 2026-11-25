@@ -65,7 +65,7 @@ void EXQ::enqueue(const UopPtr &u, int port, int64_t recv, int64_t predicted) {
   u->exuPort = port;
   u->exqRecvCycle = recv;
   u->exqPredIssue = predicted;
-  u->state = "exq_wait";
+  u->state = UopState::exqWait;
   queues_.at(port).at(queueName(*u)).push_back(u);
 }
 UopPtr EXQ::popReady(int port, int64_t cycle) {

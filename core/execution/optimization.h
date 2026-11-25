@@ -16,4 +16,11 @@ struct LoopInvariantResult {
   CompilerOptimizationStats stats;
 };
 LoopInvariantResult hoistLoopInvariants(const CanonicalVfInfo &);
+// Prepare-path helper shared with hoistLoopInvariants: fills 'stats' and returns
+// the rewritten root context only when LICM is enabled and actually moved at least
+// one instruction. std::nullopt means "reuse the input context", so the immutable
+// value/storage/parameter/source tables never have to be copied into a temporary
+// CanonicalVfInfo.
+std::optional<std::vector<CanonicalNode>>
+hoistLoopInvariantContext(const CanonicalVfInfo &, CompilerOptimizationStats &);
 } // namespace vfsim

@@ -29,22 +29,23 @@ private:
 
   std::unordered_map<int64_t, int64_t> topBlockVloopStart_;
   std::unordered_map<int64_t, int64_t> topBlockBodyOpenTime_;
-  std::unordered_map<std::string, int64_t> vloopStart_;
-  std::unordered_map<std::string, int64_t> bodyOpenTime_;
-  std::unordered_map<std::string, int64_t> lastDispatchTime_;
-  std::unordered_map<std::string, int64_t> blockBaseCycle_;
+  std::unordered_map<SchedulingKey, int64_t, SchedulingKeyHash> vloopStart_;
+  std::unordered_map<SchedulingKey, int64_t, SchedulingKeyHash> bodyOpenTime_;
+  std::unordered_map<SchedulingKey, int64_t, SchedulingKeyHash> lastDispatchTime_;
+  std::unordered_map<SchedulingKey, int64_t, SchedulingKeyHash> blockBaseCycle_;
   std::vector<VloopTraceRecord> vloopTrace_;
   void initVloopStarts();
   std::optional<int64_t> nextNonemptyTopBlock(int64_t start) const;
   void setTopBlockVloop(int64_t topBlockId, int64_t startCycle);
   void initTopBlockNestedStarts(int64_t topBlockId, int64_t topVloopStart);
 
-  std::string makeKey(int64_t topBlockId, const std::string &loopId,
+  SchedulingKey keyFromNormalized(const std::string &text) const;
+  SchedulingKey makeKey(int64_t topBlockId, const std::string &loopId,
                       const std::vector<int64_t> &iters) const;
-  std::optional<std::string>
+  std::optional<SchedulingKey>
   normalizeBlockKey(const std::pair<std::string, std::vector<int64_t>> &raw,
                     int64_t topBlockId) const;
-  std::optional<std::string>
+  std::optional<SchedulingKey>
   currentInnerBlockKey(const DynamicInst &inst) const;
 
   void updateLastDispatch(const DynamicInst &inst, int64_t cycle);

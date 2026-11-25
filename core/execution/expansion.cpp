@@ -8,9 +8,14 @@
 #include <map>
 #include <set>
 #include <sstream>
+#include <limits>
 #include <stdexcept>
 #include <unordered_map>
 #include <unordered_set>
+
+#ifndef VFSIM_LIFETIME_FLAT_LIMIT
+#define VFSIM_LIFETIME_FLAT_LIMIT (1 << 20)
+#endif
 
 namespace vfsim {
 namespace {
@@ -45,15 +50,20 @@ struct Frame {
 
 class Expander {
 public:
-  explicit Expander(const CanonicalVfInfo &vfInfo, const ParamDB &db,
-                    const UarchConfig &cfg,
+  explicit Expander(const CanonicalVfInfo &vfInfo,
+                    const std::vector<CanonicalNode> &context,
+                    const ParamDB &db, const UarchConfig &cfg,
                     std::unordered_map<std::string, ValueInfo> values,
                     bool retainDiagnostics)
-      : vfInfo_(vfInfo), db_(db), cfg_(cfg) {
+      : vfInfo_(vfInfo), context_(context), db_(db), cfg_(cfg) {
     runtime_.retainsDiagnostics = retainDiagnostics;
     runtime_.params = vfInfo.params;
     runtime_.values = std::move(values);
-    indexLoops(vfInfo.context, 0);
+    indexLoops(context_, 0);
+    buildPlanRoot(context_);
+    slotValue_.resize(slotStatic_.size());
+    slotBound_.assign(slotStatic_.size(), 0);
+    slotOwner_.assign(slotStatic_.size(), -1);
     if (!retainDiagnostics)
       return;
     std::set<std::string> occupied;
@@ -79,8 +89,8 @@ public:
   }
 
   PreparedProgram run() {
-    runtime_.instructions.reserve(estimateInstructions(vfInfo_.context));
-    expandTopLevelNodes(vfInfo_.context);
+    runtime_.instructions.reserve(estimateInstructions(context_));
+    expandTopLevelNodes(context_);
     annotateLifetimes();
     annotateSchedulingBoundaries();
     runtime_.totalTopBlocks = std::max<int64_t>(1, nextTopBlockId_);
@@ -101,6 +111,7 @@ public:
 
 private:
   const CanonicalVfInfo &vfInfo_;
+  const std::vector<CanonicalNode> &context_;
   const ParamDB &db_;
   const UarchConfig &cfg_;
   int64_t dynamicCount_ = 0;
@@ -110,7 +121,62 @@ private:
       throw std::runtime_error("Canonical dynamic instruction limit exceeded");
   }
   PreparedProgram runtime_;
-  std::unordered_map<std::string, std::string> bindings_;
+
+  // ---- static lowering: one plan tree built from the post-LICM canonical
+  // nodes.  Every static operand is interned to a dense slot once; the hot
+  // expansion path then walks the plan tree by index and reads/writes
+  // slotValue_ instead of hashing value-id strings.
+  struct StaticOperandPlan {
+    int32_t slot = -1;
+    ValueStorageKind storage = ValueStorageKind::Register;
+  };
+  struct StaticInstructionPlan {
+    std::vector<StaticOperandPlan> inputs;
+    std::vector<StaticOperandPlan> outputs;
+    // S1: attributes and scalar plan data are static. Resolve them once while
+    // building the plan; expansion only dereferences the results so that the
+    // three std::map<string, CanonicalScalar> lookups and the staticPc_ hash
+    // lookup are not repeated for every dynamic instance of an instruction.
+    // The pointers stay valid because vfInfo_ (and its canonical nodes) is
+    // immutable and outlives the plan.
+    int64_t pc = -1;
+    const CanonicalScalar *catalogMode = nullptr;
+    const CanonicalScalar *alignStateOperation = nullptr;
+    const CanonicalScalar *alignStateId = nullptr;
+    std::vector<const CanonicalMemoryAccess *> memoryAccesses;
+    const char *opClass = "COMPUTE";
+  };
+  struct StaticLoopPlan;
+  struct StaticNodePlan {
+    const StaticInstructionPlan *instruction = nullptr;
+    const StaticLoopPlan *loop = nullptr;
+  };
+  struct StaticLoopPlan {
+    std::vector<int32_t> carriedEntry;
+    std::vector<int32_t> carriedBackEdge;
+    std::vector<int32_t> carriedExit;
+    bool entryPresent = false;
+    int32_t entrySlot = -1;
+    std::vector<StaticNodePlan> body;
+    std::vector<StaticInstructionPlan> bodyInstructions;
+    std::vector<StaticLoopPlan> bodyLoops;
+  };
+  std::vector<StaticNodePlan> planRoot_;
+  std::vector<StaticInstructionPlan> rootInstructions_;
+  std::vector<StaticLoopPlan> rootLoops_;
+  std::unordered_map<std::string, int32_t> slotOf_;
+  std::vector<std::string> slotStatic_;
+  std::vector<std::string> slotValue_;
+  std::vector<uint8_t> slotBound_;
+  std::vector<int32_t> slotOwner_;
+  struct SlotUndo {
+    int32_t slot;
+    std::string previous;
+    uint8_t wasBound;
+    int32_t previousOwner;
+  };
+  std::vector<SlotUndo> slotUndo_;
+  std::vector<size_t> scopeMarks_;
   std::unordered_map<std::string, int64_t> loopTopBlockIds_;
   std::vector<Frame> frames_;
   std::unordered_map<std::string, ValueInstance> instances_;
@@ -172,9 +238,166 @@ private:
     }
   }
 
-  std::string resolve(const std::string &definitionId) const {
-    const auto found = bindings_.find(definitionId);
-    return found == bindings_.end() ? definitionId : found->second;
+  int32_t slotFor(const std::string &valueId) {
+    const auto [position, inserted] =
+        slotOf_.try_emplace(valueId, static_cast<int32_t>(slotStatic_.size()));
+    if (inserted)
+      slotStatic_.push_back(valueId);
+    return position->second;
+  }
+
+  void buildPlanOperands(const CanonicalInstruction &instruction,
+                         StaticInstructionPlan &plan) {
+    plan.inputs.reserve(instruction.inputs.size());
+    for (const auto &operand : instruction.inputs)
+      plan.inputs.push_back(
+          {slotFor(operand.valueId), vfInfo_.values.at(operand.valueId).storage});
+    plan.outputs.reserve(instruction.outputs.size());
+    for (const auto &operand : instruction.outputs)
+      plan.outputs.push_back(
+          {slotFor(operand.valueId), vfInfo_.values.at(operand.valueId).storage});
+    plan.pc = staticPc_.at(instruction.instructionId);
+    const auto attribute = [&](const char *name) -> const CanonicalScalar * {
+      const auto found = instruction.attributes.find(name);
+      return found == instruction.attributes.end() ? nullptr : &found->second;
+    };
+    plan.catalogMode = attribute("catalog_mode");
+    plan.alignStateOperation = attribute("align_state_operation");
+    plan.alignStateId = attribute("align_state_id");
+    plan.opClass =
+        instruction.instructionClass == CanonicalInstructionClass::Load ? "LOAD"
+        : instruction.instructionClass == CanonicalInstructionClass::Store
+            ? "STORE"
+            : "COMPUTE";
+    plan.memoryAccesses.clear();
+    for (const auto &operand : instruction.inputs)
+      if (operand.memoryAccess)
+        plan.memoryAccesses.push_back(&*operand.memoryAccess);
+    for (const auto &operand : instruction.outputs)
+      if (operand.memoryAccess)
+        plan.memoryAccesses.push_back(&*operand.memoryAccess);
+  }
+
+  void buildPlanBody(const std::vector<CanonicalNode> &nodes,
+                     std::vector<StaticNodePlan> &planNodes,
+                     std::vector<StaticInstructionPlan> &planInstructions,
+                     std::vector<StaticLoopPlan> &planLoops) {
+    planInstructions.reserve(nodes.size());
+    planLoops.reserve(nodes.size());
+    planNodes.reserve(nodes.size());
+    for (const auto &node : nodes) {
+      StaticNodePlan planNode;
+      if (const auto *instruction =
+              std::get_if<CanonicalInstruction>(&node.payload)) {
+        planInstructions.emplace_back();
+        auto &plan = planInstructions.back();
+        buildPlanOperands(*instruction, plan);
+        planNode.instruction = &plan;
+      } else if (std::get_if<CanonicalMembar>(&node.payload) != nullptr) {
+        planNode.instruction = nullptr;
+        planNode.loop = nullptr;
+      } else {
+        const auto &loop =
+            std::get<std::shared_ptr<const CanonicalLoop>>(node.payload);
+        if (!loop)
+          throw std::runtime_error("Canonical loop payload is null");
+        planLoops.emplace_back();
+        auto &plan = planLoops.back();
+        for (const auto &carried : loop->carriedValues) {
+          plan.carriedEntry.push_back(
+              carried.entryValueId ? slotFor(*carried.entryValueId) : -1);
+          plan.carriedBackEdge.push_back(slotFor(carried.backEdgeValueId));
+          plan.carriedExit.push_back(slotFor(carried.exitValueId));
+        }
+        plan.bodyInstructions.reserve(loop->body.size());
+        plan.bodyLoops.reserve(loop->body.size());
+        buildPlanBody(loop->body, plan.body, plan.bodyInstructions,
+                      plan.bodyLoops);
+        planNode.loop = &plan;
+      }
+      planNodes.push_back(planNode);
+    }
+  }
+
+  void buildPlanRoot(const std::vector<CanonicalNode> &nodes) {
+    rootInstructions_.reserve(nodes.size());
+    rootLoops_.reserve(nodes.size());
+    planRoot_.reserve(nodes.size());
+    for (const auto &node : nodes) {
+      StaticNodePlan planNode;
+      if (const auto *instruction =
+              std::get_if<CanonicalInstruction>(&node.payload)) {
+        rootInstructions_.emplace_back();
+        auto &plan = rootInstructions_.back();
+        buildPlanOperands(*instruction, plan);
+        planNode.instruction = &plan;
+      } else if (std::get_if<CanonicalMembar>(&node.payload) != nullptr) {
+        planNode.instruction = nullptr;
+        planNode.loop = nullptr;
+      } else {
+        const auto &loop =
+            std::get<std::shared_ptr<const CanonicalLoop>>(node.payload);
+        if (!loop)
+          throw std::runtime_error("Canonical loop payload is null");
+        rootLoops_.emplace_back();
+        auto &plan = rootLoops_.back();
+        for (const auto &carried : loop->carriedValues) {
+          plan.carriedEntry.push_back(
+              carried.entryValueId ? slotFor(*carried.entryValueId) : -1);
+          plan.carriedBackEdge.push_back(slotFor(carried.backEdgeValueId));
+          plan.carriedExit.push_back(slotFor(carried.exitValueId));
+        }
+        plan.bodyInstructions.reserve(loop->body.size());
+        plan.bodyLoops.reserve(loop->body.size());
+        buildPlanBody(loop->body, plan.body, plan.bodyInstructions,
+                      plan.bodyLoops);
+        planNode.loop = &plan;
+      }
+      planRoot_.push_back(planNode);
+    }
+  }
+
+  const std::string &resolveSlot(int32_t slot) const {
+    if (slotBound_[slot])
+      return slotValue_[slot];
+    return slotStatic_[slot];
+  }
+
+  void pushScope() { scopeMarks_.push_back(slotUndo_.size()); }
+
+  void popScope() {
+    const size_t mark = scopeMarks_.back();
+    scopeMarks_.pop_back();
+    while (slotUndo_.size() > mark) {
+      SlotUndo &undo = slotUndo_.back();
+      slotValue_[undo.slot] = std::move(undo.previous);
+      slotBound_[undo.slot] = undo.wasBound;
+      slotOwner_[undo.slot] = undo.previousOwner;
+      slotUndo_.pop_back();
+    }
+  }
+
+  void bindSlot(int32_t slot, const std::string &name) {
+    if (!slotValue_.empty() && slotBound_[slot] &&
+        slotValue_[slot] == name)
+      return;
+    if (scopeMarks_.empty()) {
+      slotValue_[slot] = name;
+      slotBound_[slot] = 1;
+      return;
+    }
+    const size_t mark = scopeMarks_.back();
+    if (slotOwner_[slot] >= 0 &&
+        static_cast<size_t>(slotOwner_[slot]) >= mark) {
+      slotValue_[slot] = name;
+      slotBound_[slot] = 1;
+      return;
+    }
+    slotUndo_.push_back({slot, slotValue_[slot], slotBound_[slot],
+                         slotOwner_[slot]});
+    slotOwner_[slot] = static_cast<int32_t>(slotUndo_.size() - 1);
+    slotValue_[slot] = name;
+    slotBound_[slot] = 1;
   }
 
   std::string dynamicName(const std::string &definitionId) {
@@ -221,45 +444,39 @@ private:
     }
   }
 
-  void expandInstruction(const CanonicalInstruction &instruction) {
+  void expandInstruction(const CanonicalInstruction &instruction,
+                         const StaticInstructionPlan &plan) {
     countInstruction();
     auto &dynamic = runtime_.instructions.emplace_back();
     dynamic.type = "inst";
     dynamic.op = instruction.opcode;
-    dynamic.opClass =
-        instruction.instructionClass == CanonicalInstructionClass::Load ? "LOAD"
-        : instruction.instructionClass == CanonicalInstructionClass::Store
-            ? "STORE"
-            : "COMPUTE";
+    dynamic.opClass = plan.opClass;
     dynamic.form = instruction.form;
-    if (auto mode = instruction.attributes.find("catalog_mode");
-        mode != instruction.attributes.end())
-      dynamic.catalogMode = std::get<std::string>(mode->second);
+    if (plan.catalogMode != nullptr)
+      dynamic.catalogMode = std::get<std::string>(*plan.catalogMode);
     if (runtime_.retainsDiagnostics)
       dynamic.staticInstructionId = instruction.instructionId;
-    dynamic.src.reserve(instruction.inputs.size());
-    dynamic.srcStorage.reserve(instruction.inputs.size());
-    dynamic.dst.reserve(instruction.outputs.size());
-    dynamic.dstStorage.reserve(instruction.outputs.size());
-    dynamic.pc = staticPc_.at(instruction.instructionId);
-    for (const auto &operand : instruction.inputs)
-      if (operand.memoryAccess)
-        dynamic.memoryAccesses.push_back(*operand.memoryAccess);
-    for (const auto &operand : instruction.outputs)
-      if (operand.memoryAccess)
-        dynamic.memoryAccesses.push_back(*operand.memoryAccess);
-    const auto alignOperation =
-        instruction.attributes.find("align_state_operation");
-    if (alignOperation != instruction.attributes.end()) {
-      const auto *value = std::get_if<std::string>(&alignOperation->second);
+    dynamic.src.reserve(plan.inputs.size());
+    dynamic.srcStorage.reserve(plan.inputs.size());
+    dynamic.dst.reserve(plan.outputs.size());
+    dynamic.dstStorage.reserve(plan.outputs.size());
+    dynamic.pc = plan.pc;
+    for (const auto *access : plan.memoryAccesses)
+      dynamic.memoryAccesses.push_back(*access);
+    // The plan caches the attribute lookup result; the exact type check and
+    // throw still happen here, at the point where the instruction is really
+    // expanded, in the historical order and with the historical messages.
+    const auto *alignOperation = plan.alignStateOperation;
+    if (alignOperation != nullptr) {
+      const auto *value = std::get_if<std::string>(alignOperation);
       if (value == nullptr)
         throw std::runtime_error("align_state_operation must be a string: " +
                                  instruction.instructionId);
       dynamic.alignStateOperation = *value;
     }
-    const auto alignState = instruction.attributes.find("align_state_id");
-    if (alignState != instruction.attributes.end()) {
-      const auto *value = std::get_if<std::string>(&alignState->second);
+    const auto *alignState = plan.alignStateId;
+    if (alignState != nullptr) {
+      const auto *value = std::get_if<std::string>(alignState);
       if (value == nullptr)
         throw std::runtime_error("align_state_id must be a string: " +
                                  instruction.instructionId);
@@ -267,33 +484,36 @@ private:
     }
     fillDynamicMetadata(dynamic);
     dynamic.vectorDestCount = dynamic.predicateDestCount = 0;
-    for (const auto &operand : instruction.inputs) {
-      dynamic.srcStorage.push_back(vfInfo_.values.at(operand.valueId).storage);
-      const auto identity = resolve(operand.valueId);
+    for (size_t index = 0; index < plan.inputs.size(); ++index) {
+      const auto &operandPlan = plan.inputs[index];
+      dynamic.srcStorage.push_back(operandPlan.storage);
+      const std::string &identity = resolveSlot(operandPlan.slot);
       dynamic.src.push_back(identity);
       if (runtime_.retainsDiagnostics)
         dynamic.srcValueInstances.push_back(instances_.at(identity));
     }
-    for (const auto &operand : instruction.outputs) {
-      const std::string identity = dynamicName(operand.valueId);
+    for (size_t index = 0; index < plan.outputs.size(); ++index) {
+      const auto &operandPlan = plan.outputs[index];
+      const std::string identity = dynamicName(instruction.outputs[index].valueId);
       dynamic.dst.push_back(identity);
-      const auto storage = vfInfo_.values.at(operand.valueId).storage;
+      const auto storage = operandPlan.storage;
       dynamic.dstStorage.push_back(storage);
       dynamic.vectorDestCount += storage == ValueStorageKind::Register;
       dynamic.predicateDestCount +=
           storage == ValueStorageKind::PredicateRegister;
       if (runtime_.retainsDiagnostics) {
-        ValueInstance instance{staticNames_.at(operand.valueId),
-                               dynamic.iterationPath};
+        ValueInstance instance{
+            staticNames_.at(instruction.outputs[index].valueId),
+            dynamic.iterationPath};
         instances_[identity] = instance;
-        if (vfInfo_.values.at(operand.valueId).storage ==
+        if (static_cast<CanonicalStorageKind>(storage) ==
             CanonicalStorageKind::UB) {
           for (const auto &id : ubAliases_.at(instance.definitionId))
             instances_[id] = instance;
         }
         dynamic.dstValueInstances.push_back(std::move(instance));
       }
-      bindings_[operand.valueId] = identity;
+      bindSlot(operandPlan.slot, identity);
     }
   }
 
@@ -338,7 +558,8 @@ private:
     return bounds;
   }
 
-  void expandLoop(const CanonicalLoop &loop, int depth) {
+  void expandLoop(const CanonicalLoop &loop, int depth,
+                  const StaticLoopPlan &plan) {
     const int64_t count =
         resolveInteger(loop.count, vfInfo_.params, "loop count");
     int64_t unroll = resolveInteger(loop.unroll, vfInfo_.params, "loop unroll");
@@ -382,22 +603,21 @@ private:
       runtime_.topBlockLoopBounds[static_cast<int>(topBlock)] =
           nestedBounds(loop);
 
-    const auto outerBindings = bindings_;
     std::vector<std::string> currentValues;
-    currentValues.reserve(loop.carriedValues.size());
-    for (const auto &carried : loop.carriedValues)
-      currentValues.push_back(carried.entryValueId
-                                  ? resolve(*carried.entryValueId)
+    currentValues.reserve(plan.carriedEntry.size());
+    for (size_t index = 0; index < plan.carriedEntry.size(); ++index)
+      currentValues.push_back(plan.carriedEntry[index] >= 0
+                                  ? resolveSlot(plan.carriedEntry[index])
                                   : std::string{});
+    pushScope();
 
     for (int64_t base = 0; base < count; base += unroll) {
       std::vector<std::vector<DynamicInst>> lanes;
       for (int64_t lane = 0; lane < unroll; ++lane) {
         const int64_t iteration = base + lane;
-        for (size_t index = 0; index < loop.carriedValues.size(); ++index)
-          if (loop.carriedValues[index].entryValueId)
-            bindings_[*loop.carriedValues[index].entryValueId] =
-                currentValues[index];
+        for (size_t index = 0; index < plan.carriedEntry.size(); ++index)
+          if (plan.carriedEntry[index] >= 0)
+            bindSlot(plan.carriedEntry[index], currentValues[index]);
         frames_.push_back(
             Frame{loop.loopId, iteration, base / unroll, topBlock,
                   loop.induction.variableId,
@@ -406,7 +626,7 @@ private:
                   resolveInteger(loop.induction.step, vfInfo_.params,
                                  "induction step")});
         const size_t start = runtime_.instructions.size();
-        expandNodes(loop.body, depth + 1);
+        expandNodes(loop.body, depth + 1, plan.body);
         if (unroll > 1) {
           std::vector<DynamicInst> laneInstructions(
               std::make_move_iterator(runtime_.instructions.begin() +
@@ -418,9 +638,8 @@ private:
           lanes.push_back(std::move(laneInstructions));
         }
         frames_.pop_back();
-        for (size_t index = 0; index < loop.carriedValues.size(); ++index)
-          currentValues[index] =
-              resolve(loop.carriedValues[index].backEdgeValueId);
+        for (size_t index = 0; index < plan.carriedBackEdge.size(); ++index)
+          currentValues[index] = resolveSlot(plan.carriedBackEdge[index]);
       }
       if (unroll > 1) {
         const size_t width = lanes.front().size();
@@ -436,20 +655,21 @@ private:
       }
     }
 
-    bindings_ = outerBindings;
-    for (size_t index = 0; index < loop.carriedValues.size(); ++index) {
-      const auto &carried = loop.carriedValues[index];
-      bindings_[carried.exitValueId] =
-          count == 0 ? resolve(carried.entryValueId.value())
-                     : currentValues[index];
-    }
+    popScope();
+    for (size_t index = 0; index < plan.carriedExit.size(); ++index)
+      bindSlot(plan.carriedExit[index],
+               count == 0 ? resolveSlot(plan.carriedEntry[index])
+                          : currentValues[index]);
   }
 
-  void expandNodes(const std::vector<CanonicalNode> &nodes, int depth) {
-    for (const auto &node : nodes) {
+  void expandNodes(const std::vector<CanonicalNode> &nodes, int depth,
+                   const std::vector<StaticNodePlan> &planNodes) {
+    for (size_t index = 0; index < nodes.size(); ++index) {
+      const auto &node = nodes[index];
+      const auto &planNode = planNodes[index];
       if (const auto *instruction =
               std::get_if<CanonicalInstruction>(&node.payload)) {
-        expandInstruction(*instruction);
+        expandInstruction(*instruction, *planNode.instruction);
       } else if (const auto *membar =
                      std::get_if<CanonicalMembar>(&node.payload)) {
         expandMembar(*membar);
@@ -458,20 +678,22 @@ private:
             std::get<std::shared_ptr<const CanonicalLoop>>(node.payload);
         if (!loop)
           throw std::runtime_error("Canonical loop payload is null");
-        expandLoop(*loop, depth);
+        expandLoop(*loop, depth, *planNode.loop);
       }
     }
   }
 
   void expandTopLevelNodes(const std::vector<CanonicalNode> &nodes) {
-    for (const auto &node : nodes) {
+    for (size_t nodeIndex = 0; nodeIndex < nodes.size(); ++nodeIndex) {
+      const auto &node = nodes[nodeIndex];
+      const auto &planNode = planRoot_[nodeIndex];
       const auto *loop =
           std::get_if<std::shared_ptr<const CanonicalLoop>>(&node.payload);
       if (loop != nullptr) {
         if (!*loop)
           throw std::runtime_error("Canonical loop payload is null");
         activeTopBlockId_ = loopTopBlockIds_.at((*loop)->loopId);
-        expandLoop(**loop, 0);
+        expandLoop(**loop, 0, *planNode.loop);
         continue;
       }
 
@@ -480,56 +702,247 @@ private:
       // loop epilogue (for example VSTAS + Membar) ahead of the next VLOOP.
       if (const auto *instruction =
               std::get_if<CanonicalInstruction>(&node.payload))
-        expandInstruction(*instruction);
+        expandInstruction(*instruction, *planNode.instruction);
       else
         expandMembar(std::get<CanonicalMembar>(node.payload));
     }
   }
 
   void annotateLifetimes() {
-    std::unordered_map<std::string, int64_t> remainingUses;
-    for (const auto &instruction : runtime_.instructions)
-      for (const auto &source : instruction.src)
-        ++remainingUses[source];
+    // Reverse scan over the final emission order. One fused identity table
+    // yields both the dense logical id and the lifetime bit, so each operand
+    // needs a single hash probe and the integers are laid out in the same
+    // order the renamer consumes them (sources right-to-left, then dsts).
+    //   * srcValueRelease == first reverse occurrence of the identity as a
+    //     source, i.e. its last use in the stream;
+    //   * dstValueKeep == the identity already occurred as a source at or
+    //     after this instruction.
+    int64_t sourceCount = 0;
+    int64_t destinationCount = 0;
+    for (const auto &instruction : runtime_.instructions) {
+      sourceCount += static_cast<int64_t>(instruction.src.size());
+      destinationCount += static_cast<int64_t>(instruction.dst.size());
+    }
+    struct FusedEntry {
+      int32_t id;
+      bool seenAsSource;
+    };
+    // L1: scoped contiguous open-addressing table. Slots carry an explicit
+    // occupied flag so the empty key is a valid identity; equality is always a
+    // byte-wise string_view comparison (never hash equality). The table only
+    // replaces the container: insertion order, id assignment, flags and all
+    // fallback decisions are unchanged.
+    struct FlatIdentityTable {
+      struct Slot {
+        std::string_view key;
+        FusedEntry value{-1, false};
+        bool occupied = false;
+      };
+      static size_t capacityFor(size_t expected) {
+        size_t capacity = 16;
+        while (capacity * 7 < (expected + 1) * 10)
+          capacity <<= 1;
+        return capacity;
+      }
+      static void place(std::vector<Slot> &slots, std::string_view key,
+                        FusedEntry value) {
+        const size_t mask = slots.size() - 1;
+        size_t index = std::hash<std::string_view>{}(key) & mask;
+        while (slots[index].occupied) {
+          if (slots[index].key == key)
+            return;
+          index = (index + 1) & mask;
+        }
+        slots[index].key = key;
+        slots[index].value = value;
+        slots[index].occupied = true;
+      }
+      explicit FlatIdentityTable(size_t expected) {
+        const size_t capacity = capacityFor(expected);
+        slots_.resize(capacity);
+      }
+      void reserve(size_t expected) { (void)expected; }
+      std::pair<FusedEntry *, bool> try_emplace(std::string_view key,
+                                                FusedEntry value) {
+        if ((size_ + 1) * 10 > slots_.size() * 7)
+          grow();
+        const size_t mask = slots_.size() - 1;
+        size_t index = std::hash<std::string_view>{}(key) & mask;
+        while (slots_[index].occupied) {
+          if (slots_[index].key == key)
+            return {&slots_[index].value, false};
+          index = (index + 1) & mask;
+        }
+        slots_[index].key = key;
+        slots_[index].value = value;
+        slots_[index].occupied = true;
+        ++size_;
+        return {&slots_[index].value, true};
+      }
+      size_t size() const { return size_; }
+      size_t bucket_count() const { return slots_.size(); }
 
+    private:
+      void grow() {
+        std::vector<Slot> grown(slots_.size() * 2);
+        for (const auto &slot : slots_)
+          if (slot.occupied)
+            place(grown, slot.key, slot.value);
+        slots_.swap(grown);
+      }
+      std::vector<Slot> slots_;
+      size_t size_ = 0;
+    };
+    // Fallback container: the historical std::unordered_map path, used when
+    // the operand count is above the scoped flat-table limit.
+    struct MapIdentityTable {
+      void reserve(size_t expected) { map_.reserve(expected); }
+      std::pair<FusedEntry *, bool> try_emplace(std::string_view key,
+                                                FusedEntry value) {
+        const auto result = map_.try_emplace(key, value);
+        return {&result.first->second, result.second};
+      }
+      size_t size() const { return map_.size(); }
+      size_t bucket_count() const { return map_.bucket_count(); }
+
+    private:
+      std::unordered_map<std::string_view, FusedEntry> map_;
+    };
+    int32_t nextValueId = 0;
+    const int64_t totalOperandCount = sourceCount + destinationCount;
+    bool idsEnabled = totalOperandCount <=
+                      static_cast<int64_t>(std::numeric_limits<int32_t>::max());
+    runtime_.operandIds.clear();
+    if (idsEnabled)
+      runtime_.operandIds.resize(static_cast<size_t>(totalOperandCount));
+    int32_t nextOperandSlot = 0;
     int64_t instructionId = 0;
     int64_t streamSequence = 0;
     for (auto &instruction : runtime_.instructions) {
       instruction.streamSeq = streamSequence++;
       instruction.instId = instruction.type == "membar" ? -1 : instructionId++;
-      for (const auto &destination : instruction.dst)
-        instruction.dstValueKeep.push_back(remainingUses[destination] > 0);
-      for (const auto &source : instruction.src) {
-        const int64_t remaining = --remainingUses[source];
-        instruction.srcValueRelease.push_back(remaining == 0);
+      instruction.srcValueRelease.assign(instruction.src.size(), false);
+      instruction.dstValueKeep.assign(instruction.dst.size(), false);
+    }
+    auto annotateIdentities = [&](auto &identities) {
+      for (size_t index = runtime_.instructions.size(); index > 0; --index) {
+        auto &instruction = runtime_.instructions[index - 1];
+        int32_t srcBase = -1;
+        int32_t dstBase = -1;
+        if (idsEnabled) {
+          srcBase = nextOperandSlot;
+          instruction.srcIdBase = srcBase;
+          nextOperandSlot += static_cast<int32_t>(instruction.src.size());
+          dstBase = nextOperandSlot;
+          instruction.dstIdBase = dstBase;
+          nextOperandSlot += static_cast<int32_t>(instruction.dst.size());
+        }
+        for (size_t srcIndex = instruction.src.size(); srcIndex > 0;
+             --srcIndex) {
+          const std::string &source = instruction.src[srcIndex - 1];
+          const auto entryAndInsert = identities.try_emplace(
+              source, FusedEntry{nextValueId, false});
+          FusedEntry *entry = entryAndInsert.first;
+          if (entryAndInsert.second) {
+            if (nextValueId == std::numeric_limits<int32_t>::max())
+              idsEnabled = false;
+            else
+              ++nextValueId;
+          }
+          if (idsEnabled)
+            runtime_.operandIds[static_cast<size_t>(srcBase) +
+                                (srcIndex - 1)] = entry->id;
+          instruction.srcValueRelease[srcIndex - 1] = !entry->seenAsSource;
+          entry->seenAsSource = true;
+        }
+        for (size_t dstIndex = 0; dstIndex < instruction.dst.size();
+             ++dstIndex) {
+          const auto entryAndInsert = identities.try_emplace(
+              instruction.dst[dstIndex], FusedEntry{nextValueId, false});
+          FusedEntry *entry = entryAndInsert.first;
+          if (entryAndInsert.second)
+            ++nextValueId;
+          if (idsEnabled)
+            runtime_.operandIds[static_cast<size_t>(dstBase) + dstIndex] =
+                entry->id;
+          instruction.dstValueKeep[dstIndex] = entry->seenAsSource;
+        }
+      }
+    };
+    if (totalOperandCount <= static_cast<int64_t>(
+                                  VFSIM_LIFETIME_FLAT_LIMIT)) {
+      FlatIdentityTable identities(static_cast<size_t>(sourceCount) * 3 / 4 + 1);
+      annotateIdentities(identities);
+    } else {
+      MapIdentityTable identities;
+      identities.reserve(static_cast<size_t>(sourceCount) + 1);
+      annotateIdentities(identities);
+    }
+    if (!idsEnabled) {
+      runtime_.operandIds.clear();
+      for (auto &instruction : runtime_.instructions) {
+        instruction.srcIdBase = -1;
+        instruction.dstIdBase = -1;
       }
     }
   }
 
   void annotateSchedulingBoundaries() {
-    std::unordered_map<std::string, size_t> lastByBlock;
+    // Typed-only in compact mode: identities are (topBlockId, depth, i, j) for
+    // depth <= 2 and the historical text key for deeper shapes, so no strings
+    // or prefix vectors are built on the hot path. Diagnostics keep the exact
+    // historical text plus blockKeyByLevel.
+    std::unordered_map<SchedulingKey, size_t, SchedulingKeyHash> lastByBlock;
     std::unordered_map<int64_t, size_t> lastByTopBlock;
     for (size_t index = 0; index < runtime_.instructions.size(); ++index) {
       auto &instruction = runtime_.instructions[index];
       if (instruction.type != "inst")
         continue;
       lastByTopBlock[instruction.topBlockId] = index;
-      for (size_t level = 0; level < instruction.iterStack.size(); ++level) {
-        std::vector<int64_t> prefix(instruction.iterStack.begin(),
-                                    instruction.iterStack.begin() +
-                                        static_cast<std::ptrdiff_t>(level));
-        if (runtime_.retainsDiagnostics)
+      const size_t depth = instruction.iterStack.size();
+      instruction.schedulingKeys.clear();
+      instruction.schedulingKeys.reserve(depth);
+      if (runtime_.retainsDiagnostics) {
+        instruction.normalizedBlockKeys.clear();
+        instruction.normalizedBlockKeys.reserve(depth);
+      }
+      for (size_t level = 0; level < depth; ++level) {
+        SchedulingKey typed;
+        typed.topBlockId = instruction.topBlockId;
+        typed.depth = static_cast<int32_t>(level);
+        std::string text;
+        if (level <= 2) {
+          typed.c0 = level > 0 ? instruction.iterStack[0] : -1;
+          typed.c1 = level > 1 ? instruction.iterStack[1] : -1;
+        } else {
+          text = std::to_string(instruction.topBlockId) + "|loop" +
+                 std::to_string(level) + "|";
+          for (size_t i = 0; i < level; ++i) {
+            if (i)
+              text += ",";
+            text += std::to_string(instruction.iterStack[i]);
+          }
+          typed.slow = text;
+        }
+        if (runtime_.retainsDiagnostics) {
+          if (text.empty()) {
+            text = std::to_string(instruction.topBlockId) + "|loop" +
+                   std::to_string(level) + "|";
+            for (size_t i = 0; i < level; ++i) {
+              if (i)
+                text += ",";
+              text += std::to_string(instruction.iterStack[i]);
+            }
+          }
+          std::vector<int64_t> prefix(instruction.iterStack.begin(),
+                                      instruction.iterStack.begin() +
+                                          static_cast<std::ptrdiff_t>(level));
           instruction.blockKeyByLevel.emplace_back(
               "loop" + std::to_string(level), prefix);
-        std::string key = std::to_string(instruction.topBlockId) + "|loop" +
-                          std::to_string(level) + "|";
-        for (size_t i = 0; i < prefix.size(); ++i) {
-          if (i)
-            key += ",";
-          key += std::to_string(prefix[i]);
+          instruction.normalizedBlockKeys.push_back(text);
         }
-        instruction.normalizedBlockKeys.push_back(std::move(key));
-        lastByBlock[instruction.normalizedBlockKeys.back()] = index;
+        lastByBlock[typed] = index;
+        instruction.schedulingKeys.push_back(std::move(typed));
       }
     }
     for (size_t index = 0; index < runtime_.instructions.size(); ++index) {
@@ -537,9 +950,10 @@ private:
       if (instruction.type != "inst")
         continue;
       for (int64_t level =
-               static_cast<int64_t>(instruction.iterStack.size()) - 1;
+               static_cast<int64_t>(instruction.schedulingKeys.size()) - 1;
            level >= 0; --level) {
-        if (lastByBlock[instruction.normalizedBlockKeys[level]] == index)
+        if (lastByBlock[instruction.schedulingKeys[static_cast<size_t>(level)]] ==
+            index)
           instruction.blockEndLevels.push_back(level);
       }
       instruction.isLastInTopBlock =
@@ -552,6 +966,15 @@ private:
 PreparedProgram expandCanonicalProgram(
     const CanonicalVfInfo &vf, const ParamDB &db, const UarchConfig &cfg,
     std::unordered_map<std::string, ValueInfo> values, bool retainDiagnostics) {
-  return Expander(vf, db, cfg, std::move(values), retainDiagnostics).run();
+  return expandCanonicalProgram(vf, vf.context, db, cfg, std::move(values),
+                                retainDiagnostics);
+}
+
+PreparedProgram expandCanonicalProgram(
+    const CanonicalVfInfo &vf, const std::vector<CanonicalNode> &context,
+    const ParamDB &db, const UarchConfig &cfg,
+    std::unordered_map<std::string, ValueInfo> values, bool retainDiagnostics) {
+  return Expander(vf, context, db, cfg, std::move(values), retainDiagnostics)
+      .run();
 }
 } // namespace vfsim

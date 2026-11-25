@@ -40,7 +40,7 @@ public:
   void updateReady(int64_t cycle, const Registers &regs) {
     for (auto &u : entries_) {
       u->readyCycle = regs.readyCycle(*u);
-      u->state = cycle >= u->readyCycle ? "ready" : "blocked";
+      u->state = cycle >= u->readyCycle ? UopState::ready : UopState::blocked;
     }
   }
   void runReleaseEvents(int64_t cycle) {
