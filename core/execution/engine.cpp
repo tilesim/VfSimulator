@@ -4,6 +4,8 @@
 #include "core/execution/engine.h"
 #include "api/common/instruction_catalog.h"
 #include <algorithm>
+#include <limits>
+#include <memory>
 namespace vfsim {
 Engine::Engine(const PreparedProgram &p, const UarchConfig &cfg,
                const ParamDB &db)
@@ -27,18 +29,22 @@ Engine::Reservation Engine::reservation(const DynamicInst &inst) const {
       counts[0] += registers_.storage().isRegister(d);
       counts[1] += registers_.storage().isPredicate(d);
     }
-  counts[2] = inst.opClass == "COMPUTE";
-  counts[3] = inst.opClass == "LOAD" || inst.opClass == "STORE";
-  counts[4] = inst.opClass == "COMPUTE" || inst.opClass == "STORE";
+  counts[2] = inst.opClassText() == "COMPUTE";
+  counts[3] = inst.opClassText() == "LOAD" || inst.opClassText() == "STORE";
+  counts[4] = inst.opClassText() == "COMPUTE" ||
+               inst.opClassText() == "STORE";
   return counts;
 }
 void Engine::admit(const DynamicInst &inst) {
+  if (ifu_.hasProvider()) {
+    ++streamIssued_;
+  }
   auto u = registers_.rename(inst, cycle_);
   if (u->profile->opClass == "LOAD" || u->profile->opClass == "STORE") {
     const auto &catalog = defaultInstructionCatalog();
-    const auto *spec = inst.catalogMode.empty()
+    const auto *spec = inst.catalogModeText().empty()
                            ? catalog.lookup(u->op)
-                           : catalog.lookupMemoryMode(u->op, inst.catalogMode);
+                           : catalog.lookupMemoryMode(u->op, inst.catalogModeText());
     if (!spec || spec->ubTransferBytes <= 0)
       throw std::runtime_error("Missing Catalog UB transfer semantics: " +
                                u->op);
@@ -59,14 +65,77 @@ bool Engine::hasPendingDispatch(int64_t seq) const {
   return false;
 }
 bool Engine::hasPending(int64_t seq, const std::string &cls) const {
+  // The scored lowering leaves the class in a borrowed view, so read it through
+  // the accessor; the raw member is empty for streamed events and a raw compare
+  // would let a LOAD/STORE barrier release while its class is still in flight.
   for (const auto &i : idu_.borrowedWindow())
-    if (i->streamSeq < seq && i->opClass == cls)
+    if (i->streamSeq < seq && i->opClassText() == cls)
       return true;
   for (const auto &[c, i] : pipe_)
-    if (i->streamSeq < seq && i->opClass == cls)
+    if (i->streamSeq < seq && i->opClassText() == cls)
       return true;
   return lsu_.hasPendingBefore(seq, cls);
 }
+DynamicInst *Engine::acquireStreamSlot() {
+  size_t index = 0;
+  if (streamFreeSlots_.empty())
+    reclaimStreamArena();
+  if (!streamFreeSlots_.empty()) {
+    index = streamFreeSlots_.back();
+    streamFreeSlots_.pop_back();
+  } else {
+    streamSlots_.push_back(std::make_unique<DynamicInst>());
+    index = streamSlots_.size() - 1;
+  }
+  if (streamMaxSlots_ > 0 && index >= static_cast<size_t>(streamMaxSlots_))
+    throw std::runtime_error("stream slot pool exceeded numeric id bound");
+  streamInFlight_.push_back(index);
+  lastAcquiredStreamSlot_ = index;
+  streamArenaHighWater_ = std::max<int64_t>(
+      streamArenaHighWater_, static_cast<int64_t>(streamInFlight_.size()));
+  DynamicInst *slot = streamSlots_[index].get();
+  if (streamOperandBlockSize_ > 0)
+    slot->srcIdBase =
+        static_cast<int32_t>(index) * streamOperandBlockSize_;
+  else
+    slot->srcIdBase = -1;
+  slot->dstIdBase = -1;
+  return slot;
+}
+
+void Engine::returnStreamSlotTail() {
+  // Only the slot that this fetch actually acquired may be returned, and only
+  // while it is still the FIFO tail. After the pop below the tail is a different
+  // index (or the queue is empty), so a second call is a no-op by construction:
+  // no free-list scan is needed on the steady-state barrier path.
+  if (streamInFlight_.empty() || streamInFlight_.back() != lastAcquiredStreamSlot_)
+    return;
+#ifndef NDEBUG
+  const int64_t seq = streamSlots_[lastAcquiredStreamSlot_]->streamSeq;
+  for (const size_t inFlight : streamInFlight_)
+    assert(streamSlots_[inFlight]->streamSeq <= seq);
+#endif
+  streamInFlight_.pop_back();
+  streamFreeSlots_.push_back(lastAcquiredStreamSlot_);
+}
+
+void Engine::reclaimStreamArena() {
+  if (streamInFlight_.empty())
+    return;
+  int64_t minSeq = std::numeric_limits<int64_t>::max();
+  for (const auto *inst : idu_.borrowedWindow())
+    minSeq = std::min(minSeq, inst->streamSeq);
+  for (const auto &[cycle, inst] : pipe_)
+    minSeq = std::min(minSeq, inst->streamSeq);
+  while (!streamInFlight_.empty()) {
+    const size_t index = streamInFlight_.front();
+    if (streamSlots_[index]->streamSeq >= minSeq)
+      break;
+    streamInFlight_.pop_front();
+    streamFreeSlots_.push_back(index);
+  }
+}
+
 void Engine::backendStep() {
   shq_.runReleaseEvents(cycle_);
   registers_.runReleaseEvents(cycle_);
@@ -110,6 +179,11 @@ SimulationResult Engine::run(const std::filesystem::path &outDir,
   if (!outDir.empty() && !program_.retainsDiagnostics)
     throw std::runtime_error("Trace export requires diagnostic preparation");
   registers_.setTraceEnabled(!outDir.empty());
+  // Same gate for the loop scheduling history: a scored run that writes no
+  // trace/export never consumes the records, so keep the vector empty (this
+  // also drops the few records built while the control was constructed).
+  loops_.setTraceRecordsEnabled(!outDir.empty() || !streamNumericTokens_);
+
   // Choose the operand-id mode once for the whole run: only a program whose
   // complete table is present and in range may use the integer RAT; anything
   // else (hand-built programs included) keeps the string RAT for the run.
@@ -165,9 +239,26 @@ SimulationResult Engine::run(const std::filesystem::path &outDir,
           pending[i] += r[i];
       }
     while (idu_.canAccept() && !ifu_.done()) {
-      const auto &inst = ifu_.nextBorrowed();
+      const DynamicInst *instPtr = nullptr;
+      if (ifu_.hasProvider()) {
+        DynamicInst *slot = acquireStreamSlot();
+        ifu_.nextInto(*slot);
+        instPtr = slot;
+        streamLiveValueHighWater_ = std::max<int64_t>(
+            streamLiveValueHighWater_, registers_.streamValueCount());
+      } else {
+        instPtr = &ifu_.nextBorrowed();
+      }
+      const auto &inst = *instPtr;
       if (inst.type == "membar")
+      {
         control_.acceptMembar(inst, cycle_);
+        // acceptMembar copies streamSeq/pc/barrier into its own Barrier object;
+        // no pointer into this slot survives, so return it immediately instead
+        // of holding it until the FIFO reclaim scan.
+        if (inst.type == "membar")
+          returnStreamSlotTail();
+      }
       else {
         idu_.acceptBorrowed(inst);
         control_.observeInstruction(inst);
@@ -199,9 +290,11 @@ SimulationResult Engine::run(const std::filesystem::path &outDir,
     budget.freeShq = cfg_.useExplicitIduCreditBank
                          ? shqCredit_
                          : std::max<int64_t>(0, shq_.freeCredit() - pending[4]);
-    for (const auto &inst : idu_.dispatchBorrowed(cycle_, budget)) {
+    const auto dispatched = idu_.dispatchBorrowed(cycle_, budget);
+    for (const auto *dispatchedPtr : dispatched) {
+      const auto &inst = *dispatchedPtr;
       if (cfg_.useExplicitIduCreditBank) {
-        auto r = reservation(*inst);
+        auto r = reservation(inst);
         vectorCredit_ -= r[0];
         predicateCredit_ -= r[1];
         shqCredit_ -= r[4];
@@ -211,11 +304,17 @@ SimulationResult Engine::run(const std::filesystem::path &outDir,
         }
       }
       if (cfg_.iduToOooDelay > 0)
-        pipe_.emplace_back(cycle_ + cfg_.iduToOooDelay, inst);
+        pipe_.emplace_back(cycle_ + cfg_.iduToOooDelay, dispatchedPtr);
       else
-        admit(*inst);
+        admit(inst);
     }
     backendStep();
+    // Reclaim lazily: the arena only needs a free slot when the next pull asks
+    // for one, and the ready-bound scan inside reclaimStreamArena is the stream
+    // path's only per-cycle cost. Same predicate, same slot reuse order, one
+    // call per needed slot instead of one per simulated cycle.
+    if (ifu_.hasProvider() && streamFreeSlots_.empty())
+      reclaimStreamArena();
     lastDone_ = std::max(lastDone_, control_.lastRetireCycle());
     if (ifu_.done() && idu_.empty() && activeCount_ == 0 && pipe_.empty() &&
         control_.empty()) {
@@ -230,6 +329,8 @@ SimulationResult Engine::run(const std::filesystem::path &outDir,
         std::to_string(cycle_));
   if (!outDir.empty())
     dumpLogs(outDir, trace_, idu_, loops_, control_, db_, cfg_.issuePorts);
+  if (ifu_.hasProvider())
+    reclaimStreamArena();
   return {cycle_, lastDone_ + db_.isaDefaults().vfDrainCost, outDir.string(),
           outDir.empty() ? std::string{} : (outDir / "trace.json").string(),
           program_.linearInstCount};

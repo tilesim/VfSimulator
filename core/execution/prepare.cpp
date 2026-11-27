@@ -54,4 +54,66 @@ PreparedProgram prepareProgram(const CanonicalVfInfo &input, const ParamDB &db,
   program.compilerOptimizationStats = stats;
   return program;
 }
+
+PreparedProgram prepareProgramForStream(
+    const CanonicalVfInfo &input, const std::vector<CanonicalNode> &rootContext,
+    const ParamDB &db, const UarchConfig &cfg, bool keepTextMetadata,
+    bool skipHoist) {
+  CompilerOptimizationStats stats;
+  const auto hoisted =
+      skipHoist ? std::nullopt
+                : hoistLoopInvariantContext(input, rootContext, stats);
+  const std::vector<CanonicalNode> &context = hoisted ? *hoisted : rootContext;
+  const int64_t linearCount = checkExecutionSupport(context);
+  std::unordered_map<std::string, ValueInfo> values;
+  for (const auto &[id, value] : input.values)
+    values.emplace(id, ValueInfo{id, value.storage, value.dtype, value.shape});
+  auto program = expandCanonicalProgram(input, context, db, cfg,
+                                        std::move(values), true,
+                                        keepTextMetadata);
+  program.linearInstCount = linearCount;
+  program.compilerOptimizationStats = stats;
+  return program;
+}
+
+PreparedProgram prepareProgramForStream(const CanonicalVfInfo &input,
+                                        const ParamDB &db,
+                                        const UarchConfig &cfg,
+                                        bool keepTextMetadata) {
+  return prepareProgramForStream(input, input.context, db, cfg,
+                                 keepTextMetadata);
+}
+
+PreparedProgram prepareProgramForStreaming(
+    const CanonicalVfInfo &input, const std::vector<CanonicalNode> &postLicmContext,
+    const ParamDB &db, const UarchConfig &cfg, CompilerOptimizationStats stats) {
+  // Shape gate and reported linear instruction count come from the same static
+  // walk the eager preparation uses; only the dynamic materialisation is gone.
+  const int64_t linearCount = checkExecutionSupport(postLicmContext);
+  std::unordered_map<std::string, ValueInfo> values;
+  for (const auto &[id, value] : input.values)
+    values.emplace(id, ValueInfo{id, value.storage, value.dtype, value.shape});
+  auto program = expandCanonicalStaticMetadata(input, postLicmContext, db, cfg,
+                                               std::move(values));
+  program.linearInstCount = linearCount;
+  program.compilerOptimizationStats = std::move(stats);
+  return program;
+}
+
+PreparedStreamingLayout prepareProgramForStreamingLayout(
+    const CanonicalVfInfo &input,
+    std::optional<std::vector<CanonicalNode>> postLicmContext, const ParamDB &db,
+    const UarchConfig &cfg, CompilerOptimizationStats stats) {
+  // Identical gate/report to prepareProgramForStreaming: one static walk for the
+  // shape gate and the reported linear instruction count, then the single layout
+  // build that the cursor reuses instead of interning the static graph again.
+  const std::vector<CanonicalNode> &context =
+      postLicmContext ? *postLicmContext : input.context;
+  const int64_t linearCount = checkExecutionSupport(context);
+  auto prepared = expandCanonicalStreamingLayout(
+      input, std::move(postLicmContext), db, cfg);
+  prepared.program.linearInstCount = linearCount;
+  prepared.program.compilerOptimizationStats = std::move(stats);
+  return prepared;
+}
 } // namespace vfsim

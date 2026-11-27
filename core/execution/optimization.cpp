@@ -36,6 +36,7 @@ bool positiveCount(const CanonicalIntegerExpression &expression, const Canonical
 
 std::optional<std::vector<CanonicalNode>>
 hoistLoopInvariantContext(const CanonicalVfInfo &vf,
+                          const std::vector<CanonicalNode> &rootContext,
                           CompilerOptimizationStats &stats) {
   stats = CompilerOptimizationStats{};
   if (auto flag = vf.source.find("compiler_optimized"); flag != vf.source.end() &&
@@ -138,7 +139,7 @@ hoistLoopInvariantContext(const CanonicalVfInfo &vf,
     }
     return output;
   };
-  ContextOpt context = visit(vf.context, std::nullopt);
+  ContextOpt context = visit(rootContext, std::nullopt);
   Ids unique;
   for (const auto &move : stats.moves) unique.insert(move.instructionId);
   stats.hoistedInstructionCount = static_cast<int64_t>(unique.size());
@@ -146,6 +147,12 @@ hoistLoopInvariantContext(const CanonicalVfInfo &vf,
   if (!context)
     return std::nullopt;
   return context;
+}
+
+std::optional<std::vector<CanonicalNode>>
+hoistLoopInvariantContext(const CanonicalVfInfo &vf,
+                          CompilerOptimizationStats &stats) {
+  return hoistLoopInvariantContext(vf, vf.context, stats);
 }
 
 LoopInvariantResult hoistLoopInvariants(const CanonicalVfInfo &vf) {

@@ -14,6 +14,10 @@ struct SimulationResult {
   std::string resultsDir, tracePath;
   int64_t linearInstCount = 0;
   CompilerOptimizationStats compilerOptimizationStats;
+  // Which preparation ran and, for the streamed scoring path, the exact static
+  // event total the cursor produced (audit only; no per-event recording).
+  std::string scoringMode = "eager";
+  int64_t scoringEventCount = -1;
 };
 void dumpLogs(const std::filesystem::path &, const TraceRecorder &, const IDU &,
               const LoopControl &, const MembarController &, const ParamDB &,

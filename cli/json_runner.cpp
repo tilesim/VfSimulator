@@ -2,12 +2,15 @@
 // SPDX-License-Identifier: CANN-1.0
 #include "api/input_api.h"
 #include "api/json/value.h"
+#include "core/execution/scoring_stream.h"
 #include "core/simulator.h"
+#include <cstdlib>
 #include <iostream>
 #include <stdexcept>
 namespace {
 struct Args {
   std::filesystem::path tracePath, ccePath, outDir = "results";
+  bool outDirExplicit = false;
   std::string kernelName;
   int64_t maxCycles = 0;
   bool vloopOnly = false, directIssue = false, help = false;
@@ -38,8 +41,12 @@ Args parseArgs(int argc, char **argv) {
       args.ccePath = value;
     else if (key == "--cce-kernel")
       args.kernelName = value;
-    else if (key == "--out-dir" || key == "--out_dir")
+    else if (key == "--out-dir" || key == "--out_dir") {
       args.outDir = value;
+      // An explicit results directory is a trace/export request: it must win
+      // over VFSIM_SCORING_STREAM instead of being silently dropped.
+      args.outDirExplicit = true;
+    }
     else if (key == "--max-cycles") {
       size_t used = 0;
       args.maxCycles = std::stoll(value, &used);
@@ -77,12 +84,31 @@ int main(int argc, char **argv) {
     const auto vf = args.ccePath.empty()
                         ? vfsim::InputAPI::loadJson(path)
                         : vfsim::InputAPI::loadCce(path, args.kernelName);
-    vfsim::CoreVfCostModel model(root, args.outDir, args.vloopOnly,
-                                 args.directIssue);
+    // Opt-in streamed scoring path for benchmarks: explicit environment switch,
+    // never enabled implicitly (default scoring stays the eager preparation).
+    // Opt-in streamed scoring path. An explicit --out_dir is a trace/export
+    // request and wins over the switch, so the results directory is never
+    // silently dropped; only a headless (default) invocation may route the
+    // normal scoring path through the streamed preparation.
+    bool scoringStream = false;
+    if (const char *scoringSwitch = std::getenv("VFSIM_SCORING_STREAM");
+        scoringSwitch != nullptr && *scoringSwitch != '\0' &&
+        std::string(scoringSwitch) != "0") {
+      if (args.outDirExplicit) {
+        std::cout << "scoringStream=refused:explicit-out-dir\n";
+      } else {
+        vfsim::setScoringStreamEnabled(true);
+        scoringStream = true;
+      }
+    }
+    vfsim::CoreVfCostModel model(root, scoringStream ? "" : args.outDir,
+                                 args.vloopOnly, args.directIssue);
     const auto result = model.runVfInfo(vf, args.maxCycles);
     std::cout << "cyclesExecuted=" << result.cyclesExecuted << '\n'
               << "vfEndCycle=" << result.vfEndCycle << '\n'
-              << "linearInstCount=" << result.linearInstCount << '\n';
+              << "linearInstCount=" << result.linearInstCount << '\n'
+              << "scoringMode=" << result.scoringMode << '\n'
+              << "scoringEventCount=" << result.scoringEventCount << '\n';
     vfsim::json::Value::Array moves;
     for (const auto &move : result.compilerOptimizationStats.moves)
       moves.emplace_back(vfsim::json::Value::Object{{"instruction_id", move.instructionId},

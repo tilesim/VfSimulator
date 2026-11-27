@@ -32,13 +32,14 @@ UopPtr Registers::rename(const DynamicInst &inst, int64_t cycle) {
   auto ptr = std::make_shared<Uop>();
   auto &u = *ptr;
   u.instId = inst.instId;
-  u.op = inst.op;
-  u.form = inst.form;
+  u.op = inst.opText();
+  u.form = inst.formText();
   const InstructionProfile *&cached = staticProfiles_[inst.pc];
   if (inst.pc >= 0 && cached)
     u.profile = cached;
   else {
-    u.profile = &db_.inst(u.op, u.form, inst.opClass, inst.catalogMode);
+    u.profile = &db_.inst(u.op, u.form, inst.opClassText(),
+                            inst.catalogModeText());
     if (inst.pc >= 0)
       cached = u.profile;
   }
@@ -69,31 +70,59 @@ UopPtr Registers::rename(const DynamicInst &inst, int64_t cycle) {
       (vec > vector_.freeCount() || pred > predicate_.freeCount()))
     throw std::runtime_error(
         "Atomic rename precheck failed: physical register credit");
-  std::vector<ProducerState *> released;
+  std::vector<ProducerState *> &released = releasedScratch_;
+  released.clear();
+  // Compact mode (no diagnostic trace) may key the RAT by numbers: the dense
+  // logical-id table of a materialised program, or a streamed program's value
+  // tokens. Both are identity keys, never table indices grown by identity.
+  const bool compact = !traceEnabled_;
+  const bool useIds = compact && operandIdsEnabled_;
+  const bool useTokens = compact && numericTokens_ && !useIds;
+  const size_t srcCount = useTokens ? inst.srcTokens.size() : inst.src.size();
+  const size_t dstCount = useTokens ? inst.dstTokens.size() : inst.dst.size();
+  if (useTokens &&
+      (inst.srcStorageCount() < srcCount ||
+       inst.dstStorageCount() < dstCount))
+    throw std::runtime_error(
+        "numeric operand tokens without per-operand storage");
   // Physical names are only consumed by the diagnostic trace and by the
   // non-default same-cycle source hazard check; building them otherwise costs
   // one std::string per operand per dynamic instruction.
   const bool needPregNames = traceEnabled_ || cfg_.enforceSameCycleSrcHazard;
-  u.pregSrc.reserve(inst.src.size());
-  u.pregSrcGen.reserve(inst.src.size());
-  u.sourceStates.reserve(inst.src.size());
-  u.pregDst.reserve(inst.dst.size());
-  u.destinationStates.reserve(inst.dst.size());
-  // Compact mode (no diagnostic trace) may use the dense integer RAT when the
-  // validated operand table is enabled for this run.
-  const bool compact = !traceEnabled_;
-  const bool useIds = compact && operandIdsEnabled_;
-  for (size_t i = 0; i < inst.src.size(); ++i) {
+  // The scored path lowers numeric tokens and production runs without a trace
+  // recorder, so nothing consumes the diagnostic physical names there: only the
+  // trace writer and the same-cycle source hazard check read them, and both are
+  // inert in this mode. The state and generation vectors are always sized and
+  // are what readiness and the release scheduler key off, so the name vectors
+  // stay empty instead of carrying one nullopt placeholder per operand per
+  // event. The string path keeps building them, so eager mode is unchanged.
+  const bool buildPregNames = needPregNames || !useTokens;
+  if (buildPregNames) {
+    u.pregSrc.reserve(srcCount);
+    u.pregDst.reserve(dstCount);
+  }
+  u.pregSrcGen.reserve(srcCount);
+  u.sourceStates.reserve(srcCount);
+  u.destinationStates.reserve(dstCount);
+  for (size_t i = 0; i < srcCount; ++i) {
     const std::string emptySpelling;
-    const std::string &id = inst.src.empty() ? emptySpelling : inst.src[i];
-    const auto storage = inst.srcStorage.empty() ? valueStorage_.storageOf(id)
-                                                 : inst.srcStorage[i];
+    const std::string &id =
+        (i < inst.src.size()) ? inst.src[i] : emptySpelling;
+    const auto storage = inst.srcStorageCount() == 0
+                            ? valueStorage_.storageOf(id)
+                            : inst.srcStorageAt(i);
     const bool pred = storage == ValueStorageKind::PredicateRegister;
     ProducerState *state = nullptr;
     int32_t logicalId = -1;
+    uint64_t token = 0;
     if (useIds) {
       logicalId = operandIdAt(inst.srcIdBase, i);
       state = lookupById(logicalId);
+    } else if (useTokens) {
+      token = inst.srcTokens[i];
+      const auto it = tokenRat_.find(token);
+      if (it != tokenRat_.end())
+        state = it->second;
     } else {
       const auto it = rat_.find(id);
       if (it != rat_.end())
@@ -101,22 +130,19 @@ UopPtr Registers::rename(const DynamicInst &inst, int64_t cycle) {
     }
     if ((storage != ValueStorageKind::Register && !pred) || state == nullptr) {
       if (pred)
-        throw std::runtime_error("Predicate source has no renamed producer: " +
-                                 id);
-      u.pregSrc.push_back(std::nullopt);
+        throw std::runtime_error(
+            "Predicate source has no renamed producer: " +
+            (useTokens ? std::to_string(token) : id));
+      if (buildPregNames)
+        u.pregSrc.push_back(std::nullopt);
       u.pregSrcGen.push_back(std::nullopt);
       u.sourceStates.push_back(nullptr);
       continue;
     }
-    if (needPregNames)
-      // pregSrc drives the resolved-prefix readiness cache, so its size must
-      // always match the source count; only the name text is optional.
-      if (needPregNames)
-        u.pregSrc.push_back(pregName(*state));
-      else
-        u.pregSrc.emplace_back(std::nullopt);
-    else
-      u.pregSrc.emplace_back(std::nullopt);
+    // Readiness and the release scheduler size themselves off sourceStates and
+    // pregSrcGen, so the name slot is only filled when a reader will see it.
+    if (buildPregNames)
+      u.pregSrc.push_back(pregName(*state));
     u.pregSrcGen.push_back(state->generation);
     u.sourceStates.push_back(state);
     ++state->consumers;
@@ -125,23 +151,27 @@ UopPtr Registers::rename(const DynamicInst &inst, int64_t cycle) {
       releaseEligible_.erase(pregName(*state));
       state->releaseEligible = false;
     }
-    if (i < inst.srcValueRelease.size() && inst.srcValueRelease[i]) {
+    if (inst.srcReleased(i)) {
       released.push_back(state);
       --state->ratBindings;
       if (useIds)
         ratById(logicalId) = nullptr;
+      else if (useTokens)
+        tokenRat_.erase(token);
       else
         rat_.erase(id);
     }
   }
-  for (size_t i = 0; i < inst.dst.size(); ++i) {
+  for (size_t i = 0; i < dstCount; ++i) {
     const std::string emptySpelling;
-    const std::string &id = inst.dst.empty() ? emptySpelling : inst.dst[i];
+    const std::string &id =
+        (i < inst.dst.size()) ? inst.dst[i] : emptySpelling;
     int32_t dstLogicalId = -1;
     if (useIds)
       dstLogicalId = operandIdAt(inst.dstIdBase, i);
-    const auto storage = inst.dstStorage.empty() ? valueStorage_.storageOf(id)
-                                                 : inst.dstStorage[i];
+    const auto storage = inst.dstStorageCount() == 0
+                            ? valueStorage_.storageOf(id)
+                            : inst.dstStorageAt(i);
     const bool pred = storage == ValueStorageKind::PredicateRegister;
     if (storage != ValueStorageKind::Register && !pred)
       continue;
@@ -151,10 +181,17 @@ UopPtr Registers::rename(const DynamicInst &inst, int64_t cycle) {
                       cfg_.theoreticalLimitMode ? nextDynamicPregId_++ : -1);
     if (pred && traceEnabled_)
       predicateIds_.insert((predicate_).name(slot));
+    uint64_t token = 0;
+    if (useTokens)
+      token = inst.dstTokens[i];
     ProducerState *previous = nullptr;
     if (useIds)
       previous = lookupById(dstLogicalId);
-    else {
+    else if (useTokens) {
+      const auto old = tokenRat_.find(token);
+      if (old != tokenRat_.end())
+        previous = old->second;
+    } else {
       const auto old = rat_.find(id);
       if (old != rat_.end())
         previous = old->second;
@@ -164,20 +201,23 @@ UopPtr Registers::rename(const DynamicInst &inst, int64_t cycle) {
       --previous->ratBindings;
       if (useIds)
         ratById(dstLogicalId) = nullptr;
+      else if (useTokens)
+        tokenRat_.erase(token);
       else
         rat_.erase(id);
     }
-    const bool keep = i >= inst.dstValueKeep.size() || inst.dstValueKeep[i];
+    const bool keep = inst.dstKept(i);
     auto &state = stateAt(slot, pred);
     if (keep) {
       if (useIds)
         ratById(dstLogicalId) = &state;
+      else if (useTokens)
+        tokenRat_[token] = &state;
       else
         rat_[id] = &state;
     }
-    if (needPregNames)
-      if (needPregNames)
-        u.pregDst.push_back((pred ? predicate_ : vector_).name(slot));
+    if (buildPregNames)
+      u.pregDst.push_back((pred ? predicate_ : vector_).name(slot));
     u.writebackBanks.insert(pred ? "predicate" : "vector");
     ++state.generation;
     state.producer.reset();
@@ -226,7 +266,9 @@ int64_t Registers::readyCycle(const Uop &u) const {
       std::max(db_.isaDefaults().vfStartupCost, u.shqReadyCycle);
   int64_t sourceReady = u.sourceReadyCycle;
   bool resolved = true;
-  for (size_t i = u.resolvedSourceCount; i < u.pregSrc.size(); ++i) {
+  // sourceStates is the authoritative per-source array: the physical-name vector
+  // is only materialised for diagnostics, so readiness must not key off it.
+  for (size_t i = u.resolvedSourceCount; i < u.sourceStates.size(); ++i) {
     const auto *state = u.sourceStates[i];
     if (state) {
       if (state->producer)
@@ -380,57 +422,57 @@ std::pair<int64_t, int64_t> Registers::updateVisibility(int64_t cycle) {
   return result;
 }
 void Registers::bindAlignState(Uop &u, const DynamicInst &inst) {
-  if (inst.alignStateOperation == "load_init" ||
-      inst.alignStateOperation == "load_use") {
-    if (inst.alignStateId.empty())
+  if (inst.alignStateOperationText() == "load_init" ||
+      inst.alignStateOperationText() == "load_use") {
+    if (inst.alignStateIdText().empty())
       throw std::runtime_error("Load align state ID is required");
-    u.alignStateOperation = inst.alignStateOperation;
-    u.alignStateId = inst.alignStateId;
-    if (inst.alignStateOperation == "load_init") {
+    u.alignStateOperation = inst.alignStateOperationText();
+    u.alignStateId = inst.alignStateIdText();
+    if (inst.alignStateOperationText() == "load_init") {
       auto record = std::make_shared<AlignProducerRecord>();
       record->instId = u.instId;
       record->streamSeq = u.streamSeq;
       record->op = u.op;
       record->form = u.form;
-      alignLoadInitializers_[inst.alignStateId] = record;
+      alignLoadInitializers_[inst.alignStateIdText()] = record;
       u.alignProducerRecord = record;
     } else {
-      auto found = alignLoadInitializers_.find(inst.alignStateId);
+      auto found = alignLoadInitializers_.find(inst.alignStateIdText());
       if (found == alignLoadInitializers_.end())
         throw std::runtime_error("Uninitialized load align state: " +
-                                 inst.alignStateId);
+                                 inst.alignStateIdText());
       u.alignPreviousProducer = found->second;
       auto record = std::make_shared<AlignProducerRecord>();
       record->instId = u.instId;
       record->streamSeq = u.streamSeq;
       record->op = u.op;
       record->form = u.form;
-      alignLoadInitializers_[inst.alignStateId] = record;
+      alignLoadInitializers_[inst.alignStateIdText()] = record;
       u.alignProducerRecord = record;
     }
     return;
   }
-  if ((inst.alignStateOperation != "append" &&
-       inst.alignStateOperation != "consume") ||
-      inst.alignStateId.empty())
+  if ((inst.alignStateOperationText() != "append" &&
+       inst.alignStateOperationText() != "consume") ||
+      inst.alignStateIdText().empty())
     return;
 
-  auto found = alignStateOpen_.find(inst.alignStateId);
+  auto found = alignStateOpen_.find(inst.alignStateIdText());
   std::shared_ptr<AlignGeneration> generation;
   if (found == alignStateOpen_.end()) {
-    const int64_t generationId = alignStateNextGeneration_[inst.alignStateId]++;
+    const int64_t generationId = alignStateNextGeneration_[inst.alignStateIdText()]++;
     generation = std::make_shared<AlignGeneration>();
-    generation->stateId = inst.alignStateId;
+    generation->stateId = inst.alignStateIdText();
     generation->generationId = generationId;
-    alignStateOpen_[inst.alignStateId] = generation;
+    alignStateOpen_[inst.alignStateIdText()] = generation;
   } else {
     generation = found->second;
   }
 
-  u.alignStateOperation = inst.alignStateOperation;
-  u.alignStateId = inst.alignStateId;
+  u.alignStateOperation = inst.alignStateOperationText();
+  u.alignStateId = inst.alignStateIdText();
   u.alignGeneration = generation;
-  if (inst.alignStateOperation == "append") {
+  if (inst.alignStateOperationText() == "append") {
     if (!generation->producers.empty())
       u.alignPreviousProducer = generation->producers.back();
     auto record = std::make_shared<AlignProducerRecord>();
@@ -445,9 +487,9 @@ void Registers::bindAlignState(Uop &u, const DynamicInst &inst) {
 
   generation->consumerInstId = u.instId;
   auto next = std::make_shared<AlignGeneration>();
-  next->stateId = inst.alignStateId;
-  next->generationId = alignStateNextGeneration_[inst.alignStateId]++;
-  alignStateOpen_[inst.alignStateId] = std::move(next);
+  next->stateId = inst.alignStateIdText();
+  next->generationId = alignStateNextGeneration_[inst.alignStateIdText()]++;
+  alignStateOpen_[inst.alignStateIdText()] = std::move(next);
 }
 
 } // namespace vfsim

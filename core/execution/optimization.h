@@ -23,4 +23,8 @@ LoopInvariantResult hoistLoopInvariants(const CanonicalVfInfo &);
 // CanonicalVfInfo.
 std::optional<std::vector<CanonicalNode>>
 hoistLoopInvariantContext(const CanonicalVfInfo &, CompilerOptimizationStats &);
+std::optional<std::vector<CanonicalNode>>
+hoistLoopInvariantContext(const CanonicalVfInfo &,
+                          const std::vector<CanonicalNode> &,
+                          CompilerOptimizationStats &);
 } // namespace vfsim

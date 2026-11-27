@@ -55,6 +55,40 @@ public:
   Registers(const UarchConfig &cfg, const ParamDB &db,
             const std::unordered_map<std::string, ValueInfo> &values);
   void setTraceEnabled(bool enabled) { traceEnabled_ = enabled; }
+  // Streamed scoring registers newly materialized value identities lazily.
+  void registerStreamValue(const std::string &id, ValueStorageKind kind) {
+    valueStorage_.add(id, kind);
+  }
+  int64_t streamValueCount() const { return streamValueCount_; }
+  void registerStreamInstruction(const DynamicInst &inst) {
+    for (size_t i = 0; i < inst.src.size() && i < inst.srcStorage.size(); ++i)
+      if (valueStorage_.add(inst.src[i], inst.srcStorage[i])) {
+        streamNames_.insert(inst.src[i]);
+        ++streamValueCount_;
+      }
+    for (size_t i = 0; i < inst.dst.size() && i < inst.dstStorage.size(); ++i)
+      if (valueStorage_.add(inst.dst[i], inst.dstStorage[i])) {
+        streamNames_.insert(inst.dst[i]);
+        ++streamValueCount_;
+      }
+  }
+  void releaseStreamInstruction(const DynamicInst &inst) {
+    for (size_t i = 0; i < inst.src.size() && i < inst.srcValueRelease.size(); ++i)
+      if (inst.srcValueRelease[i] && streamNames_.erase(inst.src[i]) != 0) {
+        valueStorage_.remove(inst.src[i]);
+        --streamValueCount_;
+      }
+    for (size_t i = 0; i < inst.dst.size() && i < inst.dstValueKeep.size(); ++i)
+      if (!inst.dstValueKeep[i] && streamNames_.erase(inst.dst[i]) != 0) {
+        valueStorage_.remove(inst.dst[i]);
+        --streamValueCount_;
+      }
+  }
+  // Streamed scoring supplies numeric value tokens on every DynamicInst, so
+  // rename keys its live-binding RAT by uint64 instead of by identity string.
+  // The flag is set by the Engine only for a numeric provider; every other
+  // caller keeps the historical string RAT (and the eager dense-id RAT).
+  void setNumericTokens(bool enabled) { numericTokens_ = enabled; }
   // Dense logical-id operand table (PreparedProgram::operandIds). Engine::run
   // validates the whole table once and enables this mode for the entire run.
   void setOperandIds(const int32_t *ids, size_t count, bool enabled) {
@@ -92,16 +126,27 @@ public:
   std::optional<int64_t> alignReady(const Uop &u) const;
 
 private:
+  // States released by the rename of the current instruction. A member (not a
+  // local) so the hot path performs no heap allocation per event; rename is not
+  // reentrant, and the buffer is cleared on every entry.
+  std::vector<ProducerState *> releasedScratch_;
   bool traceEnabled_ = true;
   std::unordered_map<int64_t, const InstructionProfile *> staticProfiles_;
   const UarchConfig &cfg_;
   const ParamDB &db_;
   ValueStorageLookup valueStorage_;
+  int64_t streamValueCount_ = 0;
+  std::unordered_set<std::string> streamNames_;
   PhysicalRegisterBank vector_, predicate_;
   int64_t nextDynamicPregId_;
   std::unordered_set<std::string> predicateIds_;
   std::unordered_map<std::string, ProducerState *> rat_;
+  // Numeric RAT: one entry per live binding, removed on the last source use or
+  // on a destination that is not kept, exactly like rat_. It is keyed by token
+  // and never sized by the identity value, so it cannot grow with trip counts.
+  std::unordered_map<uint64_t, ProducerState *> tokenRat_;
   std::vector<ProducerState *> ratById_;
+  bool numericTokens_ = false;
   const int32_t *operandIds_ = nullptr;
   size_t operandIdCount_ = 0;
   bool operandIdsEnabled_ = false;

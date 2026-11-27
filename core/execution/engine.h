@@ -8,10 +8,27 @@ namespace vfsim {
 class Engine {
 public:
   Engine(const PreparedProgram &, const UarchConfig &, const ParamDB &);
+  // Internal scoring-only bounded provider; default remains full eager.
+  void useInstructionStream(IFU::DoneFn done, IFU::FetchIntoFn fetch,
+                            int32_t operandBlockSize = 0,
+                            int32_t maxSlots = 0,
+                            bool numericTokens = false) {
+    ifu_.setProvider(std::move(done), std::move(fetch));
+    streamOperandBlockSize_ = operandBlockSize;
+    streamNumericTokens_ = numericTokens;
+    streamMaxSlots_ = maxSlots;
+    // The scoring cursor hands over numeric value tokens instead of identity
+    // strings; rename then keys its live-binding RAT by uint64.
+    registers_.setNumericTokens(numericTokens);
+  }
   SimulationResult run(const std::filesystem::path &outDir = {},
                        int64_t maxCycles = 0);
+  int64_t streamArenaHighWater() const { return streamArenaHighWater_; }
+  int64_t streamIssuedInstructions() const { return streamIssued_; }
+  int64_t streamLiveValueHighWater() const { return streamLiveValueHighWater_; }
 
 private:
+  void reclaimStreamArena();
   using Reservation = std::array<int64_t, 5>;
   Reservation reservation(const DynamicInst &) const;
   void admit(const DynamicInst &);
@@ -33,6 +50,23 @@ private:
   OoO ooo_;
   IFU ifu_;
   std::deque<std::pair<int64_t, const DynamicInst *>> pipe_;
+  std::vector<std::unique_ptr<DynamicInst>> streamSlots_;
+  std::vector<size_t> streamFreeSlots_;
+  size_t lastAcquiredStreamSlot_ = 0;
+  int32_t streamOperandBlockSize_ = 0;
+  // Mirrors useInstructionStream numericTokens: only the scored route sends
+  // numeric value tokens, so only it can skip the loop scheduling history.
+  bool streamNumericTokens_ = false;
+  int32_t streamMaxSlots_ = 0;
+  std::deque<size_t> streamInFlight_;
+  DynamicInst *acquireStreamSlot();
+  // Returns the slot that was just acquired (the FIFO tail) to the free list.
+  // Used for MEMBAR events, whose acceptance copies every field it needs, so no
+  // pointer into the slot survives the call.
+  void returnStreamSlotTail();
+  int64_t streamArenaHighWater_ = 0;
+  int64_t streamIssued_ = 0;
+  int64_t streamLiveValueHighWater_ = 0;
   // Number of admitted-but-unfinished instructions. Each of them is owned by
   // the LSU or SHQ queue (and later by EXQ/EXU), the expander allocates
   // instruction ids monotonically, and the halt test only asks whether the set

@@ -48,19 +48,45 @@ void LoopControl::initTopBlockNestedStarts(int64_t topBlockId,
     const auto key0 = makeKey(topBlockId, "loop0", {});
     vloopStart_[key0] = topVloopStart;
     bodyOpenTime_[key0] = topVloopStart + vloopToDispatchDelay_;
-    vloopTrace_.push_back({topBlockId, "loop0", {}, topVloopStart});
+    if (traceRecordsEnabled_)
+      pushTrace({topBlockId, "loop0", {}, topVloopStart});
   }
   if (depth >= 2 && bounds[0] > 0) {
     const auto key1 = makeKey(topBlockId, "loop1", {0});
     vloopStart_[key1] = topVloopStart + nestedVloopInitialStartGap_;
     bodyOpenTime_[key1] = vloopStart_[key1] + vloopToDispatchDelay_;
-    vloopTrace_.push_back({topBlockId, "loop1", {0}, vloopStart_[key1]});
+    if (traceRecordsEnabled_)
+      pushTrace({topBlockId, "loop1", {0}, vloopStart_[key1]});
   }
   if (depth >= 3 && bounds[0] > 0 && bounds[1] > 0) {
     const auto key2 = makeKey(topBlockId, "loop2", {0, 0});
     vloopStart_[key2] = topVloopStart + 2 * nestedVloopInitialStartGap_;
     bodyOpenTime_[key2] = vloopStart_[key2] + vloopToDispatchDelay_;
-    vloopTrace_.push_back({topBlockId, "loop2", {0, 0}, vloopStart_[key2]});
+    if (traceRecordsEnabled_)
+      pushTrace({topBlockId, "loop2", {0, 0}, vloopStart_[key2]});
+  }
+}
+
+
+
+
+// Exact key retirement. blockEndLevels lists the closing depth indices, and
+// schedulingKeys holds the identity of each level of this event, so the closed
+// key is removed by identity rather than reconstructed from iteration numbers.
+void LoopControl::retireClosedKeys(const DynamicInst &inst) {
+  const size_t levels = inst.schedulingKeys.size();
+  for (const int64_t level : inst.blockEndLevels) {
+    if (level < 0 || static_cast<size_t>(level) >= levels)
+      continue;
+    // Level 0 closes with the top block itself; leave it while instructions of
+    // the same block can still follow this one.
+    if (level == 0 && !inst.isLastInTopBlock)
+      continue;
+    const SchedulingKey &key = inst.schedulingKeys[static_cast<size_t>(level)];
+    vloopStart_.erase(key);
+    bodyOpenTime_.erase(key);
+    lastDispatchTime_.erase(key);
+    blockBaseCycle_.erase(key);
   }
 }
 
@@ -262,7 +288,8 @@ void LoopControl::triggerNextVloops(const DynamicInst &inst, int64_t cycle) {
         const auto nextKey = makeKey(topBlockId, "loop1", {i + 1});
         vloopStart_[nextKey] = nextStart;
         bodyOpenTime_[nextKey] = nextStart + vloopToDispatchDelay_;
-        vloopTrace_.push_back(
+        if (traceRecordsEnabled_)
+          pushTrace(
             VloopTraceRecord{topBlockId, "loop1", {i + 1}, nextStart});
       }
     }
@@ -283,7 +310,8 @@ void LoopControl::triggerNextVloops(const DynamicInst &inst, int64_t cycle) {
         const auto nextKey = makeKey(topBlockId, "loop2", {i, j + 1});
         vloopStart_[nextKey] = endCy;
         bodyOpenTime_[nextKey] = endCy + vloopToDispatchDelay_;
-        vloopTrace_.push_back(
+        if (traceRecordsEnabled_)
+          pushTrace(
             VloopTraceRecord{topBlockId, "loop2", {i, j + 1}, endCy});
       }
     }
@@ -305,7 +333,8 @@ void LoopControl::triggerNextVloops(const DynamicInst &inst, int64_t cycle) {
         vloopStart_[makeKey(topBlockId, "loop1", {i + 1})] = nextLoop1Start;
         bodyOpenTime_[makeKey(topBlockId, "loop1", {i + 1})] =
             nextLoop1Start + vloopToDispatchDelay_;
-        vloopTrace_.push_back(
+        if (traceRecordsEnabled_)
+          pushTrace(
             VloopTraceRecord{topBlockId, "loop1", {i + 1}, nextLoop1Start});
         if (M > 0) {
           const int64_t childStart =
@@ -313,7 +342,8 @@ void LoopControl::triggerNextVloops(const DynamicInst &inst, int64_t cycle) {
           vloopStart_[makeKey(topBlockId, "loop2", {i + 1, 0})] = childStart;
           bodyOpenTime_[makeKey(topBlockId, "loop2", {i + 1, 0})] =
               childStart + vloopToDispatchDelay_;
-          vloopTrace_.push_back(
+          if (traceRecordsEnabled_)
+            pushTrace(
               VloopTraceRecord{topBlockId, "loop2", {i + 1, 0}, childStart});
         }
       }

@@ -20,37 +20,57 @@ public:
           "idu_post_update_ready_latency must be positive");
   }
 
+  // Streamed callers hand over the borrowed view directly (pointer + count), so
+  // an event never materialises its own memory-access vector.
   std::vector<AddressDependency>
-  dependencies(const std::vector<CanonicalMemoryAccess> &accesses) const {
+  dependencies(const CanonicalMemoryAccess *accesses, size_t count) const {
     std::set<std::string> states;
-    for (const auto &access : accesses)
+    for (size_t index = 0; index < count; ++index) {
+      const auto &access = accesses[index];
       if (access.addressStateId)
         states.insert(*access.addressStateId);
+    }
     std::vector<AddressDependency> result;
     for (const auto &state : states)
       if (auto it = updates_.find(state); it != updates_.end())
         result.push_back(it->second);
     return result;
   }
+  std::vector<AddressDependency>
+  dependencies(const std::vector<CanonicalMemoryAccess> &accesses) const {
+    return dependencies(accesses.data(), accesses.size());
+  }
 
-  bool canDispatch(const std::vector<CanonicalMemoryAccess> &accesses,
+  bool canDispatch(const CanonicalMemoryAccess *accesses, size_t count,
                    int64_t cycle) const {
-    for (const auto &access : accesses)
+    for (size_t index = 0; index < count; ++index) {
+      const auto &access = accesses[index];
       if (access.addressStateId) {
         const auto it = updates_.find(*access.addressStateId);
         if (it != updates_.end() && cycle < it->second.readyCycle)
           return false;
       }
+    }
     return true;
+  }
+  bool canDispatch(const std::vector<CanonicalMemoryAccess> &accesses,
+                   int64_t cycle) const {
+    return canDispatch(accesses.data(), accesses.size(), cycle);
   }
 
   void notifyDispatch(int64_t instId,
                       const std::vector<CanonicalMemoryAccess> &accesses,
                       int64_t cycle) {
+    notifyDispatch(instId, accesses.data(), accesses.size(), cycle);
+  }
+  void notifyDispatch(int64_t instId, const CanonicalMemoryAccess *accesses,
+                      size_t count, int64_t cycle) {
     std::set<std::string> states;
-    for (const auto &access : accesses)
+    for (size_t index = 0; index < count; ++index) {
+      const auto &access = accesses[index];
       if (access.addressStateId && access.updateMode == "post_update")
         states.insert(*access.addressStateId);
+    }
     if (!states.empty() &&
         cycle > std::numeric_limits<int64_t>::max() - updateLatency_)
       throw std::runtime_error("Address ready_cycle exceeds int64");
@@ -119,6 +139,31 @@ public:
     window_.push_back(&inst);
   }
   void setTraceEnabled(bool enabled) { traceEnabled_ = enabled; }
+  int64_t streamValueCount() const { return streamValueCount_; }
+  void registerStreamInstruction(const DynamicInst &inst) {
+    for (size_t i = 0; i < inst.src.size() && i < inst.srcStorage.size(); ++i)
+      if (valueStorage_.add(inst.src[i], inst.srcStorage[i])) {
+        streamNames_.insert(inst.src[i]);
+        ++streamValueCount_;
+      }
+    for (size_t i = 0; i < inst.dst.size() && i < inst.dstStorage.size(); ++i)
+      if (valueStorage_.add(inst.dst[i], inst.dstStorage[i])) {
+        streamNames_.insert(inst.dst[i]);
+        ++streamValueCount_;
+      }
+  }
+  void releaseStreamInstruction(const DynamicInst &inst) {
+    for (size_t i = 0; i < inst.src.size() && i < inst.srcValueRelease.size(); ++i)
+      if (inst.srcValueRelease[i] && streamNames_.erase(inst.src[i]) != 0) {
+        valueStorage_.remove(inst.src[i]);
+        --streamValueCount_;
+      }
+    for (size_t i = 0; i < inst.dst.size() && i < inst.dstValueKeep.size(); ++i)
+      if (!inst.dstValueKeep[i] && streamNames_.erase(inst.dst[i]) != 0) {
+        valueStorage_.remove(inst.dst[i]);
+        --streamValueCount_;
+      }
+  }
   std::vector<const DynamicInst *>
   dispatchBorrowed(int64_t cycle, const IDUDispatchBudget &budget);
   std::vector<DynamicInst> dispatch(int64_t cycle,
@@ -143,6 +188,8 @@ private:
   const UarchConfig &cfg_;
   LoopControl &loops_;
   ValueStorageLookup valueStorage_;
+  int64_t streamValueCount_ = 0;
+  std::unordered_set<std::string> streamNames_;
   AddressStateTracker addressStates_;
   int64_t vfStartupCost_;
   std::deque<const DynamicInst *> window_;
