@@ -169,6 +169,18 @@ void Engine::backendStep() {
 }
 SimulationResult Engine::run(const std::filesystem::path &outDir,
                              int64_t maxCycles) {
+  // A streamed Engine serves exactly one run. The provider is detached when that
+  // run ends (successfully or not), so the machine keeps partially borrowed
+  // instructions and a consumed stream; refuse before touching any queue instead
+  // of pretending the engine is reusable.
+  if (streamSingleRun_) {
+    if (streamConsumed_)
+      throw std::logic_error(
+          "streamed Engine supports exactly one run: the instruction provider "
+          "was detached when the first run ended, so this Engine cannot be "
+          "restarted; build a fresh Engine and provider for another run");
+    streamConsumed_ = true;
+  }
   // Traces are diagnostic output and never participate in scheduling.
   // Headless scoring needs only the final cycles, not copies of every uop.
   if (!outDir.empty() && !program_.retainsDiagnostics)

@@ -89,6 +89,18 @@ ScoringStream prepareScoringStream(const CanonicalVfInfo &vf,
 
 SimulationResult runScoringStream(ScoringStream &plan, Engine &engine,
                                   int64_t maxCycles) {
+  // A plan that declined has no cursor: calling the runner anyway is a caller
+  // bug (the configuration gate runs before preparation), so report it instead
+  // of dereferencing an empty cursor or running an empty stream.
+  if (plan.cursor == nullptr ||
+      (plan.declineReason != nullptr && *plan.declineReason != '\0')) {
+    std::string message = "runScoringStream requires a streamable plan";
+    if (plan.declineReason != nullptr && *plan.declineReason != '\0')
+      message += std::string(": ") + plan.declineReason;
+    else
+      message += ": no cursor was prepared";
+    throw std::logic_error(message);
+  }
   // The provider lowers directly into the Engine's stream slot. done() is exact:
   // with a known static event total it is a counter comparison, otherwise one
   // event is peeked so the IFU never pulls past the end.

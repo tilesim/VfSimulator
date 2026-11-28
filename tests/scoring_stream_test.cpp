@@ -128,11 +128,12 @@ void checkPureConfigDeclines(const std::filesystem::path &fixture) {
   std::cout << "pure_config_decline=OK\n";
 }
 
-// runScoringStream installs callbacks that capture a provider living on its own
-// stack frame. They must be detached on every exit path: a second Engine::run on
-// the same engine used to call into the destroyed provider and segfault, both
-// after a successful run and after a budget refusal.
-void checkProviderLifetime(const std::filesystem::path &fixture) {
+// A streamed Engine is single-run by construction: when the run ends (normally
+// or with a budget refusal) the provider is detached and the engine keeps
+// partially borrowed instructions, so a second run must fail with a clear logic
+// error before it touches any queue. It used to call into the destroyed provider
+// and segfault.
+void checkSingleRunContract(const std::filesystem::path &fixture) {
   const auto vf = vfsim::InputAPI::loadJson(fixture);
   vfsim::ParamDB db(VFSIM_SOURCE_ROOT);
   const auto cfg = vfsim::resolveUarch(db.uarch(), vf.uarch, false, false);
@@ -144,23 +145,83 @@ void checkProviderLifetime(const std::filesystem::path &fixture) {
     const auto first = vfsim::runScoringStream(plan, engine, 0);
     require(first.cyclesExecuted > 0,
             "the streamed run must execute the program");
-    const auto second = engine.run({}, 0);
-    (void)second;
+    bool rejected = false;
+    try {
+      (void)engine.run({}, 0);
+    } catch (const std::logic_error &e) {
+      rejected =
+          std::string(e.what()).find("exactly one run") != std::string::npos;
+    }
+    require(rejected,
+            "a second run on a streamed Engine must be refused with a logic "
+            "error naming the single-run contract");
   }
   {
     auto plan = vfsim::prepareScoringStream(vf, db, cfg);
     vfsim::Engine engine(plan.program, cfg, db);
-    bool refused = false;
+    std::string budgetError;
     try {
       (void)vfsim::runScoringStream(plan, engine, 5);
-    } catch (const std::exception &) {
-      refused = true;
+    } catch (const std::exception &e) {
+      budgetError = e.what();
     }
-    require(refused, "a budget refusal must propagate from the streamed run");
-    const auto second = engine.run({}, 0);
-    (void)second;
+    require(budgetError ==
+                "Simulation did not complete before max_cycles: cycle=5",
+            std::string("unexpected budget error: ") + budgetError);
+    bool rejected = false;
+    try {
+      (void)engine.run({}, 0);
+    } catch (const std::logic_error &e) {
+      rejected =
+          std::string(e.what()).find("exactly one run") != std::string::npos;
+    }
+    require(rejected,
+            "a budget-refused streamed run must consume the Engine as well");
   }
-  std::cout << "provider_lifetime=OK\n";
+  std::cout << "single_run=OK\n";
+}
+
+// The provider takes over instruction supply, so a program that already
+// materialised its instructions would have them silently dropped.
+void checkMaterializedProgramRejected(const std::filesystem::path &fixture) {
+  const auto vf = vfsim::InputAPI::loadJson(fixture);
+  vfsim::ParamDB db(VFSIM_SOURCE_ROOT);
+  const auto cfg = vfsim::resolveUarch(db.uarch(), vf.uarch, false, false);
+  const auto program = vfsim::prepareProgram(vf, db, cfg, false);
+  require(!program.instructions.empty(),
+          "the eager preparation must materialise instructions");
+  vfsim::Engine engine(program, cfg, db);
+  bool rejected = false;
+  try {
+    engine.useInstructionStream([] { return true; },
+                                [](vfsim::DynamicInst &) {});
+  } catch (const std::logic_error &) {
+    rejected = true;
+  }
+  require(rejected,
+          "useInstructionStream must refuse a materialised program instead of "
+          "dropping its instructions");
+  std::cout << "materialized_program=OK\n";
+}
+
+// A declined plan has no cursor: running it would dereference an empty cursor.
+void checkDeclinedPlanRejected(const std::filesystem::path &fixture) {
+  const auto vf = vfsim::InputAPI::loadJson(fixture);
+  vfsim::ParamDB db(VFSIM_SOURCE_ROOT);
+  const auto bounded = vfsim::resolveUarch(db.uarch(), vf.uarch, false, false);
+  const auto unbounded = vfsim::resolveUarch(db.uarch(), vf.uarch, true, false);
+  auto plan = vfsim::prepareScoringStream(vf, db, unbounded);
+  require(plan.cursor == nullptr && *plan.declineReason != '\0',
+          "the unbounded configuration must decline before preparation");
+  vfsim::Engine engine(plan.program, bounded, db);
+  bool rejected = false;
+  try {
+    (void)vfsim::runScoringStream(plan, engine, 0);
+  } catch (const std::logic_error &) {
+    rejected = true;
+  }
+  require(rejected, "runScoringStream must refuse a declined plan");
+  std::cout << "declined_plan=OK\n";
 }
 } // namespace
 
@@ -171,7 +232,9 @@ int main() {
             4);
   checkCase(root / "VADD_twoloop.json", "VADD_twoloop", 96);
   checkPureConfigDeclines(root / "fixtures/v1_valid_loop.json");
-  checkProviderLifetime(root / "fixtures/v1_valid_loop.json");
+  checkSingleRunContract(root / "fixtures/v1_valid_loop.json");
+  checkMaterializedProgramRejected(root / "fixtures/v1_valid_loop.json");
+  checkDeclinedPlanRejected(root / "fixtures/v1_valid_loop.json");
   std::cout << "scoring_stream=OK\n";
   return 0;
 }
