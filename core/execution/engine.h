@@ -50,6 +50,11 @@ public:
   }
   SimulationResult run(const std::filesystem::path &outDir = {},
                        int64_t maxCycles = 0);
+  // Streamed scoring counters. They stay valid after clearInstructionStream():
+  // the frozen compiler-side entry reads them once the scoring run returned, so
+  // they are state of the run, not of the provider.
+  int64_t streamIssuedInstructions() const { return streamIssued_; }
+  int64_t streamLiveValueHighWater() const { return streamLiveValueHighWater_; }
 
 private:
   void reclaimStreamArena();
@@ -86,6 +91,9 @@ private:
   // kept after detaching, so run() can refuse a second run up front.
   bool streamSingleRun_ = false;
   bool streamConsumed_ = false;
+  // Read by the compiler-side scoring entry after the run; kept across detach.
+  int64_t streamIssued_ = 0;
+  int64_t streamLiveValueHighWater_ = 0;
   std::deque<size_t> streamInFlight_;
   DynamicInst *acquireStreamSlot();
   // Returns the slot that was just acquired (the FIFO tail) to the free list.
