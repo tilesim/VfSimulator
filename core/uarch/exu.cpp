@@ -110,8 +110,8 @@ void EXU::start(const UopPtr &u, int port, int64_t cycle, bool queued) {
   u->startCycle = cycle;
   u->doneCycle = doneCycle;
   u->exuPort = port;
-  u->state = "running";
-  running_.emplace(u->instId, u);
+  u->state = UopState::running;
+  running_.push_back(u);
   for (const auto &bank : u->writebackBanks)
     reserved.at(bank).insert(doneCycle);
   ++inflight_[port];
@@ -129,18 +129,25 @@ void EXU::start(const UopPtr &u, int port, int64_t cycle, bool queued) {
 }
 std::vector<UopPtr> EXU::finish(int64_t cycle) {
   std::vector<UopPtr> done;
-  for (auto it = running_.begin(); it != running_.end();)
-    if (cycle >= *it->second->doneCycle) {
-      auto u = it->second;
+  std::size_t keep = 0;
+  for (std::size_t i = 0; i < running_.size(); ++i) {
+    UopPtr u = std::move(running_[i]);
+    if (cycle >= *u->doneCycle) {
       for (const auto &bank : u->writebackBanks)
         completionCycles_[u->exuPort].at(bank).erase(*u->doneCycle);
       --inflight_[u->exuPort];
       u->exuPort = -1;
-      u->state = "done";
-      done.push_back(u);
-      it = running_.erase(it);
-    } else
-      ++it;
+      u->state = UopState::done;
+      done.push_back(std::move(u));
+    } else {
+      running_[keep++] = std::move(u);
+    }
+  }
+  running_.resize(keep);
+  // The previous std::map<instId, UopPtr> iterated in ascending instId order.
+  std::sort(done.begin(), done.end(), [](const UopPtr &a, const UopPtr &b) {
+    return a->instId < b->instId;
+  });
   return done;
 }
 } // namespace vfsim

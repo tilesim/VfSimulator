@@ -45,8 +45,8 @@ IDU::dispatchBorrowed(int64_t cycle, const IDUDispatchBudget &budget) {
 
     if (!loops_.canDispatch(inst, cycle))
       break;
-    const bool isLoad = inst.opClass == "LOAD";
-    const bool isStore = inst.opClass == "STORE";
+    const bool isLoad = inst.opClassText() == "LOAD";
+    const bool isStore = inst.opClassText() == "STORE";
     if (isLoad) {
       if (lsqFree <= 0)
         break;
@@ -62,19 +62,23 @@ IDU::dispatchBorrowed(int64_t cycle, const IDUDispatchBudget &budget) {
     int64_t predicateCount = inst.predicateDestCount;
     if (dstCount < 0) {
       dstCount = predicateCount = 0;
-      for (const auto &d : inst.dst) {
-        if (valueStorage_.isRegister(d))
+      for (size_t i = 0; i < inst.dst.size(); ++i) {
+        const auto storage =
+            i < inst.dstStorageCount()
+                ? inst.dstStorageAt(i)
+                : valueStorage_.storageOf(inst.dst[i]);
+        if (storage == ValueStorageKind::Register)
           ++dstCount;
+        else if (storage == ValueStorageKind::PredicateRegister)
+          ++predicateCount;
       }
-      for (const auto &d : inst.dst)
-        predicateCount += valueStorage_.isPredicate(d);
     }
     if (credits < dstCount || predicateCredits < predicateCount) {
       if (traceEnabled_) {
         IDUDispatchRecord record;
         record.cycle = cycle;
         record.instId = inst.instId;
-        record.op = inst.op;
+        record.op = inst.opText();
         record.staticInstructionId = inst.staticInstructionId;
         record.iterationPath = inst.iterationPath;
         record.streamSeq = inst.streamSeq;
@@ -89,14 +93,16 @@ IDU::dispatchBorrowed(int64_t cycle, const IDUDispatchBudget &budget) {
     }
 
     const auto dependencies =
-        traceEnabled_ ? addressStates_.dependencies(inst.memoryAccesses)
+        traceEnabled_ ? addressStates_.dependencies(inst.memoryAccessData(),
+                                       inst.memoryAccessCount())
                       : std::vector<AddressDependency>{};
-    if (!addressStates_.canDispatch(inst.memoryAccesses, cycle)) {
+    if (!addressStates_.canDispatch(inst.memoryAccessData(),
+                                  inst.memoryAccessCount(), cycle)) {
       if (traceEnabled_) {
         IDUDispatchRecord record;
         record.cycle = cycle;
         record.instId = inst.instId;
-        record.op = inst.op;
+        record.op = inst.opText();
         record.staticInstructionId = inst.staticInstructionId;
         record.iterationPath = inst.iterationPath;
         record.streamSeq = inst.streamSeq;
@@ -108,7 +114,8 @@ IDU::dispatchBorrowed(int64_t cycle, const IDUDispatchBudget &budget) {
     }
 
     dispatched.push_back(pointer);
-    addressStates_.notifyDispatch(inst.instId, inst.memoryAccesses, cycle);
+    addressStates_.notifyDispatch(inst.instId, inst.memoryAccessData(),
+                                    inst.memoryAccessCount(), cycle);
     if (traceEnabled_)
       addressDependencies.push_back(dependencies);
     credits -= dstCount;

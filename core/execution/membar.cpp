@@ -95,7 +95,7 @@ void MembarController::acceptMembar(const DynamicInst &inst, int64_t cycle) {
 void MembarController::observeInstruction(const DynamicInst &inst) {
   if (!timing_ || db_ == nullptr)
     return;
-  const std::string &cls = inst.opClass;
+  const std::string &cls = inst.opClassText();
   if (cls != "LOAD" && cls != "STORE")
     return;
   auto &progress = segment_[cls];

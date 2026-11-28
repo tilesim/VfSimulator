@@ -22,7 +22,6 @@ struct AlignGeneration {
 
 struct SrcReleaseEvent {
   int64_t instId = 0;
-  std::string preg;
   int64_t gen = 0;
   ProducerState *state = nullptr;
 };
@@ -43,8 +42,11 @@ struct ProducerState {
   bool pending = false;
   unsigned ratBindings = 0;
   int64_t generation = 0, consumers = 0;
-  std::string physical;
+  int64_t slot = -1; // dense physical slot in the vector/predicate bank
   bool predicate = false;
+  // Mirrors membership in releaseEligible_ so the hot rename path can skip a
+  // string hash probe when the state is not eligible.
+  bool releaseEligible = false;
   std::optional<int64_t> releaseEligibleCycle;
 };
 
@@ -53,6 +55,47 @@ public:
   Registers(const UarchConfig &cfg, const ParamDB &db,
             const std::unordered_map<std::string, ValueInfo> &values);
   void setTraceEnabled(bool enabled) { traceEnabled_ = enabled; }
+  // Streamed scoring registers newly materialized value identities lazily.
+  void registerStreamValue(const std::string &id, ValueStorageKind kind) {
+    valueStorage_.add(id, kind);
+  }
+  int64_t streamValueCount() const { return streamValueCount_; }
+  void registerStreamInstruction(const DynamicInst &inst) {
+    for (size_t i = 0; i < inst.src.size() && i < inst.srcStorage.size(); ++i)
+      if (valueStorage_.add(inst.src[i], inst.srcStorage[i])) {
+        streamNames_.insert(inst.src[i]);
+        ++streamValueCount_;
+      }
+    for (size_t i = 0; i < inst.dst.size() && i < inst.dstStorage.size(); ++i)
+      if (valueStorage_.add(inst.dst[i], inst.dstStorage[i])) {
+        streamNames_.insert(inst.dst[i]);
+        ++streamValueCount_;
+      }
+  }
+  void releaseStreamInstruction(const DynamicInst &inst) {
+    for (size_t i = 0; i < inst.src.size() && i < inst.srcValueRelease.size(); ++i)
+      if (inst.srcValueRelease[i] && streamNames_.erase(inst.src[i]) != 0) {
+        valueStorage_.remove(inst.src[i]);
+        --streamValueCount_;
+      }
+    for (size_t i = 0; i < inst.dst.size() && i < inst.dstValueKeep.size(); ++i)
+      if (!inst.dstValueKeep[i] && streamNames_.erase(inst.dst[i]) != 0) {
+        valueStorage_.remove(inst.dst[i]);
+        --streamValueCount_;
+      }
+  }
+  // Streamed scoring supplies numeric value tokens on every DynamicInst, so
+  // rename keys its live-binding RAT by uint64 instead of by identity string.
+  // The flag is set by the Engine only for a numeric provider; every other
+  // caller keeps the historical string RAT (and the eager dense-id RAT).
+  void setNumericTokens(bool enabled) { numericTokens_ = enabled; }
+  // Dense logical-id operand table (PreparedProgram::operandIds). Engine::run
+  // validates the whole table once and enables this mode for the entire run.
+  void setOperandIds(const int32_t *ids, size_t count, bool enabled) {
+    operandIds_ = ids;
+    operandIdCount_ = count;
+    operandIdsEnabled_ = enabled;
+  }
   UopPtr rename(const DynamicInst &inst, int64_t cycle);
   void onStart(Uop &u, int64_t cycle);
   void onDone(Uop &u, int64_t cycle);
@@ -70,24 +113,66 @@ public:
   int64_t readyCycle(const Uop &u) const;
   int64_t readyTimeForSource(const ProducerInfo &producer,
                              const Uop &consumer) const;
+  // Historical API; no callers (see task-65): kept for source compatibility.
   std::optional<ProducerInfo> producer(const std::string &id) const;
+  // Historical API: match the diagnostic physical name ("p<slot>"/"pred<slot>").
   bool pending(const std::string &id) const {
-    const auto it = producerStates_.find(id);
-    return it != producerStates_.end() && it->second.pending;
+    for (const auto &table : {&vectorStates_, &predicateStates_})
+      for (const auto &entry : *table)
+        if ((entry.second.predicate ? predicate_ : vector_).name(entry.first) == id)
+          return entry.second.pending;
+    return false;
   }
   std::optional<int64_t> alignReady(const Uop &u) const;
 
 private:
+  // States released by the rename of the current instruction. A member (not a
+  // local) so the hot path performs no heap allocation per event; rename is not
+  // reentrant, and the buffer is cleared on every entry.
+  std::vector<ProducerState *> releasedScratch_;
   bool traceEnabled_ = true;
   std::unordered_map<int64_t, const InstructionProfile *> staticProfiles_;
   const UarchConfig &cfg_;
   const ParamDB &db_;
   ValueStorageLookup valueStorage_;
+  int64_t streamValueCount_ = 0;
+  std::unordered_set<std::string> streamNames_;
   PhysicalRegisterBank vector_, predicate_;
   int64_t nextDynamicPregId_;
   std::unordered_set<std::string> predicateIds_;
   std::unordered_map<std::string, ProducerState *> rat_;
-  std::unordered_map<std::string, ProducerState> producerStates_;
+  // Numeric RAT: one entry per live binding, removed on the last source use or
+  // on a destination that is not kept, exactly like rat_. It is keyed by token
+  // and never sized by the identity value, so it cannot grow with trip counts.
+  std::unordered_map<uint64_t, ProducerState *> tokenRat_;
+  std::vector<ProducerState *> ratById_;
+  bool numericTokens_ = false;
+  const int32_t *operandIds_ = nullptr;
+  size_t operandIdCount_ = 0;
+  bool operandIdsEnabled_ = false;
+  int32_t operandIdAt(int32_t base, size_t index) const {
+    const size_t position = static_cast<size_t>(base) + index;
+    if (position >= operandIdCount_)
+      throw std::runtime_error("operand id access past the operand table");
+    return operandIds_[position];
+  }
+  ProducerState *lookupById(int32_t id) const {
+    return id >= 0 && static_cast<size_t>(id) < ratById_.size()
+               ? ratById_[static_cast<size_t>(id)]
+               : nullptr;
+  }
+  ProducerState *&ratById(int32_t id) {
+    if (static_cast<size_t>(id) >= ratById_.size())
+      ratById_.resize(static_cast<size_t>(id) + 1, nullptr);
+    return ratById_[static_cast<size_t>(id)];
+  }
+  // One node table per bank: stable addresses for Uops that borrow them, and
+  // slot ids are never packed/truncated.
+  std::unordered_map<int64_t, ProducerState> vectorStates_, predicateStates_;
+  ProducerState &stateAt(int64_t slot, bool pred) {
+    auto &table = pred ? predicateStates_ : vectorStates_;
+    return table[slot];
+  }
   std::unordered_map<std::string, ProducerState *> releaseEligible_;
   std::unordered_map<std::string, std::shared_ptr<AlignGeneration>>
       alignStateOpen_;
@@ -99,6 +184,10 @@ private:
       visiblePredicateEvents_;
   int64_t visibleVector_, visiblePredicate_, vectorDelta_ = 0,
                                              predicateDelta_ = 0;
+  // Diagnostic name of a physical slot (historical spelling).
+  std::string pregName(const ProducerState &state) const {
+    return (state.predicate ? predicate_ : vector_).name(state.slot);
+  }
   void bindAlignState(Uop &u, const DynamicInst &inst);
   void scheduleSrcReleaseFromStart(const Uop &u);
   bool tryFree(ProducerState &state, int64_t cycle);

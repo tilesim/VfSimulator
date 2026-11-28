@@ -23,6 +23,8 @@ add_library(vfsim_native_core STATIC
   api/json/value.cpp
   core/execution/engine.cpp
   core/execution/expansion.cpp
+  core/execution/cursor_lifetime.cpp
+  core/execution/scoring_stream.cpp
   core/execution/loop_control.cpp
   core/execution/membar.cpp
   core/execution/prepare.cpp

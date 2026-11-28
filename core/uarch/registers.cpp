@@ -10,7 +10,12 @@ Registers::Registers(const UarchConfig &cfg, const ParamDB &db,
     : cfg_(cfg), db_(db), valueStorage_(values), vector_(cfg.vregNum, "p"),
       predicate_(cfg.physicalPredicateRegisters, "pred"),
       nextDynamicPregId_(cfg.vregNum), visibleVector_(cfg.vregNum),
-      visiblePredicate_(cfg.physicalPredicateRegisters) {}
+      visiblePredicate_(cfg.physicalPredicateRegisters) {
+  const size_t slots = static_cast<size_t>(cfg.vregNum) +
+                       static_cast<size_t>(cfg.physicalPredicateRegisters);
+  vectorStates_.reserve(static_cast<size_t>(cfg.vregNum));
+  predicateStates_.reserve(static_cast<size_t>(cfg.physicalPredicateRegisters));
+}
 int64_t Registers::freeVector() const {
   return cfg_.theoreticalLimitMode
              ? 1000000000000000000LL
@@ -27,13 +32,14 @@ UopPtr Registers::rename(const DynamicInst &inst, int64_t cycle) {
   auto ptr = std::make_shared<Uop>();
   auto &u = *ptr;
   u.instId = inst.instId;
-  u.op = inst.op;
-  u.form = inst.form;
+  u.op = inst.opText();
+  u.form = inst.formText();
   const InstructionProfile *&cached = staticProfiles_[inst.pc];
   if (inst.pc >= 0 && cached)
     u.profile = cached;
   else {
-    u.profile = &db_.inst(u.op, u.form, inst.opClass, inst.catalogMode);
+    u.profile = &db_.inst(u.op, u.form, inst.opClassText(),
+                            inst.catalogModeText());
     if (inst.pc >= 0)
       cached = u.profile;
   }
@@ -64,74 +70,168 @@ UopPtr Registers::rename(const DynamicInst &inst, int64_t cycle) {
       (vec > vector_.freeCount() || pred > predicate_.freeCount()))
     throw std::runtime_error(
         "Atomic rename precheck failed: physical register credit");
-  std::vector<ProducerState *> released;
-  u.pregSrc.reserve(inst.src.size());
-  u.pregSrcGen.reserve(inst.src.size());
-  u.sourceStates.reserve(inst.src.size());
-  u.pregDst.reserve(inst.dst.size());
-  u.destinationStates.reserve(inst.dst.size());
-  for (size_t i = 0; i < inst.src.size(); ++i) {
-    const auto &id = inst.src[i];
-    const auto storage = inst.srcStorage.empty() ? valueStorage_.storageOf(id)
-                                                 : inst.srcStorage[i];
+  std::vector<ProducerState *> &released = releasedScratch_;
+  released.clear();
+  // Compact mode (no diagnostic trace) may key the RAT by numbers: the dense
+  // logical-id table of a materialised program, or a streamed program's value
+  // tokens. Both are identity keys, never table indices grown by identity.
+  const bool compact = !traceEnabled_;
+  const bool useIds = compact && operandIdsEnabled_;
+  const bool useTokens = compact && numericTokens_ && !useIds;
+  const size_t srcCount = useTokens ? inst.srcTokens.size() : inst.src.size();
+  const size_t dstCount = useTokens ? inst.dstTokens.size() : inst.dst.size();
+  if (useTokens &&
+      (inst.srcStorageCount() < srcCount ||
+       inst.dstStorageCount() < dstCount))
+    throw std::runtime_error(
+        "numeric operand tokens without per-operand storage");
+  // Physical names are only consumed by the diagnostic trace and by the
+  // non-default same-cycle source hazard check; building them otherwise costs
+  // one std::string per operand per dynamic instruction.
+  const bool needPregNames = traceEnabled_ || cfg_.enforceSameCycleSrcHazard;
+  // The scored path lowers numeric tokens and production runs without a trace
+  // recorder, so nothing consumes the diagnostic physical names there: only the
+  // trace writer and the same-cycle source hazard check read them, and both are
+  // inert in this mode. The state and generation vectors are always sized and
+  // are what readiness and the release scheduler key off, so the name vectors
+  // stay empty instead of carrying one nullopt placeholder per operand per
+  // event. The string path keeps building them, so eager mode is unchanged.
+  const bool buildPregNames = needPregNames || !useTokens;
+  if (buildPregNames) {
+    u.pregSrc.reserve(srcCount);
+    u.pregDst.reserve(dstCount);
+  }
+  u.pregSrcGen.reserve(srcCount);
+  u.sourceStates.reserve(srcCount);
+  u.destinationStates.reserve(dstCount);
+  for (size_t i = 0; i < srcCount; ++i) {
+    const std::string emptySpelling;
+    const std::string &id =
+        (i < inst.src.size()) ? inst.src[i] : emptySpelling;
+    const auto storage = inst.srcStorageCount() == 0
+                            ? valueStorage_.storageOf(id)
+                            : inst.srcStorageAt(i);
     const bool pred = storage == ValueStorageKind::PredicateRegister;
-    auto it = rat_.find(id);
-    if ((storage != ValueStorageKind::Register && !pred) || it == rat_.end()) {
+    ProducerState *state = nullptr;
+    int32_t logicalId = -1;
+    uint64_t token = 0;
+    if (useIds) {
+      logicalId = operandIdAt(inst.srcIdBase, i);
+      state = lookupById(logicalId);
+    } else if (useTokens) {
+      token = inst.srcTokens[i];
+      const auto it = tokenRat_.find(token);
+      if (it != tokenRat_.end())
+        state = it->second;
+    } else {
+      const auto it = rat_.find(id);
+      if (it != rat_.end())
+        state = it->second;
+    }
+    if ((storage != ValueStorageKind::Register && !pred) || state == nullptr) {
       if (pred)
-        throw std::runtime_error("Predicate source has no renamed producer: " +
-                                 id);
-      u.pregSrc.push_back(std::nullopt);
+        throw std::runtime_error(
+            "Predicate source has no renamed producer: " +
+            (useTokens ? std::to_string(token) : id));
+      if (buildPregNames)
+        u.pregSrc.push_back(std::nullopt);
       u.pregSrcGen.push_back(std::nullopt);
       u.sourceStates.push_back(nullptr);
       continue;
     }
-    auto *state = it->second;
-    u.pregSrc.push_back(state->physical);
+    // Readiness and the release scheduler size themselves off sourceStates and
+    // pregSrcGen, so the name slot is only filled when a reader will see it.
+    if (buildPregNames)
+      u.pregSrc.push_back(pregName(*state));
     u.pregSrcGen.push_back(state->generation);
     u.sourceStates.push_back(state);
     ++state->consumers;
     state->releaseEligibleCycle.reset();
-    releaseEligible_.erase(state->physical);
-    if (i < inst.srcValueRelease.size() && inst.srcValueRelease[i]) {
-      released.push_back(it->second);
-      --it->second->ratBindings;
-      rat_.erase(it);
+    if (state->releaseEligible) {
+      releaseEligible_.erase(pregName(*state));
+      state->releaseEligible = false;
+    }
+    if (inst.srcReleased(i)) {
+      released.push_back(state);
+      --state->ratBindings;
+      if (useIds)
+        ratById(logicalId) = nullptr;
+      else if (useTokens)
+        tokenRat_.erase(token);
+      else
+        rat_.erase(id);
     }
   }
-  for (size_t i = 0; i < inst.dst.size(); ++i) {
-    const auto &id = inst.dst[i];
-    const auto storage = inst.dstStorage.empty() ? valueStorage_.storageOf(id)
-                                                 : inst.dstStorage[i];
+  for (size_t i = 0; i < dstCount; ++i) {
+    const std::string emptySpelling;
+    const std::string &id =
+        (i < inst.dst.size()) ? inst.dst[i] : emptySpelling;
+    int32_t dstLogicalId = -1;
+    if (useIds)
+      dstLogicalId = operandIdAt(inst.dstIdBase, i);
+    const auto storage = inst.dstStorageCount() == 0
+                            ? valueStorage_.storageOf(id)
+                            : inst.dstStorageAt(i);
     const bool pred = storage == ValueStorageKind::PredicateRegister;
     if (storage != ValueStorageKind::Register && !pred)
       continue;
-    const std::string physical =
+    const int64_t slot =
         (pred ? predicate_ : vector_)
-            .allocate(cfg_.theoreticalLimitMode,
+            .allocateSlot(cfg_.theoreticalLimitMode,
                       cfg_.theoreticalLimitMode ? nextDynamicPregId_++ : -1);
-    if (pred)
-      predicateIds_.insert(physical);
-    auto old = rat_.find(id);
-    if (old != rat_.end()) {
-      released.push_back(old->second);
-      --old->second->ratBindings;
-      rat_.erase(old);
+    if (pred && traceEnabled_)
+      predicateIds_.insert((predicate_).name(slot));
+    uint64_t token = 0;
+    if (useTokens)
+      token = inst.dstTokens[i];
+    ProducerState *previous = nullptr;
+    if (useIds)
+      previous = lookupById(dstLogicalId);
+    else if (useTokens) {
+      const auto old = tokenRat_.find(token);
+      if (old != tokenRat_.end())
+        previous = old->second;
+    } else {
+      const auto old = rat_.find(id);
+      if (old != rat_.end())
+        previous = old->second;
     }
-    const bool keep = i >= inst.dstValueKeep.size() || inst.dstValueKeep[i];
-    auto &state = producerStates_[physical];
-    if (keep)
-      rat_[id] = &state;
-    u.pregDst.push_back(physical);
+    if (previous != nullptr) {
+      released.push_back(previous);
+      --previous->ratBindings;
+      if (useIds)
+        ratById(dstLogicalId) = nullptr;
+      else if (useTokens)
+        tokenRat_.erase(token);
+      else
+        rat_.erase(id);
+    }
+    const bool keep = inst.dstKept(i);
+    auto &state = stateAt(slot, pred);
+    if (keep) {
+      if (useIds)
+        ratById(dstLogicalId) = &state;
+      else if (useTokens)
+        tokenRat_[token] = &state;
+      else
+        rat_[id] = &state;
+    }
+    if (buildPregNames)
+      u.pregDst.push_back((pred ? predicate_ : vector_).name(slot));
     u.writebackBanks.insert(pred ? "predicate" : "vector");
     ++state.generation;
     state.producer.reset();
     state.pending = true;
     state.ratBindings = keep ? 1u : 0u;
     state.consumers = 0;
-    state.physical = physical;
+    state.slot = slot;
     state.predicate = pred;
     state.releaseEligibleCycle.reset();
-    releaseEligible_.erase(state.physical);
+    if (state.releaseEligible) {
+      releaseEligible_.erase((state.predicate ? predicate_ : vector_)
+                                 .name(state.slot));
+      state.releaseEligible = false;
+    }
     u.destinationStates.push_back(&state);
     if (pred)
       --visiblePredicate_;
@@ -144,8 +244,12 @@ UopPtr Registers::rename(const DynamicInst &inst, int64_t cycle) {
   return ptr;
 }
 std::optional<ProducerInfo> Registers::producer(const std::string &id) const {
-  const auto it = producerStates_.find(id);
-  return it == producerStates_.end() ? std::nullopt : it->second.producer;
+  // Historical API: match the diagnostic physical name and return its state.
+  for (const auto &table : {&vectorStates_, &predicateStates_})
+    for (const auto &entry : *table)
+      if ((entry.second.predicate ? predicate_ : vector_).name(entry.first) == id)
+        return entry.second.producer;
+  return std::nullopt;
 }
 int64_t Registers::readyTimeForSource(const ProducerInfo &p,
                                       const Uop &u) const {
@@ -162,7 +266,9 @@ int64_t Registers::readyCycle(const Uop &u) const {
       std::max(db_.isaDefaults().vfStartupCost, u.shqReadyCycle);
   int64_t sourceReady = u.sourceReadyCycle;
   bool resolved = true;
-  for (size_t i = u.resolvedSourceCount; i < u.pregSrc.size(); ++i) {
+  // sourceStates is the authoritative per-source array: the physical-name vector
+  // is only materialised for diagnostics, so readiness must not key off it.
+  for (size_t i = u.resolvedSourceCount; i < u.sourceStates.size(); ++i) {
     const auto *state = u.sourceStates[i];
     if (state) {
       if (state->producer)
@@ -205,9 +311,9 @@ void Registers::scheduleSrcReleaseFromStart(const Uop &u) {
     return;
   auto &events =
       srcReleaseEvents_[*u.startCycle + cfg_.consumerReleaseStartOffset];
-  for (size_t i = 0; i < u.pregSrc.size(); ++i)
-    if (u.pregSrc[i])
-      events.push_back(SrcReleaseEvent{u.instId, *u.pregSrc[i],
+  for (size_t i = 0; i < u.sourceStates.size(); ++i)
+    if (u.sourceStates[i])
+      events.push_back(SrcReleaseEvent{u.instId,
                                        u.pregSrcGen[i].value_or(0),
                                        u.sourceStates[i]});
 }
@@ -229,11 +335,11 @@ void Registers::onDone(Uop &u, int64_t cycle) {
     tryFree(*state, cycle);
 }
 bool Registers::tryFree(ProducerState &state, int64_t cycle) {
-  const auto &id = state.physical;
+  const int64_t id = state.slot;
   if (cfg_.theoreticalLimitMode)
     return false;
   auto &bank = state.predicate ? predicate_ : vector_;
-  if (!bank.allocated(id))
+  if (!bank.allocatedSlot(id))
     return false;
   if (state.ratBindings != 0)
     return false;
@@ -241,11 +347,14 @@ bool Registers::tryFree(ProducerState &state, int64_t cycle) {
     return false;
   if (state.releaseEligibleCycle && cycle < *state.releaseEligibleCycle)
     return false;
-  bank.release(id);
+  bank.releaseSlot(id);
   state.producer.reset();
   state.consumers = 0;
   state.releaseEligibleCycle.reset();
-  releaseEligible_.erase(state.physical);
+  if (state.releaseEligible) {
+    releaseEligible_.erase(pregName(state));
+    state.releaseEligible = false;
+  }
   const auto delay =
       cfg_.enableCreditVisibilityDelay ? cfg_.iduVisiblePregDelay : 0;
   if (&bank == &predicate_) {
@@ -281,7 +390,10 @@ void Registers::runReleaseEvents(int64_t cycle) {
       --count;
     if (count == 0) {
       state.releaseEligibleCycle = cycle;
-      releaseEligible_[state.physical] = &state;
+      if (!state.releaseEligible) {
+        releaseEligible_[pregName(state)] = &state;
+        state.releaseEligible = true;
+      }
     }
     tryFree(state, cycle);
   }
@@ -310,57 +422,57 @@ std::pair<int64_t, int64_t> Registers::updateVisibility(int64_t cycle) {
   return result;
 }
 void Registers::bindAlignState(Uop &u, const DynamicInst &inst) {
-  if (inst.alignStateOperation == "load_init" ||
-      inst.alignStateOperation == "load_use") {
-    if (inst.alignStateId.empty())
+  if (inst.alignStateOperationText() == "load_init" ||
+      inst.alignStateOperationText() == "load_use") {
+    if (inst.alignStateIdText().empty())
       throw std::runtime_error("Load align state ID is required");
-    u.alignStateOperation = inst.alignStateOperation;
-    u.alignStateId = inst.alignStateId;
-    if (inst.alignStateOperation == "load_init") {
+    u.alignStateOperation = inst.alignStateOperationText();
+    u.alignStateId = inst.alignStateIdText();
+    if (inst.alignStateOperationText() == "load_init") {
       auto record = std::make_shared<AlignProducerRecord>();
       record->instId = u.instId;
       record->streamSeq = u.streamSeq;
       record->op = u.op;
       record->form = u.form;
-      alignLoadInitializers_[inst.alignStateId] = record;
+      alignLoadInitializers_[inst.alignStateIdText()] = record;
       u.alignProducerRecord = record;
     } else {
-      auto found = alignLoadInitializers_.find(inst.alignStateId);
+      auto found = alignLoadInitializers_.find(inst.alignStateIdText());
       if (found == alignLoadInitializers_.end())
         throw std::runtime_error("Uninitialized load align state: " +
-                                 inst.alignStateId);
+                                 inst.alignStateIdText());
       u.alignPreviousProducer = found->second;
       auto record = std::make_shared<AlignProducerRecord>();
       record->instId = u.instId;
       record->streamSeq = u.streamSeq;
       record->op = u.op;
       record->form = u.form;
-      alignLoadInitializers_[inst.alignStateId] = record;
+      alignLoadInitializers_[inst.alignStateIdText()] = record;
       u.alignProducerRecord = record;
     }
     return;
   }
-  if ((inst.alignStateOperation != "append" &&
-       inst.alignStateOperation != "consume") ||
-      inst.alignStateId.empty())
+  if ((inst.alignStateOperationText() != "append" &&
+       inst.alignStateOperationText() != "consume") ||
+      inst.alignStateIdText().empty())
     return;
 
-  auto found = alignStateOpen_.find(inst.alignStateId);
+  auto found = alignStateOpen_.find(inst.alignStateIdText());
   std::shared_ptr<AlignGeneration> generation;
   if (found == alignStateOpen_.end()) {
-    const int64_t generationId = alignStateNextGeneration_[inst.alignStateId]++;
+    const int64_t generationId = alignStateNextGeneration_[inst.alignStateIdText()]++;
     generation = std::make_shared<AlignGeneration>();
-    generation->stateId = inst.alignStateId;
+    generation->stateId = inst.alignStateIdText();
     generation->generationId = generationId;
-    alignStateOpen_[inst.alignStateId] = generation;
+    alignStateOpen_[inst.alignStateIdText()] = generation;
   } else {
     generation = found->second;
   }
 
-  u.alignStateOperation = inst.alignStateOperation;
-  u.alignStateId = inst.alignStateId;
+  u.alignStateOperation = inst.alignStateOperationText();
+  u.alignStateId = inst.alignStateIdText();
   u.alignGeneration = generation;
-  if (inst.alignStateOperation == "append") {
+  if (inst.alignStateOperationText() == "append") {
     if (!generation->producers.empty())
       u.alignPreviousProducer = generation->producers.back();
     auto record = std::make_shared<AlignProducerRecord>();
@@ -375,9 +487,9 @@ void Registers::bindAlignState(Uop &u, const DynamicInst &inst) {
 
   generation->consumerInstId = u.instId;
   auto next = std::make_shared<AlignGeneration>();
-  next->stateId = inst.alignStateId;
-  next->generationId = alignStateNextGeneration_[inst.alignStateId]++;
-  alignStateOpen_[inst.alignStateId] = std::move(next);
+  next->stateId = inst.alignStateIdText();
+  next->generationId = alignStateNextGeneration_[inst.alignStateIdText()]++;
+  alignStateOpen_[inst.alignStateIdText()] = std::move(next);
 }
 
 } // namespace vfsim

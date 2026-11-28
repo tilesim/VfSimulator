@@ -60,7 +60,7 @@ void OoO::dispatch(int64_t cycle) {
     auto u = *it;
     if (count >= cfg_.issuePorts)
       break;
-    if (u->state != "ready" ||
+    if (u->state != UopState::ready ||
         (fuFifo && blockedFu.count(u->profile->fuType))) {
       ++it;
       continue;
@@ -146,7 +146,7 @@ void OoO::issueDirect(int64_t cycle) {
     auto u = *it;
     if (count >= cfg_.issuePorts)
       break;
-    if (u->state != "ready") {
+    if (u->state != UopState::ready) {
       ++it;
       continue;
     }

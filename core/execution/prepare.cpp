@@ -36,18 +36,39 @@ int64_t checkExecutionSupport(const std::vector<CanonicalNode> &nodes) {
 } // namespace
 PreparedProgram prepareProgram(const CanonicalVfInfo &input, const ParamDB &db,
                                const UarchConfig &cfg, bool retainDiagnostics) {
-  const auto optimized = hoistLoopInvariants(input);
-  const auto &vf = optimized.vfInfo;
-  const int64_t linearCount = checkExecutionSupport(vf.context);
+  CompilerOptimizationStats stats;
+  const auto hoisted = hoistLoopInvariantContext(input, stats);
+  // LICM rewrites only the root context. Borrow the immutable value, storage,
+  // parameter and source tables from the caller instead of copying the whole
+  // CanonicalVfInfo into a temporary.
+  const std::vector<CanonicalNode> &context = hoisted ? *hoisted : input.context;
+  const int64_t linearCount = checkExecutionSupport(context);
   std::unordered_map<std::string, ValueInfo> values;
   if (retainDiagnostics)
-    for (const auto &[id, value] : vf.values)
+    for (const auto &[id, value] : input.values)
       values.emplace(id,
                      ValueInfo{id, value.storage, value.dtype, value.shape});
-  auto program =
-      expandCanonicalProgram(vf, db, cfg, std::move(values), retainDiagnostics);
+  auto program = expandCanonicalProgram(input, context, db, cfg,
+                                        std::move(values), retainDiagnostics);
   program.linearInstCount = linearCount;
-  program.compilerOptimizationStats = optimized.stats;
+  program.compilerOptimizationStats = stats;
   return program;
+}
+
+PreparedStreamingLayout prepareProgramForStreamingLayout(
+    const CanonicalVfInfo &input,
+    std::optional<std::vector<CanonicalNode>> postLicmContext, const ParamDB &db,
+    const UarchConfig &cfg, CompilerOptimizationStats stats) {
+  // Shape gate and reported linear instruction count come from the same static
+  // walk the eager preparation uses; then one layout build that the cursor reuses
+  // instead of interning the static graph again.
+  const std::vector<CanonicalNode> &context =
+      postLicmContext ? *postLicmContext : input.context;
+  const int64_t linearCount = checkExecutionSupport(context);
+  auto prepared = expandCanonicalStreamingLayout(
+      input, std::move(postLicmContext), db, cfg);
+  prepared.program.linearInstCount = linearCount;
+  prepared.program.compilerOptimizationStats = std::move(stats);
+  return prepared;
 }
 } // namespace vfsim
