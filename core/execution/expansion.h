@@ -19,10 +19,9 @@ PreparedProgram expandCanonicalProgram(
 // Streaming layout: builds the static layout once (loop topology, static pc map,
 // lowering plan, binding slots) and hands back both the Engine metadata and the
 // layout the cursor lowers from. Static metadata only: no dynamic instruction,
-// operand id or instance value is materialised, and, like the eager no-trace
-// preparation, it
-// retains no value identity table: every streamed event carries its operand
-// storage halves, so no value is ever resolved by name on this route.
+// operand id or instance value is materialised. Like the eager no-trace
+// preparation it retains no value identity table: every streamed event carries
+// its operand storage halves, so no value is ever resolved by name here.
 //
 // postLicmContext is engaged only when LICM actually rewrote the root context;
 // that rewrite is then moved into the layout. Otherwise the layout borrows the
