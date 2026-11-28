@@ -24,22 +24,4 @@ public:
   virtual const LoweringProfile *loweringProfile() const { return nullptr; }
 };
 
-// Applies the frozen LICM rewrite once and prepares the cursor on the result.
-std::unique_ptr<CanonicalCursor> makeCanonicalCursor(
-    const CanonicalVfInfo &, const ParamDB &, const UarchConfig &,
-    bool diagnostics = true);
-
-// Prepares the cursor for a caller that already applied the frozen LICM rewrite.
-// The cursor takes ownership of `context`, which must be the very context the
-// caller expands (prepareProgramForStream(..., skipHoist=true)), so the program
-// and the plan share one post-LICM context and LICM runs exactly once.
-// With diagnostics=false the cursor lowers in scoring mode: compact value
-// identities ("@<n>"), no per-instance provenance, and no per-instruction
-// block-key strings that only the diagnostic oracle consumes. Every field the
-// Engine reads (storage arrays, destination counts, lifetime bits, scheduling
-// keys, block boundaries) is still produced.
-std::unique_ptr<CanonicalCursor> makeCanonicalCursorForContext(
-    const CanonicalVfInfo &, std::vector<CanonicalNode> context,
-    const ParamDB &, const UarchConfig &, bool diagnostics = true);
-
 }  // namespace vfsim

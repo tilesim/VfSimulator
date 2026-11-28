@@ -16,18 +16,11 @@ PreparedProgram expandCanonicalProgram(
     const ParamDB &, const UarchConfig &,
     std::unordered_map<std::string, ValueInfo> values, bool retainDiagnostics,
     bool keepInstanceMetadata = true);
-// Static metadata only: builds the scheduling/storage tables the Engine needs
-// (top blocks, loop bounds, declared values, parameters) from the static graph,
-// without materialising a single dynamic instruction, operand id or instance
-// value. The instruction stream comes from the canonical cursor at run time.
-PreparedProgram expandCanonicalStaticMetadata(
-    const CanonicalVfInfo &, const std::vector<CanonicalNode> &context,
-    const ParamDB &, const UarchConfig &,
-    std::unordered_map<std::string, ValueInfo> values);
 // Streaming layout: builds the static layout once (loop topology, static pc map,
 // lowering plan, binding slots) and hands back both the Engine metadata and the
-// layout the cursor lowers from. Same static-graph-only contract as
-// expandCanonicalStaticMetadata, and, like the eager no-trace preparation, it
+// layout the cursor lowers from. Static metadata only: no dynamic instruction,
+// operand id or instance value is materialised, and, like the eager no-trace
+// preparation, it
 // retains no value identity table: every streamed event carries its operand
 // storage halves, so no value is ever resolved by name on this route.
 //

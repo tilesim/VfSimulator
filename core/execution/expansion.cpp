@@ -1408,27 +1408,13 @@ void CanonicalStaticLayoutDeleter::operator()(CanonicalStaticLayout *layout) con
 
 class Cursor : public CanonicalCursor {
 public:
-  Cursor(std::vector<CanonicalNode> context, const CanonicalVfInfo &vf,
-         const ParamDB &db, const UarchConfig &cfg, bool diagnostics)
-      : ownedContext_(std::move(context)),
-        // A standalone cursor keeps identity strings even in scoring mode: the
-        // numeric token lowering belongs to the streamed scoring layout below,
-        // whose Engine consumer is the only one that keys the RAT by token.
-        owner_(std::make_unique<Expander>(
-            vf, ownedContext_, db, cfg,
-            std::unordered_map<std::string, ValueInfo>{}, diagnostics, false,
-            /*numericTokens=*/false)),
-        e_(*owner_), diagnostics_(diagnostics) {
-    initialize(vf, db, cfg);
-  }
   // Shares the layout the streaming preparation already built: the same
   // Expander (loops, pc map, plan, slots) serves metadata and lowering. The
-  // layout is single-consumer mutable state, so it is consumed here and there is
-  // no diagnostics=true variant (the shared layout is scoring-lowered only).
+  // layout is single-consumer mutable state, so it is consumed here, and it is
+  // always the scoring-lowered one.
   Cursor(CanonicalLayoutHandle layout, const CanonicalVfInfo &vf,
          const ParamDB &db, const UarchConfig &cfg)
-      : layout_(std::move(layout)), e_(*layout_->expander),
-        diagnostics_(false) {
+      : layout_(std::move(layout)), e_(*layout_->expander) {
     initialize(vf, db, cfg);
   }
 
@@ -1864,48 +1850,26 @@ private:
       return;
     const size_t depth = d.iterStack.size();
     d.schedulingKeys.reserve(depth);
-    if (diagnostics_)
-      d.normalizedBlockKeys.reserve(depth);
     for (size_t level = 0; level < depth; ++level) {
       SchedulingKey typed;
       typed.topBlockId = d.topBlockId;
       typed.depth = static_cast<int32_t>(level);
-      std::string text;
       if (level <= 2) {
         typed.c0 = level > 0 ? d.iterStack[0] : -1;
         typed.c1 = level > 1 ? d.iterStack[1] : -1;
         // Scoring mode consumes the typed key only; the block-key spelling is
-        // the diagnostic oracle's, so do not build it here.
-        if (!diagnostics_) {
-          d.schedulingKeys.push_back(std::move(typed));
-          continue;
-        }
-      } else {
-        text = std::to_string(d.topBlockId) + "|loop" +
-               std::to_string(level) + "|";
-        for (size_t i = 0; i < level; ++i) {
-          if (i)
-            text += ",";
-          text += std::to_string(d.iterStack[i]);
-        }
-        typed.slow = text;
+        // the diagnostic oracle's, so it is not built here.
+        d.schedulingKeys.push_back(std::move(typed));
+        continue;
       }
-      if (text.empty()) {
-        text = std::to_string(d.topBlockId) + "|loop" +
-               std::to_string(level) + "|";
-        for (size_t i = 0; i < level; ++i) {
-          if (i)
-            text += ",";
-          text += std::to_string(d.iterStack[i]);
-        }
+      std::string text = std::to_string(d.topBlockId) + "|loop" +
+                         std::to_string(level) + "|";
+      for (size_t i = 0; i < level; ++i) {
+        if (i)
+          text += ",";
+        text += std::to_string(d.iterStack[i]);
       }
-      if (diagnostics_) {
-        std::vector<int64_t> prefix(d.iterStack.begin(),
-                                    d.iterStack.begin() +
-                                        static_cast<std::ptrdiff_t>(level));
-        d.blockKeyByLevel.emplace_back("loop" + std::to_string(level), prefix);
-        d.normalizedBlockKeys.push_back(text);
-      }
+      typed.slow = text;
       d.schedulingKeys.push_back(std::move(typed));
     }
   }
@@ -2312,17 +2276,10 @@ private:
   }
 
   // Shared preparation: layout_ owns the post-LICM context and the one
-  // Expander; the standalone entry keeps the context and Expander directly.
+  // Expander.
   CanonicalLayoutHandle layout_;
-  std::vector<CanonicalNode> ownedContext_;
-  std::unique_ptr<Expander> owner_;
   Expander &e_;
-  const std::vector<CanonicalNode> &context() const {
-    return layout_ ? *layout_->context : ownedContext_;
-  }
-  // Scoring mode keeps the lowering compact: value identities are "@<n>", no
-  // per-instance provenance and no diagnostic block-key strings.
-  const bool diagnostics_ = true;
+  const std::vector<CanonicalNode> &context() const { return *layout_->context; }
   // Diagnostic lowering split (env VFSIM_PROFILE_LOWERING=1); off in timed runs.
   bool profile_ = false;
   LoweringProfile profileStorage_;
@@ -2417,23 +2374,6 @@ private:
   const char *decline_ = "";
 };
 
-std::unique_ptr<CanonicalCursor> makeCanonicalCursor(
-    const CanonicalVfInfo &input, const ParamDB &db, const UarchConfig &cfg,
-    bool diagnostics) {
-  CompilerOptimizationStats stats;
-  auto hoisted = hoistLoopInvariantContext(input, stats);
-  std::vector<CanonicalNode> context = hoisted ? *hoisted : input.context;
-  return makeCanonicalCursorForContext(input, std::move(context), db, cfg,
-                                       diagnostics);
-}
-
-std::unique_ptr<CanonicalCursor> makeCanonicalCursorForContext(
-    const CanonicalVfInfo &input, std::vector<CanonicalNode> context,
-    const ParamDB &db, const UarchConfig &cfg, bool diagnostics) {
-  return std::unique_ptr<CanonicalCursor>(
-      new Cursor(std::move(context), input, db, cfg, diagnostics));
-}
-
 PreparedStreamingLayout expandCanonicalStreamingLayout(
     const CanonicalVfInfo &vf,
     std::optional<std::vector<CanonicalNode>> postLicmContext, const ParamDB &db,
@@ -2480,17 +2420,5 @@ PreparedProgram expandCanonicalProgram(
   return Expander(vf, context, db, cfg, std::move(values), retainDiagnostics,
                   keepInstanceMetadata)
       .run();
-}
-
-PreparedProgram expandCanonicalStaticMetadata(
-    const CanonicalVfInfo &vf, const std::vector<CanonicalNode> &context,
-    const ParamDB &db, const UarchConfig &cfg,
-    std::unordered_map<std::string, ValueInfo> values) {
-  CompilerOptimizationStats unused;
-  (void)unused;
-  Expander expander(vf, context, db, cfg, std::move(values),
-                    /*retainDiagnostics=*/false, /*keepInstanceMetadata=*/false,
-                    /*numericTokens=*/true);
-  return expander.runStaticMetadata(0);
 }
 } // namespace vfsim

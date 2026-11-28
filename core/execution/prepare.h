@@ -111,19 +111,6 @@ struct PreparedProgram {
 PreparedProgram prepareProgram(const CanonicalVfInfo &, const ParamDB &,
                                const UarchConfig &,
                                bool retainDiagnostics = true);
-PreparedProgram prepareProgramForStream(const CanonicalVfInfo &, const ParamDB &,
-                                        const UarchConfig &, bool keepTextMetadata);
-PreparedProgram prepareProgramForStream(
-    const CanonicalVfInfo &, const std::vector<CanonicalNode> &rootContext,
-    const ParamDB &, const UarchConfig &, bool keepTextMetadata,
-    bool skipHoist = false);
-// Normal no-trace scoring preparation for the streamed execution path: no
-// dynamic instruction/metadata materialisation, only the static graph tables.
-// postLicmContext must be the exact post-LICM rewrite the caller also hands to
-// the cursor (single LICM), and stats is that rewrite's report.
-PreparedProgram prepareProgramForStreaming(
-    const CanonicalVfInfo &, const std::vector<CanonicalNode> &postLicmContext,
-    const ParamDB &, const UarchConfig &, CompilerOptimizationStats stats);
 
 // Streaming preparation result: the Engine-facing static metadata plus the one
 // static layout the cursor lowers from. The cursor consumes `layout` (move-only,
@@ -133,9 +120,11 @@ struct PreparedStreamingLayout {
   CanonicalLayoutHandle layout;
 };
 
-// Same contract as prepareProgramForStreaming (one LICM rewrite applied by the
-// caller, no dynamic materialisation, same shape gate/report), but the static
-// layout is built once and returned for the cursor to reuse.
+// Normal no-trace scoring preparation for the streamed execution path: no
+// dynamic instruction/metadata materialisation, only the static graph tables,
+// and the static layout is built once here and returned for the cursor to reuse.
+// postLicmContext must be the exact post-LICM rewrite the caller also hands to
+// the cursor (single LICM), and stats is that rewrite's report.
 //
 // postLicmContext is engaged only when LICM actually rewrote the root context.
 // Without a rewrite the layout borrows input.context instead of copying it, so
