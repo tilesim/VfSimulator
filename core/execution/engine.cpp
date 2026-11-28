@@ -47,7 +47,7 @@ void Engine::admit(const DynamicInst &inst) {
   } else
     shq_.enqueue(u, cycle_);
   shq_.reserve(*u);
-  active_.emplace(u->instId, u);
+  ++activeCount_;
 }
 bool Engine::hasPendingDispatch(int64_t seq) const {
   for (const auto &i : idu_.borrowedWindow())
@@ -79,7 +79,7 @@ void Engine::backendStep() {
     trace_.log("done", *u, cycle_);
     lastDone_ = std::max(lastDone_, *u->doneCycle);
     registers_.onDone(*u, cycle_);
-    active_.erase(u->instId);
+    --activeCount_;
   }
   registers_.tryFreeEligible(cycle_);
   lsu_.updateReady(cycle_);
@@ -110,6 +110,28 @@ SimulationResult Engine::run(const std::filesystem::path &outDir,
   if (!outDir.empty() && !program_.retainsDiagnostics)
     throw std::runtime_error("Trace export requires diagnostic preparation");
   registers_.setTraceEnabled(!outDir.empty());
+  // Choose the operand-id mode once for the whole run: only a program whose
+  // complete table is present and in range may use the integer RAT; anything
+  // else (hand-built programs included) keeps the string RAT for the run.
+  bool useLogicalIds = !program_.operandIds.empty();
+  if (useLogicalIds) {
+    const size_t tableSize = program_.operandIds.size();
+    for (const auto &inst : program_.instructions) {
+      if (inst.type != "inst")
+        continue;
+      const size_t srcCount = inst.src.size();
+      const size_t dstCount = inst.dst.size();
+      if (inst.srcIdBase < 0 || inst.dstIdBase < 0 ||
+          static_cast<size_t>(inst.srcIdBase) + srcCount > tableSize ||
+          static_cast<size_t>(inst.dstIdBase) + dstCount > tableSize) {
+        useLogicalIds = false;
+        break;
+      }
+    }
+  }
+  registers_.setOperandIds(useLogicalIds ? program_.operandIds.data() : nullptr,
+                           useLogicalIds ? program_.operandIds.size() : 0,
+                           useLogicalIds);
   trace_.setEnabled(!outDir.empty());
   idu_.setTraceEnabled(!outDir.empty());
   if (maxCycles <= 0) {
@@ -195,7 +217,7 @@ SimulationResult Engine::run(const std::filesystem::path &outDir,
     }
     backendStep();
     lastDone_ = std::max(lastDone_, control_.lastRetireCycle());
-    if (ifu_.done() && idu_.empty() && active_.empty() && pipe_.empty() &&
+    if (ifu_.done() && idu_.empty() && activeCount_ == 0 && pipe_.empty() &&
         control_.empty()) {
       completed = true;
       break;

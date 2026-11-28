@@ -15,6 +15,8 @@ public:
         trace_(trace) {}
   void enqueue(const UopPtr &u, int64_t cycle) {
     u->lsqReadyCycle = cycle + cfg_.oooToLsqDelay;
+    if (u->profile->opClass == "STORE")
+      pendingStoreRefreshes_.push_back(u.get());
     waiting_.push_back(u);
   }
   int64_t freeQueue() const {
@@ -37,7 +39,17 @@ private:
   MembarController &control_;
   TraceRecorder &trace_;
   std::deque<UopPtr> waiting_;
-  std::map<int64_t, UopPtr> running_;
+  // Non-owning, FIFO-ordered list of queued STOREs that still need a state
+  // refresh. waiting_ keeps ownership and the issue/hasPendingBefore order.
+  std::vector<Uop *> pendingStoreRefreshes_;
+  void compactPendingStores(bool dropReady, int64_t cycle);
+  // Reused across cycles: rebuilding the ready candidate list must not allocate
+  // two containers (vector + sort scratch) on every issue attempt.
+  std::vector<UopPtr> issueCandidates_;
+  // Completed-order bookkeeping only needs the in-flight set: a contiguous
+  // buffer avoids one tree node per started uop, and finish() stable-compacts
+  // the survivors before returning the due batch ordered by instId.
+  std::vector<UopPtr> running_;
   std::map<std::string, int64_t> resourceReady_;
   int64_t budgetCycle_ = -1, issuedBytes_ = 0;
 };

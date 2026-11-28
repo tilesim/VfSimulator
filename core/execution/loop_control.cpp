@@ -45,19 +45,19 @@ void LoopControl::initTopBlockNestedStarts(int64_t topBlockId,
 
   setTopBlockVloop(topBlockId, topVloopStart);
   if (depth >= 1) {
-    const std::string key0 = makeKey(topBlockId, "loop0", {});
+    const auto key0 = makeKey(topBlockId, "loop0", {});
     vloopStart_[key0] = topVloopStart;
     bodyOpenTime_[key0] = topVloopStart + vloopToDispatchDelay_;
     vloopTrace_.push_back({topBlockId, "loop0", {}, topVloopStart});
   }
   if (depth >= 2 && bounds[0] > 0) {
-    const std::string key1 = makeKey(topBlockId, "loop1", {0});
+    const auto key1 = makeKey(topBlockId, "loop1", {0});
     vloopStart_[key1] = topVloopStart + nestedVloopInitialStartGap_;
     bodyOpenTime_[key1] = vloopStart_[key1] + vloopToDispatchDelay_;
     vloopTrace_.push_back({topBlockId, "loop1", {0}, vloopStart_[key1]});
   }
   if (depth >= 3 && bounds[0] > 0 && bounds[1] > 0) {
-    const std::string key2 = makeKey(topBlockId, "loop2", {0, 0});
+    const auto key2 = makeKey(topBlockId, "loop2", {0, 0});
     vloopStart_[key2] = topVloopStart + 2 * nestedVloopInitialStartGap_;
     bodyOpenTime_[key2] = vloopStart_[key2] + vloopToDispatchDelay_;
     vloopTrace_.push_back({topBlockId, "loop2", {0, 0}, vloopStart_[key2]});
@@ -83,12 +83,102 @@ std::optional<int64_t> LoopControl::nextNonemptyTopBlock(int64_t start) const {
   return std::nullopt;
 }
 
-std::string LoopControl::makeKey(int64_t topBlockId, const std::string &loopId,
+SchedulingKey LoopControl::makeKey(int64_t topBlockId, const std::string &loopId,
                                  const std::vector<int64_t> &iters) const {
-  return std::to_string(topBlockId) + "|" + loopId + "|" + joinInts(iters);
+  SchedulingKey key;
+  key.topBlockId = topBlockId;
+  // Only the canonical spellings are typed; everything else keeps the exact
+  // historical text identity (loop00/loop01 etc. must not alias).
+  const bool canonical = (loopId == "loop0" && iters.empty()) ||
+                         (loopId == "loop1" && iters.size() == 1) ||
+                         (loopId == "loop2" && iters.size() == 2);
+  if (canonical) {
+    key.depth = static_cast<int32_t>(iters.size());
+    key.c0 = iters.empty() ? -1 : iters[0];
+    key.c1 = iters.size() > 1 ? iters[1] : -1;
+    return key;
+  }
+  key.slow = std::to_string(topBlockId) + "|" + loopId + "|" + joinInts(iters);
+  return key;
 }
 
-std::optional<std::string> LoopControl::normalizeBlockKey(
+SchedulingKey LoopControl::keyFromNormalized(const std::string &text) const {
+  // Legacy normalised text is "<top>|loop<N>|<i,j>". Only the canonical shapes
+  // are typed, and only when regenerating the canonical text reproduces the
+  // input byte for byte; anything else keeps the exact historical string
+  // identity. This rejects "01|loop1|02", "1|loop0|", trailing garbage and
+  // numeric overflow instead of aliasing them.
+  SchedulingKey key;
+  key.slow = text;
+  const size_t first = text.find('|');
+  if (first == std::string::npos || first == 0)
+    return key;
+  const size_t second = text.find('|', first + 1);
+  if (second == std::string::npos)
+    return key;
+  const auto parseNumber = [](const std::string &piece, int64_t *out) {
+    if (piece.empty())
+      return false;
+    size_t i = 0;
+    bool negative = false;
+    if (piece[0] == '-') {
+      negative = true;
+      i = 1;
+      if (piece.size() == 1)
+        return false;
+    }
+    int64_t value = 0;
+    for (; i < piece.size(); ++i) {
+      const char c = piece[i];
+      if (c < '0' || c > '9')
+        return false;
+      if (value > (std::numeric_limits<int64_t>::max() - (c - '0')) / 10)
+        return false;
+      value = value * 10 + (c - '0');
+    }
+    *out = negative ? -value : value;
+    return true;
+  };
+  int64_t top = 0;
+  if (!parseNumber(text.substr(0, first), &top) || top < 0)
+    return key;
+  const std::string loopId = text.substr(first + 1, second - first - 1);
+  std::vector<int64_t> iters;
+  const std::string coords = text.substr(second + 1);
+  if (!coords.empty()) {
+    size_t pos = 0;
+    while (true) {
+      const size_t comma = coords.find(',', pos);
+      const std::string piece =
+          comma == std::string::npos ? coords.substr(pos)
+                                     : coords.substr(pos, comma - pos);
+      int64_t value = 0;
+      if (!parseNumber(piece, &value))
+        return key;
+      iters.push_back(value);
+      if (comma == std::string::npos)
+        break;
+      pos = comma + 1;
+    }
+  }
+  const bool canonical = (loopId == "loop0" && iters.empty()) ||
+                         (loopId == "loop1" && iters.size() == 1) ||
+                         (loopId == "loop2" && iters.size() == 2);
+  if (!canonical)
+    return key;
+  const std::string regenerated =
+      std::to_string(top) + "|" + loopId + "|" + joinInts(iters);
+  if (regenerated != text)
+    return key;
+  SchedulingKey typed;
+  typed.topBlockId = top;
+  typed.depth = static_cast<int32_t>(iters.size());
+  typed.c0 = iters.empty() ? -1 : iters[0];
+  typed.c1 = iters.size() > 1 ? iters[1] : -1;
+  return typed;
+}
+
+std::optional<SchedulingKey> LoopControl::normalizeBlockKey(
     const std::pair<std::string, std::vector<int64_t>> &raw,
     int64_t topBlockId) const {
   if (raw.first.empty())
@@ -96,23 +186,31 @@ std::optional<std::string> LoopControl::normalizeBlockKey(
   return makeKey(topBlockId, raw.first, raw.second);
 }
 
-std::optional<std::string>
+std::optional<SchedulingKey>
 LoopControl::currentInnerBlockKey(const DynamicInst &inst) const {
   const int64_t topBlockId = inst.topBlockId;
+  if (!inst.schedulingKeys.empty())
+    return inst.schedulingKeys.back();
+  if (!inst.normalizedBlockKeys.empty())
+    return keyFromNormalized(inst.normalizedBlockKeys.back());
   const auto &bk = inst.blockKeyByLevel;
   if (!bk.empty()) {
     return normalizeBlockKey(bk.back(), topBlockId);
   }
-
   return std::nullopt;
 }
 
 void LoopControl::updateLastDispatch(const DynamicInst &inst, int64_t cycle) {
   const int64_t topBlockId = inst.topBlockId;
   const auto &bk = inst.blockKeyByLevel;
+  if (!inst.schedulingKeys.empty()) {
+    for (const auto &key : inst.schedulingKeys)
+      lastDispatchTime_[key] = cycle;
+    return;
+  }
   if (!inst.normalizedBlockKeys.empty()) {
     for (const auto &key : inst.normalizedBlockKeys)
-      lastDispatchTime_[key] = cycle;
+      lastDispatchTime_[keyFromNormalized(key)] = cycle;
     return;
   }
   if (!bk.empty()) {
@@ -153,7 +251,7 @@ void LoopControl::triggerNextVloops(const DynamicInst &inst, int64_t cycle) {
         iterStack.size() >= 1) {
       const int64_t i = iterStack[0];
       const int64_t I = bounds[0];
-      const std::string curKey = makeKey(topBlockId, "loop1", {i});
+      const auto curKey = makeKey(topBlockId, "loop1", {i});
       const int64_t endCy =
           lastDispatchTime_.count(curKey) ? lastDispatchTime_[curKey] : cycle;
       if (i + 1 < I) {
@@ -161,7 +259,7 @@ void LoopControl::triggerNextVloops(const DynamicInst &inst, int64_t cycle) {
             vloopStart_.count(curKey) ? vloopStart_[curKey] : endCy;
         const int64_t nextStart =
             std::max<int64_t>(endCy, prevStart + loop1MinFeedbackGap_);
-        const std::string nextKey = makeKey(topBlockId, "loop1", {i + 1});
+        const auto nextKey = makeKey(topBlockId, "loop1", {i + 1});
         vloopStart_[nextKey] = nextStart;
         bodyOpenTime_[nextKey] = nextStart + vloopToDispatchDelay_;
         vloopTrace_.push_back(
@@ -178,11 +276,11 @@ void LoopControl::triggerNextVloops(const DynamicInst &inst, int64_t cycle) {
       const int64_t i = iterStack[0];
       const int64_t j = iterStack[1];
       const int64_t M = bounds[1];
-      const std::string curKey = makeKey(topBlockId, "loop2", {i, j});
+      const auto curKey = makeKey(topBlockId, "loop2", {i, j});
       const int64_t endCy =
           lastDispatchTime_.count(curKey) ? lastDispatchTime_[curKey] : cycle;
       if (j + 1 < M) {
-        const std::string nextKey = makeKey(topBlockId, "loop2", {i, j + 1});
+        const auto nextKey = makeKey(topBlockId, "loop2", {i, j + 1});
         vloopStart_[nextKey] = endCy;
         bodyOpenTime_[nextKey] = endCy + vloopToDispatchDelay_;
         vloopTrace_.push_back(
@@ -196,7 +294,7 @@ void LoopControl::triggerNextVloops(const DynamicInst &inst, int64_t cycle) {
       const int64_t i = iterStack[0];
       const int64_t K = bounds[0];
       const int64_t M = bounds[1];
-      const std::string curKey = makeKey(topBlockId, "loop1", {i});
+      const auto curKey = makeKey(topBlockId, "loop1", {i});
       const int64_t endCy =
           lastDispatchTime_.count(curKey) ? lastDispatchTime_[curKey] : cycle;
       if (i + 1 < K) {
@@ -229,10 +327,10 @@ bool LoopControl::canDispatch(const DynamicInst &inst, int64_t cycle) {
   if (topOpenIt == topBlockBodyOpenTime_.end() || cycle < topOpenIt->second)
     return false;
 
-  std::optional<std::string> fallback;
-  const std::string *innerKey = nullptr;
-  if (!inst.normalizedBlockKeys.empty())
-    innerKey = &inst.normalizedBlockKeys.back();
+  std::optional<SchedulingKey> fallback;
+  const SchedulingKey *innerKey = nullptr;
+  if (!inst.schedulingKeys.empty())
+    innerKey = &inst.schedulingKeys.back();
   else {
     fallback = currentInnerBlockKey(inst);
     if (fallback)

@@ -37,7 +37,10 @@ private:
   std::vector<std::unordered_map<std::string, int64_t>> overrideReady_;
   std::vector<std::map<std::string, std::unordered_set<int64_t>>> completionCycles_;
   std::vector<int64_t> inflight_;
-  std::map<int64_t, UopPtr> running_;
+  // Started uops live in one contiguous buffer: finish() stable-compacts the
+  // survivors in place and returns the due batch ordered by instId, which is
+  // the ascending order the previous keyed container produced.
+  std::vector<UopPtr> running_;
   int rr_ = 0;
 };
 } // namespace vfsim

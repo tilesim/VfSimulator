@@ -33,7 +33,11 @@ private:
   OoO ooo_;
   IFU ifu_;
   std::deque<std::pair<int64_t, const DynamicInst *>> pipe_;
-  std::map<int64_t, UopPtr> active_;
+  // Number of admitted-but-unfinished instructions. Each of them is owned by
+  // the LSU or SHQ queue (and later by EXQ/EXU), the expander allocates
+  // instruction ids monotonically, and the halt test only asks whether the set
+  // is empty, so a counter replaces the previous id->uop map.
+  int64_t activeCount_ = 0;
   int64_t cycle_ = 0, lastDone_ = 0, vectorCredit_, predicateCredit_,
           shqCredit_, pendingShq_ = 0, pendingLsq_ = 0;
 };

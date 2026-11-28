@@ -55,6 +55,9 @@ private:
 
 struct PreparedProgram {
   std::vector<DynamicInst> instructions;
+  // Flat dense logical-operand ids; each instruction indexes a span with
+  // DynamicInst::srcIdBase/dstIdBase. Empty for hand-built programs.
+  std::vector<int32_t> operandIds;
   std::unordered_map<std::string, ValueInfo> values;
   RuntimeParamMap params;
   std::unordered_map<int, std::vector<int64_t>> topBlockLoopBounds;

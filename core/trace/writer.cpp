@@ -101,7 +101,7 @@ void dumpLogs(const std::filesystem::path &root, const TraceRecorder &trace,
     row["cy"] = event.cycle;
     row["event"] = event.event;
     row["id"] = u.instId;
-    row["state"] = u.state;
+    row["state"] = stateName(u.state);
     row["blocked_reason"] = optional(u.blockedReason);
     row["ready"] = u.readyCycle;
     row["start"] = optional(u.startCycle);
