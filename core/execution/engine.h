@@ -21,11 +21,20 @@ public:
     // strings; rename then keys its live-binding RAT by uint64.
     registers_.setNumericTokens(numericTokens);
   }
+  // Detaches the on-demand provider installed by useInstructionStream and
+  // restores the identity mode the eager program expects. The provider callbacks
+  // capture caller-owned state, so every use of useInstructionStream must end
+  // with this call before that state dies (runScoringStream does it in an RAII
+  // guard on all exit paths).
+  void clearInstructionStream() {
+    ifu_.clearProvider();
+    streamOperandBlockSize_ = 0;
+    streamNumericTokens_ = false;
+    streamMaxSlots_ = 0;
+    registers_.setNumericTokens(false);
+  }
   SimulationResult run(const std::filesystem::path &outDir = {},
                        int64_t maxCycles = 0);
-  int64_t streamArenaHighWater() const { return streamArenaHighWater_; }
-  int64_t streamIssuedInstructions() const { return streamIssued_; }
-  int64_t streamLiveValueHighWater() const { return streamLiveValueHighWater_; }
 
 private:
   void reclaimStreamArena();
@@ -64,9 +73,6 @@ private:
   // Used for MEMBAR events, whose acceptance copies every field it needs, so no
   // pointer into the slot survives the call.
   void returnStreamSlotTail();
-  int64_t streamArenaHighWater_ = 0;
-  int64_t streamIssued_ = 0;
-  int64_t streamLiveValueHighWater_ = 0;
   // Number of admitted-but-unfinished instructions. Each of them is owned by
   // the LSU or SHQ queue (and later by EXQ/EXU), the expander allocates
   // instruction ids monotonically, and the halt test only asks whether the set

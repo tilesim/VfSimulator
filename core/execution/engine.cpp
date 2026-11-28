@@ -36,9 +36,6 @@ Engine::Reservation Engine::reservation(const DynamicInst &inst) const {
   return counts;
 }
 void Engine::admit(const DynamicInst &inst) {
-  if (ifu_.hasProvider()) {
-    ++streamIssued_;
-  }
   auto u = registers_.rename(inst, cycle_);
   if (u->profile->opClass == "LOAD" || u->profile->opClass == "STORE") {
     const auto &catalog = defaultInstructionCatalog();
@@ -91,8 +88,6 @@ DynamicInst *Engine::acquireStreamSlot() {
     throw std::runtime_error("stream slot pool exceeded numeric id bound");
   streamInFlight_.push_back(index);
   lastAcquiredStreamSlot_ = index;
-  streamArenaHighWater_ = std::max<int64_t>(
-      streamArenaHighWater_, static_cast<int64_t>(streamInFlight_.size()));
   DynamicInst *slot = streamSlots_[index].get();
   if (streamOperandBlockSize_ > 0)
     slot->srcIdBase =
@@ -244,8 +239,6 @@ SimulationResult Engine::run(const std::filesystem::path &outDir,
         DynamicInst *slot = acquireStreamSlot();
         ifu_.nextInto(*slot);
         instPtr = slot;
-        streamLiveValueHighWater_ = std::max<int64_t>(
-            streamLiveValueHighWater_, registers_.streamValueCount());
       } else {
         instPtr = &ifu_.nextBorrowed();
       }

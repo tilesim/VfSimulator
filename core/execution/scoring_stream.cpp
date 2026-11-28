@@ -1,5 +1,7 @@
 #include "core/execution/scoring_stream.h"
-#include <cstdlib>
+#include <atomic>
+#include <limits>
+#include <stdexcept>
 
 #include "core/execution/engine.h"
 #include "core/execution/expansion.h"
@@ -7,7 +9,11 @@
 
 namespace vfsim {
 namespace {
-bool gScoringStreamEnabled = false;
+// Process-wide feature switch, off by default (the eager preparation is the
+// default scoring path). Atomic so a caller that toggles it from another thread
+// cannot race the scoring entry; relaxed ordering is enough because the flag is
+// a mode selector, not a data dependency.
+std::atomic<bool> gScoringStreamEnabled{false};
 } // namespace
 
 int32_t scoringStreamSlotBound(const UarchConfig &cfg) {
@@ -34,13 +40,31 @@ int32_t scoringStreamSlotBound(const UarchConfig &cfg) {
   return static_cast<int32_t>(bound);
 }
 
-bool scoringStreamEnabled() { return gScoringStreamEnabled; }
+bool scoringStreamEnabled() {
+  return gScoringStreamEnabled.load(std::memory_order_relaxed);
+}
 
-void setScoringStreamEnabled(bool enabled) { gScoringStreamEnabled = enabled; }
+void setScoringStreamEnabled(bool enabled) {
+  gScoringStreamEnabled.store(enabled, std::memory_order_relaxed);
+}
 
 ScoringStream prepareScoringStream(const CanonicalVfInfo &vf,
                                    const ParamDB &db, const UarchConfig &cfg) {
   ScoringStream plan;
+  // Pure configuration gates first. theoreticalLimitMode lets the IDU window
+  // grow without a cap, so the number of simultaneously borrowed instructions is
+  // not provably bounded; an unbounded window (or an overflowing bound) refuses
+  // the streamed path. Both checks read the resolved configuration only, so they
+  // run before any static layout or cursor is built and a refusal costs nothing.
+  if (cfg.theoreticalLimitMode) {
+    plan.declineReason = "theoretical-limit-mode-unbounded";
+    return plan;
+  }
+  const int32_t slotBound = scoringStreamSlotBound(cfg);
+  if (slotBound <= 0) {
+    plan.declineReason = "stream-slot-bound-unavailable";
+    return plan;
+  }
   CompilerOptimizationStats stats;
   // The rewrite is handed over only when LICM actually moved something; an
   // unchanged program stays borrowed, so no canonical node is copied.
@@ -59,18 +83,7 @@ ScoringStream prepareScoringStream(const CanonicalVfInfo &vf,
     plan.declineReason = why;
     return plan;
   }
-  // theoreticalLimitMode lets the IDU window grow without a cap, so the number
-  // of simultaneously borrowed instructions is not provably bounded; refuse the
-  // streamed path and let the caller run the eager preparation.
-  if (cfg.theoreticalLimitMode) {
-    plan.declineReason = "theoretical-limit-mode-unbounded";
-    return plan;
-  }
-  plan.slotBound = scoringStreamSlotBound(cfg);
-  if (plan.slotBound <= 0) {
-    plan.declineReason = "stream-slot-bound-unavailable";
-    return plan;
-  }
+  plan.slotBound = slotBound;
   return plan;
 }
 
@@ -79,6 +92,7 @@ SimulationResult runScoringStream(ScoringStream &plan, Engine &engine,
   // The provider lowers directly into the Engine's stream slot. done() is exact:
   // with a known static event total it is a counter comparison, otherwise one
   // event is peeked so the IFU never pulls past the end.
+  CanonicalCursor &cursor = *plan.cursor;
   struct Provider {
     CanonicalCursor &cursor;
     int64_t expected = -1;
@@ -88,13 +102,31 @@ SimulationResult runScoringStream(ScoringStream &plan, Engine &engine,
     bool havePeek = false;
     bool ended = false;
 
+    // A cursor that stops before it is exhausted did not finish the program; the
+    // failure must surface here instead of looking like a clean end (a lost
+    // lifetime lookup, an invalid nested loop, a stream shorter than the static
+    // event total). The cursor owns the reason, so report it verbatim.
+    [[noreturn]] void throwTerminated(const char *what) const {
+      const char *why = cursor.declineReason();
+      if (why != nullptr && *why != '\0')
+        throw std::runtime_error(std::string(what) + ": " + why);
+      throw std::runtime_error(what);
+    }
     bool done() {
       if (expected >= 0)
         return fetched >= expected;
       if (!havePeek && !ended) {
         ++prefetches;
         havePeek = cursor.next(peeked);
-        ended = !havePeek;
+        if (!havePeek) {
+          // A clean end leaves no reason behind. A reason means the cursor
+          // stopped early, including on the last event, where the index alone
+          // would look exhausted: report it instead of ending successfully.
+          const char *why = cursor.declineReason();
+          if (why != nullptr && *why != '\0')
+            throwTerminated("scoring stream failed before its static end");
+          ended = true;
+        }
       }
       return ended;
     }
@@ -103,8 +135,7 @@ SimulationResult runScoringStream(ScoringStream &plan, Engine &engine,
       ++fetched;
       if (expected >= 0) {
         if (!cursor.next(out))
-          throw std::runtime_error(
-              "scoring stream ended before the static event total");
+          throwTerminated("scoring stream ended before the static event total");
       } else {
         if (!havePeek)
           throw std::runtime_error("scoring fetch without a peeked event");
@@ -113,7 +144,7 @@ SimulationResult runScoringStream(ScoringStream &plan, Engine &engine,
       }
       out.srcIdBase = slotBase;
     }
-  } provider{*plan.cursor, plan.eventCount};
+  } provider{cursor, plan.eventCount};
   // The cursor lowers numeric value tokens (no identity strings), so the
   // Engine keys its live-binding RAT by uint64 instead of by string.
   engine.useInstructionStream([&provider]() { return provider.done(); },
@@ -122,10 +153,19 @@ SimulationResult runScoringStream(ScoringStream &plan, Engine &engine,
                               },
                               /*operandBlockSize=*/0, plan.slotBound,
                               /*numericTokens=*/true);
+  // The callbacks capture "provider", which lives on this stack frame, so they
+  // must be detached on every exit path: a normal return, a budget refusal, or a
+  // lowering error. Without this a second Engine::run would call into destroyed
+  // state. Detaching also restores the string-identity mode of the register
+  // file, which is what the eager path expects.
+  struct DetachProvider {
+    Engine &engine;
+    ~DetachProvider() { engine.clearInstructionStream(); }
+  } detach{engine};
   SimulationResult result = engine.run({}, maxCycles);
   plan.fetched = provider.fetched;
   plan.prefetches = provider.prefetches;
-  if (const LoweringProfile *profile = plan.cursor->loweringProfile())
+  if (const LoweringProfile *profile = cursor.loweringProfile())
     plan.loweringProfile = *profile;
   return result;
 }

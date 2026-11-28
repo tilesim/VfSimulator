@@ -21,6 +21,15 @@ public:
     borrowed_ = nullptr;
   }
   bool hasProvider() const { return hasProvider_; }
+  // Detaches the provider. The callbacks reference caller state that only lives
+  // for the duration of one run, so the owner must detach before that state goes
+  // out of scope; the IFU then behaves like an empty program (and the caller is
+  // expected to restore the identity mode the eager path needs).
+  void clearProvider() {
+    providerDone_ = {};
+    providerFetch_ = {};
+    hasProvider_ = false;
+  }
   bool done() const {
     if (hasProvider_)
       return providerDone_();

@@ -1630,6 +1630,12 @@ public:
   bool next(DynamicInst &out) override {
     if (!pullRaw(out))
       return false;
+    // A lifetime lookup that failed while lowering this event leaves it without
+    // release/keep bits, i.e. the Engine would score a different program. Fail
+    // closed before the event is consumed; declineReason() carries the cause, and
+    // the scoring provider turns it into an error instead of a short stream.
+    if (lifetimeFailed_)
+      return false;
     // Emission-order identity: the eager numbers the materialised stream once,
     // after any lane interleave. streamSeq orders the pipeline, instId is the
     // stable per-instruction handle the Engine sorts completed uops by, and a
@@ -1648,7 +1654,6 @@ public:
   const char *declineReason() const override {
     return declineText_.empty() ? decline_ : declineText_.c_str();
   }
-  size_t trackedValues() const { return e_.runtime_.values.size(); }
 
 private:
   struct BodySummary;

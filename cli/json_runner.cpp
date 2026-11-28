@@ -71,7 +71,11 @@ int main(int argc, char **argv) {
              "  --max-cycles N\n"
              "  --theoretical-limit-vloop-only\n"
              "  "
-             "--theoretical-limit-vloop-only-legacy-forwarding-direct-issue\n";
+             "--theoretical-limit-vloop-only-legacy-forwarding-direct-issue\n"
+             "  env VFSIM_SCORING_STREAM=1 opts into the streamed scoring path;\n"
+             "      any other value (0, false, no, off, true, ...) keeps the\n"
+             "      eager default, and an explicit --out_dir always keeps the\n"
+             "      eager trace/export path.\n";
       return 0;
     }
     const auto root =
@@ -86,14 +90,15 @@ int main(int argc, char **argv) {
                         : vfsim::InputAPI::loadCce(path, args.kernelName);
     // Opt-in streamed scoring path for benchmarks: explicit environment switch,
     // never enabled implicitly (default scoring stays the eager preparation).
-    // Opt-in streamed scoring path. An explicit --out_dir is a trace/export
-    // request and wins over the switch, so the results directory is never
-    // silently dropped; only a headless (default) invocation may route the
-    // normal scoring path through the streamed preparation.
+    // Only the documented value "1" enables it; every other spelling ("0",
+    // "false", "no", "off", "true", ...) keeps the eager default. An explicit
+    // --out_dir is a trace/export request and wins over the switch, so the
+    // results directory is never silently dropped; only a headless (default)
+    // invocation may route the normal scoring path through the streamed
+    // preparation.
     bool scoringStream = false;
     if (const char *scoringSwitch = std::getenv("VFSIM_SCORING_STREAM");
-        scoringSwitch != nullptr && *scoringSwitch != '\0' &&
-        std::string(scoringSwitch) != "0") {
+        scoringSwitch != nullptr && std::string(scoringSwitch) == "1") {
       if (args.outDirExplicit) {
         std::cout << "scoringStream=refused:explicit-out-dir\n";
       } else {
